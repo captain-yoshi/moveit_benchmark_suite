@@ -1,0 +1,35 @@
+planning_pipeline_benchmark:
+  robot_config:                                                                               # Optional  
+    urdf: "package://franka_description/robots/panda_arm_hand.urdf.xacro"                     # Default "moveti_resources path"
+    srdf: "package://moveit_resources_panda_moveit_config/config/panda_arm_hand.srdf.xacro"   # Default "moveti_resources path"
+    limit: "package://moveit_resources_panda_moveit_config/config/joint_limits.yaml"          # Default "moveti_resources path"
+    kinematic: "package://moveit_ressources_panda/config/kinematics.yaml"                     # Default "moveti_resources path"
+
+  # Scene created with the parser and encoded into a yaml file
+  scene_config:
+    resource: "package://moveit_benchmark_suite/config/panda_bbt_scene.yaml"     # REQUIRED (the start_state is not used)
+
+  parameters:
+    runs: [Number of runs for each planning algorithm on each request]           # Default 10
+    group: [The name of the group to plan]                                       # REQUIRED
+    timeout: [The maximum time for a single run; seconds]                        # Default 10.0
+    output_directory: [The directory to write the output to]                     # Default is current working directory
+
+    start_states: [Regex for the stored start states in the warehouse to try]    # Default ""
+    path_constraints: [Regex for the path constraints to benchmark]              # Default ""
+    queries: [Regex for the motion plan queries in the warehouse to try]         # Default .*
+    goal_constraints: [Regex for the goal constraints to benchmark]              # Default ""
+    trajectory_constraints: [Regex for the trajectory constraints to benchmark]  # Default ""
+  
+  planning_pipelines:  
+    - name: ompl                                                              # REQUIRED
+      resource: "package://panda_moveit_config/config/ompl_planning.yaml"     # Default "moveti_resources path"
+      planners:                                                               # REQUIRED
+        - RRT
+    - name: chomp
+      resource: "package://panda_moveit_config/config/chomp_planning.yaml"    # Default "moveti_resources path"
+      planners:
+        - CHOMP 
+
+  debug:                                                                      # Optionnal
+    visualize: true
