@@ -1,0 +1,12 @@
+<package>
+  <name>moveit_benchmark_suite_model_set</name>
+  <version>0.0.0</version>
+  <description>Model set for benchmarks</description>
+
+  <author email="todo@todo.com">TODO TODO</author>
+  <maintainer email="todo@todo.com">TODO TODO</maintainer>
+  
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>
