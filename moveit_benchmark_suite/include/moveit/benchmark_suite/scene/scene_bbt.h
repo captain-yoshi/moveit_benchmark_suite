@@ -43,8 +43,24 @@
 namespace moveit {
 namespace benchmark_suite {
 
-void scene_bbt_standard(planning_interface::PlanningSceneInterface& psi);
-void scene_bbt_primitive(planning_interface::PlanningSceneInterface& psi);
-}  // namespace benchmark_suite
+/* Collision objects scenarios */
+void bbtCollisionObjectPrimitive(std::vector<moveit_msgs::CollisionObject>& collision_object,
+                                 std::vector<moveit_msgs::ObjectColor>& object_colors);
+void bbtCollisionObjectMesh(std::vector<moveit_msgs::CollisionObject>& collision_object,
+                            std::vector<moveit_msgs::ObjectColor>& object_colors);
 
+/* Robot states for Panda */
+const std::string PANDA_JOINT1 = "panda_joint1";
+const std::string PANDA_JOINT2 = "panda_joint2";
+const std::string PANDA_JOINT3 = "panda_joint3";
+const std::string PANDA_JOINT4 = "panda_joint4";
+const std::string PANDA_JOINT5 = "panda_joint5";
+const std::string PANDA_JOINT6 = "panda_joint6";
+const std::string PANDA_JOINT7 = "panda_joint7";
+const std::string PANDA_FINGER_JOINT1 = "panda_finger_joint1";
+const std::string PANDA_FINGER_JOINT2 = "panda_finger_joint2";
+
+void bbtRobotStatePreGrasp(moveit::core::RobotState& robot_state);
+
+}  // namespace benchmark_suite
 }  // namespace moveit

@@ -48,10 +48,8 @@ namespace benchmark_suite {
 
 const std::string PACKAGE_MESH_PATH = "package://moveit_benchmark_suite_model_set/yale_cmu_berkeley";
 
-void scene_bbt_standard(planning_interface::PlanningSceneInterface& psi) {
-	std::vector<moveit_msgs::CollisionObject> collision_objects;
-	std::vector<moveit_msgs::ObjectColor> object_colors;
-
+void bbtCollisionObjectMesh(std::vector<moveit_msgs::CollisionObject>& collision_objects,
+                            std::vector<moveit_msgs::ObjectColor>& object_colors) {
 	{  // Clear box 1
 		moveit_msgs::CollisionObject object;
 
@@ -150,15 +148,10 @@ void scene_bbt_standard(planning_interface::PlanningSceneInterface& psi) {
 			}
 		}
 	}
-	if (!psi.applyCollisionObjects(collision_objects, object_colors)) {
-		ROS_ERROR("Failed to apply collision objects");
-	}
 }
 
-void scene_bbt_primitive(planning_interface::PlanningSceneInterface& psi) {
-	std::vector<moveit_msgs::CollisionObject> collision_objects;
-	std::vector<moveit_msgs::ObjectColor> object_colors;
-
+void bbtCollisionObjectPrimitive(std::vector<moveit_msgs::CollisionObject>& collision_objects,
+                                 std::vector<moveit_msgs::ObjectColor>& object_colors) {
 	{  // Clear boxes
 		moveit_msgs::CollisionObject object;
 
@@ -343,11 +336,25 @@ void scene_bbt_primitive(planning_interface::PlanningSceneInterface& psi) {
 			}
 		}
 	}
-	if (!psi.applyCollisionObjects(collision_objects, object_colors)) {
-		ROS_ERROR("Failed to apply collision objects");
-	}
 
 }  // namespace benchmark_suite
+void bbtRobotStatePreGrasp(moveit::core::RobotState& robot_state) {
+	std::map<const std::string, double> joint_position_map;
+
+	joint_position_map.insert(std::make_pair(PANDA_JOINT1, 1.0));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT2, 1.0));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT3, 1.0));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT4, 1.0));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT5, 1.0));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT6, 1.0));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT7, 1.0));
+	joint_position_map.insert(std::make_pair(PANDA_FINGER_JOINT1, 1.0));
+	joint_position_map.insert(std::make_pair(PANDA_FINGER_JOINT2, 1.0));
+
+	for (auto const& joint_position : joint_position_map) {
+		robot_state.setJointPositions(joint_position.first, &joint_position.second);
+	}
+}
 
 }  // namespace benchmark_suite
 }  // namespace moveit

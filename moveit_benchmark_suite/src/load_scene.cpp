@@ -38,7 +38,7 @@
 
 #include <moveit/benchmark_suite/scene/scene_bbt.h>
 
-#include <rosparam_shortcuts/rosparam_shortcuts.h>
+//#include <rosparam_shortcuts/rosparam_shortcuts.h>
 
 using namespace moveit::benchmark_suite;
 
@@ -49,8 +49,14 @@ int main(int argc, char** argv) {
 
 	moveit::planning_interface::PlanningSceneInterface psi;
 
-	// scene_bbt_primitive(psi);
-	scene_bbt_standard(psi);
+	std::vector<moveit_msgs::CollisionObject> collision_objects;
+	std::vector<moveit_msgs::ObjectColor> object_colors;
+
+	bbtCollisionObjectMesh(collision_objects, object_colors);
+
+	if (!psi.applyCollisionObjects(collision_objects, object_colors)) {
+		ROS_ERROR("Failed to apply collision objects");
+	}
 
 	return 0;
 }
