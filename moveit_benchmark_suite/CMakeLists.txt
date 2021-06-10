@@ -5,8 +5,10 @@ find_package(Boost REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
 	eigen_conversions
 	geometry_msgs
+	geometric_shapes
 	moveit_core
 	moveit_ros_planning
+	moveit_ros_planning_interface
 	moveit_ros_benchmarks
 	moveit_task_constructor_msgs
 	roscpp
@@ -23,19 +25,23 @@ catkin_package(
 		geometry_msgs
 		moveit_core
 		moveit_ros_planning
+		moveit_ros_planning_interface
 		moveit_ros_benchmarks
 		moveit_task_constructor_msgs
 		visualization_msgs
 )
 
 set(CMAKE_CXX_STANDARD 14)
+#set(PROJECT_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/include/moveit/benchmark_suite)
 
-# check for MOVEIT_MASTER
-include(CheckIncludeFileCXX)
-set(CMAKE_REQUIRED_INCLUDES ${moveit_core_INCLUDE_DIRS})
-CHECK_INCLUDE_FILE_CXX(moveit/collision_detection/collision_env.h MOVEIT_MASTER)
-if(NOT MOVEIT_MASTER)
-  set(MOVEIT_MASTER 0)
-endif()
-add_definitions(-DMOVEIT_MASTER=${MOVEIT_MASTER})
+include_directories(include ${catkin_INCLUDE_DIRS})
 
+add_library(${PROJECT_NAME}
+  #include/moveit/benchmark_suite/planning_scene_util.h
+  #include/moveit/benchmark_suite/scene_bbt.h
+
+  src/scene/scene_bbt.cpp)
+
+
+add_executable(${PROJECT_NAME}_load_scene_bbt src/load_scene.cpp)
+target_link_libraries(${PROJECT_NAME}_load_scene_bbt ${PROJECT_NAME} ${catkin_LIBRARIES})
