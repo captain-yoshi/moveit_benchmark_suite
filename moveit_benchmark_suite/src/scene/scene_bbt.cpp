@@ -307,7 +307,7 @@ void bbtCollisionObjectPrimitive(std::vector<moveit_msgs::CollisionObject>& coll
 	{  // Cubes
 		moveit_msgs::CollisionObject object;
 
-		const std::string object_prefix_id = "cube_";
+		const std::string object_prefix_id = "wood_block_";
 		const std::string frame_id = "world";
 
 		// physical dimension of 5 box primitives
