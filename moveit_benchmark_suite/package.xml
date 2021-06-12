@@ -17,8 +17,9 @@
 	<depend>moveit_ros_planning</depend>
 	<depend>moveit_ros_benchmarks</depend>
 	<depend>moveit_ros_planning_interface</depend>
+	<depend>moveit_task_constructor_core</depend>
 	<depend>moveit_task_constructor_msgs</depend>
 	<depend>visualization_msgs</depend>
 	<depend>rviz_marker_tools</depend>
-
+	<depend>rosparam_shortcuts</depend>
 </package>

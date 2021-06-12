@@ -10,10 +10,12 @@ find_package(catkin REQUIRED COMPONENTS
 	moveit_ros_planning
 	moveit_ros_planning_interface
 	moveit_ros_benchmarks
+	moveit_task_constructor_core
 	moveit_task_constructor_msgs
 	roscpp
 	visualization_msgs
 	rviz_marker_tools
+	rosparam_shortcuts
 )
 
 catkin_package(
@@ -27,6 +29,7 @@ catkin_package(
 		moveit_ros_planning
 		moveit_ros_planning_interface
 		moveit_ros_benchmarks
+		moveit_task_constructor_core
 		moveit_task_constructor_msgs
 		visualization_msgs
 )
@@ -40,8 +43,12 @@ add_library(${PROJECT_NAME}
   #include/moveit/benchmark_suite/planning_scene_util.h
   #include/moveit/benchmark_suite/scene_bbt.h
 
-  src/scene/scene_bbt.cpp)
+  src/scene/scene_bbt.cpp
+  src/benchmark/bbt_pick_place_task.cpp)
 
 
-add_executable(${PROJECT_NAME}_load_scene_bbt src/load_scene.cpp)
-target_link_libraries(${PROJECT_NAME}_load_scene_bbt ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_executable(${PROJECT_NAME}_load_scene src/load_scene.cpp)
+target_link_libraries(${PROJECT_NAME}_load_scene ${PROJECT_NAME} ${catkin_LIBRARIES})
+
+add_executable(${PROJECT_NAME}_run_task src/run_task.cpp)
+target_link_libraries(${PROJECT_NAME}_run_task ${PROJECT_NAME} ${catkin_LIBRARIES})
