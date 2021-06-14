@@ -51,6 +51,8 @@
 
 #include <moveit/planning_scene/planning_scene.h>
 #include <moveit/robot_model_loader/robot_model_loader.h>
+#include <moveit/robot_state/conversions.h>
+
 namespace moveit {
 namespace benchmark_suite {
 
@@ -115,6 +117,26 @@ bool getCurrentScene(planning_scene::PlanningScenePtr& planning_scene) {
 		}
 	}
 	return true;
+}
+
+void advertizeQuery(const moveit::core::RobotState& robot_state, const std::string& topic) {
+	ros::NodeHandle n;
+
+	ros::Publisher query_pub = n.advertise<moveit_msgs::RobotState>(topic, 10);
+
+	moveit_msgs::RobotState rs_msg;
+	moveit::core::robotStateToRobotStateMsg(robot_state, rs_msg);
+
+	query_pub.publish(rs_msg);
+	ros::spinOnce();
+}
+
+void updateStartQuery(const moveit::core::RobotState& robot_state) {
+	advertizeQuery(robot_state, "/rviz/moveit/update_custom_start_state");
+}
+
+void updateGoalQuery(const moveit::core::RobotState& robot_state) {
+	advertizeQuery(robot_state, "/rviz/moveit/update_custom_goal_state");
 }
 
 void createCollisionObjectMesh(moveit_msgs::CollisionObject& collision_object, const std::string& object_id,
