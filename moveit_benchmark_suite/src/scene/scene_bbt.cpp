@@ -341,15 +341,51 @@ void bbtCollisionObjectPrimitive(std::vector<moveit_msgs::CollisionObject>& coll
 void bbtRobotStatePreGrasp(moveit::core::RobotState& robot_state) {
 	std::map<const std::string, double> joint_position_map;
 
-	joint_position_map.insert(std::make_pair(PANDA_JOINT1, 1.0));
-	joint_position_map.insert(std::make_pair(PANDA_JOINT2, 1.0));
-	joint_position_map.insert(std::make_pair(PANDA_JOINT3, 1.0));
-	joint_position_map.insert(std::make_pair(PANDA_JOINT4, 1.0));
-	joint_position_map.insert(std::make_pair(PANDA_JOINT5, 1.0));
-	joint_position_map.insert(std::make_pair(PANDA_JOINT6, 1.0));
-	joint_position_map.insert(std::make_pair(PANDA_JOINT7, 1.0));
-	joint_position_map.insert(std::make_pair(PANDA_FINGER_JOINT1, 1.0));
-	joint_position_map.insert(std::make_pair(PANDA_FINGER_JOINT2, 1.0));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT1, 1.42975));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT2, -1.74947));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT3, -1.72356));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT4, -2.4002));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT5, -1.80346));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT6, 1.54083));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT7, -0.0872325));
+	joint_position_map.insert(std::make_pair(PANDA_FINGER_JOINT1, 0.012708));
+	joint_position_map.insert(std::make_pair(PANDA_FINGER_JOINT2, 0.012708));
+
+	for (auto const& joint_position : joint_position_map) {
+		robot_state.setJointPositions(joint_position.first, &joint_position.second);
+	}
+}
+
+void bbtRobotStatePreGrasp1(moveit::core::RobotState& robot_state) {
+	std::map<const std::string, double> joint_position_map;
+
+	joint_position_map.insert(std::make_pair(PANDA_JOINT1, 1.44953));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT2, -1.34194));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT3, -1.62727));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT4, -2.42115));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT5, -1.45982));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT6, 1.77905));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT7, -0.0748017));
+	joint_position_map.insert(std::make_pair(PANDA_FINGER_JOINT1, 0.0127097));
+	joint_position_map.insert(std::make_pair(PANDA_FINGER_JOINT2, 0.0127097));
+
+	for (auto const& joint_position : joint_position_map) {
+		robot_state.setJointPositions(joint_position.first, &joint_position.second);
+	}
+}
+
+void bbtRobotStatePrePlace(moveit::core::RobotState& robot_state) {
+	std::map<const std::string, double> joint_position_map;
+
+	joint_position_map.insert(std::make_pair(PANDA_JOINT1, 0.354647));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT2, 0.29075));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT3, 0.104866));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT4, -2.38177));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT5, -0.0661164));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT6, 2.67012));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT7, 2.86986));
+	joint_position_map.insert(std::make_pair(PANDA_FINGER_JOINT1, 0.012708));
+	joint_position_map.insert(std::make_pair(PANDA_FINGER_JOINT2, 0.012708));
 
 	for (auto const& joint_position : joint_position_map) {
 		robot_state.setJointPositions(joint_position.first, &joint_position.second);

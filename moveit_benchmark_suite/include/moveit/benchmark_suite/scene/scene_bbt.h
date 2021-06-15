@@ -61,6 +61,9 @@ const std::string PANDA_FINGER_JOINT1 = "panda_finger_joint1";
 const std::string PANDA_FINGER_JOINT2 = "panda_finger_joint2";
 
 void bbtRobotStatePreGrasp(moveit::core::RobotState& robot_state);
+void bbtRobotStatePreGrasp1(moveit::core::RobotState& robot_state);
+void bbtRobotStatePrePlace(moveit::core::RobotState& robot_state);
+void bbtRobotStatePrePlace1(moveit::core::RobotState& robot_state);
 
 }  // namespace benchmark_suite
 }  // namespace moveit
