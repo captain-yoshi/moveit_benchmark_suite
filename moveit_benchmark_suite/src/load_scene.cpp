@@ -37,6 +37,9 @@
 */
 
 #include <moveit/benchmark_suite/scene/scene_bbt.h>
+#include <moveit_msgs/GetPlanningScene.h>
+#include <moveit/planning_scene/planning_scene.h>
+#include <moveit/benchmark_suite/scene/util.h>
 
 //#include <rosparam_shortcuts/rosparam_shortcuts.h>
 
@@ -49,14 +52,30 @@ int main(int argc, char** argv) {
 
 	moveit::planning_interface::PlanningSceneInterface psi;
 
+	// Collision Objects
 	std::vector<moveit_msgs::CollisionObject> collision_objects;
 	std::vector<moveit_msgs::ObjectColor> object_colors;
 
-	bbtCollisionObjectMesh(collision_objects, object_colors);
+	bbtCollisionObjectPrimitive(collision_objects, object_colors);
 
 	if (!psi.applyCollisionObjects(collision_objects, object_colors)) {
 		ROS_ERROR("Failed to apply collision objects");
 	}
+
+	// Start query
+	planning_scene::PlanningScenePtr planning_scene;
+
+	getCurrentScene(planning_scene);
+	moveit::core::RobotState& state = planning_scene->getCurrentStateNonConst();
+
+	bbtRobotStatePreGrasp(state);
+	updateStartQuery(state);
+
+	// Goal query
+	bbtRobotStatePrePlace(state);
+	updateGoalQuery(state);
+
+	ros::waitForShutdown();
 
 	return 0;
 }
