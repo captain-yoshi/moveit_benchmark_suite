@@ -1,0 +1,48 @@
+# This is an example configuration that loads the "Kitchen" scene from the
+# local MoveIt warehouse and benchmarks the "manipulator" group over all pairs
+# of motion plan queries and start states in the Kitchen scene.
+
+# Five planners from two different plugins are run a total of 50 times each, with a
+# maximum of 10 seconds per run.  Output is stored in the /tmp/moveit_benchmarks directory.
+
+benchmark_config:
+    warehouse:
+        host: 127.0.0.1
+        port: 33829
+        scene_name: bbt_primitive     # Required
+    parameters:
+        name: bbt_primitive_scene
+        runs: 10
+        group: panda_arm      # Required
+        timeout: 20.0
+        output_directory: "/tmp/benchmarks"
+        queries: pick1
+        start_states: start1
+    planning_pipelines:
+        - name: ompl
+          planners:
+            #- RRTkConfigDefault
+            - RRTConnectkConfigDefault
+            #- RRTstar
+            #- PRMkConfigDefault
+            #- PRMstar
+            #- TRRT
+            #- BKPIECE
+            #- KPIECE
+            # - AnytimePathShorteningkConfig
+            #- AnytimePathShorteningConfig1
+            #- AnytimePathShorteningConfig2
+            #- AnytimePathShorteningConfig3
+            #- AnytimePathShorteningConfig4
+            #- AnytimePathShorteningConfig5
+            #- AnytimePathShorteningConfig6
+            #- AnytimePathShorteningConfig7
+            #- AnytimePathShorteningConfig8
+            #- AnytimePathShorteningConfig9
+            #- AnytimePathShorteningConfig10
+        - name: chomp
+          planners:
+            - CHOMP
+        - name: stomp
+          planners:
+            - STOMP
