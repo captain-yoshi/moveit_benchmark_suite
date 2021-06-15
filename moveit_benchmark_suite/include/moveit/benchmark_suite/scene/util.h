@@ -122,13 +122,17 @@ bool getCurrentScene(planning_scene::PlanningScenePtr& planning_scene) {
 void advertizeQuery(const moveit::core::RobotState& robot_state, const std::string& topic) {
 	ros::NodeHandle n;
 
-	ros::Publisher query_pub = n.advertise<moveit_msgs::RobotState>(topic, 10);
+	ros::Publisher pub = n.advertise<moveit_msgs::RobotState>(topic, 10);
+	while (pub.getNumSubscribers() < 1) {
+		ros::WallDuration sleep_t(0.5);
+		sleep_t.sleep();
+	}
 
 	moveit_msgs::RobotState rs_msg;
 	moveit::core::robotStateToRobotStateMsg(robot_state, rs_msg);
 
-	query_pub.publish(rs_msg);
-	ros::spinOnce();
+	pub.publish(rs_msg);
+	ros::Duration(1.0).sleep();
 }
 
 void updateStartQuery(const moveit::core::RobotState& robot_state) {
