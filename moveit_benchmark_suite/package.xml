@@ -22,4 +22,5 @@
 	<depend>visualization_msgs</depend>
 	<depend>rviz_marker_tools</depend>
 	<depend>rosparam_shortcuts</depend>
+	<depend>moveit_visual_tools</depend>
 </package>
