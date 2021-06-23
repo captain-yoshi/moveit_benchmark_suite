@@ -144,8 +144,8 @@ void updateGoalQuery(const moveit::core::RobotState& robot_state) {
 }
 
 void createCollisionObjectMesh(moveit_msgs::CollisionObject& collision_object, const std::string& object_id,
-                               const std::string& mesh_path, Eigen::Isometry3d frame, const std::string& frame_id,
-                               const Eigen::Vector3d scaling) {
+                               const std::string& mesh_path, const Eigen::Isometry3d& frame,
+                               const std::string& frame_id, const Eigen::Vector3d& scaling) {
 	geometry_msgs::PoseStamped pose_stamped;
 	tf::poseEigenToMsg(frame, pose_stamped.pose);
 	pose_stamped.header.frame_id = frame_id;
@@ -164,7 +164,7 @@ void createCollisionObjectMesh(moveit_msgs::CollisionObject& collision_object, c
 }
 
 void createCollisionObjectPrimitive(moveit_msgs::CollisionObject& collision_object, const std::string& object_id,
-                                    const shape_msgs::SolidPrimitive& primitive, Eigen::Isometry3d frame,
+                                    const shape_msgs::SolidPrimitive& primitive, const Eigen::Isometry3d& frame,
                                     const std::string& frame_id) {
 	geometry_msgs::PoseStamped pose_stamped;
 	tf::poseEigenToMsg(frame, pose_stamped.pose);
