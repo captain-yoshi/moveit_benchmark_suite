@@ -33,11 +33,13 @@ planner_configs:
     range: 0.0  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
   RRTstarkConfigDefault:
     type: geometric::RRTstar
+    optimization_objective: PathLengthOptimizationObjective
     range: 0.0  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
     goal_bias: 0.05  # When close to goal select goal, with this probability? default: 0.05
     delay_collision_checking: 1  # Stop collision checking as soon as C-free parent found. default 1
   TRRTkConfigDefault:
     type: geometric::TRRT
+    optimization_objective: PathLengthOptimizationObjective
     range: 0.0  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
     goal_bias: 0.05  # When close to goal select goal, with this probability? default: 0.05
     max_states_failed: 10  # when to start increasing temp. default: 10
@@ -52,8 +54,10 @@ planner_configs:
     max_nearest_neighbors: 10  # use k nearest neighbors. default: 10
   PRMstarkConfigDefault:
     type: geometric::PRMstar
+    optimization_objective: PathLengthOptimizationObjective
   FMTkConfigDefault:
     type: geometric::FMT
+    optimization_objective: PathLengthOptimizationObjective
     num_samples: 1000  # number of states that the planner should sample. default: 1000
     radius_multiplier: 1.1  # multiplier used for the nearest neighbors search radius. default: 1.1
     nearest_k: 1  # use Knearest strategy. default: 1
@@ -62,6 +66,7 @@ planner_configs:
     extended_fmt: 1  # activate the extended FMT*: adding new samples if planner does not finish successfully. default: 1
   BFMTkConfigDefault:
     type: geometric::BFMT
+    optimization_objective: PathLengthOptimizationObjective
     num_samples: 1000  # number of states that the planner should sample. default: 1000
     radius_multiplier: 1.0  # multiplier used for the nearest neighbors search radius. default: 1.0
     nearest_k: 1  # use the Knearest strategy. default: 1
@@ -85,6 +90,7 @@ planner_configs:
     min_valid_path_fraction: 0.2  # Accept partially valid moves above fraction. default: 0.2
   BiTRRTkConfigDefault:
     type: geometric::BiTRRT
+    optimization_objective: PathLengthOptimizationObjective
     range: 0.0  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
     temp_change_factor: 0.1  # how much to increase or decrease temp. default: 0.1
     init_temperature: 100  # initial temperature. default: 100
@@ -93,6 +99,7 @@ planner_configs:
     cost_threshold: 1e300  # the cost threshold. Any motion cost that is not better will not be expanded. default: inf
   LBTRRTkConfigDefault:
     type: geometric::LBTRRT
+    optimization_objective: PathLengthOptimizationObjective
     range: 0.0  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
     goal_bias: 0.05  # When close to goal select goal, with this probability. default: 0.05
     epsilon: 0.4  # optimality approximation factor. default: 0.4
@@ -110,21 +117,27 @@ planner_configs:
     type: geometric::LazyPRMstar
   SPARSkConfigDefault:
     type: geometric::SPARS
+    optimization_objective: PathLengthOptimizationObjective
     stretch_factor: 3.0  # roadmap spanner stretch factor. multiplicative upper bound on path quality. It does not make sense to make this parameter more than 3. default: 3.0
     sparse_delta_fraction: 0.25  # delta fraction for connection distance. This value represents the visibility range of sparse samples. default: 0.25
     dense_delta_fraction: 0.001  # delta fraction for interface detection. default: 0.001
     max_failures: 1000  # maximum consecutive failure limit. default: 1000
   SPARStwokConfigDefault:
     type: geometric::SPARStwo
+    optimization_objective: PathLengthOptimizationObjective
     stretch_factor: 3.0  # roadmap spanner stretch factor. multiplicative upper bound on path quality. It does not make sense to make this parameter more than 3. default: 3.0
     sparse_delta_fraction: 0.25  # delta fraction for connection distance. This value represents the visibility range of sparse samples. default: 0.25
     dense_delta_fraction: 0.001  # delta fraction for interface detection. default: 0.001
     max_failures: 5000  # maximum consecutive failure limit. default: 5000
   TrajOptDefault:
     type: geometric::TrajOpt
+#optimization_objective: PathLengthOptimizationObjective, MechanicalWorkOptimizationObjective, MaximizeMinClearanceObjective, StateCostIntegralObjective, MinimaxObjective
 
 panda_arm:
   default_planner_config: RRTConnectkConfigDefault
+  projection_evaluator: joints(panda_joint1, panda_joint2)
+  longest_valid_segment_fraction: 0.005
+  enforce_joint_model_state_space: false # false = cartesian planning
   planner_configs:
     - SBLkConfigDefault
     - ESTkConfigDefault

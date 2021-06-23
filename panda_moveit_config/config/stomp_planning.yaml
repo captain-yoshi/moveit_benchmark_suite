@@ -17,19 +17,23 @@ stomp/panda_arm:
         collision_penalty: 1.0
         cost_weight: 1.0
         kernel_window_percentage: 0.2
-        longest_valid_joint_move: 0.05
+        longest_valid_joint_move: 0.005
+      #- class: stomp_moveit/ToolGoalPose
+      #  position_cost_weight: 1.0
+      #  orientation_cost_weight: 0.0
     noisy_filters:
       - class: stomp_moveit/JointLimits
         lock_start: True
         lock_goal: True
-      - class: stomp_moveit/MultiTrajectoryVisualization
-        line_width: 0.02
-        rgb: [255, 255, 0]
-        marker_array_topic: stomp_trajectories
-        marker_namespace: noisy
+      #- class: stomp_moveit/MultiTrajectoryVisualization
+      #  line_width: 0.02
+      #  rgb: [255, 255, 0]
+      #  marker_array_topic: stomp_trajectories
+      #  marker_namespace: noisy
     update_filters:
       - class: stomp_moveit/PolynomialSmoother
         poly_order: 6
+      - class: stomp_moveit/ConstrainedCartesianGoal
       - class: stomp_moveit/TrajectoryVisualization
         line_width: 0.05
         rgb: [0, 191, 255]
