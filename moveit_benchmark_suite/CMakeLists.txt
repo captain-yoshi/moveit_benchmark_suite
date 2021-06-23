@@ -54,3 +54,6 @@ target_link_libraries(${PROJECT_NAME}_load_scene ${PROJECT_NAME} ${catkin_LIBRAR
 
 add_executable(${PROJECT_NAME}_run_task src/run_task.cpp)
 target_link_libraries(${PROJECT_NAME}_run_task ${PROJECT_NAME} ${catkin_LIBRARIES})
+
+add_executable(${PROJECT_NAME}_run_benchmark src/benchmark/benchmark_suite.cpp)
+target_link_libraries(${PROJECT_NAME}_run_benchmark ${PROJECT_NAME} ${catkin_LIBRARIES})
