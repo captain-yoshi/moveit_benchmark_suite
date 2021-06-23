@@ -42,6 +42,7 @@
 
 #include <moveit/benchmark_suite/scene/scene_bbt.h>
 #include <eigen_stl_containers/eigen_stl_vector_container.h>
+#include <moveit/kinematic_constraints/utils.h>
 
 namespace moveit {
 namespace benchmark_suite {
@@ -336,27 +337,43 @@ void bbtCollisionObjectPrimitive(std::vector<moveit_msgs::CollisionObject>& coll
 			}
 		}
 	}
-
 }  // namespace benchmark_suite
-void bbtRobotStatePreGrasp(moveit::core::RobotState& robot_state) {
+void bbtRobotStatePreGraspBlock1Alt1(moveit::core::RobotState& robot_state) {
 	std::map<const std::string, double> joint_position_map;
 
-	joint_position_map.insert(std::make_pair(PANDA_JOINT1, 1.42975));
-	joint_position_map.insert(std::make_pair(PANDA_JOINT2, -1.74947));
-	joint_position_map.insert(std::make_pair(PANDA_JOINT3, -1.72356));
-	joint_position_map.insert(std::make_pair(PANDA_JOINT4, -2.4002));
-	joint_position_map.insert(std::make_pair(PANDA_JOINT5, -1.80346));
-	joint_position_map.insert(std::make_pair(PANDA_JOINT6, 1.54083));
-	joint_position_map.insert(std::make_pair(PANDA_JOINT7, -0.0872325));
-	joint_position_map.insert(std::make_pair(PANDA_FINGER_JOINT1, 0.012708));
-	joint_position_map.insert(std::make_pair(PANDA_FINGER_JOINT2, 0.012708));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT1, -0.357411));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT2, 0.42179));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT3, -0.0942837));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT4, -2.36042));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT5, 0.108761));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT6, 2.77859));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT7, -1.33099));
+	joint_position_map.insert(std::make_pair(PANDA_FINGER_JOINT1, 0.015));
+	joint_position_map.insert(std::make_pair(PANDA_FINGER_JOINT2, 0.015));
+
+	for (auto const& joint_position : joint_position_map) {
+		robot_state.setJointPositions(joint_position.first, &joint_position.second);
+	}
+}
+void bbtRobotStatePreGraspBlock1Alt2(moveit::core::RobotState& robot_state) {
+	std::map<const std::string, double> joint_position_map;
+
+	joint_position_map.insert(std::make_pair(PANDA_JOINT1, -1.43943));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT2, 0.659923));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT3, 0.885315));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT4, -2.29273));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT5, -0.954043));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT6, 2.5207));
+	joint_position_map.insert(std::make_pair(PANDA_JOINT7, -0.60324));
+	joint_position_map.insert(std::make_pair(PANDA_FINGER_JOINT1, 0.015));
+	joint_position_map.insert(std::make_pair(PANDA_FINGER_JOINT2, 0.015));
 
 	for (auto const& joint_position : joint_position_map) {
 		robot_state.setJointPositions(joint_position.first, &joint_position.second);
 	}
 }
 
-void bbtRobotStatePreGrasp1(moveit::core::RobotState& robot_state) {
+void bbtRobotStatePreGraspBlock4Alt1(moveit::core::RobotState& robot_state) {
 	std::map<const std::string, double> joint_position_map;
 
 	joint_position_map.insert(std::make_pair(PANDA_JOINT1, 1.44953));
@@ -374,7 +391,7 @@ void bbtRobotStatePreGrasp1(moveit::core::RobotState& robot_state) {
 	}
 }
 
-void bbtRobotStatePrePlace(moveit::core::RobotState& robot_state) {
+void bbtRobotStatePrePlaceBlock4Alt1(moveit::core::RobotState& robot_state) {
 	std::map<const std::string, double> joint_position_map;
 
 	joint_position_map.insert(std::make_pair(PANDA_JOINT1, 0.354647));
@@ -390,6 +407,84 @@ void bbtRobotStatePrePlace(moveit::core::RobotState& robot_state) {
 	for (auto const& joint_position : joint_position_map) {
 		robot_state.setJointPositions(joint_position.first, &joint_position.second);
 	}
+}
+void bbtGoalConstraintsJoint(std::vector<moveit_msgs::Constraints>& constraints) {}
+void bbtGoalConstraintsPosition(std::vector<moveit_msgs::Constraints>& constraints) {
+	constraints.emplace_back();
+	constraints.back().name = "Position";
+	// moveit_msgs::Constraints constraints;
+	moveit_msgs::PositionConstraint pc;
+	pc.header.frame_id = "panda_link0";
+	pc.link_name = "panda_link8";
+	pc.target_point_offset.x = 0.0;
+	pc.target_point_offset.y = 0.0;
+	pc.target_point_offset.z = 0.0;
+
+	shape_msgs::SolidPrimitive box;
+	box.type = box.BOX;
+	box.dimensions.resize(3);
+	box.dimensions[box.BOX_X] = 0.429;
+	box.dimensions[box.BOX_Y] = 0.292;
+	box.dimensions[box.BOX_Z] = 0.292;
+
+	geometry_msgs::Pose box_pose;
+	box_pose.position.x = 0.429 / 2.0 + 0.16;
+	box_pose.position.y = 0.292 / 2.0 + 0.003;
+	box_pose.position.z = 0.292 / 2.0;
+	box_pose.orientation.w = 1.0;
+
+	pc.constraint_region.primitives.push_back(box);
+	pc.constraint_region.primitive_poses.push_back(box_pose);
+
+	pc.weight = 1.0;
+
+	constraints.back().position_constraints.push_back(pc);
+}
+
+void bbtPathConstraintsOrientation(std::vector<moveit_msgs::Constraints>& constraints) {
+	constraints.emplace_back();
+	constraints.back().name = "Orientation";
+
+	// Gravity Z AXIS towards BOTTOM
+	Eigen::Quaterniond quat = Eigen::AngleAxisd(0, Eigen::Vector3d::UnitZ()) *
+	                          Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitY()) *
+	                          Eigen::AngleAxisd(0, Eigen::Vector3d::UnitX());
+
+	moveit_msgs::OrientationConstraint oc;
+	oc.header.frame_id = "panda_link0";
+	oc.link_name = "panda_link8";
+	oc.orientation.w = quat.w();
+	oc.orientation.x = quat.x();
+	oc.orientation.y = quat.y();
+	oc.orientation.z = quat.z();
+
+	oc.absolute_x_axis_tolerance = 0.1;
+	oc.absolute_y_axis_tolerance = 0.1;
+	oc.absolute_z_axis_tolerance = 2 * M_PI;
+	oc.weight = 1;
+
+	constraints.back().orientation_constraints.push_back(oc);
+}
+
+void bbtGoalConstraintsPose(std::vector<moveit_msgs::Constraints>& constraints) {
+	constraints.emplace_back();
+	constraints.back().name = "Pose";
+
+	geometry_msgs::PoseStamped pose;
+	pose.header.frame_id = "panda_link0";
+	pose.pose.position.x = 0.396;
+	pose.pose.position.y = 0.2;
+	pose.pose.position.z = 0.2;
+	pose.pose.orientation.w = 0.0;
+	pose.pose.orientation.x = 0.923894;
+	pose.pose.orientation.y = 0.382867;
+	pose.pose.orientation.z = 1.258e-6;
+
+	std::vector<double> tolerance_pose(3, 0.001);
+	std::vector<double> tolerance_angle(3, 0.01);
+
+	constraints.back() =
+	    kinematic_constraints::constructGoalConstraints("panda_link8", pose, tolerance_pose, tolerance_angle);
 }
 
 }  // namespace benchmark_suite

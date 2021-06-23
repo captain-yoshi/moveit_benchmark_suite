@@ -56,26 +56,28 @@ int main(int argc, char** argv) {
 	std::vector<moveit_msgs::CollisionObject> collision_objects;
 	std::vector<moveit_msgs::ObjectColor> object_colors;
 
-	bbtCollisionObjectPrimitive(collision_objects, object_colors);
+	bbtCollisionObjectMesh(collision_objects, object_colors);
 
 	if (!psi.applyCollisionObjects(collision_objects, object_colors)) {
 		ROS_ERROR("Failed to apply collision objects");
 	}
 
 	// Start query
+
 	planning_scene::PlanningScenePtr planning_scene;
 
 	getCurrentScene(planning_scene);
 	moveit::core::RobotState& state = planning_scene->getCurrentStateNonConst();
 
-	bbtRobotStatePreGrasp(state);
+	bbtRobotStatePreGraspBlock1Alt1(state);
+	planning_scene->setCurrentState(state);
+	/*
 	updateStartQuery(state);
+	      // Goal query
+	      bbtRobotStatePrePlace(state);
+	      updateGoalQuery(state);
 
-	// Goal query
-	bbtRobotStatePrePlace(state);
-	updateGoalQuery(state);
-
-	ros::waitForShutdown();
-
+	      ros::waitForShutdown();
+	   */
 	return 0;
 }

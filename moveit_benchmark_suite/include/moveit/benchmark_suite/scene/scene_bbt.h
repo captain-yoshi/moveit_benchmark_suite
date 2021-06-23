@@ -39,17 +39,12 @@
 #pragma once
 
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include <moveit_msgs/Constraints.h>
 
 namespace moveit {
 namespace benchmark_suite {
 
-/* Collision objects scenarios */
-void bbtCollisionObjectPrimitive(std::vector<moveit_msgs::CollisionObject>& collision_object,
-                                 std::vector<moveit_msgs::ObjectColor>& object_colors);
-void bbtCollisionObjectMesh(std::vector<moveit_msgs::CollisionObject>& collision_object,
-                            std::vector<moveit_msgs::ObjectColor>& object_colors);
-
-/* Robot states for Panda */
+/* Panda joint names */
 const std::string PANDA_JOINT1 = "panda_joint1";
 const std::string PANDA_JOINT2 = "panda_joint2";
 const std::string PANDA_JOINT3 = "panda_joint3";
@@ -60,10 +55,25 @@ const std::string PANDA_JOINT7 = "panda_joint7";
 const std::string PANDA_FINGER_JOINT1 = "panda_finger_joint1";
 const std::string PANDA_FINGER_JOINT2 = "panda_finger_joint2";
 
-void bbtRobotStatePreGrasp(moveit::core::RobotState& robot_state);
-void bbtRobotStatePreGrasp1(moveit::core::RobotState& robot_state);
-void bbtRobotStatePrePlace(moveit::core::RobotState& robot_state);
-void bbtRobotStatePrePlace1(moveit::core::RobotState& robot_state);
+/* Collision objects scenarios */
+void bbtCollisionObjectPrimitive(std::vector<moveit_msgs::CollisionObject>& collision_object,
+                                 std::vector<moveit_msgs::ObjectColor>& object_colors);
+void bbtCollisionObjectMesh(std::vector<moveit_msgs::CollisionObject>& collision_object,
+                            std::vector<moveit_msgs::ObjectColor>& object_colors);
+
+/* Robot state */
+void bbtRobotStatePreGraspBlock1Alt1(moveit::core::RobotState& robot_state);
+void bbtRobotStatePreGraspBlock1Alt2(moveit::core::RobotState& robot_state);
+void bbtRobotStatePreGraspBlock4Alt1(moveit::core::RobotState& robot_state);
+
+void bbtRobotStatePrePlaceBlock4Alt1(moveit::core::RobotState& robot_state);
+
+/* Constraints */
+void bbtGoalConstraintsJoint(std::vector<moveit_msgs::Constraints>& constraints);
+void bbtGoalConstraintsPosition(std::vector<moveit_msgs::Constraints>& constraints);
+void bbtGoalConstraintsPose(std::vector<moveit_msgs::Constraints>& constraints);
+
+void bbtPathConstraintsOrientation(std::vector<moveit_msgs::Constraints>& constraints);
 
 }  // namespace benchmark_suite
 }  // namespace moveit
