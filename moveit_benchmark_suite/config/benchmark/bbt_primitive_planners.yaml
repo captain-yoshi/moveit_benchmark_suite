@@ -12,34 +12,38 @@ benchmark_config:
         scene_name: bbt_primitive     # Required
     parameters:
         name: bbt_primitive_scene
-        runs: 10
+        runs: 50
         group: panda_arm      # Required
-        timeout: 20.0
+        timeout: 30.0
         output_directory: "/tmp/benchmarks"
-        queries: pick1
-        start_states: start1
+        predefined_poses_group: panda_arm # Group where the predefined poses are specified
+        predefined_poses: # List of named targets
+            - ready
+            - extended
+        #queries: pick1
+        #start_states: start1
     planning_pipelines:
         - name: ompl
           planners:
-            #- RRTkConfigDefault
+            - SBLkConfigDefault
+            - ESTkConfigDefault
+            - LBKPIECEkConfigDefault
+            - BKPIECEkConfigDefault
+            - KPIECEkConfigDefault
+            - RRTkConfigDefault
             - RRTConnectkConfigDefault
-            #- RRTstar
-            #- PRMkConfigDefault
-            #- PRMstar
-            #- TRRT
-            #- BKPIECE
-            #- KPIECE
-            # - AnytimePathShorteningkConfig
-            #- AnytimePathShorteningConfig1
-            #- AnytimePathShorteningConfig2
-            #- AnytimePathShorteningConfig3
-            #- AnytimePathShorteningConfig4
-            #- AnytimePathShorteningConfig5
-            #- AnytimePathShorteningConfig6
-            #- AnytimePathShorteningConfig7
-            #- AnytimePathShorteningConfig8
-            #- AnytimePathShorteningConfig9
-            #- AnytimePathShorteningConfig10
+            #- RRTstarkConfigDefault
+            #- TRRTkConfigDefault
+            - PRMkConfigDefault
+            #- PRMstarkConfigDefault
+            - FMTkConfigDefault
+            - BFMTkConfigDefault
+            - PDSTkConfigDefault
+            - STRIDEkConfigDefault
+            #- BiTRRTkConfigDefault
+            #- LBTRRTkConfigDefault
+            - BiESTkConfigDefault
+            - ProjESTkConfigDefault
         - name: chomp
           planners:
             - CHOMP
