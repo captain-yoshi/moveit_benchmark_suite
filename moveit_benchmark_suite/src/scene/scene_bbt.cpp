@@ -71,9 +71,9 @@ void bbtCollisionObjectMesh(std::vector<moveit_msgs::CollisionObject>& collision
 		frame.translation() = Eigen::Vector3d(depth / 2.0 + 0.16, width / 2.0 + 0.003, 0.005);
 		frame.linear() = quat.matrix();
 
-		createCollisionObjectMesh(object, object_id, mesh_path, frame, frame_id, scaling);
-		collision_objects.push_back(object);
-		object_colors.push_back(getObjectColorTransparent(object_id));
+		// createCollisionObjectMesh(object, object_id, mesh_path, frame, frame_id, scaling);
+		// collision_objects.push_back(object);
+		// object_colors.push_back(getObjectColorTransparent(object_id));
 	}
 	{  // Clear box 2
 		moveit_msgs::CollisionObject object;
@@ -143,8 +143,8 @@ void bbtCollisionObjectMesh(std::vector<moveit_msgs::CollisionObject>& collision
 				                    (-0.292 / 2 - 0.01 / 2 - 3 * width) + (j * 2 * width), 0.01 + width / 2);
 				std::string object_id = object_prefix_id + std::to_string(ctr);
 				createCollisionObjectMesh(object, object_id, mesh_path, frame, frame_id, scaling);
-				collision_objects.push_back(object);
-				object_colors.push_back(getObjectColorBlack(object_id));
+				// collision_objects.push_back(object);
+				// object_colors.push_back(getObjectColorBlack(object_id));
 				ctr++;
 			}
 		}

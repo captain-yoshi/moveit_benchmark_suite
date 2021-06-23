@@ -1,35 +1,17 @@
-# Motion Planning benchmark pipeline test
-
-This benchmark test was created to see if we could bypass the ROS warehouse by using hard coded scenes (collision objects, robot start state and constraints). This extends the BenchmarkExecutor from the moveit_ros_benchmarks package. There a two scenes: bbt-primitive and bbt-meshe.
-
+# Floating virtual joint issue when adding collision objects as mesh
+This uses the panda_moveit_config internally (moveit_benchmark_suite_panda_moveit_config). 
 
 Run benchmark
 ```bash
+# This will launch 50 runs of RRTConnect and 50 runs of STOMP
 $ roslaunch moveit_benchmark_suite bbt_primitive_planners.launch
 
 ```
-While benchmark is running you can display trajectory and/or STOMP path convergence
+While benchmark is running display the path/trajectory to see the robot with the wrong transformation.
 ```bash
 # Display Trajectory: the pipeline->displayComputedMotionPlans MUST be set to true in the BenchmarkExecutor.cpp:115 
 # Display STOMP path: the "- class: stomp_moveit/TrajectoryVisualization" section MUST be uncommented in the stomp_planning.yaml
 roslaunch moveit_benchmark_suite display-motion.launch
 ```
 
-For MTC pick and place
-```bash
-
-# Start RViz
-$ roslaunch moveit_benchmark_suite demo.launch
-
-# In a nother terminal start the pick and place
-roslaunch moveit_benchmark_suite pickplace.launch
-```
-
-To use Bullet you MUST add this line manually (under the commented lines) in the moveit_ros_benchmarks package:
-```cpp
-//planning_pipeline::PlanningPipelinePtr pipeline(new planning_pipeline::PlanningPipeline(
-//        planning_scene_->getRobotModel(), child_nh, "planning_plugin", "request_adapters"));
-
-planning_scene_->setActiveCollisionDetector(collision_detection::CollisionDetectorAllocatorBullet::create(), true);
-
-```
+By changing the virtual joint to fixed, the bug magically disapears!
