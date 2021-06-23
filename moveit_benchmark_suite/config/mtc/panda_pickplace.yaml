@@ -19,7 +19,7 @@ surface_link: "table"
 
 # Collision object for picking
 # CUBE object specifications
-object_name: "wood_block_4"
+object_name: "wood_block_1"
 object_dimensions: [0.0254, 0.0254, 0.0254] # [length, width, height]
 #object_pose: [0.4507, -0.2272, 0.0227, 0, 0, 0]
 
