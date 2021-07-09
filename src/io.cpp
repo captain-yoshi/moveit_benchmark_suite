@@ -166,6 +166,26 @@ const std::string IO::loadFileToString(const std::string& path)
   return std::string(bytes.data(), size);
 }
 
+const std::string IO::runCommand(const std::string& cmd)
+{
+  std::array<char, 128> buffer;
+  std::string result;
+  std::shared_ptr<FILE> pipe(popen(cmd.c_str(), "r"), pclose);
+  if (!pipe)
+  {
+    ROS_ERROR_STREAM("Failed to run command `" + cmd + "`!");
+    return "";
+  }
+
+  while (!feof(pipe.get()))
+  {
+    if (fgets(buffer.data(), 128, pipe.get()) != nullptr)
+      result += buffer.data();
+  }
+
+  return result;
+}
+
 void IO::createFile(std::ofstream& out, const std::string& file)
 {
   boost::filesystem::path path(file);

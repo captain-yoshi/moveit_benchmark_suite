@@ -12,9 +12,11 @@
   
   <!-- Benchmark options file -->
   <arg name="options_file" default="$(find moveit_benchmark_suite)/config/panda_benchmark.yaml"/>
+  <arg name="start_state_file" default="$(find moveit_benchmark_suite)/config/panda_start_state.yaml"/>
 
   <!-- Launch benchmark node -->
-  <node name="benchmark" pkg="moveit_benchmark_suite" type="move_group_interface_benchmark" output="screen" required="true" launch-prefix="">
+  <node name="benchmark" pkg="moveit_benchmark_suite" type="move_group_interface_benchmark" output="screen" required="true" launch-prefix="gdb --args">
     <rosparam command="load" file="$(arg options_file)"/>
+    <rosparam command="load" file="$(arg start_state_file)"/>
   </node>
 </launch>

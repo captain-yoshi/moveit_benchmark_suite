@@ -38,8 +38,11 @@
 #include <ros/ros.h>
 
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
-
 #include <scene_parser/scene_parser.h>
+
+#include <moveit/benchmark_suite/io/yaml.h>
+
+using namespace moveit::benchmark_suite;
 
 int main(int argc, char** argv)
 {
@@ -70,6 +73,14 @@ int main(int argc, char** argv)
   parser.getCollisionObjects(collision_objects);
 
   psi.addCollisionObjects(collision_objects);
+
+  // Parse Robot State
+  std::string start_state_file = "package://moveit_benchmark_suite/config/panda_start_state.yaml";
+  moveit_msgs::RobotState rs;
+
+  IO::fromYAMLFile(rs, start_state_file);
+
+  std::cout << rs << std::endl;
 
   ros::waitForShutdown();
 

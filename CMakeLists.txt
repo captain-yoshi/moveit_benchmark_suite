@@ -45,7 +45,7 @@ add_library(${PROJECT_NAME}
   src/geometry.cpp)
 
 add_executable(move_group_interface_benchmark scripts/move_group_interface_benchmark.cpp)
-target_link_libraries(move_group_interface_benchmark ${catkin_LIBRARIES})
+target_link_libraries(move_group_interface_benchmark ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
 install(DIRECTORY include/${PROJECT_NAME}/
 	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
