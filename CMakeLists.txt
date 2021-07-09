@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.1.3)
 project(moveit_benchmark_suite)
 
 find_package(Boost REQUIRED)
+find_library(YAML yaml-cpp REQUIRED)
+find_package(Eigen3 REQUIRED)
+
 find_package(catkin REQUIRED COMPONENTS
 	eigen_conversions
 	geometric_shapes
@@ -17,7 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(
 	LIBRARIES
-		#${PROJECT_NAME}
+		${PROJECT_NAME}
 	INCLUDE_DIRS
 		include
 	CATKIN_DEPENDS
@@ -36,13 +39,18 @@ set(CMAKE_CXX_STANDARD 14)
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
+add_library(${PROJECT_NAME}
+  src/yaml.cpp
+  src/io.cpp
+  src/geometry.cpp)
+
 add_executable(move_group_interface_benchmark scripts/move_group_interface_benchmark.cpp)
 target_link_libraries(move_group_interface_benchmark ${catkin_LIBRARIES})
 
 install(DIRECTORY include/${PROJECT_NAME}/
 	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 
-install(TARGETS move_group_interface_benchmark
+install(TARGETS move_group_interface_benchmark ${PROJECT_NAME}
 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
