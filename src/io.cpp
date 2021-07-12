@@ -200,6 +200,32 @@ void IO::createFile(std::ofstream& out, const std::string& file)
   out.open(path.string(), std::ofstream::out | std::ofstream::trunc);
 }
 
+const std::string IO::getHostname()
+{
+  return boost::asio::ip::host_name();
+}
+
+std::size_t IO::getProcessID()
+{
+  return boost::interprocess::ipcdetail::get_current_process_id();
+}
+
+std::size_t IO::getThreadID()
+{
+  return boost::interprocess::ipcdetail::get_current_thread_id();
+}
+
+boost::posix_time::ptime IO::getDate()
+{
+  return boost::posix_time::microsec_clock::local_time();
+}
+
+double IO::getSeconds(boost::posix_time::ptime start, boost::posix_time::ptime finish)
+{
+  auto duration = finish - start;
+  return duration.total_microseconds() / 1000000.;
+}
+
 const std::pair<bool, YAML::Node> IO::loadFileToYAML(const std::string& path)
 {
   YAML::Node file;
