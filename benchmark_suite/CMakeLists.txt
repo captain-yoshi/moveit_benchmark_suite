@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
 	moveit_core
 	moveit_ros_planning
 	moveit_ros_planning_interface
+	moveit_benchmark_suite_msgs
 	moveit_visual_tools
 	roscpp
 	visualization_msgs
@@ -29,6 +30,7 @@ catkin_package(
 		moveit_core
 		moveit_ros_planning
 		moveit_ros_planning_interface
+		moveit_benchmark_suite_msgs
 		roscpp
 		moveit_visual_tools
 		visualization_msgs

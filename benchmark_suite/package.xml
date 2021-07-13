@@ -18,6 +18,7 @@
 	<depend>moveit_core</depend>
 	<depend>moveit_ros_planning</depend>
 	<depend>moveit_ros_planning_interface</depend>
+	<depend>moveit_benchmark_suite_msgs</depend>>
 	<depend>visualization_msgs</depend>
 	<depend>moveit_visual_tools</depend>
 	<depend>scene_parser</depend>
