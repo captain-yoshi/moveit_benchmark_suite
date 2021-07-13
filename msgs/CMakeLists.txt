@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
 # ROS messages, services and actions
 add_message_files(DIRECTORY msg FILES
 	PlanningPipelineRequest.msg
+	MoveGroupInterfaceRequest.msg
 )
 
 generate_messages(DEPENDENCIES ${MSG_DEPS})
