@@ -43,7 +43,8 @@ add_library(${PROJECT_NAME}
   src/yaml.cpp
   src/io.cpp
   src/geometry.cpp
-  src/planning.cpp)
+  src/planning.cpp
+  src/benchmark.cpp)
 
 add_executable(move_group_interface_benchmark scripts/move_group_interface_benchmark.cpp)
 target_link_libraries(move_group_interface_benchmark ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
