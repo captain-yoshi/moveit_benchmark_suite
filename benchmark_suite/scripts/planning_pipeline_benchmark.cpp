@@ -56,14 +56,14 @@ int main(int argc, char** argv)
 
   ros::NodeHandle pnh("~");
 
-  // Parse World
+  // Parse world
   SceneParser parser;
   parser.loadURDFFile(pnh, "scene/bbt");
   moveit_msgs::PlanningSceneWorld world;
 
   parser.getCollisionObjects(world.collision_objects);
 
-  // Parse Request
+  // Parse request
   std::string request_filename;
   pnh.getParam("/request/mgi", request_filename);
 
@@ -80,15 +80,12 @@ int main(int argc, char** argv)
   planning_scene::PlanningScenePtr scene = std::make_shared<planning_scene::PlanningScene>(robot->getModelConst());
   scene->processPlanningSceneWorldMsg(world);
 
-  moveit::planning_interface::PlanningSceneInterface psi;
-  moveit_msgs::PlanningScene ps;
-  scene->getPlanningSceneMsg(ps);
-  psi.applyPlanningScene(ps);
-
   // Setup planner
-  // auto planner = std::make_shared<PipelinePlanner>();
-  auto planner = std::make_shared<MoveGroupInterfacePlanner>(robot);
-  planner->initialize("panda_arm_hand");
+  auto ompl_planner = std::make_shared<PipelinePlanner>(robot);
+  ompl_planner->initialize("ompl");
+
+  auto stomp_planner = std::make_shared<PipelinePlanner>(robot);
+  stomp_planner->initialize("stomp");
 
   // Setup a benchmarking request for the joint and pose motion plan requests.
   PlanningProfiler::Options options;
@@ -99,8 +96,8 @@ int main(int argc, char** argv)
                               5.0,      // Timeout allowed for ALL queries
                               100);     // Number of trials
 
-  benchmark.addQuery("RRTkConfigDefault", scene, planner, request);
-  benchmark.addQuery("STOMP", scene, planner, request);
+  benchmark.addQuery("RRTkConfigDefault", scene, ompl_planner, request);
+  benchmark.addQuery("STOMP", scene, stomp_planner, request);
   // benchmark.addQuery("CHOMP", scene, planner, request);
 
   auto dataset = benchmark.run();

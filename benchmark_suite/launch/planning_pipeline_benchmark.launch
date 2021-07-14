@@ -1,0 +1,40 @@
+<?xml version="1.0" ?>
+<launch>
+  <!-- Load robot -->
+  <include file="$(find moveit_resources_panda_moveit_config)/launch/demo.launch">
+    <arg name="use_rviz" value="true"/>
+  </include>
+
+  <!-- Load planning pipelines -->
+  <group ns="benchmark">
+    <include ns="ompl" file="$(find moveit_resources_panda_moveit_config)/launch/planning_pipeline.launch.xml">
+      <arg name="pipeline" value="ompl" />
+    </include>
+
+    <include ns="chomp" file="$(find moveit_resources_panda_moveit_config)/launch/planning_pipeline.launch.xml">
+      <arg name="pipeline" value="chomp" />
+    </include>
+
+    <include ns="stomp" file="$(find moveit_resources_panda_moveit_config)/launch/planning_pipeline.launch.xml">
+      <arg name="pipeline" value="stomp" />
+    </include>
+  </group>
+
+  <!-- Scene -->
+  <group ns="scene">
+    <param name="bbt" command="$(find xacro)/xacro '$(find moveit_benchmark_suite)/config/bbt_primitive_scene.urdf.xacro'"/>
+  </group>
+
+  <!-- Request -->
+  <group ns="request">
+    <param name="mgi" value="$(find moveit_benchmark_suite)/config/panda_mgi_request.yaml"/>
+  </group>
+
+  <!-- Benchmark options file -->
+  <arg name="options_file" default="$(find moveit_benchmark_suite)/config/panda_benchmark.yaml"/>
+
+  <!-- Launch benchmark node -->
+  <node name="benchmark" pkg="moveit_benchmark_suite" type="planning_pipeline_benchmark" output="screen" required="true" launch-prefix="">
+    <rosparam command="load" file="$(arg options_file)"/>
+  </node>
+</launch>

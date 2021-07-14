@@ -5,18 +5,21 @@
     <arg name="use_rviz" value="true"/>
   </include>
 
+  <!-- Scene -->
   <group ns="scene">
     <param name="bbt" command="$(find xacro)/xacro '$(find moveit_benchmark_suite)/config/bbt_primitive_scene.urdf.xacro'"/>
   </group>
 
-  
+  <!-- Request -->
+  <group ns="request">
+    <param name="mgi" value="$(find moveit_benchmark_suite)/config/panda_mgi_request.yaml"/>
+  </group>
+
   <!-- Benchmark options file -->
   <arg name="options_file" default="$(find moveit_benchmark_suite)/config/panda_benchmark.yaml"/>
-  <arg name="start_state_file" default="$(find moveit_benchmark_suite)/config/panda_start_state.yaml"/>
 
   <!-- Launch benchmark node -->
-  <node name="benchmark" pkg="moveit_benchmark_suite" type="move_group_interface_benchmark" output="screen" required="true" launch-prefix="gdb --args">
+  <node name="benchmark" pkg="moveit_benchmark_suite" type="move_group_interface_benchmark" output="screen" required="true" launch-prefix="">
     <rosparam command="load" file="$(arg options_file)"/>
-    <rosparam command="load" file="$(arg start_state_file)"/>
   </node>
 </launch>

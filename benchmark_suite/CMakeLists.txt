@@ -49,13 +49,16 @@ add_library(${PROJECT_NAME}
   src/benchmark.cpp
   src/robot.cpp)
 
-add_executable(move_group_interface_benchmark scripts/move_group_interface_benchmark.cpp)
+add_executable(move_group_interface_benchmark scripts/move_group_interface_benchmark.cpp) 
 target_link_libraries(move_group_interface_benchmark ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
+
+add_executable(planning_pipeline_benchmark scripts/planning_pipeline_benchmark.cpp)
+target_link_libraries(planning_pipeline_benchmark ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
 install(DIRECTORY include/${PROJECT_NAME}/
 	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 
-install(TARGETS move_group_interface_benchmark ${PROJECT_NAME}
+install(TARGETS move_group_interface_benchmark planning_pipeline_benchmark ${PROJECT_NAME}
 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

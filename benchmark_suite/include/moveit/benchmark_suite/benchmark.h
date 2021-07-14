@@ -39,6 +39,8 @@
 #pragma once
 
 #include <moveit/benchmark_suite/planning.h>
+#include <moveit_benchmark_suite_msgs/MoveGroupInterfaceRequest.h>
+#include <moveit/robot_trajectory/robot_trajectory.h>
 
 namespace moveit
 {
@@ -88,7 +90,7 @@ public:
   PlanningQuery query;                                ///< Query evaluated to create this data.
   ::planning_interface::MotionPlanResponse response;  ///< Planner response.
   bool success;                                       ///< Was the plan successful?
-  // TrajectoryPtr trajectory;                           ///< The resulting trajectory, if available.
+  robot_trajectory::RobotTrajectoryPtr trajectory;    ///< The resulting trajectory, if available.
 
   /** \} */
 
@@ -249,6 +251,11 @@ public:
                 const PlannerPtr& planner,                           //
                 const ::planning_interface::MotionPlanRequest& request);
 
+  void addQuery(const std::string& planner_name,                     //
+                const planning_scene::PlanningSceneConstPtr& scene,  //
+                const PlannerPtr& planner,                           //
+                const ::moveit_benchmark_suite_msgs::MoveGroupInterfaceRequest& request);
+
   /** \brief Get the queries added to this experiment.
    *  \return The queries added to the experiment.
    */
@@ -271,6 +278,45 @@ private:
   PlanningProfiler::Options options_;   ///< Options for profiler.
   PlanningProfiler profiler_;           ///< Profiler to use for extracting data.
   std::vector<PlanningQuery> queries_;  ///< Queries to test.
+};
+
+/** \brief An abstract class for outputting benchmark results.
+ */
+class PlanDataSetOutputter
+{
+public:
+  /** \brief Virtual destructor for cleaning up resources.
+   */
+  virtual ~PlanDataSetOutputter() = default;
+
+  /** \brief Write the \a results of a benchmarking query out.
+   *  Must be implemented by child classes.
+   *  \param[in] results The results of one query of benchmarking.
+   */
+  virtual void dump(const PlanDataSet& results) = 0;
+};
+
+class OMPLPlanDataSetOutputter : public PlanDataSetOutputter
+{
+public:
+  /** \brief Constructor.
+   *  \param[in] prefix Prefix to place in front of all log files generated.
+   *  \param[in] dumpScene If true, will output scene into log file.
+   */
+  OMPLPlanDataSetOutputter(const std::string& prefix);
+
+  /** \brief Destructor, runs `ompl_benchmark_statistics.py` to generate benchmarking database.
+   */
+  ~OMPLPlanDataSetOutputter() override;
+
+  /** \brief Dumps \a results into a OMPL benchmarking log file in \a prefix_ named after the request \a
+   *  name_.
+   *  \param[in] results Results to dump to file.
+   */
+  void dump(const PlanDataSet& results) override;
+
+private:
+  const std::string prefix_;  ///< Log file prefix.
 };
 
 }  // namespace benchmark_suite

@@ -44,6 +44,8 @@
 
 #include <moveit/planning_scene/planning_scene.h>
 
+#include <moveit/benchmark_suite/robot.h>
+
 namespace moveit
 {
 namespace benchmark_suite
@@ -56,7 +58,7 @@ MOVEIT_CLASS_FORWARD(MoveGroupInterfacePlanner);
 class Planner
 {
 public:
-  Planner(const std::string& name = "");
+  Planner(const RobotPtr& robot, const std::string& name = "");
 
   // non-copyable
   Planner(Planner const&) = delete;
@@ -66,6 +68,7 @@ public:
    *  \return The planner's name.
    */
   const std::string& getName() const;
+  const RobotPtr getRobot() const;
 
   /** \brief Plan a motion given a \a request and a \a scene.
    *  A virtual method that must be implemented by any robowflex::Planner.
@@ -77,7 +80,9 @@ public:
                                                         const ::planning_interface::MotionPlanRequest& request) = 0;
 
 protected:
-  const std::string name_;  ///< Namespace for the planner.
+  const std::string name_;               ///< Namespace for the planner.
+  const std::string robot_description_;  ///< Namespace for the planner.
+  RobotPtr robot_;
 };
 
 /** Motion planner that uses the planning pipeline to load a planner plugin. */
@@ -86,13 +91,13 @@ class PipelinePlanner : public Planner
 public:
   /** \brief Constructor.
    */
-  PipelinePlanner(const std::string& name = "");
+  PipelinePlanner(const RobotPtr& robot, const std::string& name = "");
 
   // non-copyable
   PipelinePlanner(PipelinePlanner const&) = delete;
   void operator=(PipelinePlanner const&) = delete;
 
-  bool initialize(const std::string& robot_description = "robot_description");
+  bool initialize(const std::string& planning_pipeline_name);
   /** \brief Plan a motion given a \a request and a \a scene.
    *  Uses the planning pipeline's generatePlan() method, which goes through planning adapters.
    *  \param[in] scene A planning scene for the same \a robot_ to compute the plan in.
@@ -112,13 +117,13 @@ class MoveGroupInterfacePlanner : public Planner
 public:
   /** \brief Constructor.
    */
-  MoveGroupInterfacePlanner(const std::string& name = "");
+  MoveGroupInterfacePlanner(const RobotPtr& robot, const std::string& name = "");
 
   // non-copyable
   MoveGroupInterfacePlanner(MoveGroupInterfacePlanner const&) = delete;
   void operator=(MoveGroupInterfacePlanner const&) = delete;
 
-  bool initialize(const std::string& group, const std::string& robot_description = "robot_description");
+  bool initialize(const std::string& group);
 
   /** \brief Plan a motion given a \a request and a \a scene.
    *  Uses the planning pipeline's generatePlan() method, which goes through planning adapters.

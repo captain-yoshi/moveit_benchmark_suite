@@ -2,15 +2,13 @@
 
 #include <moveit/benchmark_suite/planning.h>
 
-#include <moveit/robot_model_loader/robot_model_loader.h>
-
 using namespace moveit::benchmark_suite;
 
 ///
 /// Planner
 ///
 
-Planner::Planner(const std::string& name) : name_(name)
+Planner::Planner(const RobotPtr& robot, const std::string& name) : robot_(robot), name_(name)
 {
 }
 
@@ -19,23 +17,37 @@ const std::string& Planner::getName() const
   return name_;
 }
 
+const RobotPtr Planner::getRobot() const
+{
+  return robot_;
+}
+
 ///
 /// PipelinePlanner
 ///
 
-PipelinePlanner::PipelinePlanner(const std::string& name) : Planner(name)
+PipelinePlanner::PipelinePlanner(const RobotPtr& robot, const std::string& name) : Planner(robot, name)
 {
 }
 
-bool PipelinePlanner::initialize(const std::string& robot_description)
+bool PipelinePlanner::initialize(const std::string& planning_pipeline_name)
 {
-  robot_model_loader::RobotModelLoader robot_model_loader(robot_description);
-  const moveit::core::RobotModelPtr& robot_model = robot_model_loader.getModel();
-  ROS_INFO("Model frame: %s", robot_model->getModelFrame().c_str());
-
-  // Initialize planning pipelines from configured child namespaces
   ros::NodeHandle pnh("~");
-  pipeline_.reset(new planning_pipeline::PlanningPipeline(robot_model, pnh, "planning_plugin", "request_adapters"));
+  // Initialize planning pipelines from configured child namespaces
+  ros::NodeHandle child_nh(pnh, planning_pipeline_name);
+  pipeline_ = std::make_shared<planning_pipeline::PlanningPipeline>(robot_->getModelConst(), child_nh,
+                                                                    "planning_plugin", "request_adapters");
+
+  // Verify the pipeline has successfully initialized a planner
+  if (!pipeline_->getPlannerManager())
+  {
+    ROS_ERROR("Failed to initialize planning pipeline '%s'", planning_pipeline_name.c_str());
+    return false;
+  }
+
+  // Disable visualizations SolutionPaths
+  pipeline_->displayComputedMotionPlans(true);
+  pipeline_->checkSolutionPaths(false);
 
   return true;
 }
@@ -44,9 +56,9 @@ bool PipelinePlanner::initialize(const std::string& robot_description)
                                                                const ::planning_interface::MotionPlanRequest& request)
 {
   ::planning_interface::MotionPlanResponse response;
+
   if (pipeline_)
     pipeline_->generatePlan(scene, request, response);
-
   return response;
 }
 
@@ -54,19 +66,13 @@ bool PipelinePlanner::initialize(const std::string& robot_description)
 /// MoveGroupInterfacePlanner
 ///
 
-MoveGroupInterfacePlanner::MoveGroupInterfacePlanner(const std::string& name) : Planner(name)
+MoveGroupInterfacePlanner::MoveGroupInterfacePlanner(const RobotPtr& robot, const std::string& name)
+  : Planner(robot, name)
 {
 }
-bool MoveGroupInterfacePlanner::initialize(const std::string& group, const std::string& robot_description)
+bool MoveGroupInterfacePlanner::initialize(const std::string& group)
 {
-  robot_model_loader::RobotModelLoader robot_model_loader(robot_description);
-  const moveit::core::RobotModelPtr& robot_model = robot_model_loader.getModel();
-  ROS_INFO("Model frame: %s", robot_model->getModelFrame().c_str());
-
-  // Initialize planning pipelines from configured child namespaces
-  ros::NodeHandle pnh("~");
-
-  robot_trajectory_ = std::make_shared<robot_trajectory::RobotTrajectory>(robot_model, group);
+  robot_trajectory_ = std::make_shared<robot_trajectory::RobotTrajectory>(robot_->getModelConst(), group);
   move_group_interface_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(group);
 
   return true;
