@@ -1,8 +1,8 @@
-#include <moveit/benchmark_suite/robot.h>
+#include <moveit_benchmark_suite/robot.h>
 
 #include <moveit/robot_model_loader/robot_model_loader.h>
 
-using namespace moveit::benchmark_suite;
+using namespace moveit_benchmark_suite;
 
 Robot::Robot(const std::string& name, const std::string& robot_description)
   : name_(name), robot_description_(robot_description)

@@ -7,9 +7,7 @@
 #include <moveit/robot_model_loader/robot_model_loader.h>
 #include <moveit_msgs/GetPlanningScene.h>
 
-namespace moveit
-{
-namespace benchmark_suite
+namespace moveit_benchmark_suite
 {
 namespace scene
 {
@@ -27,5 +25,4 @@ void clearObjects(moveit::planning_interface::PlanningSceneInterface& psi)
 }
 
 }  // namespace scene
-}  // namespace benchmark_suite
-}  // namespace moveit
+}  // namespace moveit_benchmark_suite

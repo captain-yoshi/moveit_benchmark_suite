@@ -1,8 +1,8 @@
 /* Author: Zachary Kingston */
 
-#include <moveit/benchmark_suite/planning.h>
+#include <moveit_benchmark_suite/planning.h>
 
-using namespace moveit::benchmark_suite;
+using namespace moveit_benchmark_suite;
 
 ///
 /// Planner
@@ -52,10 +52,10 @@ bool PipelinePlanner::initialize(const std::string& planning_pipeline_name)
   return true;
 }
 
-::planning_interface::MotionPlanResponse PipelinePlanner::plan(const planning_scene::PlanningSceneConstPtr& scene,
-                                                               const ::planning_interface::MotionPlanRequest& request)
+planning_interface::MotionPlanResponse PipelinePlanner::plan(const planning_scene::PlanningSceneConstPtr& scene,
+                                                             const planning_interface::MotionPlanRequest& request)
 {
-  ::planning_interface::MotionPlanResponse response;
+  planning_interface::MotionPlanResponse response;
 
   if (pipeline_)
     pipeline_->generatePlan(scene, request, response);
@@ -78,11 +78,11 @@ bool MoveGroupInterfacePlanner::initialize(const std::string& group)
   return true;
 }
 
-::planning_interface::MotionPlanResponse
+planning_interface::MotionPlanResponse
 MoveGroupInterfacePlanner::plan(const planning_scene::PlanningSceneConstPtr& scene,
-                                const ::planning_interface::MotionPlanRequest& request)
+                                const planning_interface::MotionPlanRequest& request)
 {
-  ::planning_interface::MotionPlanResponse response;
+  planning_interface::MotionPlanResponse response;
   if (move_group_interface_)
   {
     actionlib::SimpleActionClient<moveit_msgs::MoveGroupAction>& move_action_client =

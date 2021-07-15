@@ -3,9 +3,7 @@
 
 #include <moveit/robot_model/robot_model.h>
 
-namespace moveit
-{
-namespace benchmark_suite
+namespace moveit_benchmark_suite
 {
 MOVEIT_CLASS_FORWARD(Robot);
 
@@ -49,5 +47,4 @@ private:
   const std::string robot_description_;
   robot_model::RobotModelPtr model_;
 };
-}  // namespace benchmark_suite
-}  // namespace moveit
+}  // namespace moveit_benchmark_suite

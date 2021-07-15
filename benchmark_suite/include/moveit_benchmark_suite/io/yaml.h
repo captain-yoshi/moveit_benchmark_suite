@@ -10,9 +10,7 @@
 
 #include <yaml-cpp/yaml.h>
 
-namespace moveit
-{
-namespace benchmark_suite
+namespace moveit_benchmark_suite
 {
 namespace IO
 {
@@ -85,5 +83,4 @@ bool fromYAMLFile(moveit_msgs::MotionPlanRequest& msg, const std::string& file);
  */
 bool fromYAMLFile(moveit_msgs::RobotState& msg, const std::string& file);
 }  // namespace IO
-}  // namespace benchmark_suite
-}  // namespace moveit
+}  // namespace moveit_benchmark_suite

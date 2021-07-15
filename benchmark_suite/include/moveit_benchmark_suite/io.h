@@ -10,9 +10,7 @@
 
 #include <yaml-cpp/yaml.h>  // for YAML parsing
 
-namespace moveit
-{
-namespace benchmark_suite
+namespace moveit_benchmark_suite
 {
 /** \brief File and ROS Input / Output operations.
  */
@@ -179,5 +177,4 @@ bool YAMLFileToMessage(T& msg, const std::string& file)
   return result.first;
 }
 }  // namespace IO
-}  // namespace benchmark_suite
-}  // namespace moveit
+}  // namespace moveit_benchmark_suite

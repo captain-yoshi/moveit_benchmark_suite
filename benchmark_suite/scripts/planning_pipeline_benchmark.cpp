@@ -40,13 +40,13 @@
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <scene_parser/scene_parser.h>
 
-#include <moveit/benchmark_suite/io/yaml.h>
-#include <moveit/benchmark_suite/yaml.h>
-#include <moveit/benchmark_suite/planning.h>
-#include <moveit/benchmark_suite/benchmark.h>
-#include <moveit/benchmark_suite/scene.h>
+#include <moveit_benchmark_suite/io/yaml.h>
+#include <moveit_benchmark_suite/yaml.h>
+#include <moveit_benchmark_suite/planning.h>
+#include <moveit_benchmark_suite/benchmark.h>
+#include <moveit_benchmark_suite/scene.h>
 
-using namespace moveit::benchmark_suite;
+using namespace moveit_benchmark_suite;
 
 int main(int argc, char** argv)
 {

@@ -2,12 +2,12 @@
 
 #include <geometric_shapes/shape_operations.h>
 
-#include <moveit/benchmark_suite/geometry.h>
-#include <moveit/benchmark_suite/io.h>
+#include <moveit_benchmark_suite/geometry.h>
+#include <moveit_benchmark_suite/io.h>
 //#include <robowflex_library/util.h>
 #include <exception>
 
-using namespace moveit::benchmark_suite;
+using namespace moveit_benchmark_suite;
 
 const unsigned int Geometry::ShapeType::MAX = (unsigned int)Geometry::ShapeType::MESH + 1;
 const std::vector<std::string> Geometry::ShapeType::STRINGS({ "box", "sphere", "cylinder", "cone", "mesh" });

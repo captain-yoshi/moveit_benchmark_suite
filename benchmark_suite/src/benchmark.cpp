@@ -1,10 +1,12 @@
-#include <moveit/benchmark_suite/benchmark.h>
+#include <moveit_benchmark_suite/benchmark.h>
 
-#include <moveit/benchmark_suite/io.h>
+#include <moveit_benchmark_suite/io.h>
 
 #include <queue>
 #include <moveit/version.h>
-using namespace moveit::benchmark_suite;
+
+using namespace moveit_benchmark_suite;
+
 ///
 /// PlannerMetric
 ///
@@ -52,7 +54,7 @@ std::string toMetricString(const PlannerMetric& metric)
 PlanningQuery::PlanningQuery(const std::string& name,                             //
                              const planning_scene::PlanningSceneConstPtr& scene,  //
                              const PlannerPtr& planner,                           //
-                             const ::planning_interface::MotionPlanRequest& request)
+                             const planning_interface::MotionPlanRequest& request)
   : name(name), scene(scene), planner(planner), request(request)
 {
 }
@@ -83,10 +85,10 @@ std::vector<PlanDataPtr> PlanDataSet::getFlatData() const
 /// Profiler
 ///
 
-bool PlanningProfiler::profilePlan(const PlannerPtr& planner,                               //
-                                   const planning_scene::PlanningSceneConstPtr& scene,      //
-                                   const ::planning_interface::MotionPlanRequest& request,  //
-                                   const Options& options,                                  //
+bool PlanningProfiler::profilePlan(const PlannerPtr& planner,                             //
+                                   const planning_scene::PlanningSceneConstPtr& scene,    //
+                                   const planning_interface::MotionPlanRequest& request,  //
+                                   const Options& options,                                //
                                    PlanData& result) const
 {
   bool complete = false;
@@ -155,7 +157,7 @@ PlanningBenchmark::PlanningBenchmark(const std::string& name, const PlanningProf
 void PlanningBenchmark::addQuery(const std::string& planner_name,                     //
                                  const planning_scene::PlanningSceneConstPtr& scene,  //
                                  const PlannerPtr& planner,                           //
-                                 const ::planning_interface::MotionPlanRequest& request)
+                                 const planning_interface::MotionPlanRequest& request)
 {
   queries_.emplace_back(planner_name, scene, planner, request);
 }
@@ -165,7 +167,7 @@ void PlanningBenchmark::addQuery(const std::string& planner_name,               
                                  const PlannerPtr& planner,                           //
                                  const moveit_benchmark_suite_msgs::MoveGroupInterfaceRequest& request)
 {
-  ::planning_interface::MotionPlanRequest req;
+  planning_interface::MotionPlanRequest req;
   req.group_name = request.group_name;
   req.start_state = request.start_state;
   req.goal_constraints = request.goal_constraints;

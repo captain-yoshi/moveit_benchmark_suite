@@ -16,9 +16,9 @@
 #include <ros/package.h>                   // for package resolving
 #include <ros/console.h>
 
-#include <moveit/benchmark_suite/io.h>
+#include <moveit_benchmark_suite/io.h>
 
-using namespace moveit::benchmark_suite;
+using namespace moveit_benchmark_suite;
 
 namespace
 {

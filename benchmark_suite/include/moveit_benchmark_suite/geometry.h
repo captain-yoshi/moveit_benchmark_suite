@@ -16,9 +16,7 @@
 //#include <robowflex_library/adapter.h>
 #include <moveit/macros/class_forward.h>
 
-namespace moveit
-{
-namespace benchmark_suite
+namespace moveit_benchmark_suite
 {
 /** \cond IGNORE */
 MOVEIT_CLASS_FORWARD(Geometry);
@@ -224,5 +222,4 @@ private:
   shapes::ShapePtr shape_{ nullptr };                      ///< Loaded shape.
   bodies::BodyPtr body_{ nullptr };                        ///< Body operation.
 };
-}  // namespace benchmark_suite
-}  // namespace moveit
+}  // namespace moveit_benchmark_suite

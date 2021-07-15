@@ -10,13 +10,13 @@
 #include <boost/iostreams/filter/zlib.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
-#include <moveit/benchmark_suite/geometry.h>
-#include <moveit/benchmark_suite/io.h>
-#include <moveit/benchmark_suite/io/yaml.h>
-#include <moveit/benchmark_suite/macros.h>
-#include <moveit/benchmark_suite/yaml.h>
+#include <moveit_benchmark_suite/geometry.h>
+#include <moveit_benchmark_suite/io.h>
+#include <moveit_benchmark_suite/io/yaml.h>
+#include <moveit_benchmark_suite/macros.h>
+#include <moveit_benchmark_suite/yaml.h>
 
-using namespace moveit::benchmark_suite;
+using namespace moveit_benchmark_suite;
 
 namespace
 {
@@ -1766,9 +1766,7 @@ bool convert<moveit_benchmark_suite_msgs::MoveGroupInterfaceRequest>::decode(
 }
 }  // namespace YAML
 
-namespace moveit
-{
-namespace benchmark_suite
+namespace moveit_benchmark_suite
 {
 namespace IO
 {
@@ -1857,5 +1855,4 @@ bool fromYAMLFile(moveit_msgs::RobotState& msg, const std::string& file)
   return IO::YAMLFileToMessage(msg, file);
 }
 }  // namespace IO
-}  // namespace benchmark_suite
-}  // namespace moveit
+}  // namespace moveit_benchmark_suite

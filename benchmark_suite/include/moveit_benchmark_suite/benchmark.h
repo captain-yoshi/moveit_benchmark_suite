@@ -38,13 +38,11 @@
 
 #pragma once
 
-#include <moveit/benchmark_suite/planning.h>
+#include <moveit_benchmark_suite/planning.h>
 #include <moveit_benchmark_suite_msgs/MoveGroupInterfaceRequest.h>
 #include <moveit/robot_trajectory/robot_trajectory.h>
 
-namespace moveit
-{
-namespace benchmark_suite
+namespace moveit_benchmark_suite
 {
 MOVEIT_CLASS_FORWARD(PlanningBenchmark);
 MOVEIT_CLASS_FORWARD(PlanData);
@@ -73,12 +71,12 @@ struct PlanningQuery
   PlanningQuery(const std::string& name,                             //
                 const planning_scene::PlanningSceneConstPtr& scene,  //
                 const PlannerPtr& planner,                           //
-                const ::planning_interface::MotionPlanRequest& request);
+                const planning_interface::MotionPlanRequest& request);
 
-  std::string name;                                 ///< Name of this query.
-  planning_scene::PlanningSceneConstPtr scene;      ///< Scene used for the query.
-  PlannerPtr planner;                               ///< Planner used for the query.
-  ::planning_interface::MotionPlanRequest request;  ///< Request used for the query.
+  std::string name;                               ///< Name of this query.
+  planning_scene::PlanningSceneConstPtr scene;    ///< Scene used for the query.
+  PlannerPtr planner;                             ///< Planner used for the query.
+  planning_interface::MotionPlanRequest request;  ///< Request used for the query.
 };
 
 class PlanData
@@ -87,10 +85,10 @@ public:
   /** \name Planning Query and Response
       \{ */
 
-  PlanningQuery query;                                ///< Query evaluated to create this data.
-  ::planning_interface::MotionPlanResponse response;  ///< Planner response.
-  bool success;                                       ///< Was the plan successful?
-  robot_trajectory::RobotTrajectoryPtr trajectory;    ///< The resulting trajectory, if available.
+  PlanningQuery query;                              ///< Query evaluated to create this data.
+  planning_interface::MotionPlanResponse response;  ///< Planner response.
+  bool success;                                     ///< Was the plan successful?
+  robot_trajectory::RobotTrajectoryPtr trajectory;  ///< The resulting trajectory, if available.
 
   /** \} */
 
@@ -205,10 +203,10 @@ public:
    *  \param[out] result The results of profiling.
    *  \return True if planning succeeded, false on failure.
    */
-  bool profilePlan(const PlannerPtr& planner,                               //
-                   const planning_scene::PlanningSceneConstPtr& scene,      //
-                   const ::planning_interface::MotionPlanRequest& request,  //
-                   const Options& options,                                  //
+  bool profilePlan(const PlannerPtr& planner,                             //
+                   const planning_scene::PlanningSceneConstPtr& scene,    //
+                   const planning_interface::MotionPlanRequest& request,  //
+                   const Options& options,                                //
                    PlanData& result) const;
 
 private:
@@ -249,7 +247,7 @@ public:
   void addQuery(const std::string& planner_name,                     //
                 const planning_scene::PlanningSceneConstPtr& scene,  //
                 const PlannerPtr& planner,                           //
-                const ::planning_interface::MotionPlanRequest& request);
+                const planning_interface::MotionPlanRequest& request);
 
   void addQuery(const std::string& planner_name,                     //
                 const planning_scene::PlanningSceneConstPtr& scene,  //
@@ -319,5 +317,4 @@ private:
   const std::string prefix_;  ///< Log file prefix.
 };
 
-}  // namespace benchmark_suite
-}  // namespace moveit
+}  // namespace moveit_benchmark_suite
