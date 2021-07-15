@@ -196,6 +196,8 @@ PlanDataSetPtr PlanningBenchmark::run(std::size_t n_threads) const
   dataset->run_till_timeout = timeout_;
   dataset->threads = n_threads;
   dataset->queries = queries_;
+  dataset->cpuinfo = IO::getHardwareCPU();
+  dataset->cpuinfo = IO::getHardwareGPU();
 
   for (const auto& query : queries_)
   {

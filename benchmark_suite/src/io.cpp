@@ -200,6 +200,16 @@ void IO::createFile(std::ofstream& out, const std::string& file)
   out.open(path.string(), std::ofstream::out | std::ofstream::trunc);
 }
 
+const std::string IO::getHardwareCPU()
+{
+  return IO::runCommand("lscpu | grep -Ev '^(Vulnerability|Flags)'");
+}
+
+const std::string IO::getHardwareGPU()
+{
+  return IO::runCommand("lspci | grep VGA");
+}
+
 const std::string IO::getHostname()
 {
   return boost::asio::ip::host_name();

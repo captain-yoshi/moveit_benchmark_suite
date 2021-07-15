@@ -128,6 +128,10 @@ public:
   boost::posix_time::ptime start;   ///< Start time of dataset computation.
   boost::posix_time::ptime finish;  ///< End time for dataset computation.
 
+  // Hardware information
+  std::string cpuinfo;
+  std::string gpuinfo;
+
   /** \} */
 
   /** \name Experiment Parameters

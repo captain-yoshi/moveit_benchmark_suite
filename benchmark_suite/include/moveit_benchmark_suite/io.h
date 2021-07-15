@@ -100,6 +100,10 @@ void deleteFile(const std::string& file);
  */
 const std::pair<bool, std::vector<std::string>> listDirectory(const std::string& directory);
 
+const std::string getHardwareCPU();
+
+const std::string getHardwareGPU();
+
 /** \brief Get the hostname of the system.
  *  \return String of the hostname.
  */
