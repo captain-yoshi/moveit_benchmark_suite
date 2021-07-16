@@ -30,6 +30,11 @@ public:
         (std::isfinite(v)) ? v : std::numeric_limits<double>::max());
   }
 
+  std::string operator()(std::size_t value) const
+  {
+    return std::to_string(boost::get<std::size_t>(value));
+  }
+
   std::string operator()(bool value) const
   {
     return boost::lexical_cast<std::string>(boost::get<bool>(value));
@@ -185,6 +190,11 @@ const std::vector<PlanningQuery>& PlanningBenchmark::getQueries() const
   return queries_;
 }
 
+void PlanningBenchmark::setPostQueryCallback(const PostQueryCallback& callback)
+{
+  complete_callback_ = callback;
+}
+
 PlanDataSetPtr PlanningBenchmark::run(std::size_t n_threads) const
 {
   // Setup dataset to return
@@ -217,6 +227,9 @@ PlanDataSetPtr PlanningBenchmark::run(std::size_t n_threads) const
 
       data->query.name = query.name;
       dataset->addDataPoint(query.name, data);
+
+      if (complete_callback_)
+        complete_callback_(dataset, query);
     }
   }
 
@@ -293,6 +306,11 @@ void OMPLPlanDataSetOutputter::dump(const PlanDataSet& results)
         std::string operator()(int /* dummy */) const
         {
           return "INT";
+        }
+
+        std::string operator()(std::size_t /* dummy */) const
+        {
+          return "BIGINT";
         }
 
         std::string operator()(double /* dummy */) const

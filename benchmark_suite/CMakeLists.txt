@@ -48,7 +48,8 @@ add_library(${PROJECT_NAME}
   src/planning.cpp
   src/benchmark.cpp
   src/robot.cpp
-  src/log.cpp)
+  src/log.cpp
+  src/io/gnuplot.cpp)
 
 add_executable(move_group_interface_benchmark scripts/move_group_interface_benchmark.cpp) 
 target_link_libraries(move_group_interface_benchmark ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)

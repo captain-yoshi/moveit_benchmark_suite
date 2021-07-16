@@ -45,7 +45,7 @@
 #include <moveit_benchmark_suite/planning.h>
 #include <moveit_benchmark_suite/benchmark.h>
 #include <moveit_benchmark_suite/scene.h>
-
+#include <moveit_benchmark_suite/io/gnuplot.h>
 using namespace moveit_benchmark_suite;
 
 int main(int argc, char** argv)
@@ -99,6 +99,8 @@ int main(int argc, char** argv)
   benchmark.addQuery("RRTkConfigDefault", scene, ompl_planner, request);
   benchmark.addQuery("STOMP", scene, stomp_planner, request);
   // benchmark.addQuery("CHOMP", scene, planner, request);
+  IO::GNUPlotPlanDataSetOutputter plot("time");
+  benchmark.setPostQueryCallback([&](PlanDataSetPtr dataset, const PlanningQuery&) { plot.dump(*dataset); });
 
   auto dataset = benchmark.run();
 

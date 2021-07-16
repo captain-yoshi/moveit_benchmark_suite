@@ -38,6 +38,15 @@
 
 #pragma once
 
+#include <cstdint>
+#include <string>
+#include <vector>
+#include <tuple>
+#include <map>
+#include <fstream>
+
+#include <boost/variant.hpp>
+
 #include <moveit_benchmark_suite/planning.h>
 #include <moveit_benchmark_suite_msgs/MoveGroupInterfaceRequest.h>
 #include <moveit/robot_trajectory/robot_trajectory.h>
@@ -48,7 +57,7 @@ MOVEIT_CLASS_FORWARD(PlanningBenchmark);
 MOVEIT_CLASS_FORWARD(PlanData);
 MOVEIT_CLASS_FORWARD(PlanDataSet);
 
-using PlannerMetric = boost::variant<bool, double, int, std::string>;
+using PlannerMetric = boost::variant<bool, double, int, std::size_t, std::string>;
 
 /** \brief Convert a planner metric into a string.
  *  \param[in] metric The metric to convert.
@@ -263,6 +272,13 @@ public:
    */
   const std::vector<PlanningQuery>& getQueries() const;
 
+  using PostQueryCallback = std::function<void(PlanDataSetPtr dataset, const PlanningQuery& query)>;
+
+  /** \brief Set the post-dataset callback function.
+   *  \param[in] callback Callback to use.
+   */
+  void setPostQueryCallback(const PostQueryCallback& callback);
+
   /** \brief Run benchmarking on this experiment.
    *  Note that, for some planners, multiple threads cannot be used without polluting the dataset, due
    * to reuse of underlying datastructures between queries, e.g., the robowflex_ompl planner.
@@ -280,6 +296,8 @@ private:
   PlanningProfiler::Options options_;   ///< Options for profiler.
   PlanningProfiler profiler_;           ///< Profiler to use for extracting data.
   std::vector<PlanningQuery> queries_;  ///< Queries to test.
+
+  PostQueryCallback complete_callback_;  ///< Post-run callback with dataset.
 };
 
 /** \brief An abstract class for outputting benchmark results.
