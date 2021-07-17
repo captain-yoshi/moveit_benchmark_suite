@@ -42,9 +42,10 @@
 
 #include <moveit_benchmark_suite/io/yaml.h>
 #include <moveit_benchmark_suite/yaml.h>
-#include <moveit_benchmark_suite/planning.h>
-#include <moveit_benchmark_suite/benchmark.h>
+#include <moveit_benchmark_suite/move_group_pipeline/planning.h>
+#include <moveit_benchmark_suite/move_group_pipeline/benchmark.h>
 #include <moveit_benchmark_suite/scene.h>
+#include <moveit_benchmark_suite/io/gnuplot.h>
 
 using namespace moveit_benchmark_suite;
 
@@ -67,10 +68,10 @@ int main(int argc, char** argv)
   std::string request_filename;
   pnh.getParam("/request/mgi", request_filename);
 
-  moveit_benchmark_suite_msgs::MoveGroupInterfaceRequest request;
+  moveit_msgs::MotionPlanRequest request;
   auto node = YAML::LoadFile(request_filename);
 
-  request = node.as<moveit_benchmark_suite_msgs::MoveGroupInterfaceRequest>();
+  request = node.as<moveit_msgs::MotionPlanRequest>();
 
   // Setup robot
   auto robot = std::make_shared<Robot>("robot", "robot_description");
@@ -87,29 +88,38 @@ int main(int argc, char** argv)
 
   // Setup planner
   // auto planner = std::make_shared<PipelinePlanner>();
-  auto planner = std::make_shared<MoveGroupInterfacePlanner>(robot);
+  auto planner = std::make_shared<MoveGroupPlanner>(robot);
   planner->initialize("panda_arm_hand");
 
   // Setup a benchmarking request for the joint and pose motion plan requests.
-  PlanningProfiler::Options options;
-  options.metrics =
-      PlanningProfiler::WAYPOINTS | PlanningProfiler::CORRECT | PlanningProfiler::LENGTH | PlanningProfiler::SMOOTHNESS;
-  PlanningBenchmark benchmark("super",  // Name of experiment
-                              options,  // Options for internal profiler
-                              5.0,      // Timeout allowed for ALL queries
-                              100);     // Number of trials
+  MoveGroupProfiler::Options options;
+  options.metrics = MoveGroupProfiler::WAYPOINTS | MoveGroupProfiler::CORRECT | MoveGroupProfiler::LENGTH |
+                    MoveGroupProfiler::SMOOTHNESS;
 
-  benchmark.addQuery("RRTkConfigDefault", scene, planner, request);
-  benchmark.addQuery("STOMP", scene, planner, request);
+  MoveGroupBenchmark benchmark("super",  // Name of experiment
+                               options,  // Options for internal profiler
+                               5.0,      // Timeout allowed for ALL queries
+                               100);     // Number of trials
+
+  request.pipeline_id = "ompl";
+
+  request.planner_id = "RRTConnectkConfigDefault";
+  benchmark.addQuery("rrt", scene, planner, request);
+
+  request.pipeline_id = "stomp";
+
+  request.planner_id = "STOMP";
+  benchmark.addQuery("stomp", scene, planner, request);
   // benchmark.addQuery("CHOMP", scene, planner, request);
+  IO::GNUPlotMoveGroupDataSetOutputter plot("time");
+  benchmark.setPostQueryCallback([&](MoveGroupDataSetPtr dataset, const MoveGroupQuery&) { plot.dump(*dataset); });
 
   auto dataset = benchmark.run();
 
   // Dump metrics to a logfile
-  OMPLPlanDataSetOutputter output("demo");
-  output.dump(*dataset);
+  // OMPLPlanDataSetOutputter output("demo");
+  // output.dump(*dataset);
 
   ros::waitForShutdown();
-
   return 0;
 }

@@ -2,7 +2,8 @@
 #include <moveit_benchmark_suite/macros.h>
 //#include <robowflex_library/constants.h>
 #include <moveit_benchmark_suite/log.h>
-#include <moveit_benchmark_suite/benchmark.h>
+#include <moveit_benchmark_suite/planning_pipeline/benchmark.h>
+#include <moveit_benchmark_suite/move_group_pipeline/benchmark.h>
 #include <exception>
 
 #if IS_BOOST_164
@@ -138,6 +139,27 @@ public:
    *  \param[in] results Results to visualize.
    */
   void dump(const PlanDataSet& results) override;
+
+private:
+  const std::string metric_;
+  GNUPlotHelper helper_;
+};
+
+class GNUPlotMoveGroupDataSetOutputter : public MoveGroupDataSetOutputter
+{
+public:
+  /** \brief Constructor.
+   */
+  GNUPlotMoveGroupDataSetOutputter(const std::string& metric);
+
+  /** \brief Destructor.
+   */
+  ~GNUPlotMoveGroupDataSetOutputter() override;
+
+  /** \brief Visualize results.
+   *  \param[in] results Results to visualize.
+   */
+  void dump(const MoveGroupDataSet& results) override;
 
 private:
   const std::string metric_;

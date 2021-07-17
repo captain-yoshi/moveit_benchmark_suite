@@ -1719,51 +1719,6 @@ bool convert<moveit_msgs::RobotTrajectory>::decode(const Node& node, moveit_msgs
 
   return true;
 }
-
-Node convert<moveit_benchmark_suite_msgs::MoveGroupInterfaceRequest>::encode(
-    const moveit_benchmark_suite_msgs::MoveGroupInterfaceRequest& rhs)
-{
-  Node node;
-
-  node["start_state"] = rhs.start_state;
-
-  if (!rhs.goal_constraints.empty())
-    node["goal_constraints"] = rhs.goal_constraints;
-
-  if (!isConstraintEmpty(rhs.path_constraints))
-    node["path_constraints"] = rhs.path_constraints;
-
-  if (!rhs.trajectory_constraints.constraints.empty())
-    node["trajectory_constraints"] = rhs.trajectory_constraints;
-
-  if (!rhs.group_name.empty())
-    node["group_name"] = rhs.group_name;
-
-  return node;
-}
-
-bool convert<moveit_benchmark_suite_msgs::MoveGroupInterfaceRequest>::decode(
-    const Node& node, moveit_benchmark_suite_msgs::MoveGroupInterfaceRequest& rhs)
-{
-  rhs = moveit_benchmark_suite_msgs::MoveGroupInterfaceRequest();
-
-  if (IO::isNode(node["group_name"]))
-    rhs.group_name = node["group_name"].as<std::string>();
-
-  if (IO::isNode(node["start_state"]))
-    rhs.start_state = node["start_state"].as<moveit_msgs::RobotState>();
-
-  if (IO::isNode(node["goal_constraints"]))
-    rhs.goal_constraints = node["goal_constraints"].as<std::vector<moveit_msgs::Constraints>>();
-
-  if (IO::isNode(node["path_constraints"]))
-    rhs.path_constraints = node["path_constraints"].as<moveit_msgs::Constraints>();
-
-  if (IO::isNode(node["trajectory_constraints"]))
-    rhs.trajectory_constraints = node["trajectory_constraints"].as<moveit_msgs::TrajectoryConstraints>();
-
-  return true;
-}
 }  // namespace YAML
 
 namespace moveit_benchmark_suite

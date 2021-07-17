@@ -12,7 +12,6 @@ find_package(catkin REQUIRED COMPONENTS
 	moveit_core
 	moveit_ros_planning
 	moveit_ros_planning_interface
-	moveit_benchmark_suite_msgs
 	moveit_visual_tools
 	roscpp
 	visualization_msgs
@@ -30,7 +29,6 @@ catkin_package(
 		moveit_core
 		moveit_ros_planning
 		moveit_ros_planning_interface
-		moveit_benchmark_suite_msgs
 		roscpp
 		moveit_visual_tools
 		visualization_msgs
@@ -45,10 +43,13 @@ add_library(${PROJECT_NAME}
   src/yaml.cpp
   src/io.cpp
   src/geometry.cpp
-  src/planning.cpp
-  src/benchmark.cpp
+  src/dataset.cpp
   src/robot.cpp
   src/log.cpp
+  src/planning_pipeline/planning.cpp
+  src/planning_pipeline/benchmark.cpp
+  src/move_group_pipeline/planning.cpp
+  src/move_group_pipeline/benchmark.cpp
   src/io/gnuplot.cpp)
 
 add_executable(move_group_interface_benchmark scripts/move_group_interface_benchmark.cpp) 

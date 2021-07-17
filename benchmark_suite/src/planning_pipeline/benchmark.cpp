@@ -1,4 +1,4 @@
-#include <moveit_benchmark_suite/benchmark.h>
+#include <moveit_benchmark_suite/planning_pipeline/benchmark.h>
 
 #include <moveit_benchmark_suite/io.h>
 
@@ -8,89 +8,22 @@
 using namespace moveit_benchmark_suite;
 
 ///
-/// PlannerMetric
-///
-
-namespace
-{
-class toMetricStringVisitor : public boost::static_visitor<std::string>
-{
-public:
-  std::string operator()(int value) const
-  {
-    return std::to_string(boost::get<int>(value));
-  }
-
-  std::string operator()(double value) const
-  {
-    double v = boost::get<double>(value);
-
-    // [Bad Pun] No NaNs, Infs, or buts about it.
-    return boost::lexical_cast<std::string>(  //
-        (std::isfinite(v)) ? v : std::numeric_limits<double>::max());
-  }
-
-  std::string operator()(std::size_t value) const
-  {
-    return std::to_string(boost::get<std::size_t>(value));
-  }
-
-  std::string operator()(bool value) const
-  {
-    return boost::lexical_cast<std::string>(boost::get<bool>(value));
-  }
-
-  std::string operator()(std::string value) const
-  {
-    return boost::get<std::string>(value);
-  }
-};
-}  // namespace
-
-std::string toMetricString(const PlannerMetric& metric)
-{
-  return boost::apply_visitor(toMetricStringVisitor(), metric);
-}
-
-///
 /// PlanningQuery
 ///
 
 PlanningQuery::PlanningQuery(const std::string& name,                             //
                              const planning_scene::PlanningSceneConstPtr& scene,  //
-                             const PlannerPtr& planner,                           //
+                             const PipelinePlannerPtr& planner,                   //
                              const planning_interface::MotionPlanRequest& request)
   : name(name), scene(scene), planner(planner), request(request)
 {
 }
 
 ///
-/// PlanDataSet
-///
-
-void PlanDataSet::addDataPoint(const std::string& query_name, const PlanDataPtr& run)
-{
-  auto it = data.find(query_name);
-  if (it == data.end())
-    data.emplace(query_name, std::vector<PlanDataPtr>{ run });
-  else
-    it->second.emplace_back(run);
-}
-
-std::vector<PlanDataPtr> PlanDataSet::getFlatData() const
-{
-  std::vector<PlanDataPtr> r;
-  for (const auto& query : data)
-    r.insert(r.end(), query.second.begin(), query.second.end());
-
-  return r;
-}
-
-///
 /// Profiler
 ///
 
-bool PlanningProfiler::profilePlan(const PlannerPtr& planner,                             //
+bool PlanningProfiler::profilePlan(const PipelinePlannerPtr& planner,                     //
                                    const planning_scene::PlanningSceneConstPtr& scene,    //
                                    const planning_interface::MotionPlanRequest& request,  //
                                    const Options& options,                                //
@@ -161,28 +94,10 @@ PlanningBenchmark::PlanningBenchmark(const std::string& name, const PlanningProf
 
 void PlanningBenchmark::addQuery(const std::string& planner_name,                     //
                                  const planning_scene::PlanningSceneConstPtr& scene,  //
-                                 const PlannerPtr& planner,                           //
+                                 const PipelinePlannerPtr& planner,                   //
                                  const planning_interface::MotionPlanRequest& request)
 {
   queries_.emplace_back(planner_name, scene, planner, request);
-}
-
-void PlanningBenchmark::addQuery(const std::string& planner_name,                     //
-                                 const planning_scene::PlanningSceneConstPtr& scene,  //
-                                 const PlannerPtr& planner,                           //
-                                 const moveit_benchmark_suite_msgs::MoveGroupInterfaceRequest& request)
-{
-  planning_interface::MotionPlanRequest req;
-  req.group_name = request.group_name;
-  req.start_state = request.start_state;
-  req.goal_constraints = request.goal_constraints;
-  req.path_constraints = request.path_constraints;
-  req.trajectory_constraints = request.trajectory_constraints;
-
-  req.planner_id = planner_name;
-  req.allowed_planning_time = allowed_time_;
-
-  addQuery(planner_name, scene, planner, req);
 }
 
 const std::vector<PlanningQuery>& PlanningBenchmark::getQueries() const
@@ -219,10 +134,17 @@ PlanDataSetPtr PlanningBenchmark::run(std::size_t n_threads) const
     for (std::size_t j = 0; j < trials_; ++j)
     {
       auto data = std::make_shared<PlanData>();
+
+      planning_interface::MotionPlanRequest request = query.request;
+      request.allowed_planning_time = allowed_time_;
+
+      // Call pre-run callbacks
+      query.planner->preRun(query.scene, request);
+
       profiler_.profilePlan(query.planner,  //
-                            query.scene,    //
-                            query.request,  //
-                            options_,       //
+                            query.scene,
+                            request,   //
+                            options_,  //
                             *data);
 
       data->query.name = query.name;
@@ -343,7 +265,7 @@ void OMPLPlanDataSetOutputter::dump(const PlanDataSet& results)
           << run->success << "; ";
 
       for (const auto& key : keys)
-        out << ::toMetricString(run->metrics.find(key)->second) << "; ";
+        out << toMetricString(run->metrics.find(key)->second) << "; ";
 
       out << std::endl;
     }

@@ -42,10 +42,10 @@
 
 #include <moveit_benchmark_suite/io/yaml.h>
 #include <moveit_benchmark_suite/yaml.h>
-#include <moveit_benchmark_suite/planning.h>
-#include <moveit_benchmark_suite/benchmark.h>
-#include <moveit_benchmark_suite/scene.h>
+#include <moveit_benchmark_suite/planning_pipeline/planning.h>
+#include <moveit_benchmark_suite/planning_pipeline/benchmark.h>
 #include <moveit_benchmark_suite/io/gnuplot.h>
+
 using namespace moveit_benchmark_suite;
 
 int main(int argc, char** argv)
@@ -67,10 +67,10 @@ int main(int argc, char** argv)
   std::string request_filename;
   pnh.getParam("/request/mgi", request_filename);
 
-  moveit_benchmark_suite_msgs::MoveGroupInterfaceRequest request;
+  moveit_msgs::MotionPlanRequest request;
   auto node = YAML::LoadFile(request_filename);
 
-  request = node.as<moveit_benchmark_suite_msgs::MoveGroupInterfaceRequest>();
+  request = node.as<moveit_msgs::MotionPlanRequest>();
 
   // Setup robot
   auto robot = std::make_shared<Robot>("robot", "robot_description");
@@ -96,8 +96,11 @@ int main(int argc, char** argv)
                               5.0,      // Timeout allowed for ALL queries
                               100);     // Number of trials
 
-  benchmark.addQuery("RRTkConfigDefault", scene, ompl_planner, request);
-  benchmark.addQuery("STOMP", scene, stomp_planner, request);
+  request.planner_id = "RRTConnectkConfigDefault";
+  benchmark.addQuery("rrt", scene, ompl_planner, request);
+
+  request.planner_id = "STOMP";
+  benchmark.addQuery("stomp", scene, stomp_planner, request);
   // benchmark.addQuery("CHOMP", scene, planner, request);
   IO::GNUPlotPlanDataSetOutputter plot("time");
   benchmark.setPostQueryCallback([&](PlanDataSetPtr dataset, const PlanningQuery&) { plot.dump(*dataset); });

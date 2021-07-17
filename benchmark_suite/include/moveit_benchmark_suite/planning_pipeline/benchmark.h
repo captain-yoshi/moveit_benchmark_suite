@@ -38,17 +38,9 @@
 
 #pragma once
 
-#include <cstdint>
-#include <string>
-#include <vector>
-#include <tuple>
-#include <map>
-#include <fstream>
+#include <moveit_benchmark_suite/dataset.h>
+#include <moveit_benchmark_suite/planning_pipeline/planning.h>
 
-#include <boost/variant.hpp>
-
-#include <moveit_benchmark_suite/planning.h>
-#include <moveit_benchmark_suite_msgs/MoveGroupInterfaceRequest.h>
 #include <moveit/robot_trajectory/robot_trajectory.h>
 
 namespace moveit_benchmark_suite
@@ -56,14 +48,6 @@ namespace moveit_benchmark_suite
 MOVEIT_CLASS_FORWARD(PlanningBenchmark);
 MOVEIT_CLASS_FORWARD(PlanData);
 MOVEIT_CLASS_FORWARD(PlanDataSet);
-
-using PlannerMetric = boost::variant<bool, double, int, std::size_t, std::string>;
-
-/** \brief Convert a planner metric into a string.
- *  \param[in] metric The metric to convert.
- *  \return The metric as a string.
- */
-std::string toMetricString(const PlannerMetric& metric);
 
 struct PlanningQuery
 {
@@ -79,16 +63,16 @@ struct PlanningQuery
    */
   PlanningQuery(const std::string& name,                             //
                 const planning_scene::PlanningSceneConstPtr& scene,  //
-                const PlannerPtr& planner,                           //
+                const PipelinePlannerPtr& planner,                   //
                 const planning_interface::MotionPlanRequest& request);
 
   std::string name;                               ///< Name of this query.
   planning_scene::PlanningSceneConstPtr scene;    ///< Scene used for the query.
-  PlannerPtr planner;                             ///< Planner used for the query.
+  PipelinePlannerPtr planner;                     ///< Planner used for the query.
   planning_interface::MotionPlanRequest request;  ///< Request used for the query.
 };
 
-class PlanData
+class PlanData : public Data
 {
 public:
   /** \name Planning Query and Response
@@ -98,53 +82,12 @@ public:
   planning_interface::MotionPlanResponse response;  ///< Planner response.
   bool success;                                     ///< Was the plan successful?
   robot_trajectory::RobotTrajectoryPtr trajectory;  ///< The resulting trajectory, if available.
-
-  /** \} */
-
-  /** \name Timing
-      \{ */
-
-  double time;                      ///< Time that planning took in seconds.
-  boost::posix_time::ptime start;   ///< Query start time.
-  boost::posix_time::ptime finish;  ///< Query end time.
-
-  /** \} */
-
-  /** \name Host Metadata
-      \{ */
-
-  std::string hostname;    ///< Hostname of the machine the plan was run on.
-  std::size_t process_id;  ///< Process ID of the process the profiler was run in.
-  std::size_t thread_id;   ///< Thread ID of profiler execution.
-
-  /** \} */
-
-  /** \name Metrics and Progress Properties
-      \{ */
-
-  std::vector<std::string> property_names;                   ///< Planner progress value names.
-  std::vector<std::map<std::string, std::string>> progress;  ///< Planner progress data.
-  std::map<std::string, PlannerMetric> metrics;              ///< Map of metric name to value.
 };
 
-class PlanDataSet
+class PlanDataSet : public DataSet<PlanDataPtr, PlanningQuery>
 {
 public:
-  /** \name Timing
-      \{ */
-
-  double time;                      ///< Total computation time for entire dataset.
-  boost::posix_time::ptime start;   ///< Start time of dataset computation.
-  boost::posix_time::ptime finish;  ///< End time for dataset computation.
-
-  // Hardware information
-  std::string cpuinfo;
-  std::string gpuinfo;
-
-  /** \} */
-
-  /** \name Experiment Parameters
-      \{ */
+  /** Benchmark Parameters */
 
   double allowed_time;          ///< Allowed time for all queries.
   std::size_t trials;           ///< Requested trials for each query.
@@ -152,36 +95,6 @@ public:
   bool run_till_timeout;        ///< If true, planners were run to solve the problem as many times as possible
                                 ///< until time ran out.
   std::size_t threads;          ///< Threads used for dataset computation.
-
-  /** \} */
-
-  /** \name Query Information
-      \{ */
-
-  std::string name;                      ///< Name of this dataset.
-  std::vector<std::string> query_names;  ///< All unique names used by planning queries.
-  std::vector<PlanningQuery> queries;    ///< All planning queries. Note that planning queries can share
-                                         ///< the same name.
-
-  /** \} */
-
-  /** \name Data
-      \{ */
-
-  std::map<std::string, std::vector<PlanDataPtr>> data;  ///< Map of query name to collected data.
-
-  /** \brief Add a computed plan data under a query as a data point.
-   *  \param[in] query_name Name of query to store point under.
-   *  \param[in] run Run data to add to query.
-   */
-  void addDataPoint(const std::string& query_name, const PlanDataPtr& run);
-
-  /** \brief Get the full data set as a flat vector.
-   *  \return All plan data as a vector.
-   */
-  std::vector<PlanDataPtr> getFlatData() const;
-
-  /** \} */
 };
 
 class PlanningProfiler
@@ -216,7 +129,7 @@ public:
    *  \param[out] result The results of profiling.
    *  \return True if planning succeeded, false on failure.
    */
-  bool profilePlan(const PlannerPtr& planner,                             //
+  bool profilePlan(const PipelinePlannerPtr& planner,                     //
                    const planning_scene::PlanningSceneConstPtr& scene,    //
                    const planning_interface::MotionPlanRequest& request,  //
                    const Options& options,                                //
@@ -259,13 +172,8 @@ public:
    */
   void addQuery(const std::string& planner_name,                     //
                 const planning_scene::PlanningSceneConstPtr& scene,  //
-                const PlannerPtr& planner,                           //
+                const PipelinePlannerPtr& planner,                   //
                 const planning_interface::MotionPlanRequest& request);
-
-  void addQuery(const std::string& planner_name,                     //
-                const planning_scene::PlanningSceneConstPtr& scene,  //
-                const PlannerPtr& planner,                           //
-                const ::moveit_benchmark_suite_msgs::MoveGroupInterfaceRequest& request);
 
   /** \brief Get the queries added to this experiment.
    *  \return The queries added to the experiment.
