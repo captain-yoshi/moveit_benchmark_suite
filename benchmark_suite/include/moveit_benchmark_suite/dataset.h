@@ -60,6 +60,7 @@ using Metric = boost::variant<bool, double, int, std::size_t, std::string>;
  *  \return The metric as a string.
  */
 std::string toMetricString(const Metric& metric);
+double toMetricDouble(const Metric& metric);
 
 /** */
 class Data

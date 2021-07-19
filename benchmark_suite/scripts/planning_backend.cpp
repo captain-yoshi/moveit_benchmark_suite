@@ -42,8 +42,8 @@
 
 #include <moveit_benchmark_suite/io/yaml.h>
 #include <moveit_benchmark_suite/yaml.h>
-#include <moveit_benchmark_suite/planning_pipeline/planning.h>
-#include <moveit_benchmark_suite/planning_pipeline/benchmark.h>
+#include <moveit_benchmark_suite/planning.h>
+#include <moveit_benchmark_suite/benchmark.h>
 #include <moveit_benchmark_suite/io/gnuplot.h>
 
 using namespace moveit_benchmark_suite;
@@ -87,23 +87,36 @@ int main(int argc, char** argv)
   auto stomp_planner = std::make_shared<PipelinePlanner>(robot);
   stomp_planner->initialize("stomp");
 
+  auto move_group_planner = std::make_shared<MoveGroupPlanner>(robot);
+
   // Setup a benchmarking request for the joint and pose motion plan requests.
   PlanningProfiler::Options options;
   options.metrics =
       PlanningProfiler::WAYPOINTS | PlanningProfiler::CORRECT | PlanningProfiler::LENGTH | PlanningProfiler::SMOOTHNESS;
-  PlanningBenchmark benchmark("super",  // Name of experiment
-                              options,  // Options for internal profiler
-                              5.0,      // Timeout allowed for ALL queries
-                              100);     // Number of trials
+  PlanningBenchmark benchmark("PipelinePlaner vs MoveGroupInterface",  // Name of benchmark
+                              options,                                 // Options for internal profiler
+                              5.0,                                     // Timeout allowed for ALL queries
+                              10);                                     // Number of trials
 
+  request.pipeline_id = "ompl";
   request.planner_id = "RRTConnectkConfigDefault";
-  benchmark.addQuery("rrt", scene, ompl_planner, request);
+  benchmark.addQuery("rrt-pp", scene, ompl_planner, request);
+  benchmark.addQuery("rrt-mgi", scene, move_group_planner, request);
 
+  request.pipeline_id = "stomp";
   request.planner_id = "STOMP";
-  benchmark.addQuery("stomp", scene, stomp_planner, request);
-  // benchmark.addQuery("CHOMP", scene, planner, request);
-  IO::GNUPlotPlanDataSetOutputter plot("time");
-  benchmark.setPostQueryCallback([&](PlanDataSetPtr dataset, const PlanningQuery&) { plot.dump(*dataset); });
+  benchmark.addQuery("stomp-pp", scene, stomp_planner, request);
+  benchmark.addQuery("stomp-mgi", scene, move_group_planner, request);
+
+  // Use the post-query callback to visualize the data live.
+  IO::GNUPlotPlanDataSetOutputter plot_time("time");
+  IO::GNUPlotPlanDataSetOutputter plot_waypoint("waypoints");
+  IO::GNUPlotPlanDataSetOutputter plot_success("success");
+  benchmark.setPostQueryCallback([&](PlanDataSetPtr dataset, const PlanningQuery&) {
+    plot_waypoint.dump(*dataset);
+    plot_time.dump(*dataset);
+    plot_success.dump(*dataset);
+  });
 
   auto dataset = benchmark.run();
 

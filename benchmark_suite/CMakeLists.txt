@@ -46,22 +46,17 @@ add_library(${PROJECT_NAME}
   src/dataset.cpp
   src/robot.cpp
   src/log.cpp
-  src/planning_pipeline/planning.cpp
-  src/planning_pipeline/benchmark.cpp
-  src/move_group_pipeline/planning.cpp
-  src/move_group_pipeline/benchmark.cpp
+  src/planning.cpp
+  src/benchmark.cpp
   src/io/gnuplot.cpp)
 
-add_executable(move_group_interface_benchmark scripts/move_group_interface_benchmark.cpp) 
-target_link_libraries(move_group_interface_benchmark ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
-
-add_executable(planning_pipeline_benchmark scripts/planning_pipeline_benchmark.cpp)
-target_link_libraries(planning_pipeline_benchmark ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
+add_executable(planning_backend scripts/planning_backend.cpp)
+target_link_libraries(planning_backend ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
 install(DIRECTORY include/${PROJECT_NAME}/
 	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 
-install(TARGETS move_group_interface_benchmark planning_pipeline_benchmark ${PROJECT_NAME}
+install(TARGETS planning_backend ${PROJECT_NAME}
 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

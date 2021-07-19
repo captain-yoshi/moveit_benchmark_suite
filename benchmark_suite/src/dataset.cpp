@@ -43,9 +43,43 @@ public:
     return value;
   }
 };
+
+class toMetricDoubleVisitor : public boost::static_visitor<double>
+{
+public:
+  double operator()(int value) const
+  {
+    return static_cast<double>(value);
+  }
+
+  double operator()(double value) const
+  {
+    return static_cast<double>(value);
+  }
+
+  double operator()(std::size_t value) const
+  {
+    return static_cast<double>(value);
+  }
+
+  double operator()(bool value) const
+  {
+    return static_cast<double>(value);
+  }
+
+  double operator()(const std::string& value) const
+  {
+    return boost::lexical_cast<double>(value);
+  }
+};
 }  // namespace
 
 std::string moveit_benchmark_suite::toMetricString(const Metric& metric)
 {
   return boost::apply_visitor(toMetricStringVisitor(), metric);
+}
+
+double moveit_benchmark_suite::toMetricDouble(const Metric& metric)
+{
+  return boost::apply_visitor(toMetricDoubleVisitor(), metric);
 }

@@ -1,8 +1,15 @@
 <?xml version="1.0" ?>
 <launch>
+
+  <!-- By default, we are not in debug mode -->
+  <arg name="debug" default="false" />
+  <arg unless="$(arg debug)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --args" />
+
   <!-- Load robot -->
   <include file="$(find moveit_resources_panda_moveit_config)/launch/demo.launch">
     <arg name="use_rviz" value="true"/>
+    <!--<arg name="debug" value="$(arg debug)"/>-->
   </include>
 
   <!-- Load planning pipelines -->
@@ -27,14 +34,14 @@
 
   <!-- Request -->
   <group ns="request">
-    <param name="mgi" value="$(find moveit_benchmark_suite)/config/panda_mgi_request.yaml"/>
+    <param name="1" value="$(find moveit_benchmark_suite)/config/panda_request1.yaml"/>
   </group>
 
   <!-- Benchmark options file -->
   <arg name="options_file" default="$(find moveit_benchmark_suite)/config/panda_benchmark.yaml"/>
 
   <!-- Launch benchmark node -->
-  <node name="benchmark" pkg="moveit_benchmark_suite" type="planning_pipeline_benchmark" output="screen" required="true" launch-prefix="">
+  <node name="benchmark" pkg="moveit_benchmark_suite" type="planning_backend" output="screen" required="true" launch-prefix="$(arg launch_prefix)">
     <rosparam command="load" file="$(arg options_file)"/>
   </node>
 </launch>

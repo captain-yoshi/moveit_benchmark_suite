@@ -1,4 +1,4 @@
-#include <moveit_benchmark_suite/planning_pipeline/benchmark.h>
+#include <moveit_benchmark_suite/benchmark.h>
 
 #include <moveit_benchmark_suite/io.h>
 
@@ -13,7 +13,7 @@ using namespace moveit_benchmark_suite;
 
 PlanningQuery::PlanningQuery(const std::string& name,                             //
                              const planning_scene::PlanningSceneConstPtr& scene,  //
-                             const PipelinePlannerPtr& planner,                   //
+                             const PlannerPtr& planner,                           //
                              const planning_interface::MotionPlanRequest& request)
   : name(name), scene(scene), planner(planner), request(request)
 {
@@ -23,7 +23,7 @@ PlanningQuery::PlanningQuery(const std::string& name,                           
 /// Profiler
 ///
 
-bool PlanningProfiler::profilePlan(const PipelinePlannerPtr& planner,                     //
+bool PlanningProfiler::profilePlan(const PlannerPtr& planner,                             //
                                    const planning_scene::PlanningSceneConstPtr& scene,    //
                                    const planning_interface::MotionPlanRequest& request,  //
                                    const Options& options,                                //
@@ -75,6 +75,8 @@ void PlanningProfiler::computeBuiltinMetrics(uint32_t options, const planning_sc
   // if (options & Metrics::SMOOTHNESS)
   //  run.metrics["smoothness"] = run.success ? run.trajectory->getSmoothness() : 0.0;
 
+  run.metrics["time"] = run.time;
+  run.metrics["success"] = run.success;
   run.metrics["planner_name"] = run.query.planner->getName();
   run.metrics["robot_name"] = run.query.planner->getRobot()->getName();
   run.metrics["hostname"] = run.hostname;
@@ -94,7 +96,7 @@ PlanningBenchmark::PlanningBenchmark(const std::string& name, const PlanningProf
 
 void PlanningBenchmark::addQuery(const std::string& planner_name,                     //
                                  const planning_scene::PlanningSceneConstPtr& scene,  //
-                                 const PipelinePlannerPtr& planner,                   //
+                                 const PlannerPtr& planner,                           //
                                  const planning_interface::MotionPlanRequest& request)
 {
   queries_.emplace_back(planner_name, scene, planner, request);

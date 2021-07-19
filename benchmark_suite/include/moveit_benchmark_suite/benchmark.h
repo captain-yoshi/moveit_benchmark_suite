@@ -39,7 +39,7 @@
 #pragma once
 
 #include <moveit_benchmark_suite/dataset.h>
-#include <moveit_benchmark_suite/planning_pipeline/planning.h>
+#include <moveit_benchmark_suite/planning.h>
 
 #include <moveit/robot_trajectory/robot_trajectory.h>
 
@@ -63,12 +63,12 @@ struct PlanningQuery
    */
   PlanningQuery(const std::string& name,                             //
                 const planning_scene::PlanningSceneConstPtr& scene,  //
-                const PipelinePlannerPtr& planner,                   //
+                const PlannerPtr& planner,                           //
                 const planning_interface::MotionPlanRequest& request);
 
   std::string name;                               ///< Name of this query.
   planning_scene::PlanningSceneConstPtr scene;    ///< Scene used for the query.
-  PipelinePlannerPtr planner;                     ///< Planner used for the query.
+  PlannerPtr planner;                             ///< Planner used for the query.
   planning_interface::MotionPlanRequest request;  ///< Request used for the query.
 };
 
@@ -129,7 +129,7 @@ public:
    *  \param[out] result The results of profiling.
    *  \return True if planning succeeded, false on failure.
    */
-  bool profilePlan(const PipelinePlannerPtr& planner,                     //
+  bool profilePlan(const PlannerPtr& planner,                             //
                    const planning_scene::PlanningSceneConstPtr& scene,    //
                    const planning_interface::MotionPlanRequest& request,  //
                    const Options& options,                                //
@@ -172,7 +172,7 @@ public:
    */
   void addQuery(const std::string& planner_name,                     //
                 const planning_scene::PlanningSceneConstPtr& scene,  //
-                const PipelinePlannerPtr& planner,                   //
+                const PlannerPtr& planner,                           //
                 const planning_interface::MotionPlanRequest& request);
 
   /** \brief Get the queries added to this experiment.

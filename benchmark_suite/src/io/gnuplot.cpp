@@ -179,7 +179,7 @@ GNUPlotPlanDataSetOutputter::~GNUPlotPlanDataSetOutputter()
 void GNUPlotPlanDataSetOutputter::dump(const PlanDataSet& results)
 {
   GNUPlotHelper::BoxPlotOptions bpo;
-  bpo.instance = results.name;
+  bpo.instance = metric_;
   bpo.title = log::format("\\\"%1%\\\" for Experiment \\\"%2%\\\"", metric_, results.name);
   bpo.y.label = metric_;
   bpo.y.min = 0.;
@@ -192,49 +192,7 @@ void GNUPlotPlanDataSetOutputter::dump(const PlanDataSet& results)
     std::vector<double> values;
     for (const auto& run : points)
     {
-      if (metric_ == "time")
-        values.emplace_back(run->time);
-      else if (metric_ == "success")
-        values.emplace_back(run->success);
-      else
-        values.emplace_back(boost::get<double>(run->metrics[metric_]));
-    }
-
-    bpo.values.emplace(name, values);
-  }
-
-  helper_.boxplot(bpo);
-}
-GNUPlotMoveGroupDataSetOutputter::GNUPlotMoveGroupDataSetOutputter(const std::string& metric) : metric_(metric)
-{
-}
-
-GNUPlotMoveGroupDataSetOutputter::~GNUPlotMoveGroupDataSetOutputter()
-{
-}
-
-void GNUPlotMoveGroupDataSetOutputter::dump(const MoveGroupDataSet& results)
-{
-  GNUPlotHelper::BoxPlotOptions bpo;
-  bpo.instance = results.name;
-  bpo.title = log::format("\\\"%1%\\\" for Experiment \\\"%2%\\\"", metric_, results.name);
-  bpo.y.label = metric_;
-  bpo.y.min = 0.;
-
-  for (const auto& query : results.data)
-  {
-    const auto& name = query.first;
-    const auto& points = query.second;
-
-    std::vector<double> values;
-    for (const auto& run : points)
-    {
-      if (metric_ == "time")
-        values.emplace_back(run->time);
-      else if (metric_ == "success")
-        values.emplace_back(run->success);
-      else
-        values.emplace_back(boost::get<double>(run->metrics[metric_]));
+      values.emplace_back(toMetricDouble(run->metrics[metric_]));
     }
 
     bpo.values.emplace(name, values);
