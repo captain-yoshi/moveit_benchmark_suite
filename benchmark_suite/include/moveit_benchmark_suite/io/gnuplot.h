@@ -1,6 +1,6 @@
 
 #include <moveit_benchmark_suite/macros.h>
-//#include <robowflex_library/constants.h>
+#include <moveit_benchmark_suite/constants.h>
 #include <moveit_benchmark_suite/log.h>
 #include <moveit_benchmark_suite/benchmark.h>
 #include <exception>
@@ -38,9 +38,9 @@ public:
 
     struct Axis
     {
-      std::string label;                                      ///< Axis label.
-      double max = std::numeric_limits<double>::quiet_NaN();  ///< Upper axis limit. If NaN, will auto-adjust.
-      double min = std::numeric_limits<double>::quiet_NaN();  ///< Lower axis limit. If NaN, will auto-adjust.
+      std::string label;            ///< Axis label.
+      double max = constants::nan;  ///< Upper axis limit. If NaN, will auto-adjust.
+      double min = constants::nan;  ///< Lower axis limit. If NaN, will auto-adjust.
     };
 
     std::string title;         ///< Title of the plot.
