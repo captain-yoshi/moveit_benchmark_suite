@@ -109,29 +109,26 @@ int main(int argc, char** argv)
   benchmark.addQuery("stomp-mgi", scene, move_group_planner, request);
 
   // Use the post-query callback to visualize the data live.
-  IO::GNUPlotBoxPlotPlanDataSet plot_time("time");
-  IO::GNUPlotBoxPlotPlanDataSet plot_waypoint("waypoints");
-  IO::GNUPlotBoxPlotPlanDataSet plot_length("length");
-  IO::GNUPlotBoxPlotPlanDataSet plot_smoothness("smoothness");
-  IO::GNUPlotBarGraphPlanDataSet plot_success("success");
-  IO::GNUPlotBarGraphPlanDataSet plot_correct("correct");
+  IO::GNUPlotPlanDataSet plot;
+  plot.addMetric("time", IO::GNUPlotPlanDataSet::BoxPlot);
+  plot.addMetric("waypoints", IO::GNUPlotPlanDataSet::BoxPlot);
+  plot.addMetric("length", IO::GNUPlotPlanDataSet::BoxPlot);
+  plot.addMetric("smoothness", IO::GNUPlotPlanDataSet::BoxPlot);
+  plot.addMetric("success", IO::GNUPlotPlanDataSet::BarGraph);
+  plot.addMetric("correct", IO::GNUPlotPlanDataSet::BarGraph);
 
-  benchmark.setPostQueryCallback([&](PlanDataSetPtr dataset, const PlanningQuery&) {
-    plot_time.dump(*dataset);
-    plot_waypoint.dump(*dataset);
-    plot_success.dump(*dataset);
-    plot_correct.dump(*dataset);
-    plot_length.dump(*dataset);
-    plot_smoothness.dump(*dataset);
-  });
+  benchmark.setPostQueryCallback([&](PlanDataSetPtr dataset, const PlanningQuery&) { plot.dump(*dataset); });
 
+  // Run benchmark
   auto dataset = benchmark.run();
+
+  // plot.dump(*dataset);
 
   // Dump metrics to a logfile
   OMPLPlanDataSetOutputter output("demo");
   output.dump(*dataset);
 
-  // ros::waitForShutdown();
+  ros::waitForShutdown();
 
   return 0;
 }

@@ -29,13 +29,31 @@ public:
   GNUPlotHelper(GNUPlotHelper const&) = delete;
   void operator=(GNUPlotHelper const&) = delete;
 
+  struct InstanceOptions
+  {
+    std::string instance{ "default" };
+  };
+
+  struct QtTerminalOptions : InstanceOptions
+  {
+    struct Size
+    {
+      double x = 720;
+      double y = 480;
+    };
+
+    Size size;
+
+    const std::string mode{ "qt" };  ///< Terminal mode for GNUPlot
+  };
+
+  void configureTerminal(const QtTerminalOptions& options);
+
   /** \name Plotting
       \{ */
 
-  struct PlottingOptions
+  struct PlottingOptions : InstanceOptions
   {
-    std::string instance{ "default" };
-
     struct Axis
     {
       std::string label;            ///< Axis label.
@@ -43,11 +61,9 @@ public:
       double min = constants::nan;  ///< Lower axis limit. If NaN, will auto-adjust.
     };
 
-    std::string title;         ///< Title of the plot.
-    std::string mode{ "qt" };  ///< Terminal mode for GNUPlot
-
-    Axis x;  ///< X-axis parameters.
-    Axis y;  ///< Y-axis parameters.
+    std::string title;  ///< Title of the plot.
+    Axis x;             ///< X-axis parameters.
+    Axis y;             ///< Y-axis parameters.
   };
 
   /** \brief Configure a plot using common options.
@@ -91,6 +107,22 @@ public:
    */
   void bargraph(const BarGraphOptions& options);
 
+  struct MultiPlotOptions : InstanceOptions
+  {
+    struct Layout
+    {
+      int row = 1;  ///< Upper axis limit. If NaN, will auto-adjust.
+      int col = 1;  ///< Lower axis limit. If NaN, will auto-adjust.
+    };
+    Layout layout;
+    std::string title;
+  };
+
+  /** \brief Plot box data.
+   *  \param[in] options Plotting options.
+   */
+  void multiplot(const MultiPlotOptions& options);
+
   /** \} */
 
 private:
@@ -115,7 +147,7 @@ private:
     Instance(Instance const&) = delete;
     void operator=(Instance const&) = delete;
 
-    bool debug_{ false };
+    bool debug_{ true };
 
 #if IS_BOOST_164
     boost::process::opstream input_;
@@ -136,45 +168,36 @@ private:
 /** \brief Helper class to plot a real metric as a box plot using GNUPlot from benchmarking data.
  */
 
-class GNUPlotBoxPlotPlanDataSet : public PlanDataSetOutputter
+class GNUPlotPlanDataSet : public PlanDataSetOutputter
 {
 public:
+  enum PlotType
+  {
+    BoxPlot,
+    BarGraph,
+    TimeSeries,
+  };
+
   /** \brief Constructor.
    */
-  GNUPlotBoxPlotPlanDataSet(const std::string& metric);
+  GNUPlotPlanDataSet();
 
   /** \brief Destructor.
    */
-  ~GNUPlotBoxPlotPlanDataSet() override;
+  ~GNUPlotPlanDataSet() override;
 
   /** \brief Visualize results.
    *  \param[in] results Results to visualize.
    */
+  void addMetric(const std::string& metric, const PlotType& plottype);
+
   void dump(const PlanDataSet& results) override;
 
 private:
-  const std::string metric_;
-  GNUPlotHelper helper_;
-};
+  void dumpBoxPlot(const std::string& metric, const PlanDataSet& results);
+  void dumpBarGraph(const std::string& metric, const PlanDataSet& results);
 
-class GNUPlotBarGraphPlanDataSet : public PlanDataSetOutputter
-{
-public:
-  /** \brief Constructor.
-   */
-  GNUPlotBarGraphPlanDataSet(const std::string& metric);
-
-  /** \brief Destructor.
-   */
-  ~GNUPlotBarGraphPlanDataSet() override;
-
-  /** \brief Visualize results.
-   *  \param[in] results Results to visualize.
-   */
-  void dump(const PlanDataSet& results) override;
-
-private:
-  const std::string metric_;
+  std::vector<std::pair<std::string, PlotType>> plot_types_;
   GNUPlotHelper helper_;
 };
 

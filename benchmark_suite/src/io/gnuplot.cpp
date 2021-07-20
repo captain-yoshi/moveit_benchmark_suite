@@ -52,12 +52,17 @@ void GNUPlotHelper::Instance::flush()
     std::cout << std::endl;
 #endif
 }
+void GNUPlotHelper::configureTerminal(const QtTerminalOptions& options)
+{
+  auto in = getInstance(options.instance);
+  in->writeline(log::format("set term %1% noraise size %2%,%3%", options.mode, options.size.x, options.size.y));
+}
 
 void GNUPlotHelper::configurePlot(const PlottingOptions& options)
 {
   auto in = getInstance(options.instance);
 
-  in->writeline(log::format("set term %1% noraise", options.mode));
+  // in->writeline(log::format("set term %1% noraise", options.mode));
   in->writeline(log::format("set title \"%1%\"", options.title));
 
   if (not options.x.label.empty())
@@ -222,6 +227,16 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
   }
 
   in->flush();
+
+  // reset variables in case where using multiplot
+  if (options.percent)
+    in->writeline("unset format");
+}
+void GNUPlotHelper::multiplot(const MultiPlotOptions& options)
+{
+  auto in = getInstance(options.instance);
+  in->writeline(
+      log::format("set multiplot layout %1%,%2% title \"%3%\"", options.layout.row, options.layout.col, options.title));
 }
 
 std::shared_ptr<GNUPlotHelper::Instance> GNUPlotHelper::getInstance(const std::string& name)
@@ -233,23 +248,65 @@ std::shared_ptr<GNUPlotHelper::Instance> GNUPlotHelper::getInstance(const std::s
 }
 
 ///
-/// GNUPlotBoxPlotPlanDataSet
+/// GNUPlotPlanDataSet
 ///
-
-GNUPlotBoxPlotPlanDataSet::GNUPlotBoxPlotPlanDataSet(const std::string& metric) : metric_(metric)
+GNUPlotPlanDataSet::GNUPlotPlanDataSet()
 {
 }
 
-GNUPlotBoxPlotPlanDataSet::~GNUPlotBoxPlotPlanDataSet()
+GNUPlotPlanDataSet::~GNUPlotPlanDataSet()
 {
 }
 
-void GNUPlotBoxPlotPlanDataSet::dump(const PlanDataSet& results)
+void GNUPlotPlanDataSet::addMetric(const std::string& metric, const PlotType& plottype)
+{
+  plot_types_.push_back(std::make_pair(metric, plottype));
+}
+
+void GNUPlotPlanDataSet::dump(const PlanDataSet& results)
+{
+  if (plot_types_.empty())
+    ROS_WARN("No plot type specified");
+
+  GNUPlotHelper::QtTerminalOptions to;
+  to.size.x = 1280;
+  to.size.y = 720;
+
+  // TODO add in constructor
+  GNUPlotHelper::MultiPlotOptions mpo;
+  mpo.layout.row = 2;
+  mpo.layout.col = 3;
+
+  if (mpo.layout.row * mpo.layout.col < plot_types_.size())
+    ROS_WARN("Metrics cannot fit in plot layout");
+
+  helper_.configureTerminal(to);
+  helper_.multiplot(mpo);
+
+  for (const auto& pair : plot_types_)
+  {
+    switch (pair.second)
+    {
+      case PlotType::BarGraph:
+        dumpBarGraph(pair.first, results);
+        break;
+
+      case PlotType::BoxPlot:
+        dumpBoxPlot(pair.first, results);
+        break;
+
+      default:
+        ROS_WARN("Plot Type not implemented");
+        break;
+    }
+  }
+}
+
+void GNUPlotPlanDataSet::dumpBoxPlot(const std::string& metric, const PlanDataSet& results)
 {
   GNUPlotHelper::BoxPlotOptions bpo;
-  bpo.instance = metric_;
-  bpo.title = log::format("\\\"%1%\\\" for Experiment \\\"%2%\\\"", metric_, results.name);
-  bpo.y.label = metric_;
+  bpo.title = log::format("\\\"%1%\\\" for Experiment \\\"%2%\\\"", metric, results.name);
+  bpo.y.label = metric;
   bpo.y.min = 0.;
 
   for (const auto& query : results.data)
@@ -260,7 +317,7 @@ void GNUPlotBoxPlotPlanDataSet::dump(const PlanDataSet& results)
     std::vector<double> values;
     for (const auto& run : points)
     {
-      values.emplace_back(toMetricDouble(run->metrics[metric_]));
+      values.emplace_back(toMetricDouble(run->metrics[metric]));
     }
 
     bpo.values.emplace(name, values);
@@ -269,25 +326,12 @@ void GNUPlotBoxPlotPlanDataSet::dump(const PlanDataSet& results)
   helper_.boxplot(bpo);
 }
 
-///
-/// GNUPlotBarGraphPlanDataSet
-///
-
-GNUPlotBarGraphPlanDataSet::GNUPlotBarGraphPlanDataSet(const std::string& metric) : metric_(metric)
-{
-}
-
-GNUPlotBarGraphPlanDataSet::~GNUPlotBarGraphPlanDataSet()
-{
-}
-
-void GNUPlotBarGraphPlanDataSet::dump(const PlanDataSet& results)
+void GNUPlotPlanDataSet::dumpBarGraph(const std::string& metric, const PlanDataSet& results)
 {
   GNUPlotHelper::BarGraphOptions bgo;
-  bgo.instance = metric_;
   bgo.percent = true;
-  bgo.title = log::format("\\\"%1%\\\" for Experiment \\\"%2%\\\"", metric_, results.name);
-  bgo.y.label = metric_ + " (%)";
+  bgo.title = log::format("\\\"%1%\\\" for Experiment \\\"%2%\\\"", metric, results.name);
+  bgo.y.label = metric + " (%)";
   bgo.y.min = 0.;
 
   for (const auto& query : results.data)
@@ -298,7 +342,7 @@ void GNUPlotBarGraphPlanDataSet::dump(const PlanDataSet& results)
     double sum = 0;
     for (const auto& run : points)
     {
-      sum += toMetricDouble(run->metrics[metric_]);
+      sum += toMetricDouble(run->metrics[metric]);
     }
 
     double mean = (points.size()) ? sum / double(points.size()) : 0;
