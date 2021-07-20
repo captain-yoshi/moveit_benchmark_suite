@@ -20,7 +20,8 @@ class GNUPlotHelper
 public:
   using Point = std::pair<double, double>;
   using Series = std::vector<Point>;
-  using Values = std::vector<double>;
+  using Value = double;
+  using Values = std::vector<Value>;
 
   GNUPlotHelper() = default;
 
@@ -79,6 +80,17 @@ public:
    */
   void boxplot(const BoxPlotOptions& options);
 
+  struct BarGraphOptions : PlottingOptions
+  {
+    bool percent{ false };               // Defaults to count
+    std::map<std::string, Value> value;  ///< Map of names to data.
+  };
+
+  /** \brief Plot box data.
+   *  \param[in] options Plotting options.
+   */
+  void bargraph(const BarGraphOptions& options);
+
   /** \} */
 
 private:
@@ -123,16 +135,38 @@ private:
 
 /** \brief Helper class to plot a real metric as a box plot using GNUPlot from benchmarking data.
  */
-class GNUPlotPlanDataSetOutputter : public PlanDataSetOutputter
+
+class GNUPlotBoxPlotPlanDataSet : public PlanDataSetOutputter
 {
 public:
   /** \brief Constructor.
    */
-  GNUPlotPlanDataSetOutputter(const std::string& metric);
+  GNUPlotBoxPlotPlanDataSet(const std::string& metric);
 
   /** \brief Destructor.
    */
-  ~GNUPlotPlanDataSetOutputter() override;
+  ~GNUPlotBoxPlotPlanDataSet() override;
+
+  /** \brief Visualize results.
+   *  \param[in] results Results to visualize.
+   */
+  void dump(const PlanDataSet& results) override;
+
+private:
+  const std::string metric_;
+  GNUPlotHelper helper_;
+};
+
+class GNUPlotBarGraphPlanDataSet : public PlanDataSetOutputter
+{
+public:
+  /** \brief Constructor.
+   */
+  GNUPlotBarGraphPlanDataSet(const std::string& metric);
+
+  /** \brief Destructor.
+   */
+  ~GNUPlotBarGraphPlanDataSet() override;
 
   /** \brief Visualize results.
    *  \param[in] results Results to visualize.

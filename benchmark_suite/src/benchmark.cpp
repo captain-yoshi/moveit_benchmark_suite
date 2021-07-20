@@ -1,5 +1,5 @@
 #include <moveit_benchmark_suite/benchmark.h>
-
+#include <moveit_benchmark_suite/log.h>
 #include <moveit_benchmark_suite/io.h>
 
 #include <queue>
@@ -126,6 +126,7 @@ PlanDataSetPtr PlanningBenchmark::run(std::size_t n_threads) const
   dataset->cpuinfo = IO::getHardwareCPU();
   dataset->cpuinfo = IO::getHardwareGPU();
 
+  int query_index = 0;
   for (const auto& query : queries_)
   {
     // Check if this name is unique, if so, add it to dataset list.
@@ -135,6 +136,9 @@ PlanDataSetPtr PlanningBenchmark::run(std::size_t n_threads) const
 
     for (std::size_t j = 0; j < trials_; ++j)
     {
+      ROS_INFO_STREAM("");
+      ROS_INFO_STREAM(log::format("Running Query %1% `%2%` Trial [%3%/%4%]",  //
+                                  query.name, query_index, j + 1, trials_));
       auto data = std::make_shared<PlanData>();
 
       planning_interface::MotionPlanRequest request = query.request;
@@ -155,6 +159,7 @@ PlanDataSetPtr PlanningBenchmark::run(std::size_t n_threads) const
       if (complete_callback_)
         complete_callback_(dataset, query);
     }
+    query_index++;
   }
 
   dataset->finish = IO::getDate();

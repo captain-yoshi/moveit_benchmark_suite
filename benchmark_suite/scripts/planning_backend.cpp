@@ -109,9 +109,9 @@ int main(int argc, char** argv)
   benchmark.addQuery("stomp-mgi", scene, move_group_planner, request);
 
   // Use the post-query callback to visualize the data live.
-  IO::GNUPlotPlanDataSetOutputter plot_time("time");
-  IO::GNUPlotPlanDataSetOutputter plot_waypoint("waypoints");
-  IO::GNUPlotPlanDataSetOutputter plot_success("success");
+  IO::GNUPlotBoxPlotPlanDataSet plot_time("time");
+  IO::GNUPlotBoxPlotPlanDataSet plot_waypoint("waypoints");
+  IO::GNUPlotBarGraphPlanDataSet plot_success("success");
   benchmark.setPostQueryCallback([&](PlanDataSetPtr dataset, const PlanningQuery&) {
     plot_waypoint.dump(*dataset);
     plot_time.dump(*dataset);
@@ -124,7 +124,7 @@ int main(int argc, char** argv)
   OMPLPlanDataSetOutputter output("demo");
   output.dump(*dataset);
 
-  ros::waitForShutdown();
+  // ros::waitForShutdown();
 
   return 0;
 }
