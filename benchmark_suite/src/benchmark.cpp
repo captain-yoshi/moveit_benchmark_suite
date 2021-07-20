@@ -61,19 +61,19 @@ void PlanningProfiler::computeBuiltinMetrics(uint32_t options, const planning_sc
                                              PlanData& run) const
 {
   if (options & Metrics::WAYPOINTS)
-    run.metrics["waypoints"] = run.success ? int(run.trajectory->getWayPointCount()) : int(0);
+    run.metrics["waypoints"] = run.success ? int(run.trajectory->getNumWaypoints()) : int(0);
 
-  // if (options & Metrics::LENGTH)
-  //  run.metrics["length"] = run.success ? run.trajectory->getLength() : 0.0;
+  if (options & Metrics::LENGTH)
+    run.metrics["length"] = run.success ? run.trajectory->getLength() : 0.0;
 
-  // if (options & Metrics::CORRECT)
-  //  run.metrics["correct"] = run.success ? run.trajectory->isCollisionFree(scene) : false;
+  if (options & Metrics::CORRECT)
+    run.metrics["correct"] = run.success ? run.trajectory->isCollisionFree(scene) : false;
 
-  // if (options & Metrics::CLEARANCE)
-  //  run.metrics["clearance"] = run.success ? std::get<0>(run.trajectory->getClearance(scene)) : 0.0;
+  if (options & Metrics::CLEARANCE)
+    run.metrics["clearance"] = run.success ? std::get<0>(run.trajectory->getClearance(scene)) : 0.0;
 
-  // if (options & Metrics::SMOOTHNESS)
-  //  run.metrics["smoothness"] = run.success ? run.trajectory->getSmoothness() : 0.0;
+  if (options & Metrics::SMOOTHNESS)
+    run.metrics["smoothness"] = run.success ? run.trajectory->getSmoothness() : 0.0;
 
   run.metrics["time"] = run.time;
   run.metrics["success"] = run.success;

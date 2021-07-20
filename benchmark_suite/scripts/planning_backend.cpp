@@ -65,7 +65,7 @@ int main(int argc, char** argv)
 
   // Parse request
   std::string request_filename;
-  pnh.getParam("/request/mgi", request_filename);
+  pnh.getParam("/request/1", request_filename);
 
   moveit_msgs::MotionPlanRequest request;
   auto node = YAML::LoadFile(request_filename);
@@ -111,11 +111,18 @@ int main(int argc, char** argv)
   // Use the post-query callback to visualize the data live.
   IO::GNUPlotBoxPlotPlanDataSet plot_time("time");
   IO::GNUPlotBoxPlotPlanDataSet plot_waypoint("waypoints");
+  IO::GNUPlotBoxPlotPlanDataSet plot_length("length");
+  IO::GNUPlotBoxPlotPlanDataSet plot_smoothness("smoothness");
   IO::GNUPlotBarGraphPlanDataSet plot_success("success");
+  IO::GNUPlotBarGraphPlanDataSet plot_correct("correct");
+
   benchmark.setPostQueryCallback([&](PlanDataSetPtr dataset, const PlanningQuery&) {
-    plot_waypoint.dump(*dataset);
     plot_time.dump(*dataset);
+    plot_waypoint.dump(*dataset);
     plot_success.dump(*dataset);
+    plot_correct.dump(*dataset);
+    plot_length.dump(*dataset);
+    plot_smoothness.dump(*dataset);
   });
 
   auto dataset = benchmark.run();
