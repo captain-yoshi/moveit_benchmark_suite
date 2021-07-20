@@ -46,7 +46,7 @@ bool PlanningProfiler::profilePlan(const PlannerPtr& planner,                   
   result.success = result.response.error_code_.val == moveit_msgs::MoveItErrorCodes::SUCCESS;
 
   if (result.success)
-    result.trajectory = result.response.trajectory_;
+    result.trajectory = std::make_shared<Trajectory>(*result.response.trajectory_);
 
   result.hostname = IO::getHostname();
   result.process_id = IO::getProcessID();

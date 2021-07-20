@@ -48,6 +48,7 @@ add_library(${PROJECT_NAME}
   src/log.cpp
   src/planning.cpp
   src/benchmark.cpp
+  src/trajectory.cpp
   src/io/gnuplot.cpp)
 
 add_executable(planning_backend scripts/planning_backend.cpp)

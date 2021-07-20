@@ -41,7 +41,7 @@
 #include <moveit_benchmark_suite/dataset.h>
 #include <moveit_benchmark_suite/planning.h>
 
-#include <moveit/robot_trajectory/robot_trajectory.h>
+#include <moveit_benchmark_suite/trajectory.h>
 
 namespace moveit_benchmark_suite
 {
@@ -81,7 +81,7 @@ public:
   PlanningQuery query;                              ///< Query evaluated to create this data.
   planning_interface::MotionPlanResponse response;  ///< Planner response.
   bool success;                                     ///< Was the plan successful?
-  robot_trajectory::RobotTrajectoryPtr trajectory;  ///< The resulting trajectory, if available.
+  TrajectoryPtr trajectory;                         ///< The resulting trajectory, if available.
 };
 
 class PlanDataSet : public DataSet<PlanDataPtr, PlanningQuery>
