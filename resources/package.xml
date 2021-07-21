@@ -1,0 +1,12 @@
+<package>
+  <name>moveit_benchmark_suite_resources</name>
+  <version>0.0.0</version>
+  <description>Collection of resources</description>
+
+  <author email="captain.yoshisaur@gmail.com">Captain Yoshi</author>
+  <maintainer email="captain.yoshisaur@gmail.com">Captain Yoshi</maintainer>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>

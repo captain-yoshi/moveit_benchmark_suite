@@ -21,5 +21,6 @@
 	<depend>visualization_msgs</depend>
 	<depend>moveit_visual_tools</depend>
 	<depend>scene_parser</depend>
+    <depend>moveit_benchmark_suite_resources</depend>
 
 </package>

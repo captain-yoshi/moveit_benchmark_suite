@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
 	roscpp
 	visualization_msgs
 	scene_parser
+  moveit_benchmark_suite_resources
 )
 
 catkin_package(
@@ -33,6 +34,7 @@ catkin_package(
 		moveit_visual_tools
 		visualization_msgs
 		scene_parser
+    moveit_benchmark_suite_resources
 )
 
 set(CMAKE_CXX_STANDARD 14)
