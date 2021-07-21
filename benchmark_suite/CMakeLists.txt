@@ -45,6 +45,7 @@ add_library(${PROJECT_NAME}
   src/geometry.cpp
   src/dataset.cpp
   src/robot.cpp
+  src/scene.cpp
   src/log.cpp
   src/planning.cpp
   src/benchmark.cpp
