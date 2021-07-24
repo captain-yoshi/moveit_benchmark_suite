@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="panda">
+
+  <xacro:property name="boxlid"    value="${dict(bbx=0.285749, bby=0.411113, bbz=0.014288)}"/>
+  <xacro:property name="clearbox"  value="${dict(bbx=0.284112, bby=0.409485, bbz=0.141286)}"/>
+  <xacro:property name="woodblock" value="${dict(bbx=0.025942, bby=0.025808, bbz=0.025847)}"/>
+
+</robot>
