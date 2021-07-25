@@ -8,6 +8,7 @@ List of all resources, a short description and the source. Names should always b
 
 | Resources              | Description                    | Url Date     | Source                                                                                                                                                                                                   |
 |:-----------------------|:-------------------------------|:-------------|:--------------------------------------------------------------------------------------------------------------|
+| apcshelf.stl           | Low rez shelf from APC 2015    | 2021-07-25   | http://pwurman.org/amazonpickingchallenge/2015/gazebo_pod.shtml                                                       |
 | boxlid_16k.stl         | Google scanner (16k polygons)  | 2021-07-14   | http://www.ycbbenchmarks.com/wp-content/uploads/2020/04/BBT_supplementary.zip                                                        |
 | clearbox_16k.stl       | Google scanner (16k polygons)  | 2021-07-14   | http://www.ycbbenchmarks.com/wp-content/uploads/2020/04/BBT_supplementary.zip                                                        |
 | woodblock_16k.stl      | Google scanner (16k polygons)  | 2021-07-14   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/070-b_colored_wood_blocks_google_16k.tgz                        |
@@ -36,6 +37,7 @@ TODO: Add an example for subframes
 ## Statistics
 | Resources              | Bounding Box [x, y, z]             | Vertices       | Edges              | Faces    | Triangles | Size                          |
 |:-----------------------|:-----------------------------------|:---------------|:-------------------|:---------|:----------|:------------------------------|
+| apcshelf.stl           | [0.884207, 0.879534, 2.36728]      | 5,147          | 15,154             | 10,147   | 10,147    | 507,6 KB                      |
 | boxlid_16k.stl         | [0.285749, 0.411113, 0.014288]     | 9,355          | 28,059             | 18,706   | 18,706    | 935,4 KB                      |
 | clearbox_16k.stl       | [0.284112, 0.409485, 0.141286]     | 24,982         | 74,940             | 49,960   | 49,960    | 2,5 MB                        |
 | woodblock_16k.stl      | [0.025942, 0.025808, 0.025847]     | 8,194          | 24,576             | 16,384   | 16,384    | 819,3 kB                      |
