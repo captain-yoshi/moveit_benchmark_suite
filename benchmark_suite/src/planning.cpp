@@ -97,12 +97,6 @@ planning_interface::MotionPlanResponse MoveGroupPlanner::plan(const planning_sce
 void MoveGroupPlanner::preRun(const planning_scene::PlanningSceneConstPtr& scene,
                               const planning_interface::MotionPlanRequest& request)
 {
-  // Planning scene
-  moveit::planning_interface::PlanningSceneInterface psi;
-  moveit_msgs::PlanningScene ps;
-  scene->getPlanningSceneMsg(ps);
-  psi.applyPlanningScene(ps);
-
   // Convert request to MoveGroupInterface
   move_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(request.group_name);
 
@@ -166,4 +160,11 @@ void MoveGroupPlanner::preRun(const planning_scene::PlanningSceneConstPtr& scene
       // TODO add tolerance
     }
   }
+
+  // Planning scene
+  moveit::planning_interface::PlanningSceneInterface psi;
+  moveit_msgs::PlanningScene ps;
+  scene->getPlanningSceneMsg(ps);
+  ps.robot_state = request.start_state;
+  psi.applyPlanningScene(ps);
 }
