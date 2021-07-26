@@ -31,8 +31,8 @@ public:
   /** \brief Get all planning pipeline names */
   void getPlanningPipelineNames(std::vector<std::string>& planning_pipeline_names) const;
 
-  const std::vector<std::string>& getInterfaces() const;
-  const std::vector<std::string>& getCollisionDetectors() const;
+  const std::set<std::string>& getInterfaces() const;
+  const std::set<std::string>& getCollisionDetectors() const;
 
 protected:
   void readBenchmarkConfig(const std::string& ros_namespace);
@@ -48,10 +48,10 @@ protected:
   std::string benchmark_name_;
 
   /// benchmark interface
-  std::vector<std::string> interfaces_;
+  std::set<std::string> interfaces_;
 
   /// benchmark collision detector
-  std::vector<std::string> collision_detectors_;
+  std::set<std::string> collision_detectors_;
 
   /// planner configurations
   std::map<std::string, std::vector<std::string>> planning_pipelines_;

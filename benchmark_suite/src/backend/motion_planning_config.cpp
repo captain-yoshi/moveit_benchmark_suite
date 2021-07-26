@@ -55,12 +55,12 @@ const std::string& MotionPlanningConfig::getBenchmarkName() const
 {
   return benchmark_name_;
 }
-const std::vector<std::string>& MotionPlanningConfig::getInterfaces() const
+const std::set<std::string>& MotionPlanningConfig::getInterfaces() const
 {
   return interfaces_;
 }
 
-const std::vector<std::string>& MotionPlanningConfig::getCollisionDetectors() const
+const std::set<std::string>& MotionPlanningConfig::getCollisionDetectors() const
 {
   return collision_detectors_;
 }
@@ -103,8 +103,9 @@ void MotionPlanningConfig::readBenchmarkInterfaces(ros::NodeHandle& nh)
 
     for (int i = 0; i < interface_configs.size(); ++i)  // NOLINT(modernize-loop-convert)
     {
-      interfaces_.push_back(interface_configs[i]);
-      ROS_INFO("Interface name: '%s'", interfaces_[i].c_str());
+      std::string interface_name = interface_configs[i];
+      interfaces_.insert(interface_name);
+      ROS_INFO("Interface name: '%s'", interface_name.c_str());
     }
   }
 }
@@ -124,8 +125,9 @@ void MotionPlanningConfig::readBenchmarkCollisionDetectors(ros::NodeHandle& nh)
 
     for (int i = 0; i < collision_detector_configs.size(); ++i)  // NOLINT(modernize-loop-convert)
     {
-      collision_detectors_.push_back(collision_detector_configs[i]);
-      ROS_INFO("Collision detector name: '%s'", collision_detectors_[i].c_str());
+      std::string cd_name = collision_detector_configs[i];
+      collision_detectors_.insert(cd_name);
+      ROS_INFO("Collision detector name: '%s'", cd_name.c_str());
     }
   }
 }
