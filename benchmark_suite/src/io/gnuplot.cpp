@@ -145,7 +145,7 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
     if (i != n - 1)
       in->write(", ");
   }
-  in->writeline(") scale 0.0");
+  in->writeline(") scale 0.0 rotate by 45 right");
 
   in->write("plot ");
   for (std::size_t i = 0; i < n; ++i)
@@ -199,7 +199,7 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
   in->writeline("unset key");  // Disable legend
 
   if (options.percent)
-    in->writeline("set format y \"%g%%\"");  // Disable legend
+    in->writeline("set format y \"%g%%\"");  // Percent format
 
   in->write("set xtics (");
   auto it2 = options.value.begin();
@@ -209,7 +209,7 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
     if (i != n - 1)
       in->write(", ");
   }
-  in->writeline(") scale 0.0");
+  in->writeline(") scale 0.0 rotate by 45 right");
 
   in->write("plot ");
   for (std::size_t i = 0; i < n; ++i)
