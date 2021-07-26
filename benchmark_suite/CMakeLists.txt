@@ -54,13 +54,13 @@ add_library(${PROJECT_NAME}
   src/trajectory.cpp
   src/io/gnuplot.cpp)
 
-add_executable(planning_backend scripts/planning_backend.cpp)
-target_link_libraries(planning_backend ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
+add_executable(motion_planning src/backend/motion_planning.cpp)
+target_link_libraries(motion_planning ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
 install(DIRECTORY include/${PROJECT_NAME}/
 	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 
-install(TARGETS planning_backend ${PROJECT_NAME}
+install(TARGETS motion_planning ${PROJECT_NAME}
 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
