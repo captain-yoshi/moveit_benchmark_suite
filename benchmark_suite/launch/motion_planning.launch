@@ -28,13 +28,15 @@
   </group>
 
   <!-- Scene -->
-  <group ns="scene">
-    <param name="bbt" command="$(find xacro)/xacro '$(find moveit_benchmark_suite)/config/bbt_primitive_scene.urdf.xacro'"/>
+  <group ns="scene" clear_params="true">
+    <!-- <param name="empty-scene" command="$(find xacro)/xacro '$(find moveit_benchmark_suite)/config/empty_scene.urdf.xacro'"/> -->
+    <param name="bbt-primitve" command="$(find xacro)/xacro '$(find moveit_benchmark_suite)/config/bbt_primitive_scene.urdf.xacro'"/>
+    <param name="bbt-mesh"     command="$(find xacro)/xacro '$(find moveit_benchmark_suite)/config/bbt_mesh_scene.urdf.xacro'"/>
   </group>
 
   <!-- Request -->
-  <group ns="request">
-    <param name="1" value="$(find moveit_benchmark_suite)/config/panda_request1.yaml"/>
+  <group ns="request" clear_params="true">
+    <param name="jc" value="$(find moveit_benchmark_suite)/config/panda_request1.yaml"/>
   </group>
 
   <!-- Benchmark options file -->
