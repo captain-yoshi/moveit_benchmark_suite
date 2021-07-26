@@ -45,6 +45,9 @@
 #include <moveit_benchmark_suite/planning.h>
 #include <moveit_benchmark_suite/benchmark.h>
 #include <moveit_benchmark_suite/io/gnuplot.h>
+#include <moveit_benchmark_suite/scene.h>
+#include <moveit_benchmark_suite/backend/motion_planning_config.h>
+#include <map>
 
 using namespace moveit_benchmark_suite;
 
@@ -56,57 +59,124 @@ int main(int argc, char** argv)
 
   ros::NodeHandle pnh("~");
 
-  // Parse world
+  // Parse scene
   SceneParser parser;
-  parser.loadURDFFile(pnh, "scene/bbt");
-  moveit_msgs::PlanningSceneWorld world;
+  std::vector<moveit_msgs::PlanningScene> scene_msgs;
 
-  parser.getCollisionObjects(world.collision_objects);
+  std::map<std::string, std::string> scene_param_map;
+  pnh.getParam("/scene", scene_param_map);
+
+  for (const auto& scene : scene_param_map)
+  {
+    parser.loadURDF(scene.second);
+    scene_msgs.emplace_back();
+    scene_msgs.back().name = scene.first;
+    scene_msgs.back().is_diff = true;
+    parser.getCollisionObjects(scene_msgs.back().world.collision_objects);
+  }
 
   // Parse request
-  std::string request_filename;
-  pnh.getParam("/request/1", request_filename);
+  std::map<std::string, std::string> request_map;
+  pnh.getParam("/request", request_map);
 
-  moveit_msgs::MotionPlanRequest request;
-  auto node = YAML::LoadFile(request_filename);
+  std::vector<moveit_msgs::MotionPlanRequest> requests;
+  for (const auto& request : request_map)
+  {
+    requests.emplace_back();
+    auto node = YAML::LoadFile(request.second);
 
-  request = node.as<moveit_msgs::MotionPlanRequest>();
+    requests.back() = node.as<moveit_msgs::MotionPlanRequest>();
+  }
+
+  // Parse benchmark config
+  MotionPlanningConfig config(ros::this_node::getName());
+
+  const std::string& benchmark_name = config.getBenchmarkName();
+  double timeout = config.getTimeout();
+  double trials = config.getNumRuns();
+  const std::set<std::string>& interfaces = config.getInterfaces();
+  const std::set<std::string>& collision_detectors = config.getCollisionDetectors();
+  const std::map<std::string, std::vector<std::string>>& planning_pipelines =
+      config.getPlanningPipelineConfigurations();
 
   // Setup robot
   auto robot = std::make_shared<Robot>("robot", "robot_description");
   robot->initialize();
 
-  // Setup scene
-  planning_scene::PlanningScenePtr scene = std::make_shared<planning_scene::PlanningScene>(robot->getModelConst());
-  scene->processPlanningSceneWorldMsg(world);
+  // Setup scenes
+  std::vector<planning_scene::PlanningScenePtr> scenes;
+  CollisionPluginLoader plugin;
 
-  // Setup planner
-  auto ompl_planner = std::make_shared<PipelinePlanner>(robot);
-  ompl_planner->initialize("ompl");
+  for (const auto& cd : collision_detectors)
+  {
+    plugin.load(cd);
+    for (const auto& scene_msg : scene_msgs)
+    {
+      scenes.emplace_back();
+      scenes.back() = std::make_shared<planning_scene::PlanningScene>(robot->getModelConst());
+      scenes.back()->usePlanningSceneMsg(scene_msg);
+      plugin.activate(cd, scenes.back(), true);
+    }
+  }
 
-  auto stomp_planner = std::make_shared<PipelinePlanner>(robot);
-  stomp_planner->initialize("stomp");
+  // Setup planners
+  std::vector<PlannerPtr> pipelines;
 
-  auto move_group_planner = std::make_shared<MoveGroupPlanner>(robot);
+  for (const auto& interface : interfaces)
+  {
+    if (interface.compare("PlanningPipeline") == 0)
+    {
+      for (const auto& pipeline_name : planning_pipelines)
+      {
+        auto pipeline = std::make_shared<PipelinePlanner>(robot, pipeline_name.first);
+        pipeline->initialize(pipeline_name.first);
+        pipelines.push_back(pipeline);
+      }
+    }
+    else if (interface.compare("MoveGroupInterface") == 0)
+      for (const auto& pipeline_name : planning_pipelines)
+      {
+        auto pipeline = std::make_shared<MoveGroupPlanner>(robot, pipeline_name.first);
+        pipelines.push_back(pipeline);
+      }
+    else
+      ROS_WARN("Invalid configuration for interface name: %s", interface.c_str());
+  }
 
-  // Setup a benchmarking request for the joint and pose motion plan requests.
+  // Setup benchmark
   PlanningProfiler::Options options;
   options.metrics =
       PlanningProfiler::WAYPOINTS | PlanningProfiler::CORRECT | PlanningProfiler::LENGTH | PlanningProfiler::SMOOTHNESS;
-  PlanningBenchmark benchmark("PipelinePlaner vs MoveGroupInterface",  // Name of benchmark
-                              options,                                 // Options for internal profiler
-                              5.0,                                     // Timeout allowed for ALL queries
-                              10);                                     // Number of trials
+  PlanningBenchmark benchmark(benchmark_name,  // Name of benchmark
+                              options,         // Options for internal profiler
+                              timeout,         // Timeout allowed for ALL queries
+                              trials);         // Number of trials
 
-  request.pipeline_id = "ompl";
-  request.planner_id = "RRTConnectkConfigDefault";
-  benchmark.addQuery("rrt-pp", scene, ompl_planner, request);
-  benchmark.addQuery("rrt-mgi", scene, move_group_planner, request);
+  // Setup queries
+  for (const auto& scene : scenes)
+  {
+    for (auto& request : requests)
+    {
+      for (const auto& pipeline : pipelines)
+      {
+        request.pipeline_id = pipeline->getName();
 
-  request.pipeline_id = "stomp";
-  request.planner_id = "STOMP";
-  benchmark.addQuery("stomp-pp", scene, stomp_planner, request);
-  benchmark.addQuery("stomp-mgi", scene, move_group_planner, request);
+        const auto& it = planning_pipelines.find(request.pipeline_id);
+        if (it != planning_pipelines.end())
+        {
+          for (const auto& planner : it->second)
+          {
+            request.planner_id = planner;
+            std::string query_name = planner + '-' + scene->getName() + '-' + scene->getActiveCollisionDetectorName() +
+                                     '-' + pipeline->getName();
+            benchmark.addQuery(query_name, scene, pipeline, request);
+          }
+        }
+        else
+          ROS_ERROR("Cannot find pipeline id in configuration: %s", request.pipeline_id.c_str());
+      }
+    }
+  }
 
   // Use the post-query callback to visualize the data live.
   IO::GNUPlotPlanDataSet plot;
