@@ -52,7 +52,8 @@ add_library(${PROJECT_NAME}
   src/planning.cpp
   src/benchmark.cpp
   src/trajectory.cpp
-  src/io/gnuplot.cpp)
+  src/io/gnuplot.cpp
+  src/backend/motion_planning_config.cpp)
 
 add_executable(motion_planning src/backend/motion_planning.cpp)
 target_link_libraries(motion_planning ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
