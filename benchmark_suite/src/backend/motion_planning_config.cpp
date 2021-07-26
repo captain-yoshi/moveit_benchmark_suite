@@ -30,6 +30,10 @@ void MotionPlanningConfig::readBenchmarkConfig(const std::string& ros_namespace)
     readBenchmarkInterfaces(nh);
     readBenchmarkCollisionDetectors(nh);
     readPlannerConfigs(nh);
+
+    if (interfaces_.find("MoveGroupInterface") != interfaces_.end() &&
+        collision_detectors_.find("Bullet") != collision_detectors_.end())
+      ROS_ERROR("The MoveGroupInterface is incompatible with Bullet");
   }
   else
   {
