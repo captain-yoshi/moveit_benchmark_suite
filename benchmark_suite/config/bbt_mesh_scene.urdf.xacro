@@ -1,0 +1,42 @@
+<?xml version="1.0" ?>
+<robot name="scene" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:include filename="$(find scene_parser)/config/utils.xacro" />
+  <xacro:include filename="$(find moveit_benchmark_suite_resources)/objects/geometry.xacro" />
+
+  <link name="world" />
+
+  <xacro:framemesh name="boxlid"
+                       frame_id="world"
+                       xyz="${0.16 + boxlid['bby']/2} ${-boxlid['bbz']/2} ${boxlid['bbx']/2}" rpy="0 ${pi/2} ${pi/2}"
+                       resource="package://moveit_benchmark_suite_resources/objects/boxlid_16k.stl"/>
+
+  <xacro:framemesh name="clearbox1"
+                       frame_id="world"
+                       xyz="${0.16 + clearbox['bby']/2} ${-(clearbox['bbx']/2 + boxlid['bbz']/2)} 0" rpy="0 0 ${pi/2}"
+                       resource="package://moveit_benchmark_suite_resources/objects/clearbox_16k.stl"/>
+
+  <xacro:framemesh name="clearbox2"
+                       frame_id="clearbox1"
+                       xyz="${clearbox['bbx'] + boxlid['bbz']} 0 0" rpy="0 0 0"
+                       resource="package://moveit_benchmark_suite_resources/objects/clearbox_16k.stl"/>
+
+  <xacro:macro name="linearpattern" params="current:=0 frame_id:=^ index:=0 max:=^ xyz:=^ rpy=^|'0 0 0' gap:=^">
+
+    <xacro:if value="${max > current}">
+      <xacro:framemesh name="woodblock${current+index}"
+                       frame_id="${frame_id}"
+                       xyz="${float(xyz.split()[0]) + current*float(gap.split()[0])}
+                            ${float(xyz.split()[1]) + current*float(gap.split()[1])}
+                            ${float(xyz.split()[2]) + current*float(gap.split()[2])}"
+                       rpy="${rpy}"
+                       resource="package://moveit_benchmark_suite_resources/objects/woodblock_16k.stl"/>
+      <xacro:linearpattern current="${current+1}" index="${index}"/>
+    </xacro:if>
+  </xacro:macro>
+
+  <xacro:linearpattern index="1"  max="4"  frame_id="clearbox1"  gap="${woodblock['bby']*2} 0 0" xyz="${-3*woodblock['bbx']} ${(-3*woodblock['bbx'])} ${0.00709}" rpy="0 0 ${-pi/2}"/>
+  <xacro:linearpattern index="5"  max="4"  frame_id="woodblock1" gap="0 ${woodblock['bby']*2} 0" xyz="${-2*woodblock['bbx']} 0 0"/>
+  <xacro:linearpattern index="9"  max="4"  frame_id="woodblock5" gap="0 ${woodblock['bby']*2} 0" xyz="${-2*woodblock['bbx']} 0 0"/>
+  <xacro:linearpattern index="13" max="4"  frame_id="woodblock9" gap="0 ${woodblock['bby']*2} 0" xyz="${-2*woodblock['bbx']} 0 0"/>
+
+</robot>
