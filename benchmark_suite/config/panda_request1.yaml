@@ -5,7 +5,7 @@ start_state:
     header:
       frame_id: panda_link0
     name: [panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7, panda_finger_joint1, panda_finger_joint2]
-    position: [-0.357411, 0.42179, -0.0942837, -2.36042, 0.108761, 2.77859, -1.33099, 0.015, 0.015]
+    position: [-0.366519, 0.401426, -0.0872665, -2.3911, 0.10472, 2.79253, -1.3439, 0.015, 0.015]
 
 goal_constraints:
   - joint_constraints:
