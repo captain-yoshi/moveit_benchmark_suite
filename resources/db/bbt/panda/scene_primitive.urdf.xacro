@@ -16,7 +16,7 @@
                    frame_id="world"
                    xyz="${0.16 + clearbox['bby']/2} ${-(clearbox['bbx']/2 + boxlid['bbz']/2)} 0" rpy="0 0 0"
                    dimensions="${clearbox['bby']} ${clearbox['bbx']} ${clearbox['bbz']}"
-                   thickness="0.00709"/>
+                   thickness="${clearbox['subframes']['stack']['xyz'][2]}"/>
 
   <xacro:opencrate name="clearbox2"
                    frame_id="clearbox1"
