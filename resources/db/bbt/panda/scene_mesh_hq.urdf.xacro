@@ -8,17 +8,17 @@
   <xacro:framemesh name="boxlid"
                        frame_id="world"
                        xyz="${0.16 + boxlid['bby']/2} ${-boxlid['bbz']/2} ${boxlid['bbx']/2}" rpy="0 ${pi/2} ${pi/2}"
-                       resource="package://moveit_benchmark_suite_resources/objects/boxlid_16k.stl"/>
+                       resource="package://moveit_benchmark_suite_resources/objects/boxlid_19k.stl"/>
 
   <xacro:framemesh name="clearbox1"
                        frame_id="world"
                        xyz="${0.16 + clearbox['bby']/2} ${-(clearbox['bbx']/2 + boxlid['bbz']/2)} 0" rpy="0 0 ${pi/2}"
-                       resource="package://moveit_benchmark_suite_resources/objects/clearbox_16k.stl"/>
+                       resource="package://moveit_benchmark_suite_resources/objects/clearbox_50k.stl"/>
 
   <xacro:framemesh name="clearbox2"
                        frame_id="clearbox1"
                        xyz="${clearbox['bbx'] + boxlid['bbz']} 0 0" rpy="0 0 0"
-                       resource="package://moveit_benchmark_suite_resources/objects/clearbox_16k.stl"/>
+                       resource="package://moveit_benchmark_suite_resources/objects/clearbox_50k.stl"/>
 
   <xacro:macro name="linearpattern" params="current:=0 frame_id:=^ index:=0 max:=^ xyz:=^ rpy=^|'0 0 0' gap:=^">
 
