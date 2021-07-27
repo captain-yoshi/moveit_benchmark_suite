@@ -7,9 +7,10 @@ Collection of resources used by the Moveit Benchmark Suite.
 List of all resources, a short description and the source. Names should always be appended with the number of polygons.
 
 | Resources              | Description                    | Url Date     | Source                                                                                                                                                                                                   |
-|:-----------------------|:-------------------------------|:-------------|:--------------------------------------------------------------------------------------------------------------|
-| apcshelf.stl           | Low rez shelf from APC 2015    | 2021-07-25   | http://pwurman.org/amazonpickingchallenge/2015/gazebo_pod.shtml                                                       |
+|:-----------------------|:-------------------------------|:-------------|:-------------------------------------------------------------------------------------------------------------------------------------|
+| apcshelf.stl           | Low rez shelf from APC 2015    | 2021-07-25   | http://pwurman.org/amazonpickingchallenge/2015/gazebo_pod.shtml                                                                      |
 | boxlid_16k.stl         | Google scanner (16k polygons)  | 2021-07-14   | http://www.ycbbenchmarks.com/wp-content/uploads/2020/04/BBT_supplementary.zip                                                        |
+| bowl_16k.stl           | Google scanner (16k polygons)  | 2021-07-27   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/024_bowl_google_16k.tgz                                         |
 | clearbox_16k.stl       | Google scanner (16k polygons)  | 2021-07-14   | http://www.ycbbenchmarks.com/wp-content/uploads/2020/04/BBT_supplementary.zip                                                        |
 | mug_16k.stl            | Google scanner (16k polygons)  | 2021-07-27   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/025_mug_google_16k.tgz                                          |
 | plate_16k.stl          | Google scanner (16k polygons)  | 2021-07-27   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/029_plate_google_16k.tgz                                        |
@@ -50,6 +51,7 @@ Sometimes the bounding box geometry is not enough to caracterize a complex objec
 |:-----------------------|:-----------------------------------|:---------------|:-------------------|:---------|:----------|:------------------------------|
 | apcshelf.stl           | [0.884207, 0.879534, 2.36728]      | 5,147          | 15,154             | 10,147   | 10,147    | 507,6 KB                      |
 | boxlid_16k.stl         | [0.285749, 0.411113, 0.014288]     | 9,355          | 28,059             | 18,706   | 18,706    | 935,4 KB                      |
+| bowl_16k.stl           | [0.161463, 0.161463, 0.055009]     | 16,382         | 49,128             | 32,750   | 32,750    | 818,8 KB                      |
 | clearbox_16k.stl       | [0.284112, 0.409485, 0.141286]     | 24,982         | 74,940             | 49,960   | 49,960    | 2,5 MB                        |
 | mug_16k.stl            | [0.11699, 0.093089, 0.081303]      | 8,185          | 24,564             | 16,375   | 16,375    | 818,8 kB                      |
 | plate_16k.stl          | [0.26015, 0.261102, 0.026723]      | 8,002          | 24,576             | 16,384   | 16,384    | 819,3 kB                      |

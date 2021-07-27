@@ -30,6 +30,10 @@
                                            dict(name='binX', xyz=[-0.10479,  0.291029, 0.800028], rpy=[0, 0, pi]),
                                            ])}"/>
   <xacro:property name="boxlid"     value="${dict(bbx=0.285749, bby=0.411113, bbz=0.014288)}"/>
+  <xacro:property name="bowl"       value="${dict(bbx=0.161463, bby=0.161463, bbz=0.055009
+                                           subframes=[
+                                           dict(name='stack', xyz=[0, 0, 0.00624]),
+                                           ])}"/>
   <xacro:property name="clearbox"   value="${dict(bbx=0.284112, bby=0.409485, bbz=0.141286)}"/>
   <xacro:property name="mug"        value="${dict(bbx=0.11699, bby=0.093089, bbz=.141286)}"/>
   <xacro:property name="plate"      value="${dict(bbx=0.26015, bby=0.261102, bbz=0.026723
