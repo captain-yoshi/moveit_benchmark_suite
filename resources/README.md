@@ -12,6 +12,7 @@ List of all resources, a short description and the source. Names should always b
 | boxlid_16k.stl         | Google scanner (16k polygons)  | 2021-07-14   | http://www.ycbbenchmarks.com/wp-content/uploads/2020/04/BBT_supplementary.zip                                                        |
 | bowl_16k.stl           | Google scanner (16k polygons)  | 2021-07-27   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/024_bowl_google_16k.tgz                                         |
 | clearbox_16k.stl       | Google scanner (16k polygons)  | 2021-07-14   | http://www.ycbbenchmarks.com/wp-content/uploads/2020/04/BBT_supplementary.zip                                                        |
+| drill_16k.stl          | Google scanner (16k polygons)  | 2021-07-27   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/035_power_drill_google_16k.tgz                                  |
 | mug_16k.stl            | Google scanner (16k polygons)  | 2021-07-27   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/025_mug_google_16k.tgz                                          |
 | plate_16k.stl          | Google scanner (16k polygons)  | 2021-07-27   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/029_plate_google_16k.tgz                                        |
 | soupcan_16k.stl        | Google scanner (16k polygons)  | 2021-07-27   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/005_tomato_soup_can_google_16k.tgz                              |
@@ -54,6 +55,7 @@ Sometimes the bounding box geometry is not enough to caracterize a complex objec
 | boxlid_16k.stl         | [0.285749, 0.411113, 0.014288]     | 9,355          | 28,059             | 18,706   | 18,706    | 935,4 KB                      |
 | bowl_16k.stl           | [0.161463, 0.161463, 0.055009]     | 16,382         | 49,128             | 32,750   | 32,750    | 818,8 KB                      |
 | clearbox_16k.stl       | [0.284112, 0.409485, 0.141286]     | 24,982         | 74,940             | 49,960   | 49,960    | 2,5 MB                        |
+| drill_16k.stl          | [0.184361, 0.057189, 0.186929]     | 8,193          | 24,572             | 16,381   | 16,381    | 819,1 kB                      |
 | mug_16k.stl            | [0.11699, 0.093089, 0.081303]      | 8,185          | 24,564             | 16,375   | 16,375    | 818,8 kB                      |
 | plate_16k.stl          | [0.26015, 0.261102, 0.026723]      | 8,002          | 24,576             | 16,384   | 16,384    | 819,3 kB                      |
 | soupcan_16k.stl        | [0.067911, 0.067743, 0.101855]     | 8,177          | 24,572             | 16,381   | 16,381    | 819,1 kB                      |

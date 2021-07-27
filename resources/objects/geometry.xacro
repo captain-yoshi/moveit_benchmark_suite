@@ -38,6 +38,7 @@
                                            subframes=dict(
                                            stack = dict( xyz=[0, 0, 0.00709]),
                                            ))}"/>
+  <xacro:property name="drill"      value="${dict(bbx=0.184361, bby=0.057189, bbz=0.186929)}"/>
   <xacro:property name="mug"        value="${dict(bbx=0.11699, bby=0.093089, bbz=0.141286)}"/>
   <xacro:property name="plate"      value="${dict(bbx=0.26015, bby=0.261102, bbz=0.026723,
                                            subframes=dict(
