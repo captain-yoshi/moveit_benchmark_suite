@@ -3,43 +3,43 @@
 
   <!-- Bounding box and subframes -->
   <xacro:property name="apcshelf"   value="${dict(bbx=0.884207, bby=0.879534, bbz=2.36728,
-                                           subframes=[
-                                           dict(name='binA', xyz=[0.10479,  -0.291029, 1.52393]),
-                                           dict(name='binB', xyz=[0.10479,   0,        1.52393]),
-                                           dict(name='binC', xyz=[0.10479,   0.291029, 1.52393]),
-                                           dict(name='binD', xyz=[0.10479,  -0.291029, 1.29533]),
-                                           dict(name='binE', xyz=[0.10479,   0,        1.29533]),
-                                           dict(name='binF', xyz=[0.10479,   0.291029, 1.29533]),
-                                           dict(name='binG', xyz=[0.10479,  -0.291029, 1.06673]),
-                                           dict(name='binH', xyz=[0.10479,   0,        1.06673]),
-                                           dict(name='binI', xyz=[0.10479,   0.291029, 1.06673]),
-                                           dict(name='binJ', xyz=[0.10479,  -0.291029, 0.800028]),
-                                           dict(name='binK', xyz=[0.10479,   0,        0.800028]),
-                                           dict(name='binL', xyz=[0.10479,   0.291029, 0.800028]),
-                                           dict(name='binM', xyz=[-0.10479, -0.291029, 1.52393],  rpy=[0, 0, pi]),
-                                           dict(name='binN', xyz=[-0.10479,  0,        1.52393],  rpy=[0, 0, pi]),
-                                           dict(name='binO', xyz=[-0.10479,  0.291029, 1.52393],  rpy=[0, 0, pi]),
-                                           dict(name='binP', xyz=[-0.10479, -0.291029, 1.29533],  rpy=[0, 0, pi]),
-                                           dict(name='binQ', xyz=[-0.10479,  0,        1.29533],  rpy=[0, 0, pi]),
-                                           dict(name='binR', xyz=[-0.10479,  0.291029, 1.29533],  rpy=[0, 0, pi]),
-                                           dict(name='binS', xyz=[-0.10479, -0.291029, 1.06673],  rpy=[0, 0, pi]),
-                                           dict(name='binT', xyz=[-0.10479,  0,        1.06673],  rpy=[0, 0, pi]),
-                                           dict(name='binU', xyz=[-0.10479,  0.291029, 1.06673],  rpy=[0, 0, pi]),
-                                           dict(name='binV', xyz=[-0.10479, -0.291029, 0.800028], rpy=[0, 0, pi]),
-                                           dict(name='binW', xyz=[-0.10479,  0,        0.800028], rpy=[0, 0, pi]),
-                                           dict(name='binX', xyz=[-0.10479,  0.291029, 0.800028], rpy=[0, 0, pi]),
-                                           ])}"/>
+                                           subframes=dict(
+                                           binA = dict( xyz=[0.10479,  -0.291029, 1.52393]),
+                                           binB = dict( xyz=[0.10479,   0,        1.52393]),
+                                           binC = dict( xyz=[0.10479,   0.291029, 1.52393]),
+                                           binD = dict( xyz=[0.10479,  -0.291029, 1.29533]),
+                                           binE = dict( xyz=[0.10479,   0,        1.29533]),
+                                           binF = dict( xyz=[0.10479,   0.291029, 1.29533]),
+                                           binG = dict( xyz=[0.10479,  -0.291029, 1.06673]),
+                                           binH = dict( xyz=[0.10479,   0,        1.06673]),
+                                           binI = dict( xyz=[0.10479,   0.291029, 1.06673]),
+                                           binJ = dict( xyz=[0.10479,  -0.291029, 0.800028]),
+                                           binK = dict( xyz=[0.10479,   0,        0.800028]),
+                                           binL = dict( xyz=[0.10479,   0.291029, 0.800028]),
+                                           binM = dict( xyz=[-0.10479, -0.291029, 1.52393],  rpy=[0, 0, pi]),
+                                           binN = dict( xyz=[-0.10479,  0,        1.52393],  rpy=[0, 0, pi]),
+                                           binO = dict( xyz=[-0.10479,  0.291029, 1.52393],  rpy=[0, 0, pi]),
+                                           binP = dict( xyz=[-0.10479, -0.291029, 1.29533],  rpy=[0, 0, pi]),
+                                           binQ = dict( xyz=[-0.10479,  0,        1.29533],  rpy=[0, 0, pi]),
+                                           binR = dict( xyz=[-0.10479,  0.291029, 1.29533],  rpy=[0, 0, pi]),
+                                           binS = dict( xyz=[-0.10479, -0.291029, 1.06673],  rpy=[0, 0, pi]),
+                                           binT = dict( xyz=[-0.10479,  0,        1.06673],  rpy=[0, 0, pi]),
+                                           binU = dict( xyz=[-0.10479,  0.291029, 1.06673],  rpy=[0, 0, pi]),
+                                           binV = dict( xyz=[-0.10479, -0.291029, 0.800028], rpy=[0, 0, pi]),
+                                           binW = dict( xyz=[-0.10479,  0,        0.800028], rpy=[0, 0, pi]),
+                                           binX = dict( xyz=[-0.10479,  0.291029, 0.800028], rpy=[0, 0, pi]),
+                                           ))}"/>
   <xacro:property name="boxlid"     value="${dict(bbx=0.285749, bby=0.411113, bbz=0.014288)}"/>
-  <xacro:property name="bowl"       value="${dict(bbx=0.161463, bby=0.161463, bbz=0.055009
-                                           subframes=[
-                                           dict(name='stack', xyz=[0, 0, 0.00624]),
-                                           ])}"/>
+  <xacro:property name="bowl"       value="${dict(bbx=0.161463, bby=0.161463, bbz=0.055009,
+                                           subframes=dict(
+                                           stack = dict(  xyz=[0, 0, 0.00624]),
+                                           ))}"/>
   <xacro:property name="clearbox"   value="${dict(bbx=0.284112, bby=0.409485, bbz=0.141286)}"/>
   <xacro:property name="mug"        value="${dict(bbx=0.11699, bby=0.093089, bbz=0.141286)}"/>
-  <xacro:property name="plate"      value="${dict(bbx=0.26015, bby=0.261102, bbz=0.026723
-                                           subframes=[
-                                           dict(name='stack', xyz=[0, 0, 0.003232]),
-                                           ])}"/>
+  <xacro:property name="plate"      value="${dict(bbx=0.26015, bby=0.261102, bbz=0.026723,
+                                           subframes=dict(
+                                           stack = dict( xyz=[0, 0, 0.003232]),
+                                           ))}"/>
   <xacro:property name="soupcan"    value="${dict(bbx=0.067911, bby=0.067743, bbz=0.101855)}"/>
   <xacro:property name="woodblock"  value="${dict(bbx=0.025942, bby=0.025808, bbz=0.025847)}"/>
 
