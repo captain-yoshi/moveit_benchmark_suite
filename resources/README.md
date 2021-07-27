@@ -42,9 +42,9 @@ The [geometry.xacro](objects/geometry.xacro) file contains useful information su
 Sometimes the bounding box geometry is not enough to caracterize a complex object. You can add a list of subframes in the [geometry.xacro](objects/geometry.xacro) file: 
 ```xml
 <xacro:property name="apcshelf" value="${dict(bbx=0.884207, bby=0.879534, bbz=2.36728,
-                                         subframes=[
-                                           dict(name='binA', xyz=[0.10479,  -0.291029, 1.52393], rpy=[0, 0, pi]),
-                                         ])}"/>
+                                         subframes=dict(
+                                           binA=dict(xyz=[0.10479,  -0.291029, 1.52393], rpy=[0, 0, pi]),
+                                         ))}"/>
 ```
 
 ## Statistics
