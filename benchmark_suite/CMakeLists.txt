@@ -17,6 +17,9 @@ find_package(catkin REQUIRED COMPONENTS
 	visualization_msgs
 	scene_parser
   moveit_benchmark_suite_resources
+  moveit_task_constructor_core
+	moveit_task_constructor_msgs
+  rosparam_shortcuts
 )
 
 catkin_package(
@@ -35,6 +38,9 @@ catkin_package(
 		visualization_msgs
 		scene_parser
     moveit_benchmark_suite_resources
+    moveit_task_constructor_core
+	  moveit_task_constructor_msgs
+    rosparam_shortcuts
 )
 
 set(CMAKE_CXX_STANDARD 14)
@@ -53,15 +59,19 @@ add_library(${PROJECT_NAME}
   src/benchmark.cpp
   src/trajectory.cpp
   src/io/gnuplot.cpp
-  src/backend/motion_planning_config.cpp)
+  src/backend/motion_planning_config.cpp
+  src/backend/mtc_pickplace.cpp)
 
 add_executable(motion_planning src/backend/motion_planning.cpp)
 target_link_libraries(motion_planning ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
+add_executable(mtc_runtask src/backend/mtc_runtask.cpp)
+target_link_libraries(mtc_runtask ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
+
 install(DIRECTORY include/${PROJECT_NAME}/
 	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 
-install(TARGETS motion_planning ${PROJECT_NAME}
+install(TARGETS motion_planning mtc_runtask ${PROJECT_NAME}
 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

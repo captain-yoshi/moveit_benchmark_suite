@@ -22,5 +22,7 @@
 	<depend>moveit_visual_tools</depend>
 	<depend>scene_parser</depend>
     <depend>moveit_benchmark_suite_resources</depend>
-
+	<depend>moveit_task_constructor_core</depend>
+	<depend>moveit_task_constructor_msgs</depend>
+	<depend>rosparam_shortcuts</depend>
 </package>
