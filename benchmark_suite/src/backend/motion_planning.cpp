@@ -64,7 +64,7 @@ int main(int argc, char** argv)
   std::vector<moveit_msgs::PlanningScene> scene_msgs;
 
   std::map<std::string, std::string> scene_param_map;
-  pnh.getParam("/scene", scene_param_map);
+  pnh.getParam("/scenes", scene_param_map);
 
   for (const auto& scene : scene_param_map)
   {
@@ -77,7 +77,7 @@ int main(int argc, char** argv)
 
   // Parse request
   std::map<std::string, std::string> request_map;
-  pnh.getParam("/request", request_map);
+  pnh.getParam("/requests", request_map);
 
   std::vector<moveit_msgs::MotionPlanRequest> requests;
   for (const auto& request : request_map)
