@@ -1,0 +1,9 @@
+clearbox:
+  resource: "package://moveit_benchmark_suite_resources/objects/clearbox_50k.stl"
+  bb:                               # Bounding box wrt. mesh origin
+    - 0.284112
+    - 0.409485
+    - 0.141286
+  subframes:
+    stack:                          # Tf for stacking the same objects
+      xyz: [0, 0, 0.00709]

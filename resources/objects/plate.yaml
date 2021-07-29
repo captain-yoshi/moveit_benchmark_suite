@@ -1,0 +1,10 @@
+plate:
+  resource: "package://moveit_benchmark_suite_resources/objects/plate_16k.stl"
+  bb:                               # Bounding box wrt. mesh origin
+    - 0.26015
+    - 0.261102
+    - 0.026723
+  subframes:
+    stack:                          # Tf for stacking the same objects
+      xyz: [0, 0, 0.003232]
+      rpy: [0, 0, 0]

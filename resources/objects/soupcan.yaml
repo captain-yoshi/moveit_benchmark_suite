@@ -1,0 +1,6 @@
+soupcan:
+  resource: "package://moveit_benchmark_suite_resources/objects/soupcan_16k.stl"
+  bb:                               # Bounding box wrt. mesh origin
+    - 0.067911
+    - 0.067743
+    - 0.101855

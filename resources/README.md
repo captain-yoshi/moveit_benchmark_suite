@@ -9,8 +9,8 @@ List of all resources, a short description and the source. Names should always b
 | Resources              | Description                    | Url Date     | Source                                                                                                                                                                                                   |
 |:-----------------------|:-------------------------------|:-------------|:-------------------------------------------------------------------------------------------------------------------------------------|
 | apcshelf_10k.stl       | Low rez shelf from APC 2015    | 2021-07-25   | http://pwurman.org/amazonpickingchallenge/2015/gazebo_pod.shtml                                                                      |
-| boxlid_19k.stl         | NA                             | 2021-07-14   | http://www.ycbbenchmarks.com/wp-content/uploads/2020/04/BBT_supplementary.zip                                                        |
 | bowl_16k.stl           | Google scanner (16k polygons)  | 2021-07-27   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/024_bowl_google_16k.tgz                                         |
+| boxlid_19k.stl         | NA                             | 2021-07-14   | http://www.ycbbenchmarks.com/wp-content/uploads/2020/04/BBT_supplementary.zip                                                        |
 | clearbox_50k.stl       | NA                             | 2021-07-14   | http://www.ycbbenchmarks.com/wp-content/uploads/2020/04/BBT_supplementary.zip                                                        |
 | drill_16k.stl          | Google scanner (16k polygons)  | 2021-07-27   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/035_power_drill_google_16k.tgz                                  |
 | mug_16k.stl            | Google scanner (16k polygons)  | 2021-07-27   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/025_mug_google_16k.tgz                                          |
@@ -28,32 +28,42 @@ The convention used for this package is to have the mesh origin at the bottom ce
 </p>
 
 ## Bounding box
-The [geometry.xacro](objects/geometry.xacro) file contains useful information such as bounding box meausres and subframes (wrt. the origin of the mesh). They can be acessed through the name of the mesh file (without the appended polygon number and extension). If you scale the mesh, don't forget to also scale the parameters. Here is a quick example on how to use the bounding box geometry:
-```xml
-<xacro:include filename="$(find moveit_benchmark_suite_resources)/objects/geometry.xacro" />
-  
-<xacro:framemesh name="clearbox1"
-                 frame_id="world"
-                 xyz="${clearbox['bbx']/2} ${clearbox['bby']} ${clearbox['bbz']}" rpy="0 0 0"
-                 resource="package://moveit_benchmark_suite_resources/objects/clearbox_50k.stl"/>
+The [metadata.xacro](objects/metadata.xacro) loads information from each objects (through individual yaml files) such as mesh path, bounding box and subframes. They can be acessed through the name of the mesh file (without the appended polygon number and extension). If you scale the mesh, don't forget to also scale the parameters.
 
+Example from [plate.yaml](objects/plate.yaml) metadata:
+```yaml
+plate:
+  resource: "package://moveit_benchmark_suite_resources/objects/plate_16k.stl"
+  bb:                               # Bounding box wrt. mesh origin
+    - 0.26015   # x
+    - 0.261102  # y
+    - 0.026723  # z
+  subframes:
+    stack:                          # Tf for stacking the same object
+      xyz: [0, 0, 0.003232]
+      rpy: [0, 0, 0]
+
+```
+Top level example using object metadata:
+```xml
+<!-- Load all objects metadata -->
+<xacro:include filename="$(find moveit_benchmark_suite_resources)/objects/metadata.xacro" />
+
+<xacro:framemesh name="my_clearbox"
+                 frame_id="world"
+                 xyz="${clearbox['bb'][0]/2} ${clearbox['bb'][1]} ${clearbox['bb'][2]}" rpy="0 0 0"
+                 metadata="${clearbox}"/>
 ```
 
 ## Subframes
-Sometimes the bounding box geometry is not enough to caracterize a complex object. You can add a list of subframes in the [geometry.xacro](objects/geometry.xacro) file: 
-```xml
-<xacro:property name="apcshelf" value="${dict(bbx=0.884207, bby=0.879534, bbz=2.36728,
-                                         subframes=dict(
-                                           binA=dict(xyz=[0.10479,  -0.291029, 1.52393], rpy=[0, 0, pi]),
-                                         ))}"/>
-```
+Sometimes the bounding box geometry is not enough to caracterize an object. You can add a list of subframes (wrt. the mesh origin) in the [metadata.xacro](objects/metadata.xacro) file.
 
 ## Statistics
 | Resources              | Bounding Box [x, y, z]             | Vertices       | Edges              | Faces    | Triangles | Size                          |
 |:-----------------------|:-----------------------------------|:---------------|:-------------------|:---------|:----------|:------------------------------|
 | apcshelf_10k.stl       | [0.884207, 0.879534, 2.36728]      | 5,147          | 15,154             | 10,147   | 10,147    | 507,6 KB                      |
-| boxlid_19k.stl         | [0.285749, 0.411113, 0.014288]     | 9,355          | 28,059             | 18,706   | 18,706    | 935,4 KB                      |
 | bowl_16k.stl           | [0.161463, 0.161463, 0.055009]     | 8,191          | 24,564             | 16,375   | 16,375    | 818,8 KB                      |
+| boxlid_19k.stl         | [0.285749, 0.411113, 0.014288]     | 9,355          | 28,059             | 18,706   | 18,706    | 935,4 KB                      |
 | clearbox_50k.stl       | [0.284112, 0.409485, 0.141286]     | 24,982         | 74,940             | 49,960   | 49,960    | 2,5 MB                        |
 | drill_16k.stl          | [0.184361, 0.057189, 0.186929]     | 8,193          | 24,572             | 16,381   | 16,381    | 819,1 kB                      |
 | mug_16k.stl            | [0.11699, 0.093089, 0.081303]      | 8,185          | 24,564             | 16,375   | 16,375    | 818,8 kB                      |

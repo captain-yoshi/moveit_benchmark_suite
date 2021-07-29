@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="panda">
+
+  <xacro:property name="pkg_path"   value="$(find moveit_benchmark_suite_resources)/objects/"/>
+ 
+  <!-- Load metadata of all meshes -->
+  <xacro:property name="apcshelf"   value="${load_yaml(pkg_path + 'apcshelf.yaml')['apcshelf']}"/>
+  <xacro:property name="bowl"       value="${load_yaml(pkg_path + 'bowl.yaml')['bowl']}"/>
+  <xacro:property name="boxlid"     value="${load_yaml(pkg_path + 'boxlid.yaml')['boxlid']}"/>
+  <xacro:property name="clearbox"   value="${load_yaml(pkg_path + 'clearbox.yaml')['clearbox']}"/>
+  <xacro:property name="drill"      value="${load_yaml(pkg_path + 'drill.yaml')['drill']}"/>
+  <xacro:property name="mug"        value="${load_yaml(pkg_path + 'mug.yaml')['mug']}"/>
+  <xacro:property name="plate"      value="${load_yaml(pkg_path + 'plate.yaml')['plate']}"/>
+  <xacro:property name="soupecan"   value="${load_yaml(pkg_path + 'soupecan.yaml')['soupecan']}"/>
+  <xacro:property name="woodblock"  value="${load_yaml(pkg_path + 'woodblock.yaml')['woodblock']}"/>
+
+</robot>

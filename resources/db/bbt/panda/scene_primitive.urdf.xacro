@@ -2,26 +2,25 @@
 <robot name="scene" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:include filename="$(find scene_parser)/config/utils.xacro" />
   <xacro:include filename="$(find scene_parser)/config/opencrate.urdf.xacro" />
-  <!-- Used to get bb information from real meshes -->
-  <xacro:include filename="$(find moveit_benchmark_suite_resources)/objects/geometry.xacro" />
+  <xacro:include filename="$(find moveit_benchmark_suite_resources)/objects/metadata.xacro" />
 
   <link name="world" />
 
   <xacro:framebox name="boxlid"
                   frame_id="world"
-                  dimensions="${boxlid['bby']} ${boxlid['bbz']} ${boxlid['bbx']}"
-                  xyz="${0.16 + boxlid['bby']/2} 0 0"/>
+                  dimensions="${boxlid['bb'][1]} ${boxlid['bb'][2]} ${boxlid['bb'][0]}"
+                  xyz="${0.16 + boxlid['bb'][1]/2} 0 0"/>
     
   <xacro:opencrate name="clearbox1"
                    frame_id="world"
-                   xyz="${0.16 + clearbox['bby']/2} ${-(clearbox['bbx']/2 + boxlid['bbz']/2)} 0" rpy="0 0 0"
-                   dimensions="${clearbox['bby']} ${clearbox['bbx']} ${clearbox['bbz']}"
+                   xyz="${0.16 + clearbox['bb'][1]/2} ${-(clearbox['bb'][0]/2 + boxlid['bb'][2]/2)} 0" rpy="0 0 0"
+                   dimensions="${clearbox['bb'][1]} ${clearbox['bb'][0]} ${clearbox['bb'][2]}"
                    thickness="${clearbox['subframes']['stack']['xyz'][2]}"/>
 
   <xacro:opencrate name="clearbox2"
                    frame_id="clearbox1"
-                   xyz="0 ${clearbox['bbx'] + boxlid['bbz']} 0" rpy="0 0 0"
-                   dimensions="${clearbox['bby']} ${clearbox['bbx']} ${clearbox['bbz']}"
+                   xyz="0 ${clearbox['bb'][0] + boxlid['bb'][2]} 0" rpy="0 0 0"
+                   dimensions="${clearbox['bb'][1]} ${clearbox['bb'][0]} ${clearbox['bb'][2]}"
                    thickness="0.00709"/>
 
   <xacro:macro name="linearpattern" params="current:=0 frame_id:=^ index:=0 max:=^ xyz:=^ rpy=^|'0 0 0' gap:=^">
@@ -29,7 +28,7 @@
     <xacro:if value="${max > current}">
       <xacro:framebox name="woodblock${index+current}"
                       frame_id="${frame_id}"
-                      dimensions="${woodblock['bbx']} ${woodblock['bby']} ${woodblock['bbz']}"
+                      dimensions="${woodblock['bb'][0]} ${woodblock['bb'][1]} ${woodblock['bb'][2]}"
                       xyz="${float(xyz.split()[0]) + current*float(gap.split()[0])}
                            ${float(xyz.split()[1]) + current*float(gap.split()[1])}
                            ${float(xyz.split()[2]) + current*float(gap.split()[2])}" />
@@ -37,9 +36,9 @@
     </xacro:if>
   </xacro:macro>
 
-  <xacro:linearpattern index="1"  max="4"  frame_id="clearbox1"  gap="0 ${woodblock['bby']*2} 0" xyz="${3*woodblock['bbx']} ${(-3*woodblock['bbx'])} 0" rpy="0 0 0"/>
-  <xacro:linearpattern index="5"  max="4"  frame_id="woodblock1/bottom" gap="0 ${woodblock['bby']*2} 0" xyz="${-2*woodblock['bbx']} 0 0"/>
-  <xacro:linearpattern index="9"  max="4"  frame_id="woodblock5/bottom" gap="0 ${woodblock['bby']*2} 0" xyz="${-2*woodblock['bbx']} 0 0"/>
-  <xacro:linearpattern index="13" max="4"  frame_id="woodblock9/bottom" gap="0 ${woodblock['bby']*2} 0" xyz="${-2*woodblock['bbx']} 0 0"/>
+  <xacro:linearpattern index="1"  max="4"  frame_id="clearbox1"  gap="0 ${woodblock['bb'][1]*2} 0" xyz="${3*woodblock['bb'][0]} ${(-3*woodblock['bb'][0])} 0" rpy="0 0 0"/>
+  <xacro:linearpattern index="5"  max="4"  frame_id="woodblock1/bottom" gap="0 ${woodblock['bb'][1]*2} 0" xyz="${-2*woodblock['bb'][0]} 0 0"/>
+  <xacro:linearpattern index="9"  max="4"  frame_id="woodblock5/bottom" gap="0 ${woodblock['bb'][1]*2} 0" xyz="${-2*woodblock['bb'][0]} 0 0"/>
+  <xacro:linearpattern index="13" max="4"  frame_id="woodblock9/bottom" gap="0 ${woodblock['bb'][1]*2} 0" xyz="${-2*woodblock['bb'][0]} 0 0"/>
 
 </robot>

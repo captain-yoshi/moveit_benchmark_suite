@@ -1,0 +1,6 @@
+mug:
+  resource: "package://moveit_benchmark_suite_resources/objects/mug_16k.stl"
+  bb:                               # Bounding box wrt. mesh origin
+    - 0.11699
+    - 0.093089
+    - 0.081303

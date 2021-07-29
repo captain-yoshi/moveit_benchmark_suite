@@ -1,0 +1,6 @@
+woodblock:
+  resource: "package://moveit_benchmark_suite_resources/objects/woodblock_16k.stl"
+  bb:                               # Bounding box wrt. mesh origin
+    - 0.025942
+    - 0.025808
+    - 0.025847

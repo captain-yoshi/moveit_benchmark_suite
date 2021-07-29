@@ -2,7 +2,7 @@
 <robot name="scene" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:include filename="$(find scene_parser)/config/utils.xacro" />
   <xacro:include filename="$(find scene_parser)/config/shelf.urdf.xacro" />
-  <xacro:include filename="$(find moveit_benchmark_suite_resources)/objects/geometry.xacro" />
+  <xacro:include filename="$(find moveit_benchmark_suite_resources)/objects/metadata.xacro" />
 
   <link name="world" />
 
@@ -20,38 +20,26 @@
   <xacro:framemesh name="mug"
                        frame_id="shelf_board1"
                        xyz="0 0 0" rpy="0 0 0"
-                       resource="package://moveit_benchmark_suite_resources/objects/mug_16k.stl"/>
-
+                       metadata="${mug}"/>
+  
   <xacro:framemesh name="bowl"
                        frame_id="shelf_board2"
                        xyz="0 0 0" rpy="0 0 0"
-                       resource="package://moveit_benchmark_suite_resources/objects/bowl_16k.stl"/>
+                       metadata="${bowl}"/>
 
   <xacro:framemesh name="plate"
                        frame_id="shelf_board8"
                        xyz="0 0 0" rpy="0 0 0"
-                       resource="package://moveit_benchmark_suite_resources/objects/plate_16k.stl"/>
+                       metadata="${plate}"/>
 
   <xacro:framemesh name="soupcan"
                        frame_id="shelf_board7"
                        xyz="0.1 0 0" rpy="0 0 0"
-                       resource="package://moveit_benchmark_suite_resources/objects/soupcan_16k.stl"/>
+                       metadata="${soupcan}"/>
 
   <xacro:framemesh name="drill"
                        frame_id="shelf_board8"
                        xyz="0 0 0" rpy="0 0 0"
-                       resource="package://moveit_benchmark_suite_resources/objects/drill_16k.stl"/>
-
-  <!-- <xacro:macro name="shelf" params="name -->
-  <!--                                   frame_id -->
-  <!--                                   xyz:='0 0 0' -->
-  <!--                                   rpy:='0 0 0' -->
-  <!--                                   dimensions:='0.6 1.5 1.25' -->
-  <!--                                   h_boards:=5 -->
-  <!--                                   v_boards:=3 -->
-  <!--                                   h_board_thickness:=0.02 -->
-  <!--                                   v_board_thickness:=0.02 -->
-  <!--                                   back_board:=false -->
-  <!--                                   dl:=_"> -->
+                       metadata="${drill}"/>
 
 </robot>

@@ -1,0 +1,10 @@
+bowl:
+  resource: "package://moveit_benchmark_suite_resources/objects/bowl_16k.stl"
+  bb:                               # Bounding box wrt. mesh origin
+    - 0.161463
+    - 0.161463
+    - 0.055009
+  subframes:
+    stack:                          # Tf for stacking the same objects
+      xyz: [0, 0, 0.00624]
+      rpy: [0, 0, 0]

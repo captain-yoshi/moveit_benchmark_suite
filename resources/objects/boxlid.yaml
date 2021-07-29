@@ -1,0 +1,6 @@
+boxlid:
+  resource: "package://moveit_benchmark_suite_resources/objects/boxlid_19k.stl"
+  bb:                               # Bounding box wrt. mesh origin
+    - 0.285749
+    - 0.411113
+    - 0.014288
