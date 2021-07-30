@@ -144,15 +144,19 @@ int main(int argc, char** argv)
   }
 
   // Setup benchmark
-  PlanningProfiler::Options options;
-  options.metrics =
+  PlanningProfiler profiler;
+  profiler.options_.metrics =
       PlanningProfiler::WAYPOINTS | PlanningProfiler::CORRECT | PlanningProfiler::LENGTH | PlanningProfiler::SMOOTHNESS;
-  PlanningBenchmark benchmark(benchmark_name,  // Name of benchmark
-                              options,         // Options for internal profiler
-                              timeout,         // Timeout allowed for ALL queries
-                              trials);         // Number of trials
 
-  // Setup queries
+  // template <typename ProfilerType, typename QueryType, typename DataSetTypePtr>
+
+  Benchmark<PlanningQuery, PlanData, PlanDataSet, PlanningProfiler> benchmark(
+      benchmark_name,  // Name of benchmark
+      profiler,        // Options for internal profiler
+      timeout,         // Timeout allowed for ALL queries
+      trials);         // Number of trials
+
+  // Create and a queries to the benchmark
   for (const auto& scene : scenes)
   {
     for (auto& request : requests)
@@ -169,7 +173,8 @@ int main(int argc, char** argv)
             request.planner_id = planner;
             std::string query_name = planner + '-' + scene->getName() + '-' + scene->getActiveCollisionDetectorName() +
                                      '-' + pipeline->getName();
-            benchmark.addQuery(query_name, scene, pipeline, request);
+            PlanningQuery query(query_name, scene, pipeline, request);
+            benchmark.addQuery(query);
           }
         }
         else

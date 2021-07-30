@@ -80,7 +80,7 @@ public:
   std::map<std::string, Metric> metrics;  ///< Map of metric name to value.
 };
 
-template <typename DataTypePtr, typename QueryType>
+template <typename DataType, typename QueryType>
 class DataSet
 {
 public:
@@ -95,7 +95,7 @@ public:
   std::string cpuinfo;
   std::string gpuinfo;
 
-  std::map<std::string, std::vector<DataTypePtr>> data;  ///< Map of query name to collected data.
+  std::map<std::string, std::vector<std::shared_ptr<DataType>>> data;  ///< Map of query name to collected data.
 
   /**Query Information*/
   std::vector<std::string> query_names;  ///< All unique names used by planning queries.
@@ -105,18 +105,18 @@ public:
    *  \param[in] query_name Name of query to store point under.
    *  \param[in] run Run data to add to query.
    */
-  void addDataPoint(const std::string& query_name, const DataTypePtr& run)
+  void addDataPoint(const std::string& query_name, const std::shared_ptr<DataType>& run)
   {
     auto it = data.find(query_name);
     if (it == data.end())
-      data.emplace(query_name, std::vector<DataTypePtr>{ run });
+      data.emplace(query_name, std::vector<std::shared_ptr<DataType>>{ run });
     else
       it->second.emplace_back(run);
   }
 
-  std::vector<DataTypePtr> getFlatData() const
+  std::vector<std::shared_ptr<DataType>> getFlatData() const
   {
-    std::vector<DataTypePtr> r;
+    std::vector<std::shared_ptr<DataType>> r;
     for (const auto& query : data)
       r.insert(r.end(), query.second.begin(), query.second.end());
 

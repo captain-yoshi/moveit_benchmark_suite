@@ -2,7 +2,7 @@
 #include <moveit_benchmark_suite/macros.h>
 #include <moveit_benchmark_suite/constants.h>
 #include <moveit_benchmark_suite/log.h>
-#include <moveit_benchmark_suite/benchmark.h>
+#include <moveit_benchmark_suite/backend/motion_planning_benchmark.h>
 #include <exception>
 
 #if IS_BOOST_164

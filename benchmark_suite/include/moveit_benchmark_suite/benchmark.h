@@ -38,116 +38,18 @@
 
 #pragma once
 
-#include <moveit_benchmark_suite/dataset.h>
-#include <moveit_benchmark_suite/planning.h>
+//#include <moveit_benchmark_suite/dataset.h>
+//#include <moveit_benchmark_suite/planning.h>
+#include <moveit_benchmark_suite/io.h>
+#include <moveit_benchmark_suite/log.h>
 
-#include <moveit_benchmark_suite/trajectory.h>
+//#include <moveit_benchmark_suite/trajectory.h>
 
 namespace moveit_benchmark_suite
 {
-MOVEIT_CLASS_FORWARD(PlanningBenchmark);
-MOVEIT_CLASS_FORWARD(PlanData);
-MOVEIT_CLASS_FORWARD(PlanDataSet);
-
-struct PlanningQuery
-{
-  /** \brief Empty constructor.
-   */
-  PlanningQuery() = default;
-
-  /** \brief Constructor. Fills in fields.
-   *  \param[in] name Name of this query.
-   *  \param[in] scene Scene to use.
-   *  \param[in] planner Planner to use to evaluate query.
-   *  \param[in] request Request to give planner.
-   */
-  PlanningQuery(const std::string& name,                             //
-                const planning_scene::PlanningSceneConstPtr& scene,  //
-                const PlannerPtr& planner,                           //
-                const planning_interface::MotionPlanRequest& request);
-
-  std::string name;                               ///< Name of this query.
-  planning_scene::PlanningSceneConstPtr scene;    ///< Scene used for the query.
-  PlannerPtr planner;                             ///< Planner used for the query.
-  planning_interface::MotionPlanRequest request;  ///< Request used for the query.
-};
-
-class PlanData : public Data
-{
-public:
-  /** \name Planning Query and Response
-      \{ */
-
-  PlanningQuery query;                              ///< Query evaluated to create this data.
-  planning_interface::MotionPlanResponse response;  ///< Planner response.
-  bool success;                                     ///< Was the plan successful?
-  TrajectoryPtr trajectory;                         ///< The resulting trajectory, if available.
-
-  std::vector<std::string> property_names;                   ///< Planner progress value names.
-  std::vector<std::map<std::string, std::string>> progress;  ///< Planner progress data.
-};
-
-class PlanDataSet : public DataSet<PlanDataPtr, PlanningQuery>
-{
-public:
-  /** Benchmark Parameters */
-
-  double allowed_time;          ///< Allowed time for all queries.
-  std::size_t trials;           ///< Requested trials for each query.
-  bool enforced_single_thread;  ///< If true, all planners were asked to run in single-threaded mode.
-  bool run_till_timeout;        ///< If true, planners were run to solve the problem as many times as possible
-                                ///< until time ran out.
-  std::size_t threads;          ///< Threads used for dataset computation.
-};
-
-class PlanningProfiler
-{
-public:
-  /** \brief Bitmask options to select what metrics to compute for each run.
-   */
-  enum Metrics
-  {
-    WAYPOINTS = 1 << 0,   ///< Number of waypoints in path.
-    CORRECT = 1 << 1,     ///< Is the path correct (no collisions?).
-    LENGTH = 1 << 2,      ///< Length of the path.
-    CLEARANCE = 1 << 3,   ///< Clearance of path from obstacles.
-    SMOOTHNESS = 1 << 4,  ///< Smoothness of path.
-  };
-
-  /** \brief Options for profiling.
-   */
-  struct Options
-  {
-    uint32_t metrics{ uint32_t(~0) };     ///< Bitmask of which metrics to compute after planning.
-    bool progress{ true };                ///< If true, captures planner progress properties (if they exist).
-    bool progress_at_least_once{ true };  ///< If true, will always run the progress loop at least once.
-    double progress_update_rate{ 0.1 };   ///< Update rate for progress callbacks.
-  };
-
-  /** \brief Profiling a single plan using a \a planner.
-   *  \param[in] planner Planner to profile.
-   *  \param[in] scene Scene to plan in.
-   *  \param[in] request Planning request to profile.
-   *  \param[in] options The options for profiling.
-   *  \param[out] result The results of profiling.
-   *  \return True if planning succeeded, false on failure.
-   */
-  bool profilePlan(const PlannerPtr& planner,                             //
-                   const planning_scene::PlanningSceneConstPtr& scene,    //
-                   const planning_interface::MotionPlanRequest& request,  //
-                   const Options& options,                                //
-                   PlanData& result) const;
-
-private:
-  /** \brief Compute the built-in metrics according to the provided bitmask \a options.
-   *  \param[in] options Bitmask of which built-in metrics to compute.
-   *  \param[in] scene Scene used for planning and metric computation.
-   *  \param[out] run Metric results.
-   */
-  void computeBuiltinMetrics(uint32_t options, const planning_scene::PlanningSceneConstPtr& scene, PlanData& run) const;
-};
-
-class PlanningBenchmark
+// TODO deduce DataType from DataSetType?
+template <typename QueryType, typename DataType, typename DataSetType, typename ProfilerType>
+class Benchmark
 {
 public:
   /** \name Building Experiment
@@ -161,11 +63,12 @@ public:
    *  \param[in] timeout If true, will re-run each query until the total time taken has exceeded the
    * allotted time.
    */
-  PlanningBenchmark(const std::string& name,  //
-                    const PlanningProfiler::Options& options,
-                    double allowed_time = 60.0,  //
-                    std::size_t trials = 100,    //
-                    bool timeout = false);
+  Benchmark(const std::string& name,  //
+            const ProfilerType& profiler,
+            double allowed_time = 60.0,  //
+            std::size_t trials = 100,    //
+            bool timeout = false)
+    : name_(name), allowed_time_(allowed_time), trials_(trials), timeout_(timeout), profiler_(profiler){};
 
   /** \brief Add a query to the experiment for profiling.
    *  \param[in] planner_name Name to associate with this query. Does not need to be unique.
@@ -173,22 +76,28 @@ public:
    *  \param[in] planner Planner to use for query.
    *  \param[in] request Request to use for query.
    */
-  void addQuery(const std::string& planner_name,                     //
-                const planning_scene::PlanningSceneConstPtr& scene,  //
-                const PlannerPtr& planner,                           //
-                const planning_interface::MotionPlanRequest& request);
+  void addQuery(const QueryType& query)
+  {
+    queries_.emplace_back(query);
+  };
 
   /** \brief Get the queries added to this experiment.
    *  \return The queries added to the experiment.
    */
-  const std::vector<PlanningQuery>& getQueries() const;
+  const std::vector<QueryType>& getQueries() const
+  {
+    return queries_;
+  };
 
-  using PostQueryCallback = std::function<void(PlanDataSetPtr dataset, const PlanningQuery& query)>;
+  using PostQueryCallback = std::function<void(std::shared_ptr<DataSetType> dataset, const QueryType& query)>;
 
   /** \brief Set the post-dataset callback function.
    *  \param[in] callback Callback to use.
    */
-  void setPostQueryCallback(const PostQueryCallback& callback);
+  void setPostQueryCallback(const PostQueryCallback& callback)
+  {
+    complete_callback_ = callback;
+  };
 
   /** \brief Run benchmarking on this experiment.
    *  Note that, for some planners, multiple threads cannot be used without polluting the dataset, due
@@ -196,7 +105,51 @@ public:
    *  \param[in] n_threads Number of threads to use for benchmarking.
    *  \return The computed dataset.
    */
-  PlanDataSetPtr run(std::size_t n_threads = 1) const;
+  std::shared_ptr<DataSetType> run(std::size_t n_threads = 1) const
+  {
+    // Setup dataset to return
+    auto dataset = std::make_shared<DataSetType>();
+    dataset->name = name_;
+    dataset->start = IO::getDate();
+    dataset->allowed_time = allowed_time_;
+    dataset->trials = trials_;
+    dataset->run_till_timeout = timeout_;
+    dataset->threads = n_threads;
+    dataset->queries = queries_;
+    dataset->cpuinfo = IO::getHardwareCPU();
+    dataset->gpuinfo = IO::getHardwareGPU();
+
+    int query_index = 0;
+    for (const auto& query : queries_)
+    {
+      // Check if this name is unique, if so, add it to dataset list.
+      const auto& it = std::find(dataset->query_names.begin(), dataset->query_names.end(), query.name);
+      if (it == dataset->query_names.end())
+        dataset->query_names.emplace_back(query.name);
+
+      for (std::size_t j = 0; j < trials_; ++j)
+      {
+        ROS_INFO_STREAM("");
+        ROS_INFO_STREAM(log::format("Running Query %1% `%2%` Trial [%3%/%4%]",  //
+                                    query.name, query_index, j + 1, trials_));
+        auto data = std::make_shared<DataType>();
+
+        profiler_.profilePlan(allowed_time_, query, *data);
+
+        data->query.name = query.name;
+        dataset->addDataPoint(query.name, data);
+
+        if (complete_callback_)
+          complete_callback_(dataset, query);
+      }
+      query_index++;
+    }
+
+    dataset->finish = IO::getDate();
+    dataset->time = IO::getSeconds(dataset->start, dataset->finish);
+
+    return dataset;
+  };
 
 private:
   const std::string name_;  ///< Name of this experiment.
@@ -204,50 +157,11 @@ private:
   std::size_t trials_;      ///< Number of trials to run each query for.
   bool timeout_;            ///< If true, will re-run planners on queries until total time taken has exceeded the
 
-  PlanningProfiler::Options options_;   ///< Options for profiler.
-  PlanningProfiler profiler_;           ///< Profiler to use for extracting data.
-  std::vector<PlanningQuery> queries_;  ///< Queries to test.
+  // ProfilerType::Options options_;   ///< Options for profiler.
+  ProfilerType profiler_;           ///< Profiler to use for extracting data.
+  std::vector<QueryType> queries_;  ///< Queries to test.
 
   PostQueryCallback complete_callback_;  ///< Post-run callback with dataset.
-};
-
-/** \brief An abstract class for outputting benchmark results.
- */
-class PlanDataSetOutputter
-{
-public:
-  /** \brief Virtual destructor for cleaning up resources.
-   */
-  virtual ~PlanDataSetOutputter() = default;
-
-  /** \brief Write the \a results of a benchmarking query out.
-   *  Must be implemented by child classes.
-   *  \param[in] results The results of one query of benchmarking.
-   */
-  virtual void dump(const PlanDataSet& results) = 0;
-};
-
-class OMPLPlanDataSetOutputter : public PlanDataSetOutputter
-{
-public:
-  /** \brief Constructor.
-   *  \param[in] prefix Prefix to place in front of all log files generated.
-   *  \param[in] dumpScene If true, will output scene into log file.
-   */
-  OMPLPlanDataSetOutputter(const std::string& prefix);
-
-  /** \brief Destructor, runs `ompl_benchmark_statistics.py` to generate benchmarking database.
-   */
-  ~OMPLPlanDataSetOutputter() override;
-
-  /** \brief Dumps \a results into a OMPL benchmarking log file in \a prefix_ named after the request \a
-   *  name_.
-   *  \param[in] results Results to dump to file.
-   */
-  void dump(const PlanDataSet& results) override;
-
-private:
-  const std::string prefix_;  ///< Log file prefix.
 };
 
 }  // namespace moveit_benchmark_suite

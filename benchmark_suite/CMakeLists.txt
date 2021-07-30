@@ -57,10 +57,10 @@ add_library(${PROJECT_NAME}
   src/scene.cpp
   src/log.cpp
   src/planning.cpp
-  src/benchmark.cpp
   src/trajectory.cpp
   src/io/gnuplot.cpp
   src/backend/motion_planning_config.cpp
+  src/backend/motion_planning_benchmark.cpp
   src/backend/mtc_pickplace.cpp)
 
 add_executable(motion_planning src/backend/motion_planning.cpp)

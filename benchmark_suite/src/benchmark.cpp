@@ -1,6 +1,5 @@
 #include <moveit_benchmark_suite/benchmark.h>
 #include <moveit_benchmark_suite/log.h>
-#include <moveit_benchmark_suite/io.h>
 
 #include <queue>
 #include <moveit/version.h>
@@ -26,22 +25,25 @@ PlanningQuery::PlanningQuery(const std::string& name,                           
 /// Profiler
 ///
 
-bool PlanningProfiler::profilePlan(const PlannerPtr& planner,                             //
-                                   const planning_scene::PlanningSceneConstPtr& scene,    //
-                                   const planning_interface::MotionPlanRequest& request,  //
-                                   const Options& options,                                //
+bool PlanningProfiler::profilePlan(double timeout, const PlanningQuery& query,  //
                                    PlanData& result) const
 {
   bool complete = false;
 
-  result.query.scene = scene;
-  result.query.planner = planner;
+  planning_interface::MotionPlanRequest request = query.request;
+  request.allowed_planning_time = timeout;
+
+  result.query.scene = query.scene;
+  result.query.planner = query.planner;
   result.query.request = request;
+
+  // Pre-run Callback
+  query.planner->preRun(query.scene, request);
 
   result.start = IO::getDate();
 
   // Plan
-  result.response = planner->plan(scene, request);
+  result.response = query.planner->plan(query.scene, request);
 
   // Compute metrics and fill out results
   result.finish = IO::getDate();
@@ -55,7 +57,7 @@ bool PlanningProfiler::profilePlan(const PlannerPtr& planner,                   
   result.process_id = IO::getProcessID();
   result.thread_id = IO::getThreadID();
 
-  computeBuiltinMetrics(options.metrics, scene, result);
+  computeBuiltinMetrics(options_.metrics, query.scene, result);
 
   return result.success;
 }
@@ -85,90 +87,6 @@ void PlanningProfiler::computeBuiltinMetrics(uint32_t options, const planning_sc
   run.metrics["hostname"] = run.hostname;
   run.metrics["thread_id"] = (int)run.thread_id;
   run.metrics["process_id"] = (int)run.process_id;
-}
-
-///
-/// PlanningBenchmark
-///
-
-PlanningBenchmark::PlanningBenchmark(const std::string& name, const PlanningProfiler::Options& options,  //
-                                     double allowed_time, std::size_t trials, bool timeout)
-  : name_(name), allowed_time_(allowed_time), trials_(trials), timeout_(timeout), options_(options)
-{
-}
-
-void PlanningBenchmark::addQuery(const std::string& planner_name,                     //
-                                 const planning_scene::PlanningSceneConstPtr& scene,  //
-                                 const PlannerPtr& planner,                           //
-                                 const planning_interface::MotionPlanRequest& request)
-{
-  queries_.emplace_back(planner_name, scene, planner, request);
-}
-
-const std::vector<PlanningQuery>& PlanningBenchmark::getQueries() const
-{
-  return queries_;
-}
-
-void PlanningBenchmark::setPostQueryCallback(const PostQueryCallback& callback)
-{
-  complete_callback_ = callback;
-}
-
-PlanDataSetPtr PlanningBenchmark::run(std::size_t n_threads) const
-{
-  // Setup dataset to return
-  auto dataset = std::make_shared<PlanDataSet>();
-  dataset->name = name_;
-  dataset->start = IO::getDate();
-  dataset->allowed_time = allowed_time_;
-  dataset->trials = trials_;
-  dataset->run_till_timeout = timeout_;
-  dataset->threads = n_threads;
-  dataset->queries = queries_;
-  dataset->cpuinfo = IO::getHardwareCPU();
-  dataset->gpuinfo = IO::getHardwareGPU();
-
-  int query_index = 0;
-  for (const auto& query : queries_)
-  {
-    // Check if this name is unique, if so, add it to dataset list.
-    const auto& it = std::find(dataset->query_names.begin(), dataset->query_names.end(), query.name);
-    if (it == dataset->query_names.end())
-      dataset->query_names.emplace_back(query.name);
-
-    for (std::size_t j = 0; j < trials_; ++j)
-    {
-      ROS_INFO_STREAM("");
-      ROS_INFO_STREAM(log::format("Running Query %1% `%2%` Trial [%3%/%4%]",  //
-                                  query.name, query_index, j + 1, trials_));
-      auto data = std::make_shared<PlanData>();
-
-      planning_interface::MotionPlanRequest request = query.request;
-      request.allowed_planning_time = allowed_time_;
-
-      // Call pre-run callbacks
-      query.planner->preRun(query.scene, request);
-
-      profiler_.profilePlan(query.planner,  //
-                            query.scene,
-                            request,   //
-                            options_,  //
-                            *data);
-
-      data->query.name = query.name;
-      dataset->addDataPoint(query.name, data);
-
-      if (complete_callback_)
-        complete_callback_(dataset, query);
-    }
-    query_index++;
-  }
-
-  dataset->finish = IO::getDate();
-  dataset->time = IO::getSeconds(dataset->start, dataset->finish);
-
-  return dataset;
 }
 
 ///
