@@ -184,13 +184,13 @@ int main(int argc, char** argv)
   }
 
   // Use the post-query callback to visualize the data live.
-  IO::GNUPlotPlanDataSet plot;
-  plot.addMetric("time", IO::GNUPlotPlanDataSet::BoxPlot);
-  plot.addMetric("waypoints", IO::GNUPlotPlanDataSet::BoxPlot);
-  plot.addMetric("length", IO::GNUPlotPlanDataSet::BoxPlot);
-  plot.addMetric("smoothness", IO::GNUPlotPlanDataSet::BoxPlot);
-  plot.addMetric("success", IO::GNUPlotPlanDataSet::BarGraph);
-  plot.addMetric("correct", IO::GNUPlotPlanDataSet::BarGraph);
+  IO::GNUPlotDataSet plot;
+  plot.addMetric("time", IO::GNUPlotDataSet::BoxPlot);
+  plot.addMetric("waypoints", IO::GNUPlotDataSet::BoxPlot);
+  plot.addMetric("length", IO::GNUPlotDataSet::BoxPlot);
+  plot.addMetric("smoothness", IO::GNUPlotDataSet::BoxPlot);
+  plot.addMetric("success", IO::GNUPlotDataSet::BarGraph);
+  plot.addMetric("correct", IO::GNUPlotDataSet::BarGraph);
 
   benchmark.setPostQueryCallback([&](PlanDataSetPtr dataset, const PlanningQuery&) { plot.dump(*dataset); });
 

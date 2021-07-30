@@ -168,7 +168,7 @@ private:
 /** \brief Helper class to plot a real metric as a box plot using GNUPlot from benchmarking data.
  */
 
-class GNUPlotPlanDataSet : public PlanDataSetOutputter
+class GNUPlotDataSet
 {
 public:
   enum PlotType
@@ -180,22 +180,113 @@ public:
 
   /** \brief Constructor.
    */
-  GNUPlotPlanDataSet();
+  GNUPlotDataSet(){};
 
   /** \brief Destructor.
    */
-  ~GNUPlotPlanDataSet() override;
+  ~GNUPlotDataSet(){};
 
   /** \brief Visualize results.
    *  \param[in] results Results to visualize.
    */
-  void addMetric(const std::string& metric, const PlotType& plottype);
+  void addMetric(const std::string& metric, const PlotType& plottype)
+  {
+    plot_types_.push_back(std::make_pair(metric, plottype));
+  };
 
-  void dump(const PlanDataSet& results) override;
+  template <typename DataSetType>
+  void dump(const DataSetType& results)
+  {
+    if (plot_types_.empty())
+      ROS_WARN("No plot type specified");
+
+    GNUPlotHelper::QtTerminalOptions to;
+    to.size.x = 1280;
+    to.size.y = 720;
+
+    // TODO add in constructor
+    GNUPlotHelper::MultiPlotOptions mpo;
+    mpo.layout.row = 2;
+    mpo.layout.col = 3;
+
+    if (mpo.layout.row * mpo.layout.col < plot_types_.size())
+      ROS_WARN("Metrics cannot fit in plot layout");
+
+    helper_.configureTerminal(to);
+    if (plot_types_.size() > 1)
+      helper_.multiplot(mpo);
+
+    for (const auto& pair : plot_types_)
+    {
+      switch (pair.second)
+      {
+        case PlotType::BarGraph:
+          dumpBarGraph(pair.first, results);
+          break;
+
+        case PlotType::BoxPlot:
+          dumpBoxPlot(pair.first, results);
+          break;
+
+        default:
+          ROS_WARN("Plot Type not implemented");
+          break;
+      }
+    }
+  };
 
 private:
-  void dumpBoxPlot(const std::string& metric, const PlanDataSet& results);
-  void dumpBarGraph(const std::string& metric, const PlanDataSet& results);
+  template <typename DataSetType>
+  void dumpBoxPlot(const std::string& metric, const DataSetType& results)
+  {
+    GNUPlotHelper::BoxPlotOptions bpo;
+    bpo.title = log::format("\\\"%1%\\\" for Experiment \\\"%2%\\\"", metric, results.name);
+    bpo.y.label = metric;
+    bpo.y.min = 0.;
+
+    for (const auto& query : results.data)
+    {
+      const auto& name = query.first;
+      const auto& points = query.second;
+
+      std::vector<double> values;
+      for (const auto& run : points)
+      {
+        values.emplace_back(toMetricDouble(run->metrics[metric]));
+      }
+
+      bpo.values.emplace(name, values);
+    }
+
+    helper_.boxplot(bpo);
+  };
+  template <typename DataSetType>
+  void dumpBarGraph(const std::string& metric, const DataSetType& results)
+  {
+    GNUPlotHelper::BarGraphOptions bgo;
+    bgo.percent = true;
+    bgo.title = log::format("\\\"%1%\\\" for Experiment \\\"%2%\\\"", metric, results.name);
+    bgo.y.label = metric + " (%)";
+    bgo.y.min = 0.;
+
+    for (const auto& query : results.data)
+    {
+      const auto& name = query.first;
+      const auto& points = query.second;
+
+      double sum = 0;
+      for (const auto& run : points)
+      {
+        sum += toMetricDouble(run->metrics[metric]);
+      }
+
+      double mean = (points.size()) ? sum / double(points.size()) : 0;
+
+      bgo.value.emplace(name, mean * 100.0);
+    }
+
+    helper_.bargraph(bgo);
+  };
 
   std::vector<std::pair<std::string, PlotType>> plot_types_;
   GNUPlotHelper helper_;

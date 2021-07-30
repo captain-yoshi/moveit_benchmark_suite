@@ -61,6 +61,7 @@ add_library(${PROJECT_NAME}
   src/io/gnuplot.cpp
   src/backend/motion_planning_config.cpp
   src/backend/motion_planning_benchmark.cpp
+  src/backend/collision_checks_benchmark.cpp
   src/backend/mtc_pickplace.cpp)
 
 add_executable(motion_planning src/backend/motion_planning.cpp)
@@ -71,7 +72,7 @@ target_link_libraries(mtc_runtask ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
 if("${catkin_LIBRARIES}" MATCHES "moveit_collision_detection_bullet")
   add_executable(collision_checks src/backend/collision_checks.cpp)
-  target_link_libraries(collision_checks fcl ${PROJECT_NAME} ${catkin_LIBRARIES})
+  target_link_libraries(collision_checks fcl ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 endif()
 
 
