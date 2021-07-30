@@ -4,6 +4,7 @@ project(moveit_benchmark_suite)
 find_package(Boost REQUIRED)
 find_library(YAML yaml-cpp REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(fcl REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
 	eigen_conversions
@@ -68,10 +69,20 @@ target_link_libraries(motion_planning ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-c
 add_executable(mtc_runtask src/backend/mtc_runtask.cpp)
 target_link_libraries(mtc_runtask ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
+if("${catkin_LIBRARIES}" MATCHES "moveit_collision_detection_bullet")
+  add_executable(collision_checks src/backend/collision_checks.cpp)
+  target_link_libraries(collision_checks fcl ${PROJECT_NAME} ${catkin_LIBRARIES})
+endif()
+
+
 install(DIRECTORY include/${PROJECT_NAME}/
 	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 
-install(TARGETS motion_planning mtc_runtask ${PROJECT_NAME}
+install(TARGETS
+  ${PROJECT_NAME}
+  motion_planning
+  mtc_runtask
+  collision_checks
 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
