@@ -5,6 +5,9 @@
 #include <queue>
 #include <moveit/version.h>
 
+#include <moveit/collision_detection_fcl/fcl_compat.h>
+#include <moveit/collision_detection_bullet/collision_env_bullet.h>
+
 using namespace moveit_benchmark_suite;
 
 ///
@@ -124,7 +127,7 @@ PlanDataSetPtr PlanningBenchmark::run(std::size_t n_threads) const
   dataset->threads = n_threads;
   dataset->queries = queries_;
   dataset->cpuinfo = IO::getHardwareCPU();
-  dataset->cpuinfo = IO::getHardwareGPU();
+  dataset->gpuinfo = IO::getHardwareGPU();
 
   int query_index = 0;
   for (const auto& query : queries_)
@@ -185,12 +188,18 @@ void OMPLPlanDataSetOutputter::dump(const PlanDataSet& results)
   std::ofstream out;
   IO::createFile(out, "benchmark.log");
 
-  out << "MoveIt! version " << MOVEIT_VERSION << std::endl;  // version
-  out << "Experiment " << results.name << std::endl;         // experiment
-  out << "Running on " << IO::getHostname() << std::endl;    // hostname
-  out << "Starting at " << results.start << std::endl;       // date
+  out << "MoveIt! version " << MOVEIT_VERSION << std::endl;          // version
+  out << "Git branch " << MOVEIT_GIT_BRANCH << std::endl;            // version
+  out << "Git commit hash " << MOVEIT_GIT_COMMIT_HASH << std::endl;  // version
+  out << "FCL version " << MOVEIT_FCL_VERSION << std::endl;          // version
+  out << "Git commit hash " << MOVEIT_GIT_COMMIT_HASH << std::endl;  // version
+  out << "Experiment " << results.name << std::endl;                 // experiment
+  out << "Running on " << IO::getHostname() << std::endl;            // hostname
+  out << "Starting at " << results.start << std::endl;               // date
 
   out << "<<<|" << std::endl;
+  out << "CPUinfo:\n" << results.cpuinfo << std::endl;  // date
+  out << "GPUinfo:\n" << results.gpuinfo << std::endl;  // date
   out << "|>>>" << std::endl;
 
   // random seed (fake)
