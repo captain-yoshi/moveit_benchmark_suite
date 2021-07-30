@@ -82,6 +82,9 @@ public:
   planning_interface::MotionPlanResponse response;  ///< Planner response.
   bool success;                                     ///< Was the plan successful?
   TrajectoryPtr trajectory;                         ///< The resulting trajectory, if available.
+
+  std::vector<std::string> property_names;                   ///< Planner progress value names.
+  std::vector<std::map<std::string, std::string>> progress;  ///< Planner progress data.
 };
 
 class PlanDataSet : public DataSet<PlanDataPtr, PlanningQuery>

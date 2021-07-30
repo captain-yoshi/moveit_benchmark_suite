@@ -77,9 +77,7 @@ public:
   std::size_t thread_id;   ///< Thread ID of profiler execution.
 
   /** Metrics */
-  std::vector<std::string> property_names;                   ///< Planner progress value names.
-  std::vector<std::map<std::string, std::string>> progress;  ///< Planner progress data.
-  std::map<std::string, Metric> metrics;                     ///< Map of metric name to value.
+  std::map<std::string, Metric> metrics;  ///< Map of metric name to value.
 };
 
 template <typename DataTypePtr, typename QueryType>
