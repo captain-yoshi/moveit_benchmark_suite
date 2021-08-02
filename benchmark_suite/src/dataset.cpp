@@ -54,7 +54,7 @@ public:
 
   double operator()(double value) const
   {
-    return static_cast<double>(value);
+    return value;
   }
 
   double operator()(std::size_t value) const
