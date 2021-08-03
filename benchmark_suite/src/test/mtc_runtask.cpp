@@ -38,7 +38,7 @@
 #include <ros/ros.h>
 
 // MTC pick/place demo implementation
-#include <moveit_benchmark_suite/backend/mtc_pickplace.h>
+#include <moveit_benchmark_suite/test/mtc_pickplace.h>
 #include <scene_parser/scene_parser.h>
 
 constexpr char LOGNAME[] = "moveit_benchmark_suite_run_task";

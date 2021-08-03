@@ -34,7 +34,7 @@
    Desc:   A demo to show MoveIt Task Constructor in action
 */
 
-#include <moveit_benchmark_suite/backend/mtc_pickplace.h>
+#include <moveit_benchmark_suite/test/mtc_pickplace.h>
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
 
 namespace moveit
