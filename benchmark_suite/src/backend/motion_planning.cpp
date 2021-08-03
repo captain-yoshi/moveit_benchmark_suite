@@ -150,11 +150,10 @@ int main(int argc, char** argv)
 
   // template <typename ProfilerType, typename QueryType, typename DataSetTypePtr>
 
-  Benchmark<PlanningQuery, PlanData, PlanDataSet, PlanningProfiler> benchmark(
-      benchmark_name,  // Name of benchmark
-      profiler,        // Options for internal profiler
-      timeout,         // Timeout allowed for ALL queries
-      trials);         // Number of trials
+  Benchmark benchmark(benchmark_name,  // Name of benchmark
+                      profiler,        // Options for internal profiler
+                      timeout,         // Timeout allowed for ALL queries
+                      trials);         // Number of trials
 
   // Create and a queries to the benchmark
   for (const auto& scene : scenes)
@@ -173,7 +172,9 @@ int main(int argc, char** argv)
             request.planner_id = planner;
             std::string query_name = planner + '-' + scene->getName() + '-' + scene->getActiveCollisionDetectorName() +
                                      '-' + pipeline->getName();
-            PlanningQuery query(query_name, scene, pipeline, request);
+            PlanningQueryPtr query = std::make_shared<PlanningQuery>(query_name, scene, pipeline, request);
+            // PlanningQuery query(query_name, scene, pipeline, request);
+            // QueryPtr query = std::make_shared<Query>();
             benchmark.addQuery(query);
           }
         }
@@ -192,7 +193,7 @@ int main(int argc, char** argv)
   plot.addMetric("success", IO::GNUPlotDataSet::BarGraph);
   plot.addMetric("correct", IO::GNUPlotDataSet::BarGraph);
 
-  benchmark.setPostQueryCallback([&](PlanDataSetPtr dataset, const PlanningQuery&) { plot.dump(*dataset); });
+  benchmark.setPostQueryCallback([&](DataSetPtr dataset, const Query&) { plot.dump(*dataset); });
 
   // Run benchmark
   auto dataset = benchmark.run();
@@ -200,8 +201,8 @@ int main(int argc, char** argv)
   // plot.dump(*dataset);
 
   // Dump metrics to a logfile
-  OMPLPlanDataSetOutputter output("demo");
-  output.dump(*dataset);
+  // OMPLPlanDataSetOutputter output("demo");
+  // output.dump(*dataset);
 
   ros::waitForShutdown();
 

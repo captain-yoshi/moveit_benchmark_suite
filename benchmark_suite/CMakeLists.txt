@@ -53,6 +53,7 @@ add_library(${PROJECT_NAME}
   src/io.cpp
   src/geometry.cpp
   src/dataset.cpp
+  src/benchmark.cpp
   src/robot.cpp
   src/scene.cpp
   src/log.cpp

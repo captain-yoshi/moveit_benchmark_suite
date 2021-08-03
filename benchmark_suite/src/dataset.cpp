@@ -83,3 +83,36 @@ double moveit_benchmark_suite::toMetricDouble(const Metric& metric)
 {
   return boost::apply_visitor(toMetricDoubleVisitor(), metric);
 }
+
+///
+/// DataSet
+///
+
+void DataSet::addDataPoint(const std::string& query_name, const DataPtr& run)
+{
+  auto it = data.find(query_name);
+  if (it == data.end())
+    data.emplace(query_name, std::vector<DataPtr>{ run });
+  else
+    it->second.emplace_back(run);
+}
+
+std::vector<DataPtr> DataSet::getFlatData() const
+{
+  std::vector<DataPtr> r;
+  for (const auto& query : data)
+    r.insert(r.end(), query.second.begin(), query.second.end());
+
+  return r;
+}
+
+///
+/// Profiler
+///
+
+Profiler::~Profiler(){};
+
+bool Profiler::profilePlan(const QueryPtr& query, Data& result) const
+{
+  return false;
+}

@@ -132,12 +132,10 @@ int main(int argc, char** argv)
   CollisionCheckProfiler profiler;
 
   // template <typename ProfilerType, typename QueryType, typename DataSetTypePtr>
-  Benchmark<CollisionCheckQuery, CollisionCheckData, CollisionCheckDataSet,
-            CollisionCheckProfiler>
-      benchmark("collision checks",  // Name of benchmark
-                profiler,            // Options for internal profiler
-                0,                   // Timeout allowed for ALL queries
-                10000);              // Number of trials
+  Benchmark benchmark("collision checks",  // Name of benchmark
+                      profiler,            // Options for internal profiler
+                      0,                   // Timeout allowed for ALL queries
+                      10000);              // Number of trials
 
   // Create and a queries to the benchmark
   int i = 0;
@@ -163,7 +161,7 @@ int main(int argc, char** argv)
     {
       std::string query_name =
           scene->getName() + '-' + state_names[j] + '-' + self_collision + scene->getActiveCollisionDetectorName();
-      CollisionCheckQuery query(query_name, scene, state, req);
+      CollisionCheckQueryPtr query = std::make_shared<CollisionCheckQuery>(query_name, scene, state, req);
       benchmark.addQuery(query);
       j++;
     }

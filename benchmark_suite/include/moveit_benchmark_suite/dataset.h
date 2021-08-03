@@ -48,10 +48,17 @@
 #include <boost/variant.hpp>
 #include <boost/date_time/posix_time/ptime.hpp>
 
+#include <moveit/macros/class_forward.h>
+
+#include <ros/console.h>
+
 namespace moveit_benchmark_suite
 {
-// MOVEIT_CLASS_FORWARD(Data);
-// MOVEIT_CLASS_FORWARD(DataSet);
+MOVEIT_CLASS_FORWARD(Query);
+MOVEIT_CLASS_FORWARD(Response);
+MOVEIT_CLASS_FORWARD(Data);
+MOVEIT_CLASS_FORWARD(DataSet);
+MOVEIT_CLASS_FORWARD(Profiler);
 
 using Metric = boost::variant<bool, double, int, std::size_t, std::string>;
 
@@ -61,6 +68,28 @@ using Metric = boost::variant<bool, double, int, std::size_t, std::string>;
  */
 std::string toMetricString(const Metric& metric);
 double toMetricDouble(const Metric& metric);
+
+struct Query
+{
+  /** \brief Empty constructor.
+   */
+  Query() = default;
+
+  virtual ~Query(){};
+
+  Query(const std::string& name) : name(name){};
+
+  std::string name;  ///< Name of this query.
+};
+
+class Response
+{
+public:
+  /** \name Planning Query and Response
+      \{ */
+
+  bool success;  ///< Was the plan successful?
+};
 
 /** */
 class Data
@@ -76,11 +105,16 @@ public:
   std::size_t process_id;  ///< Process ID of the process the profiler was run in.
   std::size_t thread_id;   ///< Thread ID of profiler execution.
 
+  bool success;
+
+  // Store query and response base class
+  QueryPtr query;        ///< Query evaluated to create this data.
+  ResponsePtr response;  ///< Planner response.
+
   /** Metrics */
   std::map<std::string, Metric> metrics;  ///< Map of metric name to value.
 };
 
-template <typename DataType, typename QueryType>
 class DataSet
 {
 public:
@@ -95,33 +129,44 @@ public:
   std::string cpuinfo;
   std::string gpuinfo;
 
-  std::map<std::string, std::vector<std::shared_ptr<DataType>>> data;  ///< Map of query name to collected data.
+  double allowed_time;          ///< Allowed time for all queries.
+  std::size_t trials;           ///< Requested trials for each query.
+  bool enforced_single_thread;  ///< If true, all planners were asked to run in single-threaded mode.
+  bool run_till_timeout;        ///< If true, planners were run to solve the problem as many times as possible
+                                ///< until time ran out.
+  std::size_t threads;          ///< Threads used for dataset computation.
+
+  std::map<std::string, std::vector<std::shared_ptr<Data>>> data;  ///< Map of query name to collected data.
 
   /**Query Information*/
   std::vector<std::string> query_names;  ///< All unique names used by planning queries.
-  std::vector<QueryType> queries;        ///< All planning queries. Note that planning queries can share
+  // std::vector<QueryPtr> queries;         ///< All planning queries. Note that planning queries can share
 
   /** \brief Add a computed plan data under a query as a data point.
    *  \param[in] query_name Name of query to store point under.
    *  \param[in] run Run data to add to query.
    */
-  void addDataPoint(const std::string& query_name, const std::shared_ptr<DataType>& run)
-  {
-    auto it = data.find(query_name);
-    if (it == data.end())
-      data.emplace(query_name, std::vector<std::shared_ptr<DataType>>{ run });
-    else
-      it->second.emplace_back(run);
-  }
+  void addDataPoint(const std::string& query_name, const DataPtr& run);
 
-  std::vector<std::shared_ptr<DataType>> getFlatData() const
-  {
-    std::vector<std::shared_ptr<DataType>> r;
-    for (const auto& query : data)
-      r.insert(r.end(), query.second.begin(), query.second.end());
+  std::vector<DataPtr> getFlatData() const;
+};
 
-    return r;
-  }
+class Profiler
+{
+public:
+  virtual ~Profiler();
+
+  template <typename DerivedQuery>
+  std::shared_ptr<DerivedQuery> getDerivedClass(const QueryPtr& query) const
+  {
+    auto derived_ptr = std::dynamic_pointer_cast<DerivedQuery>(query);
+    if (!derived_ptr)
+      ROS_ERROR_STREAM("Cannot downcast '" << typeid(DerivedQuery).name() << "' from Query base class'");
+
+    return derived_ptr;
+  };
+
+  virtual bool profilePlan(const QueryPtr& query, Data& result) const;
 };
 
 }  // namespace moveit_benchmark_suite
