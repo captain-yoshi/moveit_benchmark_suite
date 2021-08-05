@@ -64,6 +64,7 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
   // dataset->queries = queries_;
   dataset->cpuinfo = IO::getHardwareCPU();
   dataset->gpuinfo = IO::getHardwareGPU();
+  dataset->osinfo = IO::getOSInfo();
 
   int query_index = 0;
   for (const auto& query : queries_)

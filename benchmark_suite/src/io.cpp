@@ -232,6 +232,19 @@ const GPUInfo IO::getHardwareGPU()
   return gpuinfo;
 }
 
+const OSInfo IO::getOSInfo()
+{
+  OSInfo osinfo;
+
+  osinfo.kernel_name = IO::runCommand("uname --kernel-name | tr -d '\n'");
+  osinfo.kernel_release = IO::runCommand("uname --kernel-release | tr -d '\n'");
+  osinfo.distribution = IO::runCommand("cat /etc/*release | sed -n 's/DISTRIB_ID=//p' | tr -d '\n'");
+  osinfo.version =
+      IO::runCommand("cat /etc/*release | sed -n 's/VERSION=//p' | tr -d '\n' | sed -e 's/^\"//' -e 's/\"$//'");
+
+  return osinfo;
+}
+
 const std::string IO::getHostname()
 {
   return boost::asio::ip::host_name();

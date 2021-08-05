@@ -1770,14 +1770,38 @@ bool convert<moveit_benchmark_suite::GPUInfo>::decode(const Node& node, moveit_b
   return true;
 }
 
+Node convert<moveit_benchmark_suite::OSInfo>::encode(const moveit_benchmark_suite::OSInfo& rhs)
+{
+  Node node;
+
+  node["kernel_name"] = rhs.kernel_name;
+  node["kernel_release"] = rhs.kernel_release;
+  node["distribution"] = rhs.distribution;
+  node["version"] = rhs.version;
+
+  return node;
+}
+
+bool convert<moveit_benchmark_suite::OSInfo>::decode(const Node& node, moveit_benchmark_suite::OSInfo& rhs)
+{
+  rhs.kernel_name = node["kernel_name"].as<std::string>();
+  rhs.kernel_release = node["kernel_release"].as<std::string>();
+  rhs.distribution = node["distribution"].as<std::string>();
+  rhs.version = node["version"].as<std::string>();
+
+  return true;
+}
+
 Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_suite::DataSet& rhs)
 {
   Node node;
 
   // hardware
   node["hardware"]["cpu"] = rhs.cpuinfo;
-
   node["hardware"]["gpu"] = rhs.gpuinfo;
+
+  // os
+  node["os"] = rhs.osinfo;
 
   // dataset
   node["dataset"]["name"] = rhs.name;

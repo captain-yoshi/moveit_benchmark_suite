@@ -130,6 +130,7 @@ public:
   // Metadata
   CPUInfo cpuinfo;
   GPUInfo gpuinfo;
+  OSInfo osinfo;
 
   double allowed_time;          ///< Allowed time for all queries.
   std::size_t trials;           ///< Requested trials for each query.

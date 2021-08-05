@@ -29,6 +29,14 @@ struct GPUInfo
   std::vector<std::string> model_names;
 };
 
+struct OSInfo
+{
+  std::string kernel_name;
+  std::string kernel_release;
+  std::string distribution;
+  std::string version;
+};
+
 /** \brief File and ROS Input / Output operations.
  */
 namespace IO
@@ -120,6 +128,8 @@ const std::pair<bool, std::vector<std::string>> listDirectory(const std::string&
 const CPUInfo getHardwareCPU();
 
 const GPUInfo getHardwareGPU();
+
+const OSInfo getOSInfo();
 
 /** \brief Get the hostname of the system.
  *  \return String of the hostname.
