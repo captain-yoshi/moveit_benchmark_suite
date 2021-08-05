@@ -6,6 +6,7 @@
 
 #include <moveit/collision_detection_fcl/fcl_compat.h>
 #include <moveit/collision_detection_bullet/collision_env_bullet.h>
+#include <moveit_benchmark_suite/yaml.h>
 
 using namespace moveit_benchmark_suite;
 
@@ -95,3 +96,154 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
 
   return dataset;
 };
+
+///
+/// BenchmarkSuiteDataSetOutputter
+///
+
+BenchmarkSuiteDataSetOutputter::BenchmarkSuiteDataSetOutputter()
+{
+}
+
+BenchmarkSuiteDataSetOutputter::~BenchmarkSuiteDataSetOutputter()
+{
+}
+
+void BenchmarkSuiteDataSetOutputter::dump(const DataSet& results)
+{
+  std::ofstream out;
+  IO::createFile(out, log::format("%1%_%2%.yaml", results.name, results.start));
+
+  YAML::Node node;
+  node["motion_planning"] = results;
+
+  out << node;
+
+  // out << "MoveIt! version " << MOVEIT_VERSION << std::endl;          // version
+  // out << "Git branch " << MOVEIT_GIT_BRANCH << std::endl;            // version
+  // out << "Git commit hash " << MOVEIT_GIT_COMMIT_HASH << std::endl;  // version
+  // out << "FCL version " << MOVEIT_FCL_VERSION << std::endl;          // version
+  // out << "Git commit hash " << MOVEIT_GIT_COMMIT_HASH << std::endl;  // version
+  // out << "Experiment " << results.name << std::endl;                 // experiment
+  // out << "Running on " << IO::getHostname() << std::endl;            // hostname
+  // out << "Starting at " << results.start << std::endl;               // date
+
+  // out << "<<<|" << std::endl;
+  // out << "CPUinfo:\n" << results.cpuinfo << std::endl;  // date
+  // out << "GPUinfo:\n" << results.gpuinfo << std::endl;  // date
+  // out << "|>>>" << std::endl;
+
+  // // random seed (fake)
+  // out << "0 is the random seed" << std::endl;
+
+  // // time limit
+  // out << results.allowed_time << " seconds per run" << std::endl;
+
+  // // memory limit
+  // out << "-1 MB per run" << std::endl;
+
+  // // num_runs
+  // // out << results.data.size() << " runs per planner" << std::endl;
+
+  // // total_time
+  // out << results.time << " seconds spent to collect the data" << std::endl;
+
+  // // num_enums / enums
+  // out << "0 enum types" << std::endl;
+
+  // // num_planners
+  // out << results.query_names.size() << " planners" << std::endl;
+
+  // // planners_data -> planner_data
+  // for (const auto& name : results.query_names)
+  // {
+  //   const auto& runs = results.data.find(name)->second;
+
+  //   out << name << std::endl;  // planner_name
+  //   out << "0 common properties" << std::endl;
+
+  //   out << (runs[0]->metrics.size() + 2) << " properties for each run" << std::endl;  // run_properties
+  //   out << "time REAL" << std::endl;
+  //   out << "success BOOLEAN" << std::endl;
+
+  //   std::vector<std::reference_wrapper<const std::string>> keys;
+  //   for (const auto& metric : runs[0]->metrics)
+  //   {
+  //     class ToString : public boost::static_visitor<const std::string>
+  //     {
+  //     public:
+  //       std::string operator()(int /* dummy */) const
+  //       {
+  //         return "INT";
+  //       }
+
+  //       std::string operator()(std::size_t /* dummy */) const
+  //       {
+  //         return "BIGINT";
+  //       }
+
+  //       std::string operator()(double /* dummy */) const
+  //       {
+  //         return "REAL";
+  //       }
+
+  //       std::string operator()(bool /* dummy */) const
+  //       {
+  //         return "BOOLEAN";
+  //       }
+
+  //       const std::string operator()(std::string /* dummy */) const
+  //       {
+  //         return "VARCHAR(128)";
+  //       }
+  //     };
+
+  //     const auto& name = metric.first;
+  //     keys.emplace_back(name);
+
+  //     out << name << " " << boost::apply_visitor(ToString(), metric.second) << std::endl;
+  //   }
+
+  //   out << runs.size() << " runs" << std::endl;
+
+  //   for (const auto& run : runs)
+  //   {
+  //     out << run->time << "; "  //
+  //         << run->success << "; ";
+
+  //     for (const auto& key : keys)
+  //       out << toMetricString(run->metrics.find(key)->second) << "; ";
+
+  //     out << std::endl;
+  //   }
+
+  //   // const auto& progress_names = runs[0]->property_names;
+  //   // if (not progress_names.empty())
+  //   // {
+  //   //   out << progress_names.size() << " progress properties for each run" << std::endl;
+  //   //   for (const auto& name : progress_names)
+  //   //     out << name << std::endl;
+
+  //   //   out << runs.size() << " runs" << std::endl;
+  //   //   for (const auto& run : runs)
+  //   //   {
+  //   //     for (const auto& point : run->progress)
+  //   //     {
+  //   //       for (const auto& name : progress_names)
+  //   //       {
+  //   //         auto it = point.find(name);
+  //   //         out << it->second << ",";
+  //   //       }
+
+  //   //       out << ";";
+  //   //     }
+
+  //   //     out << std::endl;
+  //   //   }
+  //   // }
+
+  //   out << "." << std::endl;
+  // }
+
+  out.close();
+}

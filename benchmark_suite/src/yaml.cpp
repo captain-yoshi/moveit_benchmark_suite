@@ -1719,6 +1719,48 @@ bool convert<moveit_msgs::RobotTrajectory>::decode(const Node& node, moveit_msgs
 
   return true;
 }
+
+Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_suite::DataSet& rhs)
+{
+  Node node;
+
+  // hardware
+  if (!rhs.cpuinfo.empty())
+    node["hardware"]["cpu"] = rhs.cpuinfo;
+
+  if (!rhs.gpuinfo.empty())
+    node["hardware"]["gpu"] = rhs.gpuinfo;
+
+  // dataset
+  node["dataset"]["name"] = rhs.name;
+  node["dataset"]["date"] = to_simple_string(rhs.start);
+  node["dataset"]["time"] = rhs.time;
+
+  for (const auto& data_map : rhs.data)
+  {
+    Node d_node;
+
+    for (const auto& data : data_map.second)
+    {
+      d_node["query_name"] = data_map.first;
+
+      for (const auto& metric : data->metrics)
+      {
+        d_node["metrics"][metric.first].push_back(toMetricString(metric.second));
+        ROBOWFLEX_YAML_FLOW(d_node["metrics"][metric.first]);
+      }
+    }
+
+    node["dataset"]["data"].push_back(d_node);
+  }
+
+  return node;
+}
+
+bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& node, moveit_benchmark_suite::DataSet& rhs)
+{
+  return true;
+}
 }  // namespace YAML
 
 namespace moveit_benchmark_suite

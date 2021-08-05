@@ -202,8 +202,8 @@ int main(int argc, char** argv)
   // plot.dump(*dataset);
 
   // Dump metrics to a logfile
-  // OMPLPlanDataSetOutputter output("demo");
-  // output.dump(*dataset);
+  BenchmarkSuiteDataSetOutputter output;
+  output.dump(*dataset);
 
   ros::waitForShutdown();
 

@@ -107,4 +107,40 @@ private:
   PostQueryCallback complete_callback_;  ///< Post-run callback with dataset.
 };
 
+/** \brief An abstract class for outputting benchmark results.
+ */
+class DataSetOutputter
+{
+public:
+  /** \brief Virtual destructor for cleaning up resources.
+   */
+  virtual ~DataSetOutputter() = default;
+
+  /** \brief Write the \a results of a benchmarking query out.
+   *  Must be implemented by child classes.
+   *  \param[in] results The results of one query of benchmarking.
+   */
+  virtual void dump(const DataSet& results) = 0;
+};
+
+class BenchmarkSuiteDataSetOutputter : public DataSetOutputter
+{
+public:
+  /** \brief Constructor.
+   *  \param[in] prefix Prefix to place in front of all log files generated.
+   *  \param[in] dumpScene If true, will output scene into log file.
+   */
+  BenchmarkSuiteDataSetOutputter();
+
+  /** \brief Destructor, runs `ompl_benchmark_statistics.py` to generate benchmarking database.
+   */
+  ~BenchmarkSuiteDataSetOutputter() override;
+
+  /** \brief Dumps \a results into a OMPL benchmarking log file in \a prefix_ named after the request \a
+   *  name_.
+   *  \param[in] results Results to dump to file.
+   */
+  void dump(const DataSet& results) override;
+};
+
 }  // namespace moveit_benchmark_suite

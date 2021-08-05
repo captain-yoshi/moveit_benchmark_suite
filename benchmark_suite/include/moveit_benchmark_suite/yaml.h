@@ -96,6 +96,8 @@
 #include <moveit_msgs/MoveGroupGoal.h>
 #include <moveit_msgs/MoveGroupResult.h>
 
+#include <moveit_benchmark_suite/dataset.h>
+
 #include <yaml-cpp/yaml.h>
 
 namespace YAML
@@ -420,6 +422,13 @@ struct convert<moveit_msgs::RobotTrajectory>
 {
   static Node encode(const moveit_msgs::RobotTrajectory& rhs);
   static bool decode(const Node& node, moveit_msgs::RobotTrajectory& rhs);
+};
+
+template <>
+struct convert<moveit_benchmark_suite::DataSet>
+{
+  static Node encode(const moveit_benchmark_suite::DataSet& rhs);
+  static bool decode(const Node& node, moveit_benchmark_suite::DataSet& rhs);
 };
 
 }  // namespace YAML
