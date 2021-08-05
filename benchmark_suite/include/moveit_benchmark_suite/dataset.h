@@ -52,6 +52,8 @@
 
 #include <ros/console.h>
 
+#include <moveit_benchmark_suite/io.h>
+
 namespace moveit_benchmark_suite
 {
 MOVEIT_CLASS_FORWARD(Query);
@@ -126,8 +128,8 @@ public:
   boost::posix_time::ptime finish;  ///< End time for dataset computation.
 
   // Metadata
-  std::string cpuinfo;
-  std::string gpuinfo;
+  CPUInfo cpuinfo;
+  GPUInfo gpuinfo;
 
   double allowed_time;          ///< Allowed time for all queries.
   std::size_t trials;           ///< Requested trials for each query.

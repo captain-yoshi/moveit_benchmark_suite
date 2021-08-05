@@ -200,14 +200,36 @@ void IO::createFile(std::ofstream& out, const std::string& file)
   out.open(path.string(), std::ofstream::out | std::ofstream::trunc);
 }
 
-const std::string IO::getHardwareCPU()
+const CPUInfo IO::getHardwareCPU()
 {
-  return IO::runCommand("lscpu | grep -Ev '^(Vulnerability|Flags)'");
+  CPUInfo cpuinfo;
+
+  cpuinfo.model = IO::runCommand("lscpu | sed -n 's/Model:[ \t]*//p' | tr -d '\n'");
+  cpuinfo.model_name = IO::runCommand("lscpu | sed -n 's/Model name:[ \t]*//p' | tr -d '\n'");
+  cpuinfo.family = IO::runCommand("lscpu | sed -n 's/CPU family:[ \t]*//p' | tr -d '\n'");
+  cpuinfo.vendor_id = IO::runCommand("lscpu | sed -n 's/Vendor ID:[ \t]*//p' | tr -d '\n'");
+  cpuinfo.architecture = IO::runCommand("lscpu | sed -n 's/Architecture:[ \t]*//p' | tr -d '\n'");
+  cpuinfo.sockets = IO::runCommand("lscpu | sed -n 's/Socket(s):[ \t]*//p' | tr -d '\n'");
+  cpuinfo.core_per_socket = IO::runCommand("lscpu | sed -n 's/Core(s) per socket:[ \t]*//p' | tr -d '\n'");
+  cpuinfo.thread_per_core = IO::runCommand("lscpu | sed -n 's/Thread(s) per core:[ \t]*//p' | tr -d '\n'");
+
+  return cpuinfo;
 }
 
-const std::string IO::getHardwareGPU()
+const GPUInfo IO::getHardwareGPU()
 {
-  return IO::runCommand("lspci | grep VGA");
+  GPUInfo gpuinfo;
+
+  std::string n_str_lines = IO::runCommand("lspci | grep -c VGA | tr -d '\n'");
+  int n_lines = std::stoi(n_str_lines);
+
+  for (int i = 0; i < n_lines; ++i)
+  {
+    std::string model_name = IO::runCommand("lspci | grep VGA | sed -n '" + std::to_string(i + 1) +
+                                            " p' | sed -n 's/.*compatible controller: //p' | tr -d '\n'");
+    gpuinfo.model_names.push_back(model_name);
+  }
+  return gpuinfo;
 }
 
 const std::string IO::getHostname()

@@ -12,6 +12,23 @@
 
 namespace moveit_benchmark_suite
 {
+struct CPUInfo
+{
+  std::string model;
+  std::string model_name;
+  std::string family;
+  std::string vendor_id;
+  std::string architecture;
+  std::string sockets;
+  std::string core_per_socket;
+  std::string thread_per_core;
+};
+
+struct GPUInfo
+{
+  std::vector<std::string> model_names;
+};
+
 /** \brief File and ROS Input / Output operations.
  */
 namespace IO
@@ -100,9 +117,9 @@ void deleteFile(const std::string& file);
  */
 const std::pair<bool, std::vector<std::string>> listDirectory(const std::string& directory);
 
-const std::string getHardwareCPU();
+const CPUInfo getHardwareCPU();
 
-const std::string getHardwareGPU();
+const GPUInfo getHardwareGPU();
 
 /** \brief Get the hostname of the system.
  *  \return String of the hostname.

@@ -1720,16 +1720,64 @@ bool convert<moveit_msgs::RobotTrajectory>::decode(const Node& node, moveit_msgs
   return true;
 }
 
+Node convert<moveit_benchmark_suite::CPUInfo>::encode(const moveit_benchmark_suite::CPUInfo& rhs)
+{
+  Node node;
+
+  node["model"] = rhs.model;
+  node["model_name"] = rhs.model_name;
+  node["family"] = rhs.family;
+  node["vendor_id"] = rhs.vendor_id;
+  node["architecture"] = rhs.architecture;
+  node["sockets"] = rhs.sockets;
+  node["core_per_socket"] = rhs.core_per_socket;
+  node["thread_per_core"] = rhs.thread_per_core;
+
+  return node;
+}
+
+bool convert<moveit_benchmark_suite::CPUInfo>::decode(const Node& node, moveit_benchmark_suite::CPUInfo& rhs)
+{
+  rhs.model = node["model"].as<std::string>();
+  rhs.model_name = node["model_name"].as<std::string>();
+  rhs.family = node["family"].as<std::string>();
+  rhs.vendor_id = node["vendor_id"].as<std::string>();
+  rhs.architecture = node["architecture"].as<std::string>();
+  rhs.sockets = node["sockets"].as<std::string>();
+  rhs.core_per_socket = node["core_per_socket"].as<std::string>();
+  rhs.thread_per_core = node["thread_per_core"].as<std::string>();
+
+  return true;
+}
+
+Node convert<moveit_benchmark_suite::GPUInfo>::encode(const moveit_benchmark_suite::GPUInfo& rhs)
+{
+  Node node;
+
+  for (const auto& model_name : rhs.model_names)
+    node["model_names"].push_back(model_name);
+
+  return node;
+}
+
+bool convert<moveit_benchmark_suite::GPUInfo>::decode(const Node& node, moveit_benchmark_suite::GPUInfo& rhs)
+{
+  int n_model = node["model_names"].size();
+
+  for (int i = 0; i < n_model; ++i)
+    rhs.model_names.push_back(node["model_names"][i].as<std::string>());
+
+  return true;
+}
+
 Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_suite::DataSet& rhs)
 {
   Node node;
 
   // hardware
-  if (!rhs.cpuinfo.empty())
-    node["hardware"]["cpu"] = rhs.cpuinfo;
+  node["hardware"]["cpu"] = rhs.cpuinfo;
 
-  if (!rhs.gpuinfo.empty())
-    node["hardware"]["gpu"] = rhs.gpuinfo;
+  node["hardware"]["gpu"] = rhs.gpuinfo;
 
   // dataset
   node["dataset"]["name"] = rhs.name;

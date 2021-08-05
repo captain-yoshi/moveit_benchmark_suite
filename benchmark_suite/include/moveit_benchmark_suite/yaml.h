@@ -425,6 +425,20 @@ struct convert<moveit_msgs::RobotTrajectory>
 };
 
 template <>
+struct convert<moveit_benchmark_suite::CPUInfo>
+{
+  static Node encode(const moveit_benchmark_suite::CPUInfo& rhs);
+  static bool decode(const Node& node, moveit_benchmark_suite::CPUInfo& rhs);
+};
+
+template <>
+struct convert<moveit_benchmark_suite::GPUInfo>
+{
+  static Node encode(const moveit_benchmark_suite::GPUInfo& rhs);
+  static bool decode(const Node& node, moveit_benchmark_suite::GPUInfo& rhs);
+};
+
+template <>
 struct convert<moveit_benchmark_suite::DataSet>
 {
   static Node encode(const moveit_benchmark_suite::DataSet& rhs);
