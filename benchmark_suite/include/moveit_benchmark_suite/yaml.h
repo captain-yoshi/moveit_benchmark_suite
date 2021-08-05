@@ -446,6 +446,13 @@ struct convert<moveit_benchmark_suite::OSInfo>
 };
 
 template <>
+struct convert<moveit_benchmark_suite::MoveitInfo>
+{
+  static Node encode(const moveit_benchmark_suite::MoveitInfo& rhs);
+  static bool decode(const Node& node, moveit_benchmark_suite::MoveitInfo& rhs);
+};
+
+template <>
 struct convert<moveit_benchmark_suite::DataSet>
 {
   static Node encode(const moveit_benchmark_suite::DataSet& rhs);

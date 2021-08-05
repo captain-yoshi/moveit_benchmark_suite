@@ -17,6 +17,7 @@
 #include <ros/console.h>
 
 #include <moveit_benchmark_suite/io.h>
+#include <moveit/version.h>
 
 using namespace moveit_benchmark_suite;
 
@@ -243,6 +244,17 @@ const OSInfo IO::getOSInfo()
       IO::runCommand("cat /etc/*release | sed -n 's/VERSION=//p' | tr -d '\n' | sed -e 's/^\"//' -e 's/\"$//'");
 
   return osinfo;
+}
+
+const MoveitInfo IO::getMoveitInfo()
+{
+  MoveitInfo info;
+
+  info.version = MOVEIT_VERSION;
+  info.git_branch = MOVEIT_GIT_BRANCH;
+  info.git_commit = MOVEIT_GIT_COMMIT_HASH;
+
+  return info;
 }
 
 const std::string IO::getHostname()

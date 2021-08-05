@@ -1792,6 +1792,26 @@ bool convert<moveit_benchmark_suite::OSInfo>::decode(const Node& node, moveit_be
   return true;
 }
 
+Node convert<moveit_benchmark_suite::MoveitInfo>::encode(const moveit_benchmark_suite::MoveitInfo& rhs)
+{
+  Node node;
+
+  node["version"] = rhs.version;
+  node["git_branch"] = rhs.git_branch;
+  node["git_commit"] = rhs.git_commit;
+
+  return node;
+}
+
+bool convert<moveit_benchmark_suite::MoveitInfo>::decode(const Node& node, moveit_benchmark_suite::MoveitInfo& rhs)
+{
+  rhs.version = node["version"].as<std::string>();
+  rhs.git_branch = node["git_branch"].as<std::string>();
+  rhs.git_commit = node["git_commit"].as<std::string>();
+
+  return true;
+}
+
 Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_suite::DataSet& rhs)
 {
   Node node;
@@ -1799,6 +1819,9 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
   // hardware
   node["hardware"]["cpu"] = rhs.cpuinfo;
   node["hardware"]["gpu"] = rhs.gpuinfo;
+
+  // software
+  node["software"]["moveit"] = rhs.moveitinfo;
 
   // os
   node["os"] = rhs.osinfo;

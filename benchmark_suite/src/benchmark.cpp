@@ -2,7 +2,6 @@
 #include <moveit_benchmark_suite/log.h>
 
 #include <queue>
-#include <moveit/version.h>
 
 #include <moveit/collision_detection_fcl/fcl_compat.h>
 #include <moveit/collision_detection_bullet/collision_env_bullet.h>
@@ -65,6 +64,7 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
   dataset->cpuinfo = IO::getHardwareCPU();
   dataset->gpuinfo = IO::getHardwareGPU();
   dataset->osinfo = IO::getOSInfo();
+  dataset->moveitinfo = IO::getMoveitInfo();
 
   int query_index = 0;
   for (const auto& query : queries_)

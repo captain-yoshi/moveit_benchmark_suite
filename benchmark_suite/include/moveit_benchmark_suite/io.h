@@ -37,6 +37,13 @@ struct OSInfo
   std::string version;
 };
 
+struct MoveitInfo
+{
+  std::string version;
+  std::string git_branch;
+  std::string git_commit;
+};
+
 /** \brief File and ROS Input / Output operations.
  */
 namespace IO
@@ -130,6 +137,8 @@ const CPUInfo getHardwareCPU();
 const GPUInfo getHardwareGPU();
 
 const OSInfo getOSInfo();
+
+const MoveitInfo getMoveitInfo();
 
 /** \brief Get the hostname of the system.
  *  \return String of the hostname.

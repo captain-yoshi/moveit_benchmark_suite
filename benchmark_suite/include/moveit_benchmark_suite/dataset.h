@@ -131,6 +131,7 @@ public:
   CPUInfo cpuinfo;
   GPUInfo gpuinfo;
   OSInfo osinfo;
+  MoveitInfo moveitinfo;
 
   double allowed_time;          ///< Allowed time for all queries.
   std::size_t trials;           ///< Requested trials for each query.
