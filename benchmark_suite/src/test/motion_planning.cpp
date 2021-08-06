@@ -164,6 +164,7 @@ int main(int argc, char** argv)
       for (const auto& pipeline : pipelines)
       {
         request.pipeline_id = pipeline->getName();
+        request.allowed_planning_time = timeout;
 
         const auto& it = planning_pipelines.find(request.pipeline_id);
         if (it != planning_pipelines.end())
