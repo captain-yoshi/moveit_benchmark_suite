@@ -167,11 +167,29 @@ int main(int argc, char** argv)
     }
   }
 
+  // Aggregate time metric into collision checks / second
+  benchmark.setPostRunCallback([&](DataSetPtr dataset, const Query& query) {
+    auto it = dataset->data.find(query.name);
+    if (it != dataset->data.end())
+    {
+      double total_time = 0;
+      for (const auto& data : it->second)
+      {
+        total_time += toMetricDouble(data->metrics["time"]);
+      }
+
+      double cc_per_second = it->second.size() / total_time;
+      it->second[0]->metrics["collision checks per second"] = cc_per_second;
+    }
+  });
+
   // Run benchmark
   auto dataset = benchmark.run();
 
   IO::GNUPlotDataSet plot;
   plot.addMetric("time", IO::GNUPlotDataSet::BoxPlot);
+  plot.addMetric("collision checks per second", IO::GNUPlotDataSet::BarGraph);
+
   IO::GNUPlotHelper::MultiPlotOptions mpo;
   mpo.layout.row = 1;
   mpo.layout.col = 2;
