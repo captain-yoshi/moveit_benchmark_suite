@@ -36,6 +36,7 @@
 
 #include <moveit_benchmark_suite/test/collision_checks_benchmark.h>
 #include <moveit_benchmark_suite/io.h>
+#include <chrono>
 
 using namespace moveit_benchmark_suite::collision_checks;
 
@@ -204,16 +205,17 @@ bool CollisionCheckProfiler::profilePlan(const QueryPtr& query_base,  //
   // Plan
   if (query->scene->getWorld()->size() == 0)
   {
-    result.start = IO::getDate();
+    result.start = std::chrono::high_resolution_clock::now();
     query->scene->checkSelfCollision(query->request, response.response);
   }
   else
   {
-    result.start = IO::getDate();
+    result.start = std::chrono::high_resolution_clock::now();
     query->scene->checkCollision(query->request, response.response, *query->robot_state);
   }
+
   // Compute metrics and fill out results
-  result.finish = IO::getDate();
+  result.finish = std::chrono::high_resolution_clock::now();
   result.time = IO::getSeconds(result.start, result.finish);
   result.success = true;
 

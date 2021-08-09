@@ -277,10 +277,11 @@ boost::posix_time::ptime IO::getDate()
   return boost::posix_time::microsec_clock::local_time();
 }
 
-double IO::getSeconds(boost::posix_time::ptime start, boost::posix_time::ptime finish)
+double IO::getSeconds(std::chrono::high_resolution_clock::time_point start,
+                      std::chrono::high_resolution_clock::time_point end)
 {
-  auto duration = finish - start;
-  return duration.total_microseconds() / 1000000.;
+  auto duration_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+  return duration_seconds.count();
 }
 
 const std::pair<bool, YAML::Node> IO::loadFileToYAML(const std::string& path)

@@ -58,7 +58,8 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
   // Setup dataset to return
   auto dataset = std::make_shared<DataSet>();
   dataset->name = name_;
-  dataset->start = IO::getDate();
+  dataset->date = boost::posix_time::microsec_clock::local_time();
+  dataset->start = std::chrono::high_resolution_clock::now();
   dataset->allowed_time = allowed_time_;
   dataset->trials = trials_;
   dataset->run_till_timeout = timeout_;
@@ -98,7 +99,7 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
       post_callback_(dataset, *query);
   }
 
-  dataset->finish = IO::getDate();
+  dataset->finish = std::chrono::high_resolution_clock::now();
   dataset->time = IO::getSeconds(dataset->start, dataset->finish);
 
   return dataset;
@@ -119,7 +120,7 @@ BenchmarkSuiteDataSetOutputter::~BenchmarkSuiteDataSetOutputter()
 void BenchmarkSuiteDataSetOutputter::dump(const DataSet& results)
 {
   std::ofstream out;
-  IO::createFile(out, log::format("%1%_%2%.yaml", results.name, results.start));
+  IO::createFile(out, log::format("%1%_%2%.yaml", results.name, results.date));
 
   YAML::Node node;
   node["motion_planning"] = results;

@@ -41,13 +41,13 @@ bool PlanningProfiler::profilePlan(const QueryPtr& query_base,  //
   // Pre-run Callback
   query->planner->preRun(query->scene, request);
 
-  result.start = IO::getDate();
+  result.start = std::chrono::high_resolution_clock::now();
 
   // Plan
   response.response = query->planner->plan(query->scene, request);
 
   // Compute metrics and fill out results
-  result.finish = IO::getDate();
+  result.finish = std::chrono::high_resolution_clock::now();
   result.time = IO::getSeconds(result.start, result.finish);
   response.success = response.response.error_code_.val == moveit_msgs::MoveItErrorCodes::SUCCESS;
 

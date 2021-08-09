@@ -5,6 +5,7 @@
 #include <string>   // for std::string
 #include <utility>  // for std::pair
 #include <fstream>  // for std::ofstream
+#include <chrono>
 
 #include <boost/date_time.hpp>  // for date operations
 
@@ -165,7 +166,8 @@ boost::posix_time::ptime getDate();
  *  \param[in] finish The finish time.
  *  \return The time in seconds.
  */
-double getSeconds(boost::posix_time::ptime start, boost::posix_time::ptime finish);
+double getSeconds(std::chrono::high_resolution_clock::time_point start,
+                  std::chrono::high_resolution_clock::time_point end);
 
 /** \brief Put the current thread to sleep for a desired amount of seconds.
  *  \param[in] seconds Seconds to sleep for.

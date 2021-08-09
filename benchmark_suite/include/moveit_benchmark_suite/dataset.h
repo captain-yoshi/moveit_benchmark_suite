@@ -44,9 +44,9 @@
 #include <tuple>
 #include <map>
 #include <fstream>
+#include <chrono>
 
 #include <boost/variant.hpp>
-#include <boost/date_time/posix_time/ptime.hpp>
 
 #include <moveit/macros/class_forward.h>
 
@@ -98,9 +98,9 @@ class Data
 {
 public:
   /** Timing */
-  double time;                      ///< Time that planning took in seconds.
-  boost::posix_time::ptime start;   ///< Query start time.
-  boost::posix_time::ptime finish;  ///< Query end time.
+  double time;                                            ///< Time that planning took in seconds.
+  std::chrono::high_resolution_clock::time_point start;   ///< Query start time.
+  std::chrono::high_resolution_clock::time_point finish;  ///< Query end time.
 
   /** Host Metadata */
   std::string hostname;    ///< Hostname of the machine the plan was run on.
@@ -123,9 +123,11 @@ public:
   std::string name;  ///< Name of this dataset.
 
   /** Timing */
-  double time;                      ///< Total computation time for entire dataset.
-  boost::posix_time::ptime start;   ///< Start time of dataset computation.
-  boost::posix_time::ptime finish;  ///< End time for dataset computation.
+  double time;  ///< Total computation time for entire dataset.
+
+  std::chrono::high_resolution_clock::time_point start;   ///< Start time of dataset computation.
+  std::chrono::high_resolution_clock::time_point finish;  ///< End time for dataset computation.
+  boost::posix_time::ptime date;                          ///< Query start time.
 
   // Metadata
   CPUInfo cpuinfo;
