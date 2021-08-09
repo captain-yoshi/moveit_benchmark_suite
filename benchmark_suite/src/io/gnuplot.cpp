@@ -214,14 +214,9 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
   in->write("plot ");
   for (std::size_t i = 0; i < n; ++i)
   {
-    if (options.percent)
-      in->write(log::format("'%1%' using (%2%):%2% with boxes, '' u (%2%):%2%:%2% with labels offset char 0,1",  //
-                            (i == 0) ? "$data" : "",                                                             //
-                            i + 1));
-    else
-      in->write(log::format("'%1%' using (%2%):1 with boxes",  //
-                            (i == 0) ? "$data" : "",           //
-                            i + 1));
+    in->write(log::format("'%1%' using (%2%):%2% with boxes, '' u (%2%):%2%:%2% with labels offset char 0,1",  //
+                          (i == 0) ? "$data" : "",                                                             //
+                          i + 1));
     if (i != n - 1)
       in->write(", ");
   }
@@ -331,9 +326,9 @@ void GNUPlotDataSet::dumpBoxPlot(const std::string& metric, const DataSet& resul
 void GNUPlotDataSet::dumpBarGraph(const std::string& metric, const DataSet& results)
 {
   GNUPlotHelper::BarGraphOptions bgo;
-  bgo.percent = true;
+  bgo.percent = false;
   bgo.title = log::format("\\\"%1%\\\" for Experiment \\\"%2%\\\"", metric, results.name);
-  bgo.y.label = metric + " (%)";
+  bgo.y.label = metric;
   bgo.y.min = 0.;
 
   for (const auto& query : results.data)
@@ -342,14 +337,20 @@ void GNUPlotDataSet::dumpBarGraph(const std::string& metric, const DataSet& resu
     const auto& points = query.second;
 
     double sum = 0;
+    int n = 0;
     for (const auto& run : points)
     {
-      sum += toMetricDouble(run->metrics[metric]);
+      if (run->metrics.find(metric) != run->metrics.end())
+      {
+        sum += toMetricDouble(run->metrics[metric]);
+        n++;
+      }
     }
 
-    double mean = (points.size()) ? sum / double(points.size()) : 0;
+    double mean = (n) ? sum / double(n) : 0;
 
-    bgo.value.emplace(name, mean * 100.0);
+    // bgo.value.emplace(name, mean * 100.0);
+    bgo.value.emplace(name, mean);
   }
 
   helper_.bargraph(bgo);
