@@ -34,8 +34,6 @@ const std::vector<QueryPtr>& Benchmark::getQueries() const
   return queries_;
 };
 
-using PostQueryCallback = std::function<void(DataSetPtr dataset, const Query& query)>;
-
 /** \brief Set the post-dataset callback function.
  *  \param[in] callback Callback to use.
  */
@@ -43,6 +41,11 @@ void Benchmark::setPostQueryCallback(const PostQueryCallback& callback)
 {
   complete_callback_ = callback;
 };
+
+void Benchmark::setPostRunCallback(const PostRunCallback& callback)
+{
+  post_callback_ = callback;
+}
 
 /** \brief Run benchmarking on this experiment.
  *  Note that, for some planners, multiple threads cannot be used without polluting the dataset, due
@@ -90,6 +93,9 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
         complete_callback_(dataset, *query);
     }
     query_index++;
+
+    if (post_callback_)
+      post_callback_(dataset, *query);
   }
 
   dataset->finish = IO::getDate();
