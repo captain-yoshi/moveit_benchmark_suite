@@ -259,19 +259,17 @@ void GNUPlotDataSet::addMetric(const std::string& metric, const PlotType& plotty
   plot_types_.push_back(std::make_pair(metric, plottype));
 };
 
-void GNUPlotDataSet::dump(const DataSet& results)
+void GNUPlotDataSet::dump(const DataSet& results, GNUPlotHelper::MultiPlotOptions& mpo)
 {
   if (plot_types_.empty())
+  {
     ROS_WARN("No plot type specified");
+    return;
+  }
 
   GNUPlotHelper::QtTerminalOptions to;
   to.size.x = 1280;
   to.size.y = 720;
-
-  // TODO add in constructor
-  GNUPlotHelper::MultiPlotOptions mpo;
-  mpo.layout.row = 2;
-  mpo.layout.col = 3;
 
   if (mpo.layout.row * mpo.layout.col < plot_types_.size())
     ROS_WARN("Metrics cannot fit in plot layout");

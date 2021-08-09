@@ -195,7 +195,11 @@ int main(int argc, char** argv)
   plot.addMetric("success", IO::GNUPlotDataSet::BarGraph);
   plot.addMetric("correct", IO::GNUPlotDataSet::BarGraph);
 
-  benchmark.setPostQueryCallback([&](DataSetPtr dataset, const Query&) { plot.dump(*dataset); });
+  IO::GNUPlotHelper::MultiPlotOptions mpo;
+  mpo.layout.row = 2;
+  mpo.layout.col = 3;
+
+  benchmark.setPostQueryCallback([&](DataSetPtr dataset, const Query&) { plot.dump(*dataset, mpo); });
 
   // Run benchmark
   auto dataset = benchmark.run();

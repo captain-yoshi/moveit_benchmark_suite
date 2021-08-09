@@ -172,8 +172,11 @@ int main(int argc, char** argv)
 
   IO::GNUPlotDataSet plot;
   plot.addMetric("time", IO::GNUPlotDataSet::BoxPlot);
+  IO::GNUPlotHelper::MultiPlotOptions mpo;
+  mpo.layout.row = 1;
+  mpo.layout.col = 2;
 
-  plot.dump(*dataset);
+  plot.dump(*dataset, mpo);
 
   ros::waitForShutdown();
 

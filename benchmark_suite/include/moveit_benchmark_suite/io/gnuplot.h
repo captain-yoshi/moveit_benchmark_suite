@@ -191,7 +191,7 @@ public:
    */
   void addMetric(const std::string& metric, const PlotType& plottype);
 
-  void dump(const DataSet& results);
+  void dump(const DataSet& results, GNUPlotHelper::MultiPlotOptions& mpo);
 
 private:
   void dumpBoxPlot(const std::string& metric, const DataSet& results);
