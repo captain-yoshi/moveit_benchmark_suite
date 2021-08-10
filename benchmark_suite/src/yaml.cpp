@@ -1831,6 +1831,8 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
   node["date"] = to_simple_string(rhs.date);
   node["time"] = rhs.time;
 
+  node["query_setup"] = rhs.query_setup.query_setup;
+
   for (const auto& data_map : rhs.data)
   {
     Node d_node;
@@ -1838,6 +1840,7 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
     for (const auto& data : data_map.second)
     {
       d_node["query_name"] = data_map.first;
+      d_node["query_setup"] = data->query->group_name_map;
 
       for (const auto& metric : data->metrics)
       {
