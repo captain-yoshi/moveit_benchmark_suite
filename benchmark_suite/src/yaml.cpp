@@ -1827,9 +1827,9 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
   node["os"] = rhs.osinfo;
 
   // dataset
-  node["dataset"]["name"] = rhs.name;
-  node["dataset"]["date"] = to_simple_string(rhs.date);
-  node["dataset"]["time"] = rhs.time;
+  node["name"] = rhs.name;
+  node["date"] = to_simple_string(rhs.date);
+  node["time"] = rhs.time;
 
   for (const auto& data_map : rhs.data)
   {
@@ -1846,7 +1846,7 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
       }
     }
 
-    node["dataset"]["data"].push_back(d_node);
+    node["data"].push_back(d_node);
   }
 
   return node;
