@@ -60,6 +60,9 @@ int main(int argc, char** argv)
 
   ros::NodeHandle pnh("~");
 
+  // Prepare query setup
+  QuerySetup query_setup;
+
   // Parse scene
   SceneParser parser;
   std::vector<moveit_msgs::PlanningScene> scene_msgs;
@@ -74,19 +77,23 @@ int main(int argc, char** argv)
     scene_msgs.back().name = scene.first;
     scene_msgs.back().is_diff = true;
     parser.getCollisionObjects(scene_msgs.back().world.collision_objects);
+
+    query_setup.addQuery("scene", scene.first, "");
   }
 
   // Parse request
   std::map<std::string, std::string> request_map;
   pnh.getParam("/requests", request_map);
 
-  std::vector<moveit_msgs::MotionPlanRequest> requests;
+  std::vector<std::pair<std::string, moveit_msgs::MotionPlanRequest>> requests;
   for (const auto& request : request_map)
   {
     requests.emplace_back();
     auto node = YAML::LoadFile(request.second);
 
-    requests.back() = node.as<moveit_msgs::MotionPlanRequest>();
+    requests.back().first = request.first;
+    requests.back().second = node.as<moveit_msgs::MotionPlanRequest>();
+    query_setup.addQuery("request", request.first, request.second);
   }
 
   // Parse benchmark config
@@ -110,6 +117,8 @@ int main(int argc, char** argv)
 
   for (const auto& cd : collision_detectors)
   {
+    query_setup.addQuery("collision_detector", cd, "");
+
     plugin.load(cd);
     for (const auto& scene_msg : scene_msgs)
     {
@@ -121,24 +130,29 @@ int main(int argc, char** argv)
   }
 
   // Setup planners
-  std::vector<PlannerPtr> pipelines;
+  std::vector<std::pair<std::string, PlannerPtr>> pipelines;
 
   for (const auto& interface : interfaces)
   {
+    query_setup.addQuery("interface", interface, "");
     if (interface.compare("PlanningPipeline") == 0)
     {
       for (const auto& pipeline_name : planning_pipelines)
       {
         auto pipeline = std::make_shared<PipelinePlanner>(robot, pipeline_name.first);
         pipeline->initialize(pipeline_name.first);
-        pipelines.push_back(pipeline);
+        pipelines.emplace_back();
+        pipelines.back().first = interface;
+        pipelines.back().second = pipeline;
       }
     }
     else if (interface.compare("MoveGroupInterface") == 0)
       for (const auto& pipeline_name : planning_pipelines)
       {
         auto pipeline = std::make_shared<MoveGroupPlanner>(robot, pipeline_name.first);
-        pipelines.push_back(pipeline);
+        pipelines.emplace_back();
+        pipelines.back().first = interface;
+        pipelines.back().second = pipeline;
       }
     else
       ROS_WARN("Invalid configuration for interface name: %s", interface.c_str());
@@ -153,8 +167,9 @@ int main(int argc, char** argv)
 
   Benchmark benchmark(benchmark_name,  // Name of benchmark
                       profiler,        // Options for internal profiler
+                      query_setup,     // Number of trials
                       timeout,         // Timeout allowed for ALL queries
-                      trials);         // Number of trials
+                      trials);
 
   // Create and a queries to the benchmark
   for (const auto& scene : scenes)
@@ -163,25 +178,35 @@ int main(int argc, char** argv)
     {
       for (const auto& pipeline : pipelines)
       {
-        request.pipeline_id = pipeline->getName();
-        request.allowed_planning_time = timeout;
+        request.second.pipeline_id = pipeline.second->getName();
+        request.second.allowed_planning_time = timeout;
 
-        const auto& it = planning_pipelines.find(request.pipeline_id);
+        const auto& it = planning_pipelines.find(request.second.pipeline_id);
         if (it != planning_pipelines.end())
         {
           for (const auto& planner : it->second)
           {
-            request.planner_id = planner;
+            query_setup.addQuery("planner", planner, "");
+
+            request.second.planner_id = planner;
             std::string query_name = planner + '-' + scene->getName() + '-' + scene->getActiveCollisionDetectorName() +
-                                     '-' + pipeline->getName();
-            PlanningQueryPtr query = std::make_shared<PlanningQuery>(query_name, scene, pipeline, request);
+                                     '-' + pipeline.first + request.first;
+
+            QueryGroupName query_gn = { { "scene", scene->getName() },
+                                        { "planner", planner },
+                                        { "collision_detector", scene->getActiveCollisionDetectorName() },
+                                        { "interface", pipeline.first },
+                                        { "request", request.first } };
+
+            PlanningQueryPtr query =
+                std::make_shared<PlanningQuery>(query_name, query_gn, scene, pipeline.second, request.second);
             // PlanningQuery query(query_name, scene, pipeline, request);
             // QueryPtr query = std::make_shared<Query>();
             benchmark.addQuery(query);
           }
         }
         else
-          ROS_ERROR("Cannot find pipeline id in configuration: %s", request.pipeline_id.c_str());
+          ROS_ERROR("Cannot find pipeline id in configuration: %s", request.second.pipeline_id.c_str());
       }
     }
   }

@@ -54,7 +54,7 @@ struct PlanningQuery : public Query
 {
   /** \brief Empty constructor.
    */
-  // PlanningQuery() = default;
+  PlanningQuery() = default;
 
   /** \brief Constructor. Fills in fields.
    *  \param[in] name Name of this query.
@@ -63,6 +63,7 @@ struct PlanningQuery : public Query
    *  \param[in] request Request to give planner.
    */
   PlanningQuery(const std::string& name,
+                const QueryGroupName& group_name_map,                //
                 const planning_scene::PlanningSceneConstPtr& scene,  //
                 const PlannerPtr& planner,                           //
                 const planning_interface::MotionPlanRequest& request);

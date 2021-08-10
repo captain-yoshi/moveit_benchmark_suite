@@ -9,11 +9,17 @@
 
 using namespace moveit_benchmark_suite;
 
-Benchmark::Benchmark(const std::string& name,                        //
-                     const Profiler& profiler, double allowed_time,  //
-                     std::size_t trials,                             //
+Benchmark::Benchmark(const std::string& name,  //
+                     const Profiler& profiler, const QuerySetup& query_setup,
+                     double allowed_time,  //
+                     std::size_t trials,   //
                      bool timeout)
-  : name_(name), allowed_time_(allowed_time), trials_(trials), timeout_(timeout), profiler_(profiler){};
+  : name_(name)
+  , query_setup_(query_setup)
+  , allowed_time_(allowed_time)
+  , trials_(trials)
+  , timeout_(timeout)
+  , profiler_(profiler){};
 
 /** \brief Add a query to the experiment for profiling.
  *  \param[in] planner_name Name to associate with this query. Does not need to be unique.
@@ -69,6 +75,8 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
   dataset->gpuinfo = IO::getHardwareGPU();
   dataset->osinfo = IO::getOSInfo();
   dataset->moveitinfo = IO::getMoveitInfo();
+
+  dataset->query_setup = query_setup_;
 
   int query_index = 0;
   for (const auto& query : queries_)

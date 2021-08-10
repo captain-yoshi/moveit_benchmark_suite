@@ -71,6 +71,12 @@ using Metric = boost::variant<bool, double, int, std::size_t, std::string>;
 std::string toMetricString(const Metric& metric);
 double toMetricDouble(const Metric& metric);
 
+using QueryGroup = std::string;
+using QueryName = std::string;
+using QueryResource = std::string;
+
+using QueryGroupName = std::map<QueryGroup, QueryName>;
+
 struct Query
 {
   /** \brief Empty constructor.
@@ -79,9 +85,29 @@ struct Query
 
   virtual ~Query(){};
 
-  Query(const std::string& name) : name(name){};
+  Query(const std::string& name, const QueryGroupName& group_name_map) : name(name), group_name_map(group_name_map){};
 
   std::string name;  ///< Name of this query.
+  QueryGroupName group_name_map;
+};
+
+// pair-wise combinations of a query
+struct QuerySetup
+{
+  /** \brief Empty constructor.
+   */
+  QuerySetup() = default;
+
+  void addQuery(const QueryGroup& group, const QueryName& name, const QueryResource& resource)
+  {
+    auto it = query_setup.find(group);
+    if (it == query_setup.end())
+      query_setup.insert(std::pair<QueryGroup, std::map<QueryName, QueryResource>>(group, { { name, resource } }));
+    else
+      it->second.insert(std::pair<QueryName, QueryResource>(name, resource));
+  }
+
+  std::map<QueryGroup, std::map<QueryName, QueryResource>> query_setup;
 };
 
 class Response
@@ -135,6 +161,10 @@ public:
   OSInfo osinfo;
   MoveitInfo moveitinfo;
 
+  // Setup
+  QuerySetup query_setup;
+
+  // Benchmark parameters
   double allowed_time;          ///< Allowed time for all queries.
   std::size_t trials;           ///< Requested trials for each query.
   bool enforced_single_thread;  ///< If true, all planners were asked to run in single-threaded mode.

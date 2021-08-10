@@ -14,10 +14,11 @@ using namespace moveit_benchmark_suite;
 ///
 
 PlanningQuery::PlanningQuery(const std::string& name,                             //
+                             const QueryGroupName& group_name_map,                //
                              const planning_scene::PlanningSceneConstPtr& scene,  //
                              const PlannerPtr& planner,                           //
                              const planning_interface::MotionPlanRequest& request)
-  : Query(name), scene(scene), planner(planner), request(request)
+  : Query(name, group_name_map), scene(scene), planner(planner), request(request)
 {
 }
 
@@ -32,7 +33,7 @@ bool PlanningProfiler::profilePlan(const QueryPtr& query_base,  //
   if (!query)
     return false;
 
-  // result.query = std::make_shared<PnningQuery>(query);
+  result.query = std::make_shared<PlanningQuery>(*query);
 
   PlanningResponse response;
 

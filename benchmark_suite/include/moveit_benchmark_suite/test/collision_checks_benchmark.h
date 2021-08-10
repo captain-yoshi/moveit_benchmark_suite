@@ -124,6 +124,7 @@ struct CollisionCheckQuery : public Query
    *  \param[in] request Request to give planner.
    */
   CollisionCheckQuery(const std::string& name,                             //
+                      const QueryGroupName& group_name_map,                //
                       const planning_scene::PlanningSceneConstPtr& scene,  //
                       const moveit::core::RobotStatePtr& robot_state,      //
                       const collision_detection::CollisionRequest& request);
@@ -139,7 +140,7 @@ public:
   /** \name Planning Query and Response
       \{ */
 
-  CollisionCheckQuery query;                      ///< Query evaluated to create this data.
+  // CollisionCheckQuery query;                      ///< Query evaluated to create this data.
   collision_detection::CollisionResult response;  ///< Planner response.
   bool success;                                   ///< Was the plan successful?
 };

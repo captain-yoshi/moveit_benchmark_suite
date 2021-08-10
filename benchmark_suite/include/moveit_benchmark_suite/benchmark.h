@@ -61,9 +61,11 @@ public:
    *  \param[in] timeout If true, will re-run each query until the total time taken has exceeded the
    * allotted time.
    */
-  Benchmark(const std::string& name,                               //
-            const Profiler& profiler, double allowed_time = 60.0,  //
-            std::size_t trials = 100,                              //
+  Benchmark(const std::string& name,   //
+            const Profiler& profiler,  //
+            const QuerySetup& setup_query,
+            double allowed_time = 60.0,  //
+            std::size_t trials = 100,    //
             bool timeout = false);
 
   /** \brief Add a query to the experiment for profiling.
@@ -110,6 +112,7 @@ private:
   // ProfilerType::Options options_;   ///< Options for profiler.
   const Profiler& profiler_;       ///< Profiler to use for extracting data.
   std::vector<QueryPtr> queries_;  ///< Queries to test.
+  QuerySetup query_setup_;
 
   PostQueryCallback complete_callback_;  ///< Post-run callback with dataset.
   PostRunCallback post_callback_;        ///< Post-run callback.

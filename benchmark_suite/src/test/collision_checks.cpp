@@ -60,6 +60,9 @@ int main(int argc, char** argv)
 
   ros::NodeHandle pnh("~");
 
+  // Prepare query setup
+  QuerySetup query_setup;
+
   // TODO load configuration
   std::vector<std::string> collision_detector_names = { "FCL", "Bullet" };
 
@@ -81,23 +84,27 @@ int main(int argc, char** argv)
   planning_scene->checkCollision(req, res, planning_scene->getCurrentState(), acm);
 
   // Setup robot states
-  std::vector<moveit::core::RobotStatePtr> sampled_states;
+  std::vector<std::pair<std::string, moveit::core::RobotStatePtr>> sampled_states;
   moveit::core::RobotState& current_state{ planning_scene->getCurrentStateNonConst() };
   current_state.setToDefaultValues(current_state.getJointModelGroup("panda_arm"), "home");
   current_state.update();
 
-  sampled_states.push_back(std::make_shared<moveit::core::RobotState>(current_state));
+  sampled_states.emplace_back();
+  sampled_states.back().first = "no-collision";
+  sampled_states.back().second = std::make_shared<moveit::core::RobotState>(current_state);
 
-  std::vector<std::string> state_names;
-  state_names.push_back("");
-  state_names.push_back("in-collision");
+  query_setup.addQuery("robot_state", sampled_states.back().first, "");
 
   // bring the robot into a position which collides with the world clutter
   double joint_2 = 1.5;
   current_state.setJointPositions("panda_joint2", &joint_2);
   current_state.update();
 
-  sampled_states.push_back(std::make_shared<moveit::core::RobotState>(current_state));
+  sampled_states.emplace_back();
+  sampled_states.back().first = "in-collision";
+  sampled_states.back().second = std::make_shared<moveit::core::RobotState>(current_state);
+
+  query_setup.addQuery("robot_state", sampled_states.back().first, "");
 
   // Setup scene msg
   std::vector<moveit_msgs::PlanningScene> scene_msgs;
@@ -105,11 +112,13 @@ int main(int argc, char** argv)
   scene_msgs.emplace_back();
   planning_scene->getPlanningSceneMsg(scene_msgs.back());  // Empty world
   scene_msgs.back().name = "empty-world";
+  query_setup.addQuery("scene", scene_msgs.back().name, "");
 
   clutterWorld(planning_scene, 100, CollisionObjectType::MESH);
   scene_msgs.emplace_back();
   planning_scene->getPlanningSceneMsg(scene_msgs.back());  // Cluttered world
   scene_msgs.back().name = "cluter-world";
+  query_setup.addQuery("scene", scene_msgs.back().name, "");
 
   // Setup scenes with pair wise collision detector
   std::vector<planning_scene::PlanningScenePtr> scenes;
@@ -119,6 +128,7 @@ int main(int argc, char** argv)
   for (const auto& cd_name : collision_detector_names)
   {
     plugin.load(cd_name);
+    query_setup.addQuery("collision_detector", cd_name, "");
     for (const auto& scene_msg : scene_msgs)
     {
       scenes.emplace_back();
@@ -134,8 +144,9 @@ int main(int argc, char** argv)
   // template <typename ProfilerType, typename QueryType, typename DataSetTypePtr>
   Benchmark benchmark("collision checks",  // Name of benchmark
                       profiler,            // Options for internal profiler
-                      0,                   // Timeout allowed for ALL queries
-                      10000);              // Number of trials
+                      query_setup,
+                      0,       // Timeout allowed for ALL queries
+                      10000);  // Number of trials
 
   // Create and a queries to the benchmark
   int i = 0;
@@ -160,8 +171,14 @@ int main(int argc, char** argv)
     for (auto& state : sampled_states)
     {
       std::string query_name =
-          scene->getName() + '-' + state_names[j] + '-' + self_collision + scene->getActiveCollisionDetectorName();
-      CollisionCheckQueryPtr query = std::make_shared<CollisionCheckQuery>(query_name, scene, state, req);
+          scene->getName() + '-' + state.first + '-' + self_collision + scene->getActiveCollisionDetectorName();
+
+      QueryGroupName query_gn = { { "scene", scene->getName() },
+                                  { "collision_detector", scene->getActiveCollisionDetectorName() },
+                                  { "robot_state", state.first },
+                                  { "request", self_collision } };
+      CollisionCheckQueryPtr query =
+          std::make_shared<CollisionCheckQuery>(query_name, query_gn, scene, state.second, req);
       benchmark.addQuery(query);
       j++;
     }

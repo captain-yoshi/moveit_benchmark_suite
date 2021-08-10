@@ -183,10 +183,11 @@ void moveit_benchmark_suite::collision_checks::findStates(const RobotStateSelect
 /// CollisionCheckQuery
 ///
 CollisionCheckQuery::CollisionCheckQuery(const std::string& name,                             //
+                                         const QueryGroupName& group_name_map,                //
                                          const planning_scene::PlanningSceneConstPtr& scene,  //
                                          const moveit::core::RobotStatePtr& robot_state,      //
                                          const collision_detection::CollisionRequest& request)
-  : Query(name), scene(scene), robot_state(robot_state), request(request)
+  : Query(name, group_name_map), scene(scene), robot_state(robot_state), request(request)
 {
 }
 
@@ -200,6 +201,8 @@ bool CollisionCheckProfiler::profilePlan(const QueryPtr& query_base,  //
   auto query = getDerivedClass<CollisionCheckQuery>(query_base);
   if (!query)
     return false;
+
+  result.query = std::make_shared<CollisionCheckQuery>(*query);
 
   CollisionCheckResponse response;
   // Plan
