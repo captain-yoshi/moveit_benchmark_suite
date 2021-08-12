@@ -98,8 +98,11 @@ public:
 
   struct BarGraphOptions : PlottingOptions
   {
-    bool percent{ false };               // Defaults to count
-    std::map<std::string, Value> value;  ///< Map of names to data.
+    bool percent{ false };  // Defaults to count
+    // std::vector<Values> value;  ///< Map of names to data.
+
+    std::map<std::string, Values> value_map;
+    std::map<std::string, std::map<std::string, Values>> value_legend_map;
   };
 
   /** \brief Plot box data.
@@ -178,6 +181,17 @@ public:
     TimeSeries,
   };
 
+  struct FilterKey
+  {
+    std::string node;
+    std::string group;
+    std::string id;
+  };
+  using LegendKey = FilterKey;
+
+  using Legend = std::set<std::string>;
+  using Filter = std::set<std::string>;
+
   /** \brief Constructor.
    */
   GNUPlotDataSet();
@@ -191,11 +205,23 @@ public:
    */
   void addMetric(const std::string& metric, const PlotType& plottype);
 
-  void dump(const DataSet& results, GNUPlotHelper::MultiPlotOptions& mpo);
+  void dump(const DataSetPtr& dataset, GNUPlotHelper::MultiPlotOptions& mpo);
+  void dump(const std::vector<DataSetPtr>& datasets, GNUPlotHelper::MultiPlotOptions& mpo);
 
 private:
-  void dumpBoxPlot(const std::string& metric, const DataSet& results);
-  void dumpBarGraph(const std::string& metric, const DataSet& results);
+  void dumpBoxPlot(const std::string& metric, const std::vector<DataSetPtr>& results);
+  void dumpBarGraph(const std::string& metric, const std::vector<DataSetPtr>& results);
+
+  bool fillData(const std::string& metric, const std::set<std::string>& filter, const std::set<std::string>& legend,
+                const std::vector<DataSetPtr>& datasets, GNUPlotHelper::BarGraphOptions& bgo);
+
+  bool filterDataSet(const std::set<std::string>& legend, const std::vector<DataSetPtr>& datasets,
+                     std::vector<DataSetPtr>& filtered_datasets);
+  bool isLegendFilterValid(const Legend& legend, const Filter& filter, std::vector<LegendKey>& legend_keys,
+                           std::vector<FilterKey>& filter_keys);
+
+  bool isValidData(const DataPtr& data, const std::vector<LegendKey>& legend_keys,
+                   const std::vector<FilterKey>& filter_keys, std::string& legend_name, std::string& filter_name);
 
   std::vector<std::pair<std::string, PlotType>> plot_types_;
   GNUPlotHelper helper_;

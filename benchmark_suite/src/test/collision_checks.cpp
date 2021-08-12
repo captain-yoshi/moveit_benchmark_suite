@@ -200,7 +200,11 @@ int main(int argc, char** argv)
   mpo.layout.row = 1;
   mpo.layout.col = 2;
 
-  plot.dump(*dataset, mpo);
+  plot.dump(dataset, mpo);
+
+  // Dump metrics to a logfile
+  BenchmarkSuiteDataSetOutputter output;
+  output.dump(*dataset);
 
   ros::waitForShutdown();
 

@@ -1,19 +1,20 @@
 motion_planning_config:
   parameters:
     name: "Planning pipeline"
-    runs: 10                      # Number of runs per scene, interface, collision detector and each planning algorithm
+    runs: 5                      # Number of runs per scene, interface, collision detector and each planning algorithm
     timeout: 5                   # Default 10.0
   interface:                      # [PlanningPipeline, MoveGroupInterface]
     - PlanningPipeline
     #- MoveGroupInterface
   collision_detector:             # [FCL, Bullet]
     - FCL
-    #- Bullet                      # Not configurable when using the MoveGroupInterface  
+    - Bullet                      # Not configurable when using the MoveGroupInterface  
   planning_pipelines:  
     - name: ompl                                                              # REQUIRED
       planners:                                                               # REQUIRED
         - RRTConnectkConfigDefault
-    - name: stomp
-      planners:
-        - STOMP 
+        - RRTkConfigDefault
+    #- name: stomp
+    #  planners:
+    #    - STOMP 
 

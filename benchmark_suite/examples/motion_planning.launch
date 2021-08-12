@@ -8,7 +8,7 @@
 
   <!-- Load robot -->
   <include file="$(find moveit_resources_panda_moveit_config)/launch/demo.launch">
-    <arg name="use_rviz" value="true"/>
+    <arg name="use_rviz" value="false"/>
     <!--<arg name="debug" value="$(arg debug)"/>-->
   </include>
 
