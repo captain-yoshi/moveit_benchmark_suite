@@ -47,6 +47,7 @@
 #include <moveit_benchmark_suite/test/collision_checks_benchmark.h>
 #include <moveit_benchmark_suite/scene.h>
 #include <moveit_benchmark_suite/benchmark.h>
+#include <moveit_benchmark_suite/aggregation.h>
 #include <moveit_benchmark_suite/io/gnuplot.h>
 
 using namespace moveit_benchmark_suite;
@@ -185,18 +186,7 @@ int main(int argc, char** argv)
 
   // Aggregate time metric into collision checks / second
   benchmark.setPostRunCallback([&](DataSetPtr dataset, const Query& query) {
-    auto it = dataset->data.find(query.name);
-    if (it != dataset->data.end())
-    {
-      double total_time = 0;
-      for (const auto& data : it->second)
-      {
-        total_time += toMetricDouble(data->metrics["time"]);
-      }
-
-      double cc_per_second = it->second.size() / total_time;
-      it->second[0]->metrics["collision checks per second"] = cc_per_second;
-    }
+    aggregate::toFrequency("time", "collision_checks_per_second", dataset, query);
   });
 
   // Run benchmark
@@ -204,7 +194,7 @@ int main(int argc, char** argv)
 
   IO::GNUPlotDataSet plot;
   plot.addMetric("time", IO::GNUPlotDataSet::BoxPlot);
-  plot.addMetric("collision checks per second", IO::GNUPlotDataSet::BarGraph);
+  plot.addMetric("collision_checks_per_second", IO::GNUPlotDataSet::BarGraph);
 
   IO::GNUPlotHelper::MultiPlotOptions mpo;
   mpo.layout.row = 1;
