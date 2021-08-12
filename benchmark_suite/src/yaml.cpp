@@ -1828,6 +1828,7 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
 
   // dataset
   node["name"] = rhs.name;
+  node["type"] = rhs.type;
   node["date"] = to_simple_string(rhs.date);
   node["time"] = rhs.time;
 

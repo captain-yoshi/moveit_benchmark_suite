@@ -143,6 +143,7 @@ int main(int argc, char** argv)
 
   // template <typename ProfilerType, typename QueryType, typename DataSetTypePtr>
   Benchmark benchmark("collision checks",  // Name of benchmark
+                      BenchmarkType::COLLISION_CHECK,
                       profiler,            // Options for internal profiler
                       query_setup,
                       0,       // Timeout allowed for ALL queries

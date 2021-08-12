@@ -10,11 +10,13 @@
 using namespace moveit_benchmark_suite;
 
 Benchmark::Benchmark(const std::string& name,  //
+                     const std::string& type,  //
                      const Profiler& profiler, const QuerySetup& query_setup,
                      double allowed_time,  //
                      std::size_t trials,   //
                      bool timeout)
   : name_(name)
+  , type_(type)
   , query_setup_(query_setup)
   , allowed_time_(allowed_time)
   , trials_(trials)
@@ -64,6 +66,7 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
   // Setup dataset to return
   auto dataset = std::make_shared<DataSet>();
   dataset->name = name_;
+  dataset->type = type_;
   dataset->date = boost::posix_time::microsec_clock::local_time();
   dataset->start = std::chrono::high_resolution_clock::now();
   dataset->allowed_time = allowed_time_;

@@ -166,9 +166,10 @@ int main(int argc, char** argv)
   // template <typename ProfilerType, typename QueryType, typename DataSetTypePtr>
 
   Benchmark benchmark(benchmark_name,  // Name of benchmark
-                      profiler,        // Options for internal profiler
-                      query_setup,     // Number of trials
-                      timeout,         // Timeout allowed for ALL queries
+                      BenchmarkType::MOTION_PLANNING,
+                      profiler,     // Options for internal profiler
+                      query_setup,  // Number of trials
+                      timeout,      // Timeout allowed for ALL queries
                       trials);
 
   // Create and a queries to the benchmark

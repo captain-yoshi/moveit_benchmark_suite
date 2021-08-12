@@ -147,6 +147,7 @@ class DataSet
 {
 public:
   std::string name;  ///< Name of this dataset.
+  std::string type;  ///< Name of this dataset.
 
   /** Timing */
   double time;  ///< Total computation time for entire dataset.

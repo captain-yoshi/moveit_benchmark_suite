@@ -47,6 +47,13 @@
 
 namespace moveit_benchmark_suite
 {
+namespace BenchmarkType
+{
+const std::string MOTION_PLANNING = "MOTION PLANNING";
+const std::string COLLISION_CHECK = "COLLISION CHECK";
+
+}  // namespace BenchmarkType
+
 class Benchmark
 {
 public:
@@ -61,7 +68,8 @@ public:
    *  \param[in] timeout If true, will re-run each query until the total time taken has exceeded the
    * allotted time.
    */
-  Benchmark(const std::string& name,   //
+  Benchmark(const std::string& name,  //
+            const std::string& type,
             const Profiler& profiler,  //
             const QuerySetup& setup_query,
             double allowed_time = 60.0,  //
@@ -105,6 +113,7 @@ public:
 
 private:
   const std::string name_;  ///< Name of this experiment.
+  const std::string type_;  ///< Name of this experiment.
   double allowed_time_;     ///< Allotted time to use for each query.
   std::size_t trials_;      ///< Number of trials to run each query for.
   bool timeout_;            ///< If true, will re-run planners on queries until total time taken has exceeded the
