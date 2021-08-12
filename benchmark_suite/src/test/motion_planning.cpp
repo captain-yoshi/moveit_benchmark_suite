@@ -190,8 +190,9 @@ int main(int argc, char** argv)
             query_setup.addQuery("planner", planner, "");
 
             request.second.planner_id = planner;
-            std::string query_name = planner + '-' + scene->getName() + '-' + scene->getActiveCollisionDetectorName() +
-                                     '-' + pipeline.first + request.first;
+            std::string query_name = planner + "\\n" + scene->getName() + "\\n" +
+                                     scene->getActiveCollisionDetectorName() + "\\n" + pipeline.first + "\\n" +
+                                     request.first;
 
             QueryGroupName query_gn = { { "scene", scene->getName() },
                                         { "planner", planner },

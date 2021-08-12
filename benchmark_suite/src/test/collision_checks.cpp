@@ -168,11 +168,10 @@ int main(int argc, char** argv)
       // req.distance = true;
       self_collision = "self-collision";
     }
-    int j = 0;
     for (auto& state : sampled_states)
     {
-      std::string query_name =
-          scene->getName() + '-' + state.first + '-' + self_collision + scene->getActiveCollisionDetectorName();
+      std::string query_name = scene->getName() + "\\n" + state.first + "\\n" + self_collision + "\\n" +
+                               scene->getActiveCollisionDetectorName() + "\\n" + self_collision;
 
       QueryGroupName query_gn = { { "scene", scene->getName() },
                                   { "collision_detector", scene->getActiveCollisionDetectorName() },
@@ -181,7 +180,6 @@ int main(int argc, char** argv)
       CollisionCheckQueryPtr query =
           std::make_shared<CollisionCheckQuery>(query_name, query_gn, scene, state.second, req);
       benchmark.addQuery(query);
-      j++;
     }
   }
 
