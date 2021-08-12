@@ -44,6 +44,7 @@
 #include <moveit_benchmark_suite/yaml.h>
 #include <moveit_benchmark_suite/planning.h>
 #include <moveit_benchmark_suite/benchmark.h>
+#include <moveit_benchmark_suite/aggregation.h>
 #include <moveit_benchmark_suite/io/gnuplot.h>
 #include <moveit_benchmark_suite/scene.h>
 #include <moveit_benchmark_suite/test/motion_planning_config.h>
@@ -215,18 +216,27 @@ int main(int argc, char** argv)
 
   // Use the post-query callback to visualize the data live.
   IO::GNUPlotDataSet plot;
-  plot.addMetric("time", IO::GNUPlotDataSet::BoxPlot);
-  plot.addMetric("waypoints", IO::GNUPlotDataSet::BoxPlot);
-  plot.addMetric("length", IO::GNUPlotDataSet::BoxPlot);
-  plot.addMetric("smoothness", IO::GNUPlotDataSet::BoxPlot);
-  plot.addMetric("success", IO::GNUPlotDataSet::BarGraph);
-  plot.addMetric("correct", IO::GNUPlotDataSet::BarGraph);
+  // plot.addMetric("time", IO::GNUPlotDataSet::BoxPlot);
+  // plot.addMetric("waypoints", IO::GNUPlotDataSet::BoxPlot);
+  // plot.addMetric("length", IO::GNUPlotDataSet::BoxPlot);
+  // plot.addMetric("smoothness", IO::GNUPlotDataSet::BoxPlot);
+  // plot.addMetric("success", IO::GNUPlotDataSet::BarGraph);
+  // plot.addMetric("correct", IO::GNUPlotDataSet::BarGraph);
+  plot.addMetric("mean_success", IO::GNUPlotDataSet::BarGraph);
+  plot.addMetric("mean_correct", IO::GNUPlotDataSet::BarGraph);
 
   IO::GNUPlotHelper::MultiPlotOptions mpo;
   mpo.layout.row = 2;
   mpo.layout.col = 3;
 
-  benchmark.setPostQueryCallback([&](DataSetPtr dataset, const Query&) { plot.dump(*dataset, mpo); });
+  benchmark.setPostQueryCallback([&](DataSetPtr dataset, const Query&) { plot.dump(dataset, mpo); });
+
+  // Aggregate time metric into collision checks / second
+  benchmark.setPostRunCallback([&](DataSetPtr dataset, const Query& query) {
+    aggregate::toMean("time", "mean_time", dataset, query);
+    aggregate::toMean("success", "mean_success", dataset, query);
+    aggregate::toMean("correct", "mean_correct", dataset, query);
+  });
 
   // Run benchmark
   auto dataset = benchmark.run();
