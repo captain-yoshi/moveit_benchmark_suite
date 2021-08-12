@@ -134,7 +134,7 @@ void BenchmarkSuiteDataSetOutputter::dump(const DataSet& results)
   IO::createFile(out, log::format("%1%_%2%.yaml", results.name, results.date));
 
   YAML::Node node;
-  node["motion_planning"] = results;
+  node["dataset"] = results;
 
   out << node;
 
