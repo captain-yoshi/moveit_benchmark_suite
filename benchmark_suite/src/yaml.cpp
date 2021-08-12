@@ -1816,16 +1816,6 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
 {
   Node node;
 
-  // hardware
-  node["hardware"]["cpu"] = rhs.cpuinfo;
-  node["hardware"]["gpu"] = rhs.gpuinfo;
-
-  // software
-  node["software"]["moveit"] = rhs.moveitinfo;
-
-  // os
-  node["os"] = rhs.osinfo;
-
   // dataset
   node["name"] = rhs.name;
   node["type"] = rhs.type;
@@ -1852,6 +1842,16 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
 
     node["data"].push_back(d_node);
   }
+
+  // hardware
+  node["hardware"]["cpu"] = rhs.cpuinfo;
+  node["hardware"]["gpu"] = rhs.gpuinfo;
+
+  // software
+  node["software"]["moveit"] = rhs.moveitinfo;
+
+  // os
+  node["os"] = rhs.osinfo;
 
   return node;
 }
