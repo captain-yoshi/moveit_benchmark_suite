@@ -166,14 +166,8 @@ int main(int argc, char** argv)
 
   // template <typename ProfilerType, typename QueryType, typename DataSetTypePtr>
 
-  Benchmark benchmark(benchmark_name,  // Name of benchmark
-                      BenchmarkType::MOTION_PLANNING,
-                      profiler,     // Options for internal profiler
-                      query_setup,  // Number of trials
-                      timeout,      // Timeout allowed for ALL queries
-                      trials);
-
   // Create and a queries to the benchmark
+  std::vector<PlanningQueryPtr> queries;
   for (const auto& scene : scenes)
   {
     for (auto& request : requests)
@@ -205,13 +199,25 @@ int main(int argc, char** argv)
                 std::make_shared<PlanningQuery>(query_name, query_gn, scene, pipeline.second, request.second);
             // PlanningQuery query(query_name, scene, pipeline, request);
             // QueryPtr query = std::make_shared<Query>();
-            benchmark.addQuery(query);
+            queries.push_back(query);
           }
         }
         else
           ROS_ERROR("Cannot find pipeline id in configuration: %s", request.second.pipeline_id.c_str());
       }
     }
+  }
+
+  Benchmark benchmark(benchmark_name,  // Name of benchmark
+                      BenchmarkType::MOTION_PLANNING,
+                      profiler,     // Options for internal profiler
+                      query_setup,  // Number of trials
+                      timeout,      // Timeout allowed for ALL queries
+                      trials);
+
+  for (const auto& query : queries)
+  {
+    benchmark.addQuery(query);
   }
 
   // Use the post-query callback to visualize the data live.
