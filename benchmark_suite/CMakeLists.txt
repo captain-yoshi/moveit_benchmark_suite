@@ -76,6 +76,8 @@ if("${catkin_LIBRARIES}" MATCHES "moveit_collision_detection_bullet")
   target_link_libraries(collision_checks fcl ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 endif()
 
+add_executable(yaml_test src/test/yaml_test.cpp)
+target_link_libraries(yaml_test ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
 install(DIRECTORY include/${PROJECT_NAME}/
 	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})

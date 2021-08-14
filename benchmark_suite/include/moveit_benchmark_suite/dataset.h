@@ -91,7 +91,7 @@ struct Query
   QueryGroupName group_name_map;
 };
 
-// pair-wise combinations of a query
+// pair - wise combinations of a query
 struct QuerySetup
 {
   /** \brief Empty constructor.
@@ -164,6 +164,9 @@ public:
 
   // Setup
   QuerySetup query_setup;
+
+  // Used for filtering diffeent metrics
+  YAML::Node metadata;
 
   // Benchmark parameters
   double allowed_time;          ///< Allowed time for all queries.

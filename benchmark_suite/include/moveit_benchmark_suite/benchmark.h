@@ -112,6 +112,8 @@ public:
   DataSetPtr run(std::size_t n_threads = 1) const;
 
 private:
+  void fillMetaData(DataSetPtr& dataset) const;
+
   const std::string name_;  ///< Name of this experiment.
   const std::string type_;  ///< Name of this experiment.
   double allowed_time_;     ///< Allotted time to use for each query.

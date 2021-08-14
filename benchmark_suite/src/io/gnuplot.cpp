@@ -3,6 +3,7 @@
 #include <moveit_benchmark_suite/io.h>
 #include <moveit_benchmark_suite/io/gnuplot.h>
 #include <moveit_benchmark_suite/yaml.h>
+#include <moveit_benchmark_suite/token.h>
 
 #include <cmath>
 
@@ -124,6 +125,38 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
   configurePlot(options);
   auto in = getInstance(options.instance);
 
+  std::vector<std::string> xtick_titles;
+  std::vector<std::string> legend_titles;
+  double boxwidth = 0.5;
+
+  bool is_legend = (options.values.size() == 1 && options.values.begin()->first.empty()) ? false : true;
+
+  auto it1 = options.values.begin();
+  int n_legend = options.values.size();
+  int n_xtick = it1->second.size();
+
+  // data blocks
+  int ctr = 0;
+  for (std::size_t i = 0; i < n_legend; ++i, ++it1)
+  {
+    legend_titles.push_back(it1->first);
+
+    auto it2 = it1->second.begin();
+    for (std::size_t j = 0; j < n_xtick; ++j, ++it2)
+    {
+      in->writeline(log::format("$data%1% <<EOD", ctr + 1));
+
+      if (it2 != it1->second.end())
+      {
+        for (const auto& val : it2->second)
+        {
+          in->writeline(log::format("%1%", val));
+        }
+      }
+      in->writeline("EOD");
+      ctr++;
+    }
+  }
   in->writeline("set datafile separator \",\"");
 
   in->writeline("set style data boxplot");
@@ -138,118 +171,7 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
   else
     in->writeline("set style boxplot nooutliers");
 
-  auto n = options.values.size();
-
-  in->write("set xtics (");
-  auto it1 = options.values.begin();
-  for (std::size_t i = 0; i < n; ++i, ++it1)
-  {
-    in->write(log::format("\"%1%\" %2%", it1->first, i + 1));
-    if (i != n - 1)
-      in->write(", ");
-  }
-  in->writeline(") scale 0.0 rotate by 45 right offset 4, 0");
-
-  in->write("plot ");
-  for (std::size_t i = 0; i < n; ++i)
-  {
-    in->write(log::format("'%1%' using (%2%):1 pointsize .1",  // TODO reduce pointsize outliers automatically?
-                          (i == 0) ? "-" : "",                 //
-                          i + 1));
-    if (i != n - 1)
-      in->write(", ");
-  }
-
-  in->flush();
-
-  auto it2 = options.values.begin();
-  for (std::size_t i = 0; i < n; ++i, ++it2)
-  {
-    for (const auto& point : it2->second)
-      in->writeline(log::format("%1%", point));
-
-    in->writeline("e");
-  }
-}
-
-void GNUPlotHelper::bargraph(const BarGraphOptions& options)
-{
-  configurePlot(options);
-  auto in = getInstance(options.instance);
-
-  // data block
-  std::vector<std::string> xticks;
-  std::vector<std::string> legend_titles;
-  double boxwidth = 0.5;
-  int n = 0;
-  int n_data;
-
-  if (options.value_legend_map.size() > 0)
-  {
-    n = options.value_legend_map.size();
-
-    if (n == 0)
-      return;
-
-    int i = 0;
-    for (const auto& legend : options.value_legend_map)
-    {
-      n_data = legend.second.size();
-      legend_titles.push_back(legend.first);
-
-      in->writeline(log::format("$data%1% <<EOD", i + 1));
-      int j = 0;
-      for (const auto& val : legend.second)
-      {
-        in->write(log::format("%1%", val.second[0]));
-        if (j != legend.second.size() - 1)
-          in->write(", ");
-        j++;
-
-        if (i == 0)
-        {
-          xticks.push_back(val.first);
-        }
-      }
-      in->flush();
-      in->writeline("EOD");
-      i++;
-    }
-  }
-  else
-  {
-    n = options.value_map.size();
-    n_data = options.value_map.size();
-
-    if (options.value_map.empty())
-      return;
-
-    in->writeline("$data1 <<EOD");
-    int j = 0;
-    for (const auto& val : options.value_map)
-    {
-      xticks.push_back(val.first);
-      in->write(log::format("%1%", val.second[0]));
-      if (j != options.value_map.size() - 1)
-        in->write(", ");
-      j++;
-    }
-    in->flush();
-    in->writeline("EOD");
-  }
-
-  // script
-  if (options.percent)
-    in->writeline("set title offset 0,1");
-
-  in->writeline("set datafile separator \",\"");
-
-  in->writeline(log::format("set boxwidth %1%", boxwidth));
-  in->writeline("set style fill solid 0.5 border -1");
-
-  if (options.value_legend_map.size() == 0)
-    in->writeline("unset key");  // Disable legend
-  else
+  if (is_legend)
   {
     int legend_title_n = 0;
     for (const auto& legend_title : legend_titles)
@@ -261,61 +183,256 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
     in->writeline(log::format("set rmargin %1%", legend_title_n + 6));  // Disable legend
     in->writeline("set key at screen 1, graph 1");                      // Disable legend
   }
+  else
+    in->writeline("unset key");  // Disable legend
 
-  if (options.percent)
-    in->writeline("set format y \"%g%%\"");  // Percent format
+  // xticks
+  for (const auto& xtick : options.values.begin()->second)
+  {
+    xtick_titles.push_back(xtick.first);
+  }
 
   in->write("set xtics (");
   // auto it2 = options.xticks.begin();
-  for (std::size_t i = 0; i < xticks.size(); ++i)
+  for (std::size_t i = 0; i < xtick_titles.size(); ++i)
   {
-    in->write(log::format("\"%1%\" %2%", xticks[i], i + 1));
-    if (i != xticks.size() - 1)
+    in->write(log::format("\"%1%\" %2%", xtick_titles[i], i + 1));
+    if (i != xtick_titles.size() - 1)
       in->write(", ");
   }
   in->writeline(") scale 0.0 rotate by 45 right offset 4, 0");
 
-  if (options.value_map.size() > 0)
+  std::vector<std::string> x_offsets;
+
+  double start = (is_legend) ? -(double(n_legend) / 2.0 * boxwidth - boxwidth / 2.0) : 0.0;
+
+  for (int i = 0; i < n_legend; ++i)
   {
-    in->write("plot ");
-    for (int i = 0; i < n; ++i)
+    x_offsets.push_back(std::to_string(start));
+    start += boxwidth;
+  }
+
+  // plot
+  // Set Data block in order
+  std::vector<int> index;
+
+  if (is_legend)
+  {
+    int idx = 0;
+    for (int i = 0; i < n_xtick; ++i)
     {
-      in->write(log::format("for [i=1:%3%] '%1%' using (i):i with boxes, for [i=1:%3%] '%1%' u (i):i:i with labels "
-                            "offset char 0,1",                             //
-                            std::string("$data" + std::to_string(i + 1)),  //
-                            i, n_data));
-      if (i != n - 1)
-        in->write(", ");
+      idx = i;
+      for (int j = 0; j < n_legend; ++j)
+      {
+        index.push_back(idx + 1);
+        idx += n_xtick;
+      }
+    }
+  }
+
+  ctr = 0;
+  in->write("plot ");
+  for (std::size_t i = 0; i < n_xtick; ++i)
+  {
+    for (std::size_t j = 0; j < n_legend; ++j)
+    {
+      if (is_legend)
+      {
+        in->writeline(log::format("'$data%1%' using (%2%%3%%4%):1 title \"%5%\" lt %6%%7%", index[ctr], i + 1,
+                                  (stod(x_offsets[j]) >= 0.0) ? "+" : "", x_offsets[j], (i == 0) ? legend_titles[j] : "",
+                                  j + 1, (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
+      }
+      else
+      {
+        in->writeline(log::format("'$data%1%' using (%2%):1%3%", ctr + 1, ctr + 1,
+                                  (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
+      }
+      ctr++;
+    }
+  }
+
+  // configurePlot(options);
+  // auto in = getInstance(options.instance);
+
+  // in->writeline("set datafile separator \",\"");
+
+  // in->writeline("set style data boxplot");
+  // in->writeline("set style fill solid 0.5 border -1");
+  // in->writeline("unset key");
+
+  // if (options.sorted)
+  //   in->writeline("set style boxplot sorted");
+
+  // if (options.outliers)
+  //   in->writeline("set style boxplot outliers pointtype 7");
+  // else
+  //   in->writeline("set style boxplot nooutliers");
+
+  // auto n = options.values.size();
+
+  // in->write("set xtics (");
+  // auto it1 = options.values.begin();
+  // for (std::size_t i = 0; i < n; ++i, ++it1)
+  // {
+  //   in->write(log::format("\"%1%\" %2%", it1->first, i + 1));
+  //   if (i != n - 1)
+  //     in->write(", ");
+  // }
+  // in->writeline(") scale 0.0 rotate by 45 right offset 4, 0");
+
+  // in->write("plot ");
+  // for (std::size_t i = 0; i < n; ++i)
+  // {
+  //   in->write(log::format("'%1%' using (%2%):1 pointsize .1",  // TODO reduce pointsize outliers automatically?
+  //                         (i == 0) ? "-" : "",                 //
+  //                         i + 1));
+  //   if (i != n - 1)
+  //     in->write(", ");
+  // }
+
+  // in->flush();
+
+  // auto it2 = options.values.begin();
+  // for (std::size_t i = 0; i < n; ++i, ++it2)
+  // {
+  //   for (const auto& point : it2->second)
+  //     in->writeline(log::format("%1%", point));
+
+  //   in->writeline("e");
+  // }
+}
+
+void GNUPlotHelper::bargraph(const BarGraphOptions& options)
+{
+  configurePlot(options);
+  auto in = getInstance(options.instance);
+
+  std::vector<std::string> xtick_titles;
+  std::vector<std::string> legend_titles;
+  double boxwidth = 0.5;
+
+  bool is_legend = (options.values.size() == 1 && options.values.begin()->first.empty()) ? false : true;
+
+  auto it1 = options.values.begin();
+  int n_legend = options.values.size();
+  int n_xtick = it1->second.size();
+
+  // data blocks
+  int ctr = 0;
+  for (std::size_t i = 0; i < n_legend; ++i, ++it1)
+  {
+    legend_titles.push_back(it1->first);
+
+    auto it2 = it1->second.begin();
+    for (std::size_t j = 0; j < n_xtick; ++j, ++it2)
+    {
+      in->writeline(log::format("$data%1% <<EOD", ctr + 1));
+
+      if (it2 != it1->second.end())
+      {
+        for (const auto& val : it2->second)
+        {
+          in->writeline(log::format("%1%", val));
+        }
+      }
+      in->writeline("EOD");
+      ctr++;
+    }
+  }
+
+  // plot configuration
+  if (options.percent)
+    in->writeline("set title offset 0,1");
+
+  in->writeline("set datafile separator \",\"");
+
+  in->writeline(log::format("set boxwidth %1%", boxwidth));
+  in->writeline("set style fill solid 0.5 border -1");
+
+  if (is_legend)
+  {
+    int legend_title_n = 0;
+    for (const auto& legend_title : legend_titles)
+    {
+      if (legend_title.size() > legend_title_n)
+        legend_title_n = legend_title.size();
     }
 
-    in->flush();
+    in->writeline(log::format("set rmargin %1%", legend_title_n + 6));  // Disable legend
+    in->writeline("set key at screen 1, graph 1");                      // Disable legend
   }
   else
+    in->writeline("unset key");  // Disable legend
+
+  if (options.percent)
+    in->writeline("set format y \"%g%%\"");  // Percent format
+
+  // xticks
+  for (const auto& xtick : options.values.begin()->second)
   {
-    std::vector<std::string> x_offsets;
+    xtick_titles.push_back(xtick.first);
+  }
 
-    double start = -(double(n) / 2.0 * boxwidth - boxwidth / 2.0);
+  in->write("set xtics (");
+  // auto it2 = options.xticks.begin();
+  for (std::size_t i = 0; i < xtick_titles.size(); ++i)
+  {
+    in->write(log::format("\"%1%\" %2%", xtick_titles[i], i + 1));
+    if (i != xtick_titles.size() - 1)
+      in->write(", ");
+  }
+  in->writeline(") scale 0.0 rotate by 45 right offset 4, 0");
 
-    for (int i = 0; i < n; ++i)
+  std::vector<std::string> x_offsets;
+
+  double start = (is_legend) ? -(double(n_legend) / 2.0 * boxwidth - boxwidth / 2.0) : 0.0;
+
+  for (int i = 0; i < n_legend; ++i)
+  {
+    x_offsets.push_back(std::to_string(start));
+    start += boxwidth;
+  }
+
+  // plot
+  // Set Data block in order
+  std::vector<int> index;
+
+  if (is_legend)
+  {
+    int idx = 0;
+    for (int i = 0; i < n_xtick; ++i)
     {
-      x_offsets.push_back(std::to_string(start));
-      start += boxwidth;
+      idx = i;
+      for (int j = 0; j < n_legend; ++j)
+      {
+        index.push_back(idx + 1);
+        idx += n_xtick;
+      }
     }
+  }
 
-    in->write("plot ");
-    for (int i = 0; i < n; ++i)
+  ctr = 0;
+  in->write("plot ");
+  for (std::size_t i = 0; i < n_xtick; ++i)
+  {
+    for (std::size_t j = 0; j < n_legend; ++j)
     {
-      in->write(log::format("for [i=1:%3%] '%1%' using (i%4%%5%):i title (i == 1 ? \"%6%\" : \"\") with boxes lt %2%, "
-                            "for [i=1:%3%] '%1%' u (i%4%%5%):i:i title \"\""
-                            "with labels "
-                            "offset char 0,1",                             //
-                            std::string("$data" + std::to_string(i + 1)),  //
-                            i + 1, n_data, (stod(x_offsets[i]) > 0.0) ? "+" : "", x_offsets[i], legend_titles[i]));
-      if (i != n - 1)
-        in->write(", ");
+      if (is_legend)
+      {
+        in->writeline(log::format("'$data%1%' using (%2%%3%%4%):1 title \"%5%\" with boxes lt %6%, '$data%1%' u "
+                                  "(%2%%3%%4%):1:1 title \"\" with labels offset char 0,1%7%",
+                                  index[ctr], i + 1, (stod(x_offsets[j]) >= 0.0) ? "+" : "", x_offsets[j],
+                                  (i == 0) ? legend_titles[j] : "", j + 1,
+                                  (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
+      }
+      else
+      {
+        in->writeline(log::format("'$data%1%' using (%2%):1 with boxes, '$data%1%' u "
+                                  "(%2%):1:1 with labels offset char 0,1%3%",
+                                  ctr + 1, ctr + 1, (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
+      }
+      ctr++;
     }
-
-    in->flush();
   }
 
   // reset variables in case where using multiplot
@@ -355,15 +472,17 @@ void GNUPlotDataSet::addMetric(const std::string& metric, const PlotType& plotty
   plot_types_.push_back(std::make_pair(metric, plottype));
 };
 
-void GNUPlotDataSet::dump(const DataSetPtr& dataset, GNUPlotHelper::MultiPlotOptions& mpo)
+void GNUPlotDataSet::dump(const DataSetPtr& dataset, GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set,
+                          const TokenSet& legend_set)
 {
   std::vector<DataSetPtr> datasets;
   datasets.push_back(dataset);
 
-  dump(datasets, mpo);
+  dump(datasets, mpo, xtick_set, legend_set);
 };
 
-void GNUPlotDataSet::dump(const std::vector<DataSetPtr>& datasets, GNUPlotHelper::MultiPlotOptions& mpo)
+void GNUPlotDataSet::dump(const std::vector<DataSetPtr>& datasets, GNUPlotHelper::MultiPlotOptions& mpo,
+                          const TokenSet& xtick_set, const TokenSet& legend_set)
 {
   if (plot_types_.empty())
   {
@@ -382,16 +501,22 @@ void GNUPlotDataSet::dump(const std::vector<DataSetPtr>& datasets, GNUPlotHelper
   if (plot_types_.size() > 1)
     helper_.multiplot(mpo);
 
+  if (!validOverlap(xtick_set, legend_set))
+  {
+    ROS_WARN("Tokens overlap");
+    return;
+  }
+
   for (const auto& pair : plot_types_)
   {
     switch (pair.second)
     {
       case PlotType::BarGraph:
-        dumpBarGraph(pair.first, datasets);
+        dumpBarGraph(pair.first, datasets, xtick_set, legend_set);
         break;
 
       case PlotType::BoxPlot:
-        dumpBoxPlot(pair.first, datasets);
+        dumpBoxPlot(pair.first, datasets, xtick_set, legend_set);
         break;
 
       default:
@@ -401,32 +526,41 @@ void GNUPlotDataSet::dump(const std::vector<DataSetPtr>& datasets, GNUPlotHelper
   }
 };
 
-void GNUPlotDataSet::dumpBoxPlot(const std::string& metric, const std::vector<DataSetPtr>& results)
+void GNUPlotDataSet::dumpBoxPlot(const std::string& metric, const std::vector<DataSetPtr>& datasets,
+                                 const TokenSet& xtick_set, const TokenSet& legend_set)
 
-    {
-      // GNUPlotHelper::BoxPlotOptions bpo;
-      // bpo.title = log::format("\\\"%1%\\\" for Experiment \\\"%2%\\\"", metric, results.name);
-      // bpo.y.label = metric;
-      // bpo.y.min = 0.;
+{
+  GNUPlotHelper::BoxPlotOptions bpo;
+  bpo.title = log::format("\\\"%1%\\\" for Experiment \\\"%2%\\\"", metric, datasets[0]->name);
+  bpo.y.label = metric;
+  bpo.y.min = 0.;
 
-      // for (const auto& query : results.data)
-      // {
-      //   const auto& name = query.first;
-      //   const auto& points = query.second;
+  // for (const auto& query : datasets.data)
+  // {
+  //   const auto& name = query.first;
+  //   const auto& points = query.second;
 
-      //   std::vector<double> values;
-      //   for (const auto& run : points)
-      //   {
-      //     values.emplace_back(toMetricDouble(run->metrics[metric]));
-      //   }
+  //   std::vector<double> values;
+  //   for (const auto& run : points)
+  //   {
+  //     values.emplace_back(toMetricDouble(run->metrics[metric]));
+  //   }
 
-      //   bpo.values.emplace(name, values);
-      // }
+  //   bpo.values.emplace(name, values);
+  // }
+  fillDataSet(metric, datasets, xtick_set, legend_set, bpo.values);
 
-      // helper_.boxplot(bpo);
-    };
+  if (bpo.values.empty())
+  {
+    ROS_WARN("No values to plot...");
+    return;
+  }
 
-void GNUPlotDataSet::dumpBarGraph(const std::string& metric, const std::vector<DataSetPtr>& datasets)
+  helper_.boxplot(bpo);
+};
+
+void GNUPlotDataSet::dumpBarGraph(const std::string& metric, const std::vector<DataSetPtr>& datasets,
+                                  const TokenSet& xtick_set, const TokenSet& legend_set)
 {
   GNUPlotHelper::BarGraphOptions bgo;
   bgo.percent = false;
@@ -434,32 +568,62 @@ void GNUPlotDataSet::dumpBarGraph(const std::string& metric, const std::vector<D
   bgo.y.label = metric;
   bgo.y.min = 0.;
 
-  Filter filter;
-  // Filter filter = { { "query_setup/scene/cluter-world" }, { "query_setup/robot_state/in-collision" } };
-  Legend legend = { { "query_setup/collision_detector" } };
+  fillDataSet(metric, datasets, xtick_set, legend_set, bgo.values);
 
-  fillData(metric, filter, legend, datasets, bgo);
+  if (bgo.values.empty())
+  {
+    ROS_WARN("No values to plot...");
+    return;
+  }
 
   helper_.bargraph(bgo);
 };
 
-bool GNUPlotDataSet::fillData(const std::string& metric, const std::set<std::string>& filter,
-                              const std::set<std::string>& legend, const std::vector<DataSetPtr>& datasets,
-                              GNUPlotHelper::BarGraphOptions& bgo)
+bool GNUPlotDataSet::validOverlap(const TokenSet& xtick_set, const TokenSet& legend_set)
+{
+  int overlap_ctr = 0;
+  for (const auto& t1 : legend_set)
+  {
+    for (const auto& t2 : legend_set)
+    {
+      if (token::overlap(t1, t2))
+        overlap_ctr++;
+    }
+  }
+  if (overlap_ctr > legend_set.size())
+    return false;
+
+  overlap_ctr = 0;
+  for (const auto& t1 : xtick_set)
+  {
+    for (const auto& t2 : xtick_set)
+    {
+      if (token::overlap(t1, t2))
+        overlap_ctr++;
+    }
+  }
+  if (overlap_ctr > xtick_set.size())
+    return false;
+
+  for (const auto& t1 : legend_set)
+  {
+    for (const auto& t2 : xtick_set)
+    {
+      if (token::overlap(t1, t2))
+        return false;
+    }
+  }
+
+  return true;
+}
+
+bool GNUPlotDataSet::fillDataSet(const std::string& metric_name, const std::vector<DataSetPtr>& datasets,
+                                 const TokenSet& xtick_set, const TokenSet& legend_set,
+                                 GNUPlotHelper::PlotValues& plt_values)
 {
   std::vector<DataSetPtr> filtered_datasets;
 
-  std::vector<LegendKey> legend_keys;
-  std::vector<FilterKey> filter_keys;
-
-  if (!isLegendFilterValid(legend, filter, legend_keys, filter_keys))
-    return false;
-
-  std::set<std::string> legend_filter;
-  std::set_union(std::begin(legend), std::end(legend), std::begin(filter), std::end(filter),
-                 std::inserter(legend_filter, std::begin(legend_filter)));
-
-  filterDataSet(legend_filter, datasets, filtered_datasets);
+  filterDataSet(legend_set, xtick_set, datasets, filtered_datasets);
 
   for (const auto& dataset : filtered_datasets)
   {
@@ -471,8 +635,9 @@ bool GNUPlotDataSet::fillData(const std::string& metric, const std::set<std::str
         continue;
 
       std::string legend_name;
-      std::string filter_name;
-      if (!isValidData(data_vec[0], legend_keys, filter_keys, legend_name, filter_name))
+      std::string xtick_name;
+      if (!filterDataLegend(data_vec[0], dataset->metadata, legend_set, legend_name, " + ") ||
+          !filterDataXtick(data_vec[0], dataset->metadata, xtick_set, legend_set, xtick_name, "\\n"))
         continue;
 
       if (data_vec.empty())
@@ -480,294 +645,227 @@ bool GNUPlotDataSet::fillData(const std::string& metric, const std::set<std::str
 
       const auto& metric_map = data_vec[0]->metrics;
 
-      const auto& it = metric_map.find(metric);
+      const auto& it = metric_map.find(metric_name);
       if (it == metric_map.end())
         continue;
 
-      double data = toMetricDouble(data_vec[0]->metrics[metric]);
+      std::vector<double> metrics;
+      for (const auto& data : data_vec)
+      {
+        const auto& it = data->metrics.find(metric_name);
+        if (it != data->metrics.end())
+        {
+          double metric = toMetricDouble(it->second);
+          metrics.push_back(metric);
+        }
+      }
 
-      if (legend.empty())
-      {
-        bgo.value_map.insert(std::make_pair(filter_name, std::vector<double>({ data })));
-      }
+      auto it2 = plt_values.find(legend_name);
+      if (it2 == plt_values.end())
+        plt_values.insert({ { legend_name, { { xtick_name, metrics } } } });
       else
-      {
-        // std::map<std::string, std::map<std::string, Values>> value_legend_map;
-        auto it = bgo.value_legend_map.find(legend_name);
-        if (it == bgo.value_legend_map.end())
-          bgo.value_legend_map.insert({ { legend_name, { { filter_name, { data } } } } });
-        else
-          it->second.insert({ { filter_name, { data } } });
-      }
+        it2->second.insert({ { xtick_name, metrics } });
     }
   }
   return true;
 }
-std::vector<std::string> split(std::string s, std::string delimiter)
+
+bool GNUPlotDataSet::filterDataSet(const TokenSet& legend_set, const TokenSet& filter_set,
+                                   const std::vector<DataSetPtr>& datasets, std::vector<DataSetPtr>& filtered_datasets)
 {
-  size_t pos_start = 0, pos_end, delim_len = delimiter.length();
-  std::string token;
-  std::vector<std::string> res;
-
-  while ((pos_end = s.find(delimiter, pos_start)) != std::string::npos)
-  {
-    token = s.substr(pos_start, pos_end - pos_start);
-    pos_start = pos_end + delim_len;
-    res.push_back(token);
-  }
-
-  res.push_back(s.substr(pos_start));
-  return res;
-}
-
-bool GNUPlotDataSet::filterDataSet(const std::set<std::string>& legends, const std::vector<DataSetPtr>& datasets,
-                                   std::vector<DataSetPtr>& filtered_datasets)
-{
-  if (legends.empty())
+  if (legend_set.empty() && filter_set.empty())
   {
     for (const auto& dataset : datasets)
       filtered_datasets.push_back(dataset);
+    return true;
   }
 
-  for (const auto& legend : legends)
+  TokenSet all_set;
+  std::set_union(legend_set.begin(), legend_set.end(), filter_set.begin(), filter_set.end(),
+                 std::inserter(all_set, all_set.begin()));
+
+  for (const auto& dataset : datasets)
   {
-    std::string delimiter = "/";
-    std::vector<std::string> v = split(legend, delimiter);
-
-    if (v.size() < 2)
-    {
-      ROS_WARN("Invalid legend string");
-      return false;
-    }
-
-    std::string key = v[0];
-    std::string group = v[1];
-    std::string name = v.size() > 2 ? v[2] : "";
-
-    for (const auto& dataset : datasets)
+    bool add = true;
+    for (const auto& t : all_set)
     {
       YAML::Node node;
-      node["hardware"]["cpu"] = dataset->cpuinfo;
-      node["hardware"]["gpu"] = dataset->gpuinfo;
-      node["software"]["moveit"] = dataset->moveitinfo;
-      node["os"] = dataset->osinfo;
-      node["name"] = dataset->name;
-      node["date"] = to_simple_string(dataset->date);
-      node["time"] = dataset->time;
-      node["query_setup"] = dataset->query_setup.query_setup;
-
-      if (name.empty())
+      if (!token::compareToNode(t, dataset->metadata, node))
       {
-        if (node[key][group])
-          filtered_datasets.push_back(dataset);
+        if (token::hasValue(t) && t.key_root.compare("query_setup") == 0)
+        {
+          std::set<std::string> keys = token::getChildNodeKeys(node);
+
+          auto it = keys.find(t.value);
+          if (it == keys.end())
+          {
+            add = false;
+            break;
+          }
+        }
+        else
+        {
+          add = false;
+          break;
+        }
+      }
+    }
+    if (add)
+      filtered_datasets.push_back(dataset);
+  }
+
+  return true;
+}
+bool GNUPlotDataSet::filterDataLegend(const DataPtr& data, const YAML::Node& metadata, const TokenSet& legend_set,
+                                      std::string& legend_name, const std::string& del)
+{
+  YAML::Node node;
+  node = YAML::Clone(metadata);
+  node["query_setup"] = data->query->group_name_map;
+
+  for (const auto& token : legend_set)
+  {
+    YAML::Node res;
+    if (!token::compareToNode(token, node, res))
+      return false;
+
+    if (token::hasValue(token))
+      if (token.key_root.compare("query_setup") == 0)
+        legend_name += token.value;
+
+      else
+        legend_name += token.token + token.value;
+    else
+    {
+      // try getting child node keys
+      std::set<std::string> keys = token::getChildNodeKeys(res);
+
+      // get node value
+      if (keys.empty())
+        keys.insert(token::getNodeValue(res));
+
+      std::string filter_value;
+      for (const auto& key : keys)
+      {
+        filter_value += key;
+        filter_value += "+";
+      }
+      if (!filter_value.empty())
+        filter_value.pop_back();
+
+      if (token.key_root.compare("query_setup") == 0)
+        legend_name += filter_value;
+
+      else
+        legend_name += token.token + filter_value;
+    }
+
+    legend_name += del;
+  }
+
+  // Remove trailing delimiter
+  if (!legend_name.empty())
+    for (int i = 0; i < del.size(); ++i)
+      legend_name.pop_back();
+  return true;
+}
+
+bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& metadata, const TokenSet& xtick_set,
+                                     const TokenSet& legend_set, std::string& xtick_name, const std::string& del)
+{
+  YAML::Node node;
+  node = YAML::Clone(metadata);
+  node["query_setup"] = data->query->group_name_map;
+
+  for (const auto& token : xtick_set)
+  {
+    YAML::Node res;
+    if (!token::compareToNode(token, node, res))
+      continue;
+
+    if (token::hasValue(token))
+    {
+      std::set<std::string> keys;
+      if (token.key_root.compare("query_setup") == 0)
+      {
+        res = node["query_setup"];
+        auto node_kv = token::getChildNodeKeyValues(res);
+
+        for (const auto& kv : node_kv)
+        {
+          keys.insert(kv.second);
+          for (const auto& t : legend_set)
+          {
+            if (t.keys[1].compare(kv.first) == 0)
+              keys.erase(kv.second);
+          }
+        }
+        std::string xtick_value;
+        for (const auto& key : keys)
+        {
+          xtick_value += key;
+          xtick_value += del;
+        }
+        if (!xtick_value.empty())
+          for (int i = 0; i < del.size(); ++i)
+            xtick_value.pop_back();
+        xtick_name += xtick_value;
+      }
+      else
+        xtick_name += token.token + token.value;
+    }
+
+    else
+    {
+      std::set<std::string> keys;
+      if (token.key_root.compare("query_setup") == 0)
+      {
+        res = node["query_setup"];
+        auto node_kv = token::getChildNodeKeyValues(res);
+
+        for (const auto& kv : node_kv)
+        {
+          keys.insert(kv.second);
+          for (const auto& t : legend_set)
+          {
+            if (t.keys[1].compare(kv.first) == 0)
+              keys.erase(kv.second);
+          }
+        }
       }
       else
       {
-        if (node[key][group][name])
-          filtered_datasets.push_back(dataset);
+        // try getting child node keys
+        keys = token::getChildNodeKeys(res);
+
+        // get node value
+        if (keys.empty())
+          keys.insert(token::getNodeValue(res));
       }
-    }
-  }
-  return true;
-}
 
-bool GNUPlotDataSet::isLegendFilterValid(const Legend& legends, const Filter& filters,
-                                         std::vector<LegendKey>& legend_keys, std::vector<FilterKey>& filter_keys)
-{
-  int i = 0;
-  for (const auto& legend : legends)
-  {
-    std::string delimiter = "/";
-    std::vector<std::string> v = split(legend, delimiter);
-
-    if (v.size() < 2)
-    {
-      ROS_WARN("Invalid legend string");
-      return false;
-    }
-
-    std::string legend_key = v[0];
-    std::string legend_group = v[1];
-    std::string legend_name = v.size() > 2 ? v[2] : "";
-
-    LegendKey legendkey;
-    legendkey.node = legend_key;
-    legendkey.group = legend_group;
-    legendkey.id = legend_name;
-
-    legend_keys.push_back(legendkey);
-
-    for (const auto& filter : filters)
-    {
-      std::vector<std::string> v2 = split(filter, delimiter);
-
-      if (v2.size() < 2)
+      std::string xtick_value;
+      for (const auto& key : keys)
       {
-        ROS_WARN("Invalid legend string");
-        return false;
+        xtick_value += key;
+        xtick_value += del;
       }
+      if (!xtick_value.empty())
+        for (int i = 0; i < del.size(); ++i)
+          xtick_value.pop_back();
 
-      std::string filter_key = v2[0];
-      std::string filter_group = v2[1];
-      std::string filter_name = v2.size() > 2 ? v2[2] : "";
-
-      if (i == 0)
-      {
-        FilterKey filterkey;
-        filterkey.node = filter_key;
-        filterkey.group = filter_group;
-        filterkey.id = filter_name;
-
-        filter_keys.push_back(filterkey);
-      }
-
-      if (legend_key.compare(filter_key) == 0)
-      {
-        if (legend_group.compare(filter_group) == 0)
-        {
-          if (legend_name.empty() || filter_name.empty())
-          {
-            ROS_WARN("legend or filter targets same group");
-            return false;
-          }
-          if (legend_name.compare(filter_name) == 0)
-          {
-            ROS_WARN("legend and filter cannot have the same name");
-            return false;
-          }
-        }
-      }
+      if (token.key_root.compare("query_setup") == 0)
+        xtick_name += xtick_value;
+      else
+        xtick_name += token.token + xtick_value;
     }
-    i++;
+
+    xtick_name += del;
   }
 
-  if (legends.empty() && !filters.empty())
-  {
-    for (const auto& filter : filters)
-    {
-      std::string delimiter = "/";
-      std::vector<std::string> v2 = split(filter, delimiter);
-
-      if (v2.size() < 2)
-      {
-        ROS_WARN("Invalid legend string");
-        return false;
-      }
-
-      std::string filter_key = v2[0];
-      std::string filter_group = v2[1];
-      std::string filter_name = v2.size() > 2 ? v2[2] : "";
-
-      FilterKey filterkey;
-      filterkey.node = filter_key;
-      filterkey.group = filter_group;
-      filterkey.id = filter_name;
-
-      filter_keys.push_back(filterkey);
-    }
-  }
-
-  return true;
-}
-
-bool GNUPlotDataSet::isValidData(const DataPtr& data, const std::vector<LegendKey>& legend_keys,
-                                 const std::vector<FilterKey>& filter_keys, std::string& legend_name,
-                                 std::string& filter_name)
-{
-  std::string del = " + ";
-  for (const auto& legend : legend_keys)
-  {
-    const auto& it = data->query->group_name_map.find(legend.group);
-    if (it == data->query->group_name_map.end())
-      return false;
-
-    if (!legend.id.empty())
-    {
-      if (legend.id.compare(it->second) != 0)
-        return false;
-    }
-    // Already filled
-    if (!legend_name.empty())
-      continue;
-
-    legend_name += it->second;
-    legend_name += del;
-  }
-  if (!legend_name.empty())
-  {
+  if (xtick_name.empty())
+    return false;
+  else
     for (int i = 0; i < del.size(); ++i)
-      legend_name.pop_back();
-  }
-
-  for (const auto& filter : filter_keys)
-  {
-    const auto& it = data->query->group_name_map.find(filter.group);
-    if (it == data->query->group_name_map.end())
-      return false;
-
-    if (!filter.id.empty())
-    {
-      if (filter.id.compare(it->second) != 0)
-        return false;
-    }
-
-    // Already filled
-    if (!filter_name.empty())
-      continue;
-
-    del = "\\n";
-
-    for (const auto& group_name : data->query->group_name_map)
-    {
-      // Remove legend group
-      bool found = false;
-      for (const auto& legend : legend_keys)
-      {
-        if (group_name.first.compare(legend.group) == 0)
-        {
-          found = true;
-          break;
-        }
-      }
-      if (found)
-        continue;
-
-      filter_name += group_name.second;
-      filter_name += del;
-    }
-    if (!filter_name.empty())
-    {
-      for (int i = 0; i < del.size(); ++i)
-        filter_name.pop_back();
-    }
-  }
-
-  if (filter_keys.empty())
-  {
-    std::string del = "\\n";
-
-    for (const auto& group_name : data->query->group_name_map)
-    {
-      bool found = false;
-      for (const auto& legend : legend_keys)
-      {
-        if (group_name.first.compare(legend.group) == 0)
-        {
-          found = true;
-          break;
-        }
-      }
-      if (found)
-        continue;
-      filter_name += group_name.second;
-      filter_name += del;
-    }
-    if (!filter_name.empty())
-    {
-      for (int i = 0; i < del.size(); ++i)
-        filter_name.pop_back();
-    }
-  }
-
+      xtick_name.pop_back();  // Remove trailing delimiter
   return true;
 }

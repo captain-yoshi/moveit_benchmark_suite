@@ -145,10 +145,10 @@ int main(int argc, char** argv)
   // template <typename ProfilerType, typename QueryType, typename DataSetTypePtr>
   Benchmark benchmark("collision checks",  // Name of benchmark
                       BenchmarkType::COLLISION_CHECK,
-                      profiler,            // Options for internal profiler
+                      profiler,  // Options for internal profiler
                       query_setup,
-                      0,       // Timeout allowed for ALL queries
-                      10000);  // Number of trials
+                      0,     // Timeout allowed for ALL queries
+                      100);  // Number of trials
 
   // Create and a queries to the benchmark
   int i = 0;
@@ -197,10 +197,19 @@ int main(int argc, char** argv)
   plot.addMetric("collision_checks_per_second", IO::GNUPlotDataSet::BarGraph);
 
   IO::GNUPlotHelper::MultiPlotOptions mpo;
-  mpo.layout.row = 1;
-  mpo.layout.col = 2;
+  mpo.layout.row = 2;
+  mpo.layout.col = 1;
 
-  plot.dump(dataset, mpo);
+  TokenSet xtick;
+  // filter_set.insert(Token("query_setup", ""));
+  xtick.insert(Token("query_setup/scene", "cluter-world"));
+  xtick.insert(Token("query_setup/scene", "empty-world"));
+
+  TokenSet legend;
+  legend.insert(Token("query_setup/collision_detector", "Bullet"));
+  // legend_set.insert(Token("hardware/cpu/vendor_id", ""));
+
+  plot.dump(dataset, mpo, xtick, legend);
 
   // Dump metrics to a logfile
   BenchmarkSuiteDataSetOutputter output;

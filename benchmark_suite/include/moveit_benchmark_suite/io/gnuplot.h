@@ -3,6 +3,7 @@
 #include <moveit_benchmark_suite/constants.h>
 #include <moveit_benchmark_suite/log.h>
 #include <moveit_benchmark_suite/dataset.h>
+#include <moveit_benchmark_suite/token.h>
 #include <exception>
 
 #if IS_BOOST_164
@@ -22,6 +23,10 @@ public:
   using Series = std::vector<Point>;
   using Value = double;
   using Values = std::vector<Value>;
+
+  using Legend = std::string;
+  using Xthick = std::string;
+  using PlotValues = std::map<Legend, std::map<Xthick, Values>>;
 
   GNUPlotHelper() = default;
 
@@ -88,7 +93,8 @@ public:
   {
     bool outliers{ true };
     bool sorted{ true };
-    std::map<std::string, Values> values;  ///< Map of names to data.
+    // std::map<std::string, Values> values;  ///< Map of names to data.
+    PlotValues values;
   };
 
   /** \brief Plot box data.
@@ -101,8 +107,8 @@ public:
     bool percent{ false };  // Defaults to count
     // std::vector<Values> value;  ///< Map of names to data.
 
-    std::map<std::string, Values> value_map;
-    std::map<std::string, std::map<std::string, Values>> value_legend_map;
+    // std::map<std::string, Values> value_map;
+    PlotValues values;
   };
 
   /** \brief Plot box data.
@@ -150,7 +156,7 @@ private:
     Instance(Instance const&) = delete;
     void operator=(Instance const&) = delete;
 
-    bool debug_{ false };
+    bool debug_{ true };
 
 #if IS_BOOST_164
     boost::process::opstream input_;
@@ -181,17 +187,6 @@ public:
     TimeSeries,
   };
 
-  struct FilterKey
-  {
-    std::string node;
-    std::string group;
-    std::string id;
-  };
-  using LegendKey = FilterKey;
-
-  using Legend = std::set<std::string>;
-  using Filter = std::set<std::string>;
-
   /** \brief Constructor.
    */
   GNUPlotDataSet();
@@ -205,23 +200,34 @@ public:
    */
   void addMetric(const std::string& metric, const PlotType& plottype);
 
-  void dump(const DataSetPtr& dataset, GNUPlotHelper::MultiPlotOptions& mpo);
-  void dump(const std::vector<DataSetPtr>& datasets, GNUPlotHelper::MultiPlotOptions& mpo);
+  void dump(const DataSetPtr& dataset, GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set,
+            const TokenSet& legend_set = {});
+  void dump(const std::vector<DataSetPtr>& datasets, GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set,
+            const TokenSet& legend_set = {});
 
 private:
-  void dumpBoxPlot(const std::string& metric, const std::vector<DataSetPtr>& results);
-  void dumpBarGraph(const std::string& metric, const std::vector<DataSetPtr>& results);
+  void dumpBoxPlot(const std::string& metric, const std::vector<DataSetPtr>& results, const TokenSet& xtick_set,
+                   const TokenSet& legend_set);
+  void dumpBarGraph(const std::string& metric, const std::vector<DataSetPtr>& results, const TokenSet& xtick_set,
+                    const TokenSet& legend_set);
 
-  bool fillData(const std::string& metric, const std::set<std::string>& filter, const std::set<std::string>& legend,
-                const std::vector<DataSetPtr>& datasets, GNUPlotHelper::BarGraphOptions& bgo);
+  bool fillDataSet(const std::string& metric, const std::vector<DataSetPtr>& datasets, const TokenSet& xtick_set,
+                   const TokenSet& legend_set, GNUPlotHelper::PlotValues& plt_values);
 
-  bool filterDataSet(const std::set<std::string>& legend, const std::vector<DataSetPtr>& datasets,
+  bool validOverlap(const TokenSet& xtick_set, const TokenSet& legend_set);
+  bool filterDataSet(const TokenSet& xtick_set, const TokenSet& legend_set, const std::vector<DataSetPtr>& datasets,
                      std::vector<DataSetPtr>& filtered_datasets);
-  bool isLegendFilterValid(const Legend& legend, const Filter& filter, std::vector<LegendKey>& legend_keys,
-                           std::vector<FilterKey>& filter_keys);
 
-  bool isValidData(const DataPtr& data, const std::vector<LegendKey>& legend_keys,
-                   const std::vector<FilterKey>& filter_keys, std::string& legend_name, std::string& filter_name);
+  bool filterDataXtick(const DataPtr& data, const YAML::Node& metadata, const TokenSet& legend_set,
+                       const TokenSet& xtick_set, std::string& xtick_name, const std::string& del);
+  bool filterDataLegend(const DataPtr& data, const YAML::Node& metadata, const TokenSet& legend_set,
+                        std::string& legend_name, const std::string& del);
+
+  // bool isLegendFilterValid(const Legend& legend, const Filter& filter, std::vector<LegendKey>& legend_keys,
+  //                          std::vector<FilterKey>& filter_keys);
+
+  // bool isValidData(const DataPtr& data, const std::vector<LegendKey>& legend_keys,
+  //                  const std::vector<FilterKey>& filter_keys, std::string& legend_name, std::string& filter_name);
 
   std::vector<std::pair<std::string, PlotType>> plot_types_;
   GNUPlotHelper helper_;

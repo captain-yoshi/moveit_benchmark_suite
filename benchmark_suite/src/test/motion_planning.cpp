@@ -228,20 +228,33 @@ int main(int argc, char** argv)
   // plot.addMetric("smoothness", IO::GNUPlotDataSet::BoxPlot);
   // plot.addMetric("success", IO::GNUPlotDataSet::BarGraph);
   // plot.addMetric("correct", IO::GNUPlotDataSet::BarGraph);
-  plot.addMetric("mean_success", IO::GNUPlotDataSet::BarGraph);
-  plot.addMetric("mean_correct", IO::GNUPlotDataSet::BarGraph);
+  plot.addMetric("mean_time", IO::GNUPlotDataSet::BarGraph);
+  // plot.addMetric("mean_success", IO::GNUPlotDataSet::BarGraph);
+  // plot.addMetric("mean_correct", IO::GNUPlotDataSet::BarGraph);
 
   IO::GNUPlotHelper::MultiPlotOptions mpo;
-  mpo.layout.row = 2;
-  mpo.layout.col = 3;
+  mpo.layout.row = 1;
+  mpo.layout.col = 1;
 
-  benchmark.setPostQueryCallback([&](DataSetPtr dataset, const Query&) { plot.dump(dataset, mpo); });
+  TokenSet xtick;
+  xtick.insert(Token("query_setup/scene", ""));
 
-  // Aggregate time metric into collision checks / second
-  benchmark.setPostRunCallback([&](DataSetPtr dataset, const Query& query) {
+  TokenSet legend;
+  legend.insert(Token("query_setup/collision_detector", ""));
+
+  benchmark.setPostQueryCallback([&](DataSetPtr dataset, const Query& query) {
     aggregate::toMean("time", "mean_time", dataset, query);
     aggregate::toMean("success", "mean_success", dataset, query);
     aggregate::toMean("correct", "mean_correct", dataset, query);
+
+    plot.dump(dataset, mpo, xtick, legend);
+  });
+
+  // Aggregate time metric into collision checks / second
+  benchmark.setPostRunCallback([&](DataSetPtr dataset, const Query& query) {
+    // aggregate::toMean("time", "mean_time", dataset, query);
+    // aggregate::toMean("success", "mean_success", dataset, query);
+    // aggregate::toMean("correct", "mean_correct", dataset, query);
   });
 
   // Run benchmark
