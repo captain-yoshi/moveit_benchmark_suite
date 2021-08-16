@@ -57,7 +57,7 @@
 
 namespace moveit_benchmark_suite
 {
-std::vector<std::string> split(std::string s, std::string delimiter)
+std::vector<std::string> splitStr(std::string s, std::string delimiter)
 {
   size_t pos_start = 0, pos_end, delim_len = delimiter.length();
   std::string token;
@@ -82,7 +82,7 @@ struct Token
   Token(const std::string& token, const std::string& value, const std::string& del = "/")
     : token(token), value(value), del(del)
   {
-    keys = split(token, del);
+    keys = splitStr(token, del);
 
     if (keys.size() == 1 && keys[0].empty())
       reset();
