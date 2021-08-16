@@ -1839,6 +1839,16 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
         ROBOWFLEX_YAML_FLOW(d_node["metrics"][metric.first]);
       }
     }
+    // Remove sequence if metric has only one value
+    for (YAML::iterator it = d_node["metrics"].begin(); it != d_node["metrics"].end(); ++it)
+    {
+      YAML::Node value = it->second;
+      if (value.Type() == YAML::NodeType::Sequence)
+      {
+        if (value.size() == 1)
+          value = value[0];
+      }
+    }
 
     node["data"].push_back(d_node);
   }
