@@ -74,6 +74,17 @@ std::vector<std::string> splitStr(std::string s, std::string delimiter)
   return res;
 }
 
+std::string replaceStr(std::string subject, const std::string& search, const std::string& replace)
+{
+  size_t pos = 0;
+  while ((pos = subject.find(search, pos)) != std::string::npos)
+  {
+    subject.replace(pos, search.length(), replace);
+    pos += replace.length();
+  }
+  return subject;
+}
+
 // Token with empty keys will revert to an empty Token
 struct Token
 {
