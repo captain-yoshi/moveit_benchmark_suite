@@ -80,6 +80,7 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
   dataset->gpuinfo = IO::getHardwareGPU();
   dataset->osinfo = IO::getOSInfo();
   dataset->moveitinfo = IO::getMoveitInfo();
+  dataset->moveitbenchmarksuiteinfo = IO::getMoveitBenchmarkSuiteInfo();
 
   dataset->query_setup = query_setup_;
 

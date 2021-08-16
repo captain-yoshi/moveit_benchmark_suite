@@ -247,13 +247,28 @@ const OSInfo IO::getOSInfo()
   return osinfo;
 }
 
-const MoveitInfo IO::getMoveitInfo()
+const RosPkgInfo IO::getMoveitInfo()
 {
   std::string path = resolvePackage("package://moveit_core");
 
-  MoveitInfo info;
+  RosPkgInfo info;
 
   info.version = MOVEIT_VERSION;
+  // info.git_branch = MOVEIT_GIT_BRANCH;
+  // info.git_commit = MOVEIT_GIT_COMMIT_HASH;
+  info.git_branch = IO::runCommand(log::format("(cd %1% && git rev-parse --abbrev-ref HEAD | tr -d '\n')", path));
+  info.git_commit = IO::runCommand(log::format("(cd %1% && git rev-parse HEAD | tr -d '\n')", path));
+
+  return info;
+}
+
+const RosPkgInfo IO::getMoveitBenchmarkSuiteInfo()
+{
+  std::string path = resolvePackage("package://moveit_benchmark_suite");
+
+  RosPkgInfo info;
+
+  info.version = "0.0.7";
   // info.git_branch = MOVEIT_GIT_BRANCH;
   // info.git_commit = MOVEIT_GIT_COMMIT_HASH;
   info.git_branch = IO::runCommand(log::format("(cd %1% && git rev-parse --abbrev-ref HEAD | tr -d '\n')", path));

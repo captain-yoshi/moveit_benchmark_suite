@@ -1792,7 +1792,7 @@ bool convert<moveit_benchmark_suite::OSInfo>::decode(const Node& node, moveit_be
   return true;
 }
 
-Node convert<moveit_benchmark_suite::MoveitInfo>::encode(const moveit_benchmark_suite::MoveitInfo& rhs)
+Node convert<moveit_benchmark_suite::RosPkgInfo>::encode(const moveit_benchmark_suite::RosPkgInfo& rhs)
 {
   Node node;
 
@@ -1803,7 +1803,7 @@ Node convert<moveit_benchmark_suite::MoveitInfo>::encode(const moveit_benchmark_
   return node;
 }
 
-bool convert<moveit_benchmark_suite::MoveitInfo>::decode(const Node& node, moveit_benchmark_suite::MoveitInfo& rhs)
+bool convert<moveit_benchmark_suite::RosPkgInfo>::decode(const Node& node, moveit_benchmark_suite::RosPkgInfo& rhs)
 {
   rhs.version = node["version"].as<std::string>();
   rhs.git_branch = node["git_branch"].as<std::string>();
@@ -1831,6 +1831,7 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
 
   // s
   node["sw"]["moveit"] = rhs.moveitinfo;
+  node["sw"]["moveit_benchmark_suite"] = rhs.moveitbenchmarksuiteinfo;
 
   // os
   node["os"] = rhs.osinfo;

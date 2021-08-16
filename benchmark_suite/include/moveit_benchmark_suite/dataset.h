@@ -160,7 +160,8 @@ public:
   CPUInfo cpuinfo;
   GPUInfo gpuinfo;
   OSInfo osinfo;
-  MoveitInfo moveitinfo;
+  RosPkgInfo moveitinfo;
+  RosPkgInfo moveitbenchmarksuiteinfo;
 
   // Setup
   QuerySetup query_setup;

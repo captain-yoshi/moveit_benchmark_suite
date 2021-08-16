@@ -38,7 +38,7 @@ struct OSInfo
   std::string version;
 };
 
-struct MoveitInfo
+struct RosPkgInfo
 {
   std::string version;
   std::string git_branch;
@@ -139,7 +139,8 @@ const GPUInfo getHardwareGPU();
 
 const OSInfo getOSInfo();
 
-const MoveitInfo getMoveitInfo();
+const RosPkgInfo getMoveitInfo();
+const RosPkgInfo getMoveitBenchmarkSuiteInfo();
 
 /** \brief Get the hostname of the system.
  *  \return String of the hostname.

@@ -446,10 +446,10 @@ struct convert<moveit_benchmark_suite::OSInfo>
 };
 
 template <>
-struct convert<moveit_benchmark_suite::MoveitInfo>
+struct convert<moveit_benchmark_suite::RosPkgInfo>
 {
-  static Node encode(const moveit_benchmark_suite::MoveitInfo& rhs);
-  static bool decode(const Node& node, moveit_benchmark_suite::MoveitInfo& rhs);
+  static Node encode(const moveit_benchmark_suite::RosPkgInfo& rhs);
+  static bool decode(const Node& node, moveit_benchmark_suite::RosPkgInfo& rhs);
 };
 
 template <>
