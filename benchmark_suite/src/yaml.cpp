@@ -1825,7 +1825,17 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
   node["trials"] = rhs.trials;
   node["hostname"] = rhs.hostname;
 
-  node["setup"] = rhs.query_setup.query_setup;
+  // hardware
+  node["hw"]["cpu"] = rhs.cpuinfo;
+  node["hw"]["gpu"] = rhs.gpuinfo;
+
+  // s
+  node["sw"]["moveit"] = rhs.moveitinfo;
+
+  // os
+  node["os"] = rhs.osinfo;
+
+  node["config"] = rhs.query_setup.query_setup;
 
   for (const auto& data_map : rhs.data)
   {
@@ -1834,7 +1844,7 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
     for (const auto& data : data_map.second)
     {
       d_node["name"] = data_map.first;
-      d_node["setup"] = data->query->group_name_map;
+      d_node["config"] = data->query->group_name_map;
 
       for (const auto& metric : data->metrics)
       {
@@ -1855,16 +1865,6 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
 
     node["data"].push_back(d_node);
   }
-
-  // hardware
-  node["hardware"]["cpu"] = rhs.cpuinfo;
-  node["hardware"]["gpu"] = rhs.gpuinfo;
-
-  // software
-  node["software"]["moveit"] = rhs.moveitinfo;
-
-  // os
-  node["os"] = rhs.osinfo;
 
   return node;
 }

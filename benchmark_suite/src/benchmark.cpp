@@ -73,6 +73,8 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
   dataset->trials = trials_;
   dataset->run_till_timeout = timeout_;
   dataset->threads = n_threads;
+  dataset->hostname = IO::getHostname();
+
   // dataset->queries = queries_;
   dataset->cpuinfo = IO::getHardwareCPU();
   dataset->gpuinfo = IO::getHardwareGPU();
@@ -143,13 +145,13 @@ BenchmarkSuiteDataSetOutputter::~BenchmarkSuiteDataSetOutputter()
 {
 }
 
-void BenchmarkSuiteDataSetOutputter::dump(const DataSet& results)
+void BenchmarkSuiteDataSetOutputter::dump(const DataSet& dataset)
 {
   std::ofstream out;
-  IO::createFile(out, log::format("%1%_%2%.yaml", results.name, results.date));
+  IO::createFile(out, log::format("%1%_%2%.yaml", dataset.name, dataset.date));
 
   YAML::Node node;
-  node["dataset"] = results;
+  node["dataset"] = dataset;
 
   out << node;
 
