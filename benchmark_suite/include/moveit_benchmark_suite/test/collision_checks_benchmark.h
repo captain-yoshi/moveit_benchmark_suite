@@ -33,6 +33,7 @@
  *********************************************************************/
 
 /* Author: Jens Petit */
+#pragma once
 
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 #include <moveit/collision_plugin_loader/collision_plugin_loader.h>

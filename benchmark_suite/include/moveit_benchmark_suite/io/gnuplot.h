@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include <moveit_benchmark_suite/macros.h>
 #include <moveit_benchmark_suite/constants.h>
 #include <moveit_benchmark_suite/log.h>
