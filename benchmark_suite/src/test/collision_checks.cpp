@@ -139,26 +139,16 @@ int main(int argc, char** argv)
     }
   }
 
-  // Setup benchmark
-  CollisionCheckProfiler profiler;
-
-  // template <typename ProfilerType, typename QueryType, typename DataSetTypePtr>
-  Benchmark benchmark("collision checks",  // Name of benchmark
-                      BenchmarkType::COLLISION_CHECK,
-                      profiler,  // Options for internal profiler
-                      query_setup,
-                      0,     // Timeout allowed for ALL queries
-                      100);  // Number of trials
-
-  // Create and a queries to the benchmark
-  int i = 0;
+  // Create queries
+  std::vector<CollisionCheckQueryPtr> queries;
+  int ctr = 0;
   for (const auto& scene : scenes)
   {
     // Create collision requests
     collision_detection::CollisionRequest req;
     req.distance = false;
 
-    std::string self_collision = "";
+    std::string self_collision = "environment-collision";
     if (scene->getWorld()->size() != 0)
     {
       req.contacts = true;
@@ -171,18 +161,30 @@ int main(int argc, char** argv)
     }
     for (auto& state : sampled_states)
     {
-      std::string query_name = scene->getName() + "\\n" + state.first + "\\n" + self_collision + "\\n" +
-                               scene->getActiveCollisionDetectorName() + "\\n" + self_collision;
+      std::string query_name = "q" + std::to_string(++ctr);
 
       QueryGroupName query_gn = { { "scene", scene->getName() },
                                   { "collision_detector", scene->getActiveCollisionDetectorName() },
                                   { "robot_state", state.first },
                                   { "request", self_collision } };
-      CollisionCheckQueryPtr query =
-          std::make_shared<CollisionCheckQuery>(query_name, query_gn, scene, state.second, req);
-      benchmark.addQuery(query);
+
+      queries.push_back(std::make_shared<CollisionCheckQuery>(query_name, query_gn, scene, state.second, req));
     }
   }
+
+  // Setup benchmark
+  CollisionCheckProfiler profiler;
+
+  // template <typename ProfilerType, typename QueryType, typename DataSetTypePtr>
+  Benchmark benchmark("collision checks",  // Name of benchmark
+                      BenchmarkType::COLLISION_CHECK,
+                      profiler,  // Options for internal profiler
+                      query_setup,
+                      0,     // Timeout allowed for ALL queries
+                      100);  // Number of trials
+
+  for (const auto& query : queries)
+    benchmark.addQuery(query);
 
   // Aggregate time metric into collision checks / second
   benchmark.setPostRunCallback([&](DataSetPtr dataset, const Query& query) {
