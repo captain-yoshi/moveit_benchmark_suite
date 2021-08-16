@@ -17,6 +17,7 @@
 #include <ros/console.h>
 
 #include <moveit_benchmark_suite/io.h>
+#include <moveit_benchmark_suite/log.h>
 #include <moveit/version.h>
 
 using namespace moveit_benchmark_suite;
@@ -248,11 +249,15 @@ const OSInfo IO::getOSInfo()
 
 const MoveitInfo IO::getMoveitInfo()
 {
+  std::string path = resolvePackage("package://moveit_core");
+
   MoveitInfo info;
 
   info.version = MOVEIT_VERSION;
-  info.git_branch = MOVEIT_GIT_BRANCH;
-  info.git_commit = MOVEIT_GIT_COMMIT_HASH;
+  // info.git_branch = MOVEIT_GIT_BRANCH;
+  // info.git_commit = MOVEIT_GIT_COMMIT_HASH;
+  info.git_branch = IO::runCommand(log::format("(cd %1% && git rev-parse --abbrev-ref HEAD | tr -d '\n')", path));
+  info.git_commit = IO::runCommand(log::format("(cd %1% && git rev-parse HEAD | tr -d '\n')", path));
 
   return info;
 }
