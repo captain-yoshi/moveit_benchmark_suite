@@ -1833,8 +1833,8 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
 
     for (const auto& data : data_map.second)
     {
-      d_node["query_name"] = data_map.first;
-      d_node["query_setup"] = data->query->group_name_map;
+      d_node["name"] = data_map.first;
+      d_node["setup"] = data->query->group_name_map;
 
       for (const auto& metric : data->metrics)
       {
