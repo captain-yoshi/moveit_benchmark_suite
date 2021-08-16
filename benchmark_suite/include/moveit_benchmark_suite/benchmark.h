@@ -39,6 +39,7 @@
 #pragma once
 
 #include <moveit_benchmark_suite/dataset.h>
+//#include <moveit_benchmark_suite/token.h>
 //#include <moveit_benchmark_suite/planning.h>
 #include <moveit_benchmark_suite/io.h>
 #include <moveit_benchmark_suite/log.h>
@@ -162,7 +163,7 @@ public:
    *  name_.
    *  \param[in] results Results to dump to file.
    */
-  void dump(const DataSet& results) override;
+  void dump(const DataSet& dataset) override;
 };
 
 }  // namespace moveit_benchmark_suite

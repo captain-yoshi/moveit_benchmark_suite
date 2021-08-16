@@ -106,6 +106,13 @@ std::vector<DataPtr> DataSet::getFlatData() const
   return r;
 }
 
+void DataSet::eraseMetric(const std::string& metric)
+{
+  for (const auto& data_map : data)
+    for (const auto& d : data_map.second)
+      d->metrics.erase(metric);
+}
+
 ///
 /// Profiler
 ///

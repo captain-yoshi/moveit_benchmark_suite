@@ -188,6 +188,8 @@ public:
    */
   void addDataPoint(const std::string& query_name, const DataPtr& run);
 
+  void eraseMetric(const std::string& metric);
+
   std::vector<DataPtr> getFlatData() const;
 };
 
