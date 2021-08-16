@@ -6,6 +6,7 @@
 #include <moveit/collision_detection_fcl/fcl_compat.h>
 #include <moveit/collision_detection_bullet/collision_env_bullet.h>
 #include <moveit_benchmark_suite/yaml.h>
+#include <moveit_benchmark_suite/constants.h>
 
 using namespace moveit_benchmark_suite;
 
@@ -124,14 +125,14 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
 
 void Benchmark::fillMetaData(DataSetPtr& dataset) const
 {
-  dataset->metadata["hardware"]["cpu"] = dataset->cpuinfo;
-  dataset->metadata["hardware"]["gpu"] = dataset->gpuinfo;
-  dataset->metadata["software"]["moveit"] = dataset->moveitinfo;
-  dataset->metadata["os"] = dataset->osinfo;
-  dataset->metadata["name"] = dataset->name;
-  dataset->metadata["date"] = to_simple_string(dataset->date);
-  dataset->metadata["time"] = dataset->time;
-  dataset->metadata["query_setup"] = dataset->query_setup.query_setup;
+  dataset->metadata[DATASET_HW_KEY]["cpu"] = dataset->cpuinfo;
+  dataset->metadata[DATASET_HW_KEY]["gpu"] = dataset->gpuinfo;
+  dataset->metadata[DATASET_SW_KEY]["moveit"] = dataset->moveitinfo;
+  dataset->metadata[DATASET_OS_KEY] = dataset->osinfo;
+  dataset->metadata[DATASET_NAME_KEY] = dataset->name;
+  dataset->metadata[DATASET_DATE_KEY] = to_simple_string(dataset->date);
+  dataset->metadata[DATASET_TOTAL_TIME_KEY] = dataset->time;
+  dataset->metadata[DATASET_CONFIG_KEY] = dataset->query_setup.query_setup;
 }
 
 ///

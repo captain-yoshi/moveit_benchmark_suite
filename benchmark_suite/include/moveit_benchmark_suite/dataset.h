@@ -62,6 +62,24 @@ MOVEIT_CLASS_FORWARD(Data);
 MOVEIT_CLASS_FORWARD(DataSet);
 MOVEIT_CLASS_FORWARD(Profiler);
 
+// Dataset
+static const std::string DATASET_CONFIG_KEY = "config";
+static const std::string DATASET_HW_KEY = "hw";
+static const std::string DATASET_SW_KEY = "sw";
+static const std::string DATASET_OS_KEY = "os";
+static const std::string DATASET_NAME_KEY = "name";
+static const std::string DATASET_DATE_KEY = "date";
+static const std::string DATASET_TOTAL_TIME_KEY = "totaltime";
+static const std::string DATASET_TYPE_KEY = "type";
+static const std::string DATASET_TIME_LIMIT_KEY = "timelimit";
+static const std::string DATASET_TRIALS_KEY = "trials";
+static const std::string DATASET_HOSTNAME_KEY = "hostname";
+static const std::string DATASET_DATA_KEY = "data";
+
+// Data
+static const std::string DATA_CONFIG_KEY = DATASET_CONFIG_KEY;
+static const std::string DATA_METRIC_KEY = "metrics";
+
 using Metric = boost::variant<bool, double, int, std::size_t, std::string>;
 
 /** \brief Convert a planner metric into a string.

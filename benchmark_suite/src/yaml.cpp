@@ -15,6 +15,7 @@
 #include <moveit_benchmark_suite/io/yaml.h>
 #include <moveit_benchmark_suite/macros.h>
 #include <moveit_benchmark_suite/yaml.h>
+#include <moveit_benchmark_suite/dataset.h>
 
 using namespace moveit_benchmark_suite;
 
@@ -1817,26 +1818,26 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
   Node node;
 
   // dataset
-  node["name"] = rhs.name;
-  node["type"] = rhs.type;
-  node["date"] = to_simple_string(rhs.date);
-  node["toaltime"] = rhs.time;
-  node["timelimit"] = rhs.allowed_time;
-  node["trials"] = rhs.trials;
-  node["hostname"] = rhs.hostname;
+  node[DATASET_NAME_KEY] = rhs.name;
+  node[DATASET_TYPE_KEY] = rhs.type;
+  node[DATASET_DATE_KEY] = to_simple_string(rhs.date);
+  node[DATASET_TOTAL_TIME_KEY] = rhs.time;
+  node[DATASET_TIME_LIMIT_KEY] = rhs.allowed_time;
+  node[DATASET_TRIALS_KEY] = rhs.trials;
+  node[DATASET_HOSTNAME_KEY] = rhs.hostname;
 
   // hardware
-  node["hw"]["cpu"] = rhs.cpuinfo;
-  node["hw"]["gpu"] = rhs.gpuinfo;
+  node[DATASET_HW_KEY]["cpu"] = rhs.cpuinfo;
+  node[DATASET_HW_KEY]["gpu"] = rhs.gpuinfo;
 
   // s
-  node["sw"]["moveit"] = rhs.moveitinfo;
-  node["sw"]["moveit_benchmark_suite"] = rhs.moveitbenchmarksuiteinfo;
+  node[DATASET_SW_KEY]["moveit"] = rhs.moveitinfo;
+  node[DATASET_SW_KEY]["moveit_benchmark_suite"] = rhs.moveitbenchmarksuiteinfo;
 
   // os
-  node["os"] = rhs.osinfo;
+  node[DATASET_OS_KEY] = rhs.osinfo;
 
-  node["config"] = rhs.query_setup.query_setup;
+  node[DATASET_CONFIG_KEY] = rhs.query_setup.query_setup;
 
   for (const auto& data_map : rhs.data)
   {
@@ -1844,17 +1845,17 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
 
     for (const auto& data : data_map.second)
     {
-      d_node["name"] = data_map.first;
-      d_node["config"] = data->query->group_name_map;
+      d_node[DATASET_NAME_KEY] = data_map.first;
+      d_node[DATASET_CONFIG_KEY] = data->query->group_name_map;
 
       for (const auto& metric : data->metrics)
       {
-        d_node["metrics"][metric.first].push_back(toMetricString(metric.second));
-        ROBOWFLEX_YAML_FLOW(d_node["metrics"][metric.first]);
+        d_node[DATA_METRIC_KEY][metric.first].push_back(toMetricString(metric.second));
+        ROBOWFLEX_YAML_FLOW(d_node[DATA_METRIC_KEY][metric.first]);
       }
     }
     // Remove sequence if metric has only one value
-    for (YAML::iterator it = d_node["metrics"].begin(); it != d_node["metrics"].end(); ++it)
+    for (YAML::iterator it = d_node[DATA_METRIC_KEY].begin(); it != d_node[DATA_METRIC_KEY].end(); ++it)
     {
       YAML::Node value = it->second;
       if (value.Type() == YAML::NodeType::Sequence)
@@ -1864,7 +1865,7 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
       }
     }
 
-    node["data"].push_back(d_node);
+    node[DATASET_DATA_KEY].push_back(d_node);
   }
 
   return node;

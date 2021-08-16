@@ -692,7 +692,7 @@ bool GNUPlotDataSet::filterDataSet(const TokenSet& legend_set, const TokenSet& f
       YAML::Node node;
       if (!token::compareToNode(t, dataset->metadata, node))
       {
-        if (token::hasValue(t) && t.key_root.compare("query_setup") == 0)
+        if (token::hasValue(t) && t.key_root.compare(DATASET_CONFIG_KEY) == 0)
         {
           std::set<std::string> keys = token::getChildNodeKeys(node);
 
@@ -721,7 +721,7 @@ bool GNUPlotDataSet::filterDataLegend(const DataPtr& data, const YAML::Node& met
 {
   YAML::Node node;
   node = YAML::Clone(metadata);
-  node["query_setup"] = data->query->group_name_map;
+  node[DATA_CONFIG_KEY] = data->query->group_name_map;
 
   for (const auto& token : legend_set)
   {
@@ -730,7 +730,7 @@ bool GNUPlotDataSet::filterDataLegend(const DataPtr& data, const YAML::Node& met
       return false;
 
     if (token::hasValue(token))
-      if (token.key_root.compare("query_setup") == 0)
+      if (token.key_root.compare(DATA_CONFIG_KEY) == 0)
         legend_name += token.value;
 
       else
@@ -753,7 +753,7 @@ bool GNUPlotDataSet::filterDataLegend(const DataPtr& data, const YAML::Node& met
       if (!filter_value.empty())
         filter_value.pop_back();
 
-      if (token.key_root.compare("query_setup") == 0)
+      if (token.key_root.compare(DATA_CONFIG_KEY) == 0)
         legend_name += filter_value;
 
       else
@@ -775,7 +775,7 @@ bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& meta
 {
   YAML::Node node;
   node = YAML::Clone(metadata);
-  node["query_setup"] = data->query->group_name_map;
+  node[DATA_CONFIG_KEY] = data->query->group_name_map;
 
   for (const auto& token : xtick_set)
   {
@@ -786,9 +786,9 @@ bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& meta
     if (token::hasValue(token))
     {
       std::set<std::string> keys;
-      if (token.key_root.compare("query_setup") == 0)
+      if (token.key_root.compare(DATA_CONFIG_KEY) == 0)
       {
-        res = node["query_setup"];
+        res = node[DATA_CONFIG_KEY];
         auto node_kv = token::getChildNodeKeyValues(res);
 
         for (const auto& kv : node_kv)
@@ -818,9 +818,9 @@ bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& meta
     else
     {
       std::set<std::string> keys;
-      if (token.key_root.compare("query_setup") == 0)
+      if (token.key_root.compare(DATA_CONFIG_KEY) == 0)
       {
-        res = node["query_setup"];
+        res = node[DATA_CONFIG_KEY];
         auto node_kv = token::getChildNodeKeyValues(res);
 
         for (const auto& kv : node_kv)
@@ -853,7 +853,7 @@ bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& meta
         for (int i = 0; i < del.size(); ++i)
           xtick_value.pop_back();
 
-      if (token.key_root.compare("query_setup") == 0)
+      if (token.key_root.compare(DATA_CONFIG_KEY) == 0)
         xtick_name += xtick_value;
       else
         xtick_name += token.token + xtick_value;
