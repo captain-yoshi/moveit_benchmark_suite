@@ -1820,9 +1820,12 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
   node["name"] = rhs.name;
   node["type"] = rhs.type;
   node["date"] = to_simple_string(rhs.date);
-  node["time"] = rhs.time;
+  node["toaltime"] = rhs.time;
+  node["timelimit"] = rhs.allowed_time;
+  node["trials"] = rhs.trials;
+  node["hostname"] = rhs.hostname;
 
-  node["query_setup"] = rhs.query_setup.query_setup;
+  node["setup"] = rhs.query_setup.query_setup;
 
   for (const auto& data_map : rhs.data)
   {
