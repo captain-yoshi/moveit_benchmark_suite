@@ -67,10 +67,10 @@ void GNUPlotHelper::configurePlot(const PlottingOptions& options)
   auto in = getInstance(options.instance);
 
   // in->writeline(log::format("set term %1% noraise", options.mode));
-  in->writeline(log::format("set title \"%1%\"", options.title));
+  in->writeline(log::format("set title \"%1%\"", replaceStr(options.title, "_", "\\\\_")));
 
   if (not options.x.label.empty())
-    in->writeline(log::format("set xlabel \"%1%\"", options.x.label));
+    in->writeline(log::format("set xlabel \"%1%\"", replaceStr(options.x.label, "_", "\\\\_")));
 
   if (std::isfinite(options.x.max))
     in->writeline(log::format("set xrange [:%1%]", options.x.max));
@@ -79,7 +79,7 @@ void GNUPlotHelper::configurePlot(const PlottingOptions& options)
     in->writeline(log::format("set xrange [%1%:]", options.x.min));
 
   if (not options.y.label.empty())
-    in->writeline(log::format("set ylabel \"%1%\"", options.y.label));
+    in->writeline(log::format("set ylabel \"%1%\"", replaceStr(options.y.label, "_", "\\\\_")));
 
   if (std::isfinite(options.y.max))
     in->writeline(log::format("set yrange [:%1%]", options.y.max));
@@ -139,7 +139,7 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
   int ctr = 0;
   for (std::size_t i = 0; i < n_legend; ++i, ++it1)
   {
-    legend_titles.push_back(it1->first);
+    legend_titles.push_back(replaceStr(it1->first, "_", "\\\\_"));
 
     auto it2 = it1->second.begin();
     for (std::size_t j = 0; j < n_xtick; ++j, ++it2)
@@ -189,7 +189,7 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
   // xticks
   for (const auto& xtick : options.values.begin()->second)
   {
-    xtick_titles.push_back(xtick.first);
+    xtick_titles.push_back(replaceStr(xtick.first, "_", "\\\\_"));
   }
 
   in->write("set xtics (");
@@ -321,7 +321,7 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
   int ctr = 0;
   for (std::size_t i = 0; i < n_legend; ++i, ++it1)
   {
-    legend_titles.push_back(it1->first);
+    legend_titles.push_back(replaceStr(it1->first, "_", "\\\\_"));
 
     auto it2 = it1->second.begin();
     for (std::size_t j = 0; j < n_xtick; ++j, ++it2)
@@ -370,7 +370,7 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
   // xticks
   for (const auto& xtick : options.values.begin()->second)
   {
-    xtick_titles.push_back(xtick.first);
+    xtick_titles.push_back(replaceStr(xtick.first, "_", "\\\\_"));
   }
 
   in->write("set xtics (");
