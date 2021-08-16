@@ -292,9 +292,14 @@ std::size_t IO::getThreadID()
   return boost::interprocess::ipcdetail::get_current_thread_id();
 }
 
-boost::posix_time::ptime IO::getDate()
+boost::posix_time::ptime IO::getDate(boost::posix_time::microsec_clock& clock)
 {
-  return boost::posix_time::microsec_clock::local_time();
+  return clock.local_time();
+}
+
+boost::posix_time::ptime IO::getDateUTC(boost::posix_time::microsec_clock& clock)
+{
+  return clock.universal_time();
 }
 
 double IO::getSeconds(std::chrono::high_resolution_clock::time_point start,

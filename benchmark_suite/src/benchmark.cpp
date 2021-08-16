@@ -68,7 +68,9 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
   auto dataset = std::make_shared<DataSet>();
   dataset->name = name_;
   dataset->type = type_;
-  dataset->date = boost::posix_time::microsec_clock::local_time();
+  boost::posix_time::microsec_clock clock;
+  dataset->date = IO::getDate(clock);
+  dataset->date_utc = IO::getDateUTC(clock);
   dataset->start = std::chrono::high_resolution_clock::now();
   dataset->allowed_time = allowed_time_;
   dataset->trials = trials_;

@@ -1821,6 +1821,7 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
   node[DATASET_NAME_KEY] = rhs.name;
   node[DATASET_TYPE_KEY] = rhs.type;
   node[DATASET_DATE_KEY] = to_simple_string(rhs.date);
+  node[DATASET_DATE_UTC_KEY] = to_simple_string(rhs.date_utc);
   node[DATASET_TOTAL_TIME_KEY] = rhs.time;
   node[DATASET_TIME_LIMIT_KEY] = rhs.allowed_time;
   node[DATASET_TRIALS_KEY] = rhs.trials;

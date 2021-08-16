@@ -69,6 +69,7 @@ static const std::string DATASET_SW_KEY = "sw";
 static const std::string DATASET_OS_KEY = "os";
 static const std::string DATASET_NAME_KEY = "name";
 static const std::string DATASET_DATE_KEY = "date";
+static const std::string DATASET_DATE_UTC_KEY = "dateutc";
 static const std::string DATASET_TOTAL_TIME_KEY = "totaltime";
 static const std::string DATASET_TYPE_KEY = "type";
 static const std::string DATASET_TIME_LIMIT_KEY = "timelimit";
@@ -173,6 +174,7 @@ public:
   std::chrono::high_resolution_clock::time_point start;   ///< Start time of dataset computation.
   std::chrono::high_resolution_clock::time_point finish;  ///< End time for dataset computation.
   boost::posix_time::ptime date;                          ///< Query start time.
+  boost::posix_time::ptime date_utc;                      ///< Query start time.
 
   // Metadata
   CPUInfo cpuinfo;

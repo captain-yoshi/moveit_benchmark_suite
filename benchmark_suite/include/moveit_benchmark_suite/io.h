@@ -160,7 +160,8 @@ std::size_t getThreadID();
 /** \brief Get the current time (up to milliseconds)
  *  \return The time.
  */
-boost::posix_time::ptime getDate();
+boost::posix_time::ptime getDate(boost::posix_time::microsec_clock& clock);
+boost::posix_time::ptime getDateUTC(boost::posix_time::microsec_clock& clock);
 
 /** \brief Get a duration in seconds from two times.
  *  \param[in] start The start time.
