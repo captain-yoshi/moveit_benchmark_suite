@@ -59,9 +59,7 @@ void toFrequency(const std::string& metric, const std::string& new_metric, DataS
 
     double acc = 0;
     for (const auto& data : it->second)
-    {
       acc += toMetricDouble(data->metrics[metric]);
-    }
 
     double frequency = it->second.size() / acc;
     it->second[0]->metrics[new_metric] = frequency;
@@ -78,9 +76,7 @@ void toMean(const std::string& metric, const std::string& new_metric, DataSetPtr
 
     double acc = 0;
     for (const auto& data : it->second)
-    {
       acc += toMetricDouble(data->metrics[metric]);
-    }
 
     double mean = acc / it->second.size();
     it->second[0]->metrics[new_metric] = mean;
