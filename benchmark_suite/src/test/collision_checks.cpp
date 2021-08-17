@@ -64,6 +64,10 @@ int main(int argc, char** argv)
   // Prepare query setup
   QuerySetup query_setup;
 
+  // Parse filename
+  std::string filename;
+  pnh.getParam("output", filename);
+
   // TODO load configuration
   std::vector<std::string> collision_detector_names = { "FCL", "Bullet" };
 
@@ -215,11 +219,13 @@ int main(int argc, char** argv)
 
   // Dump metrics to a logfile
   BenchmarkSuiteDataSetOutputter output;
+  if (filename.empty())
+    filename = log::format("%1%_%2%", dataset->name, dataset->date);
+  std::cout << filename << std::endl;
 
-  std::string filename = log::format("%1%", dataset->name);
   output.dump(*dataset, filename);
 
-  ros::waitForShutdown();
+  // ros::waitForShutdown();
 
   return 0;
 }

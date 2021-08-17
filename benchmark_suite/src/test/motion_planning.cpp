@@ -64,6 +64,10 @@ int main(int argc, char** argv)
   // Prepare query setup
   QuerySetup query_setup;
 
+  // Parse filename
+  std::string filename;
+  pnh.getParam("output", filename);
+
   // Parse scene
   SceneParser parser;
   std::vector<moveit_msgs::PlanningScene> scene_msgs;
@@ -265,10 +269,11 @@ int main(int argc, char** argv)
   // Dump metrics to a logfile
   BenchmarkSuiteDataSetOutputter output;
 
-  std::string filename = log::format("%1%", dataset->name);
+  if (filename.empty())
+    filename = log::format("%1%_%2%", dataset->name, dataset->date);
   output.dump(*dataset, filename);
 
-  ros::waitForShutdown();
+  // ros::waitForShutdown();
 
   return 0;
 }

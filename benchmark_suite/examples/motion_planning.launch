@@ -6,6 +6,9 @@
   <arg unless="$(arg debug)" name="launch_prefix" value="" />
   <arg     if="$(arg debug)" name="launch_prefix" value="gdb --args" />
 
+  <!-- Output file -->
+  <arg name="output" default="" />
+
   <!-- Load robot -->
   <include file="$(find moveit_resources_panda_moveit_config)/launch/demo.launch">
     <arg name="use_rviz" value="false"/>
@@ -45,5 +48,6 @@
   <!-- Launch benchmark node -->
   <node name="benchmark" pkg="moveit_benchmark_suite" type="motion_planning" output="screen" required="true" launch-prefix="$(arg launch_prefix)">
     <rosparam command="load" file="$(arg options_file)"/>
+    <param name="output" value="$(arg output)"/>
   </node>
 </launch>
