@@ -264,7 +264,9 @@ int main(int argc, char** argv)
 
   // Dump metrics to a logfile
   BenchmarkSuiteDataSetOutputter output;
-  output.dump(*dataset);
+
+  std::string filename = log::format("%1%", dataset->name);
+  output.dump(*dataset, filename);
 
   ros::waitForShutdown();
 

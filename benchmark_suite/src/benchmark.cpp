@@ -149,15 +149,21 @@ BenchmarkSuiteDataSetOutputter::~BenchmarkSuiteDataSetOutputter()
 {
 }
 
-void BenchmarkSuiteDataSetOutputter::dump(const DataSet& dataset)
+void BenchmarkSuiteDataSetOutputter::dump(const DataSet& dataset, const std::string& filename)
 {
   std::ofstream out;
-  IO::createFile(out, log::format("%1%_%2%.yaml", dataset.name, dataset.date));
+  std::string extension = ".yaml";
+  IO::createFile(out, filename + extension);
+
+  // Necessary if we append to the end of the file
+  out << "\n";
 
   YAML::Node node;
   node["dataset"] = dataset;
 
-  out << node;
+  YAML::Node root_node;
+  root_node.push_back(node);
 
+  out << root_node;
   out.close();
 }

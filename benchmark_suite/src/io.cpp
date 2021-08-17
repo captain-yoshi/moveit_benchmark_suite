@@ -199,7 +199,7 @@ void IO::createFile(std::ofstream& out, const std::string& file)
   if (!parent.empty())
     boost::filesystem::create_directories(parent);
 
-  out.open(path.string(), std::ofstream::out | std::ofstream::trunc);
+  out.open(path.string(), std::ofstream::out | std::ofstream::app);
 }
 
 const CPUInfo IO::getHardwareCPU()
