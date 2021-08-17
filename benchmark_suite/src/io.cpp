@@ -83,6 +83,18 @@ bool isExtension(const std::string& path_string, const std::string& extension)
 }
 }  // namespace
 
+std::string IO::generateUUID()
+{
+  boost::uuids::random_generator gen;
+  boost::uuids::uuid u = gen();
+
+  std::string s = boost::lexical_cast<std::string>(u);
+
+  std::replace(s.begin(), s.end(), '-', '_');
+
+  return s;
+}
+
 const std::string IO::resolvePackage(const std::string& path)
 {
   if (path.empty())
