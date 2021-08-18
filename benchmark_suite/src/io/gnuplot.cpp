@@ -734,7 +734,7 @@ bool GNUPlotDataSet::filterDataLegend(const DataPtr& data, const YAML::Node& met
         legend_name += token.value;
 
       else
-        legend_name += token.token + token.value;
+        legend_name += token.token + ": " + token.value;
     else
     {
       // try getting child node keys
@@ -757,7 +757,7 @@ bool GNUPlotDataSet::filterDataLegend(const DataPtr& data, const YAML::Node& met
         legend_name += filter_value;
 
       else
-        legend_name += token.token + filter_value;
+        legend_name += token.token + ": " + filter_value;
     }
 
     legend_name += del;
