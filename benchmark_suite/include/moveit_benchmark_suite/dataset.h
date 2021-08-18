@@ -68,6 +68,7 @@ static const std::string DATASET_HW_KEY = "hw";
 static const std::string DATASET_SW_KEY = "sw";
 static const std::string DATASET_OS_KEY = "os";
 static const std::string DATASET_NAME_KEY = "name";
+static const std::string DATASET_UUID_KEY = "uuid";
 static const std::string DATASET_DATE_KEY = "date";
 static const std::string DATASET_DATE_UTC_KEY = "dateutc";
 static const std::string DATASET_TOTAL_TIME_KEY = "totaltime";
@@ -168,6 +169,8 @@ public:
   std::string name;  ///< Name of this dataset.
   std::string type;  ///< Name of this dataset.
   std::string hostname;
+  std::string uuid;
+
   /** Timing */
   double time;  ///< Total computation time for entire dataset.
 

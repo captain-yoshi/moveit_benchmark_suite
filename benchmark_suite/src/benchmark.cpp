@@ -67,6 +67,7 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
   // Setup dataset to return
   auto dataset = std::make_shared<DataSet>();
   dataset->name = name_;
+  dataset->uuid = IO::generateUUID();
   dataset->type = type_;
   boost::posix_time::microsec_clock clock;
   dataset->date = IO::getDate(clock);
@@ -133,6 +134,7 @@ void Benchmark::fillMetaData(DataSetPtr& dataset) const
   dataset->metadata[DATASET_SW_KEY]["moveit_benchmark_suite"] = dataset->moveitbenchmarksuiteinfo;
   dataset->metadata[DATASET_OS_KEY] = dataset->osinfo;
   dataset->metadata[DATASET_NAME_KEY] = dataset->name;
+  dataset->metadata[DATASET_UUID_KEY] = dataset->uuid;
   dataset->metadata[DATASET_DATE_KEY] = to_simple_string(dataset->date);
   dataset->metadata[DATASET_TOTAL_TIME_KEY] = dataset->time;
   dataset->metadata[DATASET_CONFIG_KEY] = dataset->query_setup.query_setup;

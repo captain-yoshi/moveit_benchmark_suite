@@ -1860,6 +1860,7 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
   // dataset
   node[DATASET_NAME_KEY] = rhs.name;
   node[DATASET_TYPE_KEY] = rhs.type;
+  node[DATASET_UUID_KEY] = rhs.uuid;
   node[DATASET_DATE_KEY] = to_simple_string(rhs.date);
   node[DATASET_DATE_UTC_KEY] = to_simple_string(rhs.date_utc);
   node[DATASET_TOTAL_TIME_KEY] = rhs.time;
@@ -2019,6 +2020,7 @@ bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& n, moveit_benc
   rhs.metadata[DATASET_SW_KEY]["moveit_benchmark_suite"] = rhs.moveitbenchmarksuiteinfo;
   rhs.metadata[DATASET_OS_KEY] = rhs.osinfo;
   rhs.metadata[DATASET_NAME_KEY] = rhs.name;
+  rhs.metadata[DATASET_UUID_KEY] = rhs.uuid;
   rhs.metadata[DATASET_DATE_KEY] = to_simple_string(rhs.date);
   rhs.metadata[DATASET_TOTAL_TIME_KEY] = rhs.time;
   rhs.metadata[DATASET_CONFIG_KEY] = rhs.query_setup.query_setup;
