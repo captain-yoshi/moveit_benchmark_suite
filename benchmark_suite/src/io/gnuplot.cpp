@@ -663,6 +663,8 @@ bool GNUPlotDataSet::fillDataSet(const std::string& metric_name, const std::vect
 
   filterDataSet(legend_set, xtick_set, datasets, filtered_datasets);
 
+  bool multiple_datasets = (filtered_datasets.size() > 1) ? true : false;
+
   for (const auto& dataset : filtered_datasets)
   {
     for (const auto& data_map : dataset->data)
@@ -675,7 +677,7 @@ bool GNUPlotDataSet::fillDataSet(const std::string& metric_name, const std::vect
       std::string legend_name;
       std::string xtick_name;
       if (!filterDataLegend(data_vec[0], dataset->metadata, legend_set, legend_name, " + ") ||
-          !filterDataXtick(data_vec[0], dataset->metadata, xtick_set, legend_set, xtick_name, "\\n"))
+          !filterDataXtick(data_vec[0], dataset->metadata, xtick_set, legend_set, xtick_name, "\\n", multiple_datasets))
         continue;
 
       if (data_vec.empty())
@@ -809,7 +811,8 @@ bool GNUPlotDataSet::filterDataLegend(const DataPtr& data, const YAML::Node& met
 }
 
 bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& metadata, const TokenSet& xtick_set,
-                                     const TokenSet& legend_set, std::string& xtick_name, const std::string& del)
+                                     const TokenSet& legend_set, std::string& xtick_name, const std::string& del,
+                                     bool multiple_datasets)
 {
   YAML::Node node;
   node = YAML::Clone(metadata);
@@ -854,6 +857,18 @@ bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& meta
       }
       else
         xtick_name += token.token + token.value;
+
+      if (multiple_datasets)
+      {
+        bool found = false;
+        for (const auto& t : legend_set)
+        {
+          if (t.token.compare("uuid") == 0)
+            found = true;
+        }
+        if (!found)
+          xtick_name += del + metadata[DATASET_UUID_KEY].as<std::string>();
+      }
     }
 
     else
@@ -898,6 +913,18 @@ bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& meta
         xtick_name += xtick_value;
       else
         xtick_name += token.token + xtick_value;
+
+      if (multiple_datasets)
+      {
+        bool found = false;
+        for (const auto& t : legend_set)
+        {
+          if (t.token.compare("uuid") == 0)
+            found = true;
+        }
+        if (!found)
+          xtick_name += del + metadata[DATASET_UUID_KEY].as<std::string>();
+      }
     }
 
     xtick_name += del;

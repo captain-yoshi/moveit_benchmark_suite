@@ -221,7 +221,8 @@ private:
                      std::vector<DataSetPtr>& filtered_datasets);
 
   bool filterDataXtick(const DataPtr& data, const YAML::Node& metadata, const TokenSet& legend_set,
-                       const TokenSet& xtick_set, std::string& xtick_name, const std::string& del);
+                       const TokenSet& xtick_set, std::string& xtick_name, const std::string& del,
+                       bool multiple_datasets);
   bool filterDataLegend(const DataPtr& data, const YAML::Node& metadata, const TokenSet& legend_set,
                         std::string& legend_name, const std::string& del);
 
