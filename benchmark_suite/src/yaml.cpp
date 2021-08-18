@@ -1720,6 +1720,21 @@ bool convert<moveit_msgs::RobotTrajectory>::decode(const Node& node, moveit_msgs
 
   return true;
 }
+Node convert<moveit_benchmark_suite::QuerySetup>::encode(const moveit_benchmark_suite::QuerySetup& rhs)
+{
+  Node node;
+  return node;
+}
+
+bool convert<moveit_benchmark_suite::QuerySetup>::decode(const Node& node, moveit_benchmark_suite::QuerySetup& rhs)
+{
+  std::cout << node << std::endl;
+  for (YAML::const_iterator it1 = node.begin(); it1 != node.end(); ++it1)
+    for (YAML::const_iterator it2 = it1->second.begin(); it2 != it1->second.end(); ++it2)
+      rhs.addQuery(it1->first.as<std::string>(), it2->first.as<std::string>(), it2->second.as<std::string>());
+
+  return true;
+}
 
 Node convert<moveit_benchmark_suite::CPUInfo>::encode(const moveit_benchmark_suite::CPUInfo& rhs)
 {
@@ -1813,6 +1828,32 @@ bool convert<moveit_benchmark_suite::RosPkgInfo>::decode(const Node& node, movei
   return true;
 }
 
+Node convert<moveit_benchmark_suite::Data>::encode(const moveit_benchmark_suite::Data& rhs)
+{
+  // TODO
+  Node node;
+  return node;
+}
+bool convert<moveit_benchmark_suite::Data>::decode(const Node& node, moveit_benchmark_suite::Data& rhs)
+{
+  rhs.query = std::make_shared<Query>();
+  rhs.query->name = node["name"].as<std::string>();
+
+  for (YAML::const_iterator it = node["metrics"].begin(); it != node["metrics"].end(); ++it)
+  {
+    if (it->second.IsSequence())
+    {
+      for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2) {}
+    }
+
+    else
+    {
+      rhs.metrics.insert({ it->first.as<std::string>(), it->second.as<double>() });
+    }
+  }
+  return true;
+}  // namespace YAML
+
 Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_suite::DataSet& rhs)
 {
   Node node;
@@ -1827,11 +1868,11 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
   node[DATASET_TRIALS_KEY] = rhs.trials;
   node[DATASET_HOSTNAME_KEY] = rhs.hostname;
 
-  // hardware
+  // hw
   node[DATASET_HW_KEY]["cpu"] = rhs.cpuinfo;
   node[DATASET_HW_KEY]["gpu"] = rhs.gpuinfo;
 
-  // s
+  // sw
   node[DATASET_SW_KEY]["moveit"] = rhs.moveitinfo;
   node[DATASET_SW_KEY]["moveit_benchmark_suite"] = rhs.moveitbenchmarksuiteinfo;
 
@@ -1872,8 +1913,85 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
   return node;
 }
 
-bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& node, moveit_benchmark_suite::DataSet& rhs)
+bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& n, moveit_benchmark_suite::DataSet& rhs)
 {
+  YAML::Node node;
+  node = n["dataset"];
+  std::cout << node << std::endl;
+
+  rhs.name = node[DATASET_NAME_KEY].as<std::string>();
+  rhs.type = node[DATASET_TYPE_KEY].as<std::string>();
+  rhs.date = boost::posix_time::time_from_string(node[DATASET_DATE_KEY].as<std::string>());
+  rhs.date_utc = boost::posix_time::time_from_string(node[DATASET_DATE_UTC_KEY].as<std::string>());
+  rhs.time = node[DATASET_TOTAL_TIME_KEY].as<double>();
+  rhs.allowed_time = node[DATASET_TIME_LIMIT_KEY].as<double>();
+  rhs.trials = node[DATASET_TRIALS_KEY].as<int>();
+  rhs.hostname = node[DATASET_HOSTNAME_KEY].as<std::string>();
+
+  // hw
+  rhs.cpuinfo = node[DATASET_HW_KEY]["cpu"].as<CPUInfo>();
+  rhs.gpuinfo = node[DATASET_HW_KEY]["gpu"].as<GPUInfo>();
+
+  // sw
+  rhs.moveitinfo = node[DATASET_SW_KEY]["moveit"].as<RosPkgInfo>();
+  rhs.moveitbenchmarksuiteinfo = node[DATASET_SW_KEY]["moveit_benchmark_suite"].as<RosPkgInfo>();
+
+  // os
+  rhs.osinfo = node[DATASET_OS_KEY].as<OSInfo>();
+
+  rhs.query_setup = node[DATASET_CONFIG_KEY].as<QuerySetup>();
+
+  // data
+  for (YAML::const_iterator it = node["data"].begin(); it != node["data"].end(); ++it)
+  {
+    const YAML::Node& d = *it;
+
+    for (YAML::const_iterator it_metric = d["metrics"].begin(); it_metric != d["metrics"].end(); ++it_metric)
+    {
+      if (it_metric->second.IsSequence())
+      {
+        for (YAML::const_iterator it2 = it_metric->second.begin(); it2 != it_metric->second.end(); ++it2)
+        {
+          DataPtr data = std::make_shared<Data>();
+          data->metrics.insert({ it_metric->first.as<std::string>(), it2->as<double>() });
+
+          // Fill Query map
+          data->query = std::make_shared<Query>();
+          data->query->name = d["name"].as<std::string>();
+          for (YAML::const_iterator it3 = d["config"].begin(); it3 != d["config"].end(); ++it3)
+          {
+            data->query->group_name_map.insert({ it3->first.as<std::string>(), it3->second.as<std::string>() });
+          }
+
+          rhs.addDataPoint(d["name"].as<std::string>(), data);
+        }
+      }
+      else
+      {
+        DataPtr data = std::make_shared<Data>();
+        data->metrics.insert({ it_metric->first.as<std::string>(), it_metric->second.as<double>() });
+        // Fill Query map
+        data->query = std::make_shared<Query>();
+        data->query->name = d["name"].as<std::string>();
+        for (YAML::const_iterator it3 = d["config"].begin(); it3 != d["config"].end(); ++it3)
+        {
+          data->query->group_name_map.insert({ it3->first.as<std::string>(), it3->second.as<std::string>() });
+        }
+        rhs.addDataPoint(d["name"].as<std::string>(), data);
+      }
+    }
+  }
+  // Fill metadata
+  rhs.metadata[DATASET_HW_KEY]["cpu"] = rhs.cpuinfo;
+  rhs.metadata[DATASET_HW_KEY]["gpu"] = rhs.gpuinfo;
+  rhs.metadata[DATASET_SW_KEY]["moveit"] = rhs.moveitinfo;
+  rhs.metadata[DATASET_SW_KEY]["moveit_benchmark_suite"] = rhs.moveitbenchmarksuiteinfo;
+  rhs.metadata[DATASET_OS_KEY] = rhs.osinfo;
+  rhs.metadata[DATASET_NAME_KEY] = rhs.name;
+  rhs.metadata[DATASET_DATE_KEY] = to_simple_string(rhs.date);
+  rhs.metadata[DATASET_TOTAL_TIME_KEY] = rhs.time;
+  rhs.metadata[DATASET_CONFIG_KEY] = rhs.query_setup.query_setup;
+
   return true;
 }
 }  // namespace YAML

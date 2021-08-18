@@ -425,6 +425,13 @@ struct convert<moveit_msgs::RobotTrajectory>
 };
 
 template <>
+struct convert<moveit_benchmark_suite::QuerySetup>
+{
+  static Node encode(const moveit_benchmark_suite::QuerySetup& rhs);
+  static bool decode(const Node& node, moveit_benchmark_suite::QuerySetup& rhs);
+};
+
+template <>
 struct convert<moveit_benchmark_suite::CPUInfo>
 {
   static Node encode(const moveit_benchmark_suite::CPUInfo& rhs);
@@ -450,6 +457,13 @@ struct convert<moveit_benchmark_suite::RosPkgInfo>
 {
   static Node encode(const moveit_benchmark_suite::RosPkgInfo& rhs);
   static bool decode(const Node& node, moveit_benchmark_suite::RosPkgInfo& rhs);
+};
+
+template <>
+struct convert<moveit_benchmark_suite::Data>
+{
+  static Node encode(const moveit_benchmark_suite::Data& rhs);
+  static bool decode(const Node& node, moveit_benchmark_suite::Data& rhs);
 };
 
 template <>
