@@ -130,6 +130,7 @@ void Benchmark::fillMetaData(DataSetPtr& dataset) const
   dataset->metadata[DATASET_HW_KEY]["cpu"] = dataset->cpuinfo;
   dataset->metadata[DATASET_HW_KEY]["gpu"] = dataset->gpuinfo;
   dataset->metadata[DATASET_SW_KEY]["moveit"] = dataset->moveitinfo;
+  dataset->metadata[DATASET_SW_KEY]["moveit_benchmark_suite"] = dataset->moveitbenchmarksuiteinfo;
   dataset->metadata[DATASET_OS_KEY] = dataset->osinfo;
   dataset->metadata[DATASET_NAME_KEY] = dataset->name;
   dataset->metadata[DATASET_DATE_KEY] = to_simple_string(dataset->date);
