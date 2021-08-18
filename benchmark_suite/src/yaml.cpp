@@ -1728,7 +1728,6 @@ Node convert<moveit_benchmark_suite::QuerySetup>::encode(const moveit_benchmark_
 
 bool convert<moveit_benchmark_suite::QuerySetup>::decode(const Node& node, moveit_benchmark_suite::QuerySetup& rhs)
 {
-  std::cout << node << std::endl;
   for (YAML::const_iterator it1 = node.begin(); it1 != node.end(); ++it1)
     for (YAML::const_iterator it2 = it1->second.begin(); it2 != it1->second.end(); ++it2)
       rhs.addQuery(it1->first.as<std::string>(), it2->first.as<std::string>(), it2->second.as<std::string>());
@@ -1915,9 +1914,7 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
 
 bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& n, moveit_benchmark_suite::DataSet& rhs)
 {
-  YAML::Node node;
-  node = n["dataset"];
-  std::cout << node << std::endl;
+  const YAML::Node& node = n["dataset"];
 
   rhs.name = node[DATASET_NAME_KEY].as<std::string>();
   rhs.type = node[DATASET_TYPE_KEY].as<std::string>();
@@ -1946,39 +1943,73 @@ bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& n, moveit_benc
   {
     const YAML::Node& d = *it;
 
+    DataPtr data = std::make_shared<Data>();
+
+    // Fill query
+    std::string query_name = d["name"].as<std::string>();
+    QueryGroupName query_group;
+
+    for (YAML::const_iterator it_query = d["config"].begin(); it_query != d["config"].end(); ++it_query)
+      query_group.insert({ it_query->first.as<std::string>(), it_query->second.as<std::string>() });
+
+    data->query = std::make_shared<Query>();
+    data->query->name = query_name;
+    data->query->group_name_map = query_group;
+
+    // First pass for removing non sequence metrics
+    struct SequenceIt
+    {
+      std::string name;
+      YAML::const_iterator it;
+      int size;
+    };
+
+    std::vector<SequenceIt> iterators;
+    int max_iterator_index = 0;
+    int max_iterator_size = 0;
+    int ctr = 0;
+
     for (YAML::const_iterator it_metric = d["metrics"].begin(); it_metric != d["metrics"].end(); ++it_metric)
     {
       if (it_metric->second.IsSequence())
       {
-        for (YAML::const_iterator it2 = it_metric->second.begin(); it2 != it_metric->second.end(); ++it2)
+        int metric_size = it_metric->second.size() - 1;
+        if (metric_size > max_iterator_size)
         {
-          DataPtr data = std::make_shared<Data>();
-          data->metrics.insert({ it_metric->first.as<std::string>(), it2->as<double>() });
-
-          // Fill Query map
-          data->query = std::make_shared<Query>();
-          data->query->name = d["name"].as<std::string>();
-          for (YAML::const_iterator it3 = d["config"].begin(); it3 != d["config"].end(); ++it3)
-          {
-            data->query->group_name_map.insert({ it3->first.as<std::string>(), it3->second.as<std::string>() });
-          }
-
-          rhs.addDataPoint(d["name"].as<std::string>(), data);
+          max_iterator_size = metric_size;
+          max_iterator_index = ctr;
         }
+        ctr++;
+        if (it_metric->second.begin() != it_metric->second.end())
+          data->metrics.insert({ it_metric->first.as<std::string>(), it_metric->second.begin()->as<double>() });
+
+        iterators.emplace_back();
+        iterators.back().name = it_metric->first.as<std::string>();
+        iterators.back().size = metric_size;
+        iterators.back().it = ++(it_metric->second.begin());
+
+        // iterators.push_back({ it_metric->first.as<std::string>(), ++(it_metric->second.begin()) });
       }
       else
-      {
-        DataPtr data = std::make_shared<Data>();
         data->metrics.insert({ it_metric->first.as<std::string>(), it_metric->second.as<double>() });
-        // Fill Query map
-        data->query = std::make_shared<Query>();
-        data->query->name = d["name"].as<std::string>();
-        for (YAML::const_iterator it3 = d["config"].begin(); it3 != d["config"].end(); ++it3)
-        {
-          data->query->group_name_map.insert({ it3->first.as<std::string>(), it3->second.as<std::string>() });
-        }
-        rhs.addDataPoint(d["name"].as<std::string>(), data);
+    }
+    rhs.addDataPoint(query_name, data);
+
+    // Add remaining sequences
+    for (int i = 0; i < max_iterator_size; ++i)
+    {
+      DataPtr data = std::make_shared<Data>();
+      data->query = std::make_shared<Query>();
+      data->query->name = query_name;
+      data->query->group_name_map = query_group;
+
+      for (auto& it_seq : iterators)
+      {
+        if (i < it_seq.size)
+          data->metrics.insert({ it_seq.name, it_seq.it->as<double>() });
+        ++it_seq.it;
       }
+      rhs.addDataPoint(query_name, data);
     }
   }
   // Fill metadata
