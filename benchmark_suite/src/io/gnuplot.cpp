@@ -781,6 +781,9 @@ bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& meta
   {
     YAML::Node res;
     if (!token::compareToNode(token, node, res))
+      return false;
+
+    if (!xtick_name.empty())
       continue;
 
     if (token::hasValue(token))
