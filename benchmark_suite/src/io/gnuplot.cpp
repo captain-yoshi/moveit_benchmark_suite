@@ -128,6 +128,7 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
   std::vector<std::string> xtick_titles;
   std::vector<std::string> legend_titles;
   double boxwidth = 0.5;
+  double boxwidth_gap = 0.15;
 
   bool is_legend = (options.values.size() == 1 && options.values.begin()->first.empty()) ? false : true;
 
@@ -191,26 +192,39 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
   {
     xtick_titles.push_back(replaceStr(xtick.first, "_", "\\\\_"));
   }
-
   in->write("set xtics (");
   // auto it2 = options.xticks.begin();
-  for (std::size_t i = 0; i < xtick_titles.size(); ++i)
+  double xtick_center_start = (double)n_legend * boxwidth / 2.0 + boxwidth_gap;
+  std::vector<double> x_offsets;
+
+  if (is_legend)
   {
-    in->write(log::format("\"%1%\" %2%", xtick_titles[i], i + 1));
-    if (i != xtick_titles.size() - 1)
-      in->write(", ");
+    for (std::size_t i = 0; i < xtick_titles.size(); ++i)
+    {
+      double xtick_center = xtick_center_start + (double(i) * boxwidth_gap + double(i) * double(n_legend) / 2.0);
+
+      in->write(log::format("\"%1%\" %2%", xtick_titles[i], std::to_string(xtick_center)));
+
+      double xtick_start = xtick_center - double(n_legend) * boxwidth / 2.0 + boxwidth / 2.0;
+
+      x_offsets.push_back(xtick_start);
+      if (i != xtick_titles.size() - 1)
+        in->write(", ");
+    }
   }
-  in->writeline(") scale 0.0 rotate by 45 right offset 4, 0");
-
-  std::vector<std::string> x_offsets;
-
-  double start = (is_legend) ? -(double(n_legend) / 2.0 * boxwidth - boxwidth / 2.0) : 0.0;
-
-  for (int i = 0; i < n_legend; ++i)
+  else
   {
-    x_offsets.push_back(std::to_string(start));
-    start += boxwidth;
+    for (std::size_t i = 0; i < xtick_titles.size(); ++i)
+    {
+      in->write(log::format("\"%1%\" %2%", xtick_titles[i], i + 1));
+
+      if (i != xtick_titles.size() - 1)
+        in->write(", ");
+    }
   }
+  // in->writeline(") scale 0.0 rotate by 45 right offset 4, 0");
+
+  in->writeline(") scale 0.0 center");
 
   // plot
   // Set Data block in order
@@ -238,9 +252,9 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
     {
       if (is_legend)
       {
-        in->writeline(log::format("'$data%1%' using (%2%%3%%4%):1 title \"%5%\" lt %6%%7%", index[ctr], i + 1,
-                                  (stod(x_offsets[j]) >= 0.0) ? "+" : "", x_offsets[j], (i == 0) ? legend_titles[j] : "",
-                                  j + 1, (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
+        in->writeline(log::format("'$data%1%' using (%2%):1 title \"%3%\" lt %4%%5%", index[ctr],
+                                  x_offsets[i] + j * boxwidth, (i == 0) ? legend_titles[j] : "", j + 1,
+                                  (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
       }
       else
       {
@@ -310,6 +324,7 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
   std::vector<std::string> xtick_titles;
   std::vector<std::string> legend_titles;
   double boxwidth = 0.5;
+  double boxwidth_gap = 0.15;
 
   bool is_legend = (options.values.size() == 1 && options.values.begin()->first.empty()) ? false : true;
 
@@ -367,6 +382,8 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
   if (options.percent)
     in->writeline("set format y \"%g%%\"");  // Percent format
 
+  in->writeline("set bmargin 6");
+
   // xticks
   for (const auto& xtick : options.values.begin()->second)
   {
@@ -375,23 +392,45 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
 
   in->write("set xtics (");
   // auto it2 = options.xticks.begin();
-  for (std::size_t i = 0; i < xtick_titles.size(); ++i)
+  double xtick_center_start = (double)n_legend * boxwidth / 2.0 + boxwidth_gap;
+  std::vector<double> x_offsets;
+
+  if (is_legend)
   {
-    in->write(log::format("\"%1%\" %2%", xtick_titles[i], i + 1));
-    if (i != xtick_titles.size() - 1)
-      in->write(", ");
+    for (std::size_t i = 0; i < xtick_titles.size(); ++i)
+    {
+      double xtick_center = xtick_center_start + (double(i) * boxwidth_gap + double(i) * double(n_legend) / 2.0);
+
+      in->write(log::format("\"%1%\" %2%", xtick_titles[i], std::to_string(xtick_center)));
+
+      double xtick_start = xtick_center - double(n_legend) * boxwidth / 2.0 + boxwidth / 2.0;
+
+      x_offsets.push_back(xtick_start);
+      if (i != xtick_titles.size() - 1)
+        in->write(", ");
+    }
   }
-  in->writeline(") scale 0.0 rotate by 45 right offset 4, 0");
-
-  std::vector<std::string> x_offsets;
-
-  double start = (is_legend) ? -(double(n_legend) / 2.0 * boxwidth - boxwidth / 2.0) : 0.0;
-
-  for (int i = 0; i < n_legend; ++i)
+  else
   {
-    x_offsets.push_back(std::to_string(start));
-    start += boxwidth;
+    for (std::size_t i = 0; i < xtick_titles.size(); ++i)
+    {
+      in->write(log::format("\"%1%\" %2%", xtick_titles[i], i + 1));
+
+      if (i != xtick_titles.size() - 1)
+        in->write(", ");
+    }
   }
+  // in->writeline(") scale 0.0 rotate by 45 right offset 4, 0");
+
+  in->writeline(") scale 0.0 center");
+
+  // double start = (is_legend) ? -(double(n_legend) / 2.0 * boxwidth - boxwidth / 2.0) : 0.0;
+
+  // for (int i = 0; i < n_legend; ++i)
+  // {
+  //   x_offsets.push_back(std::to_string(start));
+  //   start += boxwidth;
+  // }
 
   // plot
   // Set Data block in order
@@ -419,10 +458,9 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
     {
       if (is_legend)
       {
-        in->writeline(log::format("'$data%1%' using (%2%%3%%4%):1 title \"%5%\" with boxes lt %6%, '$data%1%' u "
-                                  "(%2%%3%%4%):1:1 title \"\" with labels offset char 0,1%7%",
-                                  index[ctr], i + 1, (stod(x_offsets[j]) >= 0.0) ? "+" : "", x_offsets[j],
-                                  (i == 0) ? legend_titles[j] : "", j + 1,
+        in->writeline(log::format("'$data%1%' using (%2%):1 title \"%3%\" with boxes lt %4%, '$data%1%' u "
+                                  "(%2%):1:1 title \"\" with labels offset char 0,1%5%",
+                                  index[ctr], x_offsets[i] + j * boxwidth, (i == 0) ? legend_titles[j] : "", j + 1,
                                   (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
       }
       else
