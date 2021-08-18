@@ -192,6 +192,9 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
   {
     xtick_titles.push_back(replaceStr(xtick.first, "_", "\\\\_"));
   }
+
+  in->writeline("set bmargin 6");
+
   in->write("set xtics (");
   // auto it2 = options.xticks.begin();
   double xtick_center_start = (double)n_legend * boxwidth / 2.0 + boxwidth_gap;
