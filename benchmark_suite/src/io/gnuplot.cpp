@@ -707,7 +707,11 @@ bool GNUPlotDataSet::fillDataSet(const std::string& metric_name, const std::vect
       if (it2 == plt_values.end())
         plt_values.insert({ { legend_name, { { xtick_name, metrics } } } });
       else
+      {
+        if (it2->second.find(xtick_name) != it2->second.end())
+          ROS_WARN_STREAM(log::format("Xtick label '%1%' for metric '%2%' was overwritten", xtick_name, metric_name));
         it2->second.insert({ { xtick_name, metrics } });
+      }
     }
   }
   return true;
