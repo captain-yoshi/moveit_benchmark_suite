@@ -224,6 +224,16 @@ bool compareToNode(const Token& t, const YAML::Node& node, YAML::Node& res)
   return true;
 }
 
+bool compareToNode(const TokenSet& tokens, const YAML::Node& node)
+{
+  for (const auto& token : tokens)
+  {
+    if (!compareToNode(token, node))
+      return false;
+  }
+  return true;
+}
+
 bool compareToNode(const Token& t, const YAML::Node& node)
 {
   YAML::Node dummy;

@@ -86,6 +86,8 @@ bool overlap(const Token& t1, const Token& t2);
 bool compareToNode(const Token& t, const YAML::Node& node, YAML::Node& res);
 bool compareToNode(const Token& t, const YAML::Node& node);
 
+bool compareToNode(const TokenSet& tokens, const YAML::Node& node);
+
 std::set<std::string> getChildNodeKeys(const YAML::Node& node);
 std::set<std::string> getChildNodeValues(const YAML::Node& node);
 std::map<std::string, std::string> getChildNodeKeyValues(const YAML::Node& node);
