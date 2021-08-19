@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<launch>
+
+  <!-- By default, we are not in debug mode -->
+  <arg name="debug" default="false" />
+  <arg unless="$(arg debug)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --args" />
+
+  <node name="aggregate" pkg="moveit_benchmark_suite" type="aggregate" respawn="false" output="screen" launch-prefix="$(arg launch_prefix)">
+
+    <!-- Configuration as YAML text -->
+    <rosparam>
+      filename: /home/captain-yoshi/.ros/db/raw_collision_check.yaml
+      filters:
+        - type/COLLISION CHECK
+      aggregate:
+        - raw_metric: time
+          new_metric: collision_checks_per_seconds
+          type: frequency
+    </rosparam>
+
+  </node>
+</launch>

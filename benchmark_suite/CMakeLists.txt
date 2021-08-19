@@ -80,6 +80,9 @@ endif()
 add_executable(plot_dataset src/plot_dataset.cpp)
 target_link_libraries(plot_dataset ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
+add_executable(aggregate src/aggregate.cpp)
+target_link_libraries(aggregate ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
+
 add_executable(yaml_test src/test/yaml_test.cpp)
 target_link_libraries(yaml_test ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
@@ -92,6 +95,7 @@ install(TARGETS
   mtc_runtask
   collision_checks
   plot_dataset
+  aggregate
 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
