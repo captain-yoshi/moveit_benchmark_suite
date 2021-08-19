@@ -49,6 +49,12 @@ namespace moveit_benchmark_suite
 {
 namespace aggregate
 {
+static const std::string AVERAGE_KEY = "average";
+static const std::string FREQUENCY_KEY = "frequency";
+
+using Callback = std::function<void(const std::string& metric, const std::string& new_metric, DataSetPtr& dataset,
+                                    const Query& query)>;
+
 void toFrequency(const std::string& metric, const std::string& new_metric, DataSetPtr& dataset, const Query& query)
 {
   auto it = dataset->data.find(query.name);
@@ -81,6 +87,11 @@ void toMean(const std::string& metric, const std::string& new_metric, DataSetPtr
     double mean = acc / it->second.size();
     it->second[0]->metrics[new_metric] = mean;
   }
+};
+
+const std::map<std::string, Callback> CallbackMap = {
+  { AVERAGE_KEY, &toMean },
+  { FREQUENCY_KEY, &toFrequency },
 };
 
 }  // namespace aggregate
