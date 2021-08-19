@@ -68,12 +68,21 @@ std::string replaceStr(std::string subject, const std::string& search, const std
   return subject;
 }
 
-Token::Token(const std::string& token) : token(token)
+Token::Token(const std::string& token, const std::string& del) : token(token), del(del)
 {
-  del = "/";
   keys = splitStr(token, del);
 
-  if (keys.size() == 1 && keys[0].empty())
+  // Extract value
+  if (!keys.empty())
+  {
+    if (!keys[keys.size() - 1].empty())
+      value = keys[keys.size() - 1];
+    keys.pop_back();
+  }
+
+  if (keys.empty())
+    reset();
+  else if (keys.size() == 1 && keys[0].empty())
     reset();
   else
   {
@@ -82,21 +91,6 @@ Token::Token(const std::string& token) : token(token)
     createTokenNode(0, node);
   }
 }
-
-Token::Token(const std::string& token, const std::string& value, const std::string& del)
-  : token(token), value(value), del(del)
-{
-  keys = splitStr(token, del);
-
-  if (keys.size() == 1 && keys[0].empty())
-    reset();
-  else
-  {
-    n_key = keys.size();
-    key_root = keys[0];
-    createTokenNode(0, node);
-  }
-};
 
 void Token::createTokenNode(int i, YAML::Node& n)
 {

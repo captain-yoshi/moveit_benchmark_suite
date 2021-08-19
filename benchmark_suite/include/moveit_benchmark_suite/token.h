@@ -55,12 +55,9 @@ struct Token
 {
   Token() = default;
 
-  Token(const std::string& token);
-
-  Token(const std::string& token, const std::string& value, const std::string& del = "/");
+  Token(const std::string& token, const std::string& del = "/");
 
   void createTokenNode(int i, YAML::Node& n);
-
   void reset();
 
   std::string token;
