@@ -2020,6 +2020,7 @@ bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& n, moveit_benc
   rhs.metadata[DATASET_SW_KEY]["moveit_benchmark_suite"] = rhs.moveitbenchmarksuiteinfo;
   rhs.metadata[DATASET_OS_KEY] = rhs.osinfo;
   rhs.metadata[DATASET_NAME_KEY] = rhs.name;
+  rhs.metadata[DATASET_TYPE_KEY] = rhs.type;
   rhs.metadata[DATASET_UUID_KEY] = rhs.uuid;
   rhs.metadata[DATASET_DATE_KEY] = to_simple_string(rhs.date);
   rhs.metadata[DATASET_TOTAL_TIME_KEY] = rhs.time;
