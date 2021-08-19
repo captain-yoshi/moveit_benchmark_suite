@@ -309,6 +309,13 @@ boost::posix_time::ptime IO::getDate(boost::posix_time::microsec_clock& clock)
   return clock.local_time();
 }
 
+std::string IO::getDateStr()
+{
+  boost::posix_time::microsec_clock clock;
+
+  return to_simple_string(clock.local_time());
+}
+
 boost::posix_time::ptime IO::getDateUTC(boost::posix_time::microsec_clock& clock)
 {
   return clock.universal_time();
