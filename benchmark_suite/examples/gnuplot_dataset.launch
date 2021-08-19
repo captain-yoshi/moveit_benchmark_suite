@@ -6,7 +6,7 @@
   <arg unless="$(arg debug)" name="launch_prefix" value="" />
   <arg     if="$(arg debug)" name="launch_prefix" value="gdb --args" />
 
-  <node name="plot_dataset" pkg="moveit_benchmark_suite" type="plot_dataset" respawn="false" required="true" output="screen" launch-prefix="$(arg launch_prefix)">
+  <node name="gnuplot_dataset" pkg="moveit_benchmark_suite" type="gnuplot_dataset" respawn="false" required="true" output="screen" launch-prefix="$(arg launch_prefix)">
 
     <rosparam>
       files:
