@@ -38,95 +38,30 @@
 
 #pragma once
 
-#include <cstdint>
 #include <string>
 #include <vector>
-#include <tuple>
 #include <map>
-#include <fstream>
-#include <chrono>
 
-#include <boost/variant.hpp>
-
-#include <moveit/macros/class_forward.h>
-
-#include <ros/console.h>
-
-#include <moveit_benchmark_suite/io.h>
-#include <moveit_benchmark_suite/io/yaml.h>
+#include <yaml-cpp/yaml.h>
 
 namespace moveit_benchmark_suite
 {
-std::vector<std::string> splitStr(std::string s, std::string delimiter)
-{
-  size_t pos_start = 0, pos_end, delim_len = delimiter.length();
-  std::string token;
-  std::vector<std::string> res;
+std::vector<std::string> splitStr(std::string s, std::string delimiter);
 
-  while ((pos_end = s.find(delimiter, pos_start)) != std::string::npos)
-  {
-    token = s.substr(pos_start, pos_end - pos_start);
-    pos_start = pos_end + delim_len;
-    res.push_back(token);
-  }
-
-  res.push_back(s.substr(pos_start));
-  return res;
-}
-
-std::string replaceStr(std::string subject, const std::string& search, const std::string& replace)
-{
-  size_t pos = 0;
-  while ((pos = subject.find(search, pos)) != std::string::npos)
-  {
-    subject.replace(pos, search.length(), replace);
-    pos += replace.length();
-  }
-  return subject;
-}
+std::string replaceStr(std::string subject, const std::string& search, const std::string& replace);
 
 // Token with empty keys will revert to an empty Token
 struct Token
 {
   Token() = default;
 
-  Token(const std::string& token, const std::string& value, const std::string& del = "/")
-    : token(token), value(value), del(del)
-  {
-    keys = splitStr(token, del);
+  Token(const std::string& token);
 
-    if (keys.size() == 1 && keys[0].empty())
-      reset();
-    else
-    {
-      n_key = keys.size();
-      key_root = keys[0];
-      createTokenNode(0, node);
-    }
-  };
+  Token(const std::string& token, const std::string& value, const std::string& del = "/");
 
-  void createTokenNode(int i, YAML::Node& n)
-  {
-    YAML::Node temp;
+  void createTokenNode(int i, YAML::Node& n);
 
-    if (i == n_key - 1)
-      n[keys[i]] = value;
-    else
-    {
-      createTokenNode(i + 1, temp);
-      n[keys[i]] = temp;
-    }
-  };
-
-  void reset()
-  {
-    token = "";
-    value = "";
-
-    keys = std::vector<std::string>();
-    n_key = 0;
-    node = YAML::Node();
-  };
+  void reset();
 
   std::string token;
   std::string value;
@@ -140,168 +75,28 @@ struct Token
 
 using TokenSet = std::set<Token>;
 
-bool operator>(const Token& t1, const Token& t2)
-{
-  return t1.n_key > t2.n_key;
-}
-
-bool operator>=(const Token& t1, const Token& t2)
-{
-  return t1.n_key >= t2.n_key;
-}
-
-bool operator<(const Token& t1, const Token& t2)
-{
-  return t1.n_key < t2.n_key;
-}
-
-bool operator<=(const Token& t1, const Token& t2)
-{
-  return t1.n_key <= t2.n_key;
-}
+bool operator>(const Token& t1, const Token& t2);
+bool operator>=(const Token& t1, const Token& t2);
+bool operator<(const Token& t1, const Token& t2);
+bool operator<=(const Token& t1, const Token& t2);
 
 namespace token
 {
-bool hasValue(const Token& t1)
-{
-  if (t1.value.empty())
-    return false;
-  return true;
-}
+bool hasValue(const Token& t1);
 
 // Check tokens overlap ex. overlaps -> "test/alpha" "test/alpha"
-bool overlap(const Token& t1, const Token& t2)
-{
-  // Case one of the token has no key so don't overlap
-  if (!t1.n_key || !t2.n_key)
-    return false;
+bool overlap(const Token& t1, const Token& t2);
+bool compareToNode(const Token& t, const YAML::Node& node, YAML::Node& res);
+bool compareToNode(const Token& t, const YAML::Node& node);
 
-  // Case tokens first keys are different
-  if (t1.n_key && t2.n_key && t1.keys[0].compare(t2.keys[0]) != 0)
-    return false;
-
-  // Case tokens are identity (same keys)
-  if (t1.node.is(t2.node))
-  {
-    if (t1.value.empty() || t2.value.empty())  // If empty value they overlap
-      return true;
-    else if (t1.value.compare(t2.value) == 0)  // If same value they overlap
-      return true;
-    return false;
-  }
-
-  // Case tokens are not identity and have values
-  if (!t1.value.empty() && !t2.value.empty() && t1.value.compare(t2.value) != 0)  // has different values don't overlap
-    return false;
-
-  // Case tokens are not identity and one has an empty value
-  int n;
-  if (t1 >= t2)
-    n = t2.n_key;
-  else
-    n = t1.n_key;
-
-  for (int i = 0; i < n; ++i)
-  {
-    if (t1.keys[i].compare(t2.keys[i]) != 0)
-      return false;
-  }
-
-  return true;
-}
-
-bool compareToNode(const Token& t, const YAML::Node& node, YAML::Node& res)
-{
-  if (t.keys.empty())
-    return false;
-
-  res = YAML::Clone(node);
-  for (const auto& key : t.keys)
-  {
-    try
-    {
-      if (res[key])
-        res = res[key];
-      else
-        return false;
-    }
-    catch (YAML::BadSubscript& e)
-    {
-      return false;
-    }
-  }
-
-  // compare value
-  if (!t.value.empty())
-  {
-    std::string node_value;
-    try
-    {
-      node_value = res.as<std::string>();
-    }
-    catch (YAML::BadConversion& e)
-    {
-      return false;
-    }
-
-    if (t.value.compare(node_value) != 0)
-      return false;
-  }
-  return true;
-}
-
-bool compareToNode(const Token& t, const YAML::Node& node)
-{
-  YAML::Node dummy;
-  return compareToNode(t, node, dummy);
-}
-
-std::set<std::string> getChildNodeKeys(const YAML::Node& node)
-{
-  std::set<std::string> keys;
-  for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
-  {
-    keys.insert(it->first.as<std::string>());
-  }
-  return keys;
-}
-
-std::set<std::string> getChildNodeValues(const YAML::Node& node)
-{
-  std::set<std::string> keys;
-  for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
-  {
-    keys.insert(it->second.as<std::string>());
-  }
-  return keys;
-}
-
-std::map<std::string, std::string> getChildNodeKeyValues(const YAML::Node& node)
-{
-  std::map<std::string, std::string> map;
-  for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
-  {
-    map.insert({ it->first.as<std::string>(), it->second.as<std::string>() });
-  }
-  return map;
-}
-
-std::string getNodeValue(const YAML::Node& node)
-{
-  std::string res;
-  try
-  {
-    res = node.as<std::string>();
-  }
-  catch (YAML::BadConversion& e)
-  {
-    return res;
-  }
-  return res;
-}
+std::set<std::string> getChildNodeKeys(const YAML::Node& node);
+std::set<std::string> getChildNodeValues(const YAML::Node& node);
+std::map<std::string, std::string> getChildNodeKeyValues(const YAML::Node& node);
+std::string getNodeValue(const YAML::Node& node);
 
 }  // namespace token
 }  // namespace moveit_benchmark_suite
+
 namespace std
 {
 template <>
