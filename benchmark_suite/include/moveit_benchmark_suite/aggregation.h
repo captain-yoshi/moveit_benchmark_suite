@@ -47,6 +47,13 @@
 
 namespace moveit_benchmark_suite
 {
+struct AggregateConfig
+{
+  std::string raw_metric;
+  std::string new_metric;
+  std::string type;
+};
+
 namespace aggregate
 {
 static const std::string AVERAGE_KEY = "average";
