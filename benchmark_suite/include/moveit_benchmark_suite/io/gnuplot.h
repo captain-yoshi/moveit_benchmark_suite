@@ -189,6 +189,9 @@ public:
     TimeSeries,
   };
 
+  std::map<std::string, PlotType> plottype_map = { { "boxplot", PlotType::BoxPlot },
+                                                   { "bargraph", PlotType::BarGraph } };
+
   /** \brief Constructor.
    */
   GNUPlotDataSet();
@@ -201,6 +204,7 @@ public:
    *  \param[in] results Results to visualize.
    */
   void addMetric(const std::string& metric, const PlotType& plottype);
+  void addMetric(const std::string& metric, const std::string& plottype);
 
   void dump(const DataSetPtr& dataset, GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set,
             const TokenSet& legend_set = {});

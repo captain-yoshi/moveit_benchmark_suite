@@ -513,6 +513,15 @@ void GNUPlotDataSet::addMetric(const std::string& metric, const PlotType& plotty
   plot_types_.push_back(std::make_pair(metric, plottype));
 };
 
+void GNUPlotDataSet::addMetric(const std::string& metric, const std::string& plottype)
+{
+  auto it = plottype_map.find(plottype);
+  if (it == plottype_map.end())
+    ROS_WARN("Cannot find plot type");
+  else
+    addMetric(metric, it->second);
+};
+
 void GNUPlotDataSet::dump(const DataSetPtr& dataset, GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set,
                           const TokenSet& legend_set)
 {
