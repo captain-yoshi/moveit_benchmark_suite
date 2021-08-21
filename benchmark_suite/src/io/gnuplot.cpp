@@ -880,7 +880,7 @@ bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& meta
         bool found = false;
         for (const auto& t : legend_set)
         {
-          if (t.token.compare("uuid") == 0)
+          if (t.key_root.compare("uuid") == 0)
             found = true;
         }
         if (!found)
@@ -936,7 +936,7 @@ bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& meta
         bool found = false;
         for (const auto& t : legend_set)
         {
-          if (t.token.compare("uuid") == 0)
+          if (t.key_root.compare("uuid") == 0)
             found = true;
         }
         if (!found)
