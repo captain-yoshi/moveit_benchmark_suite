@@ -66,7 +66,6 @@ void GNUPlotHelper::configurePlot(const PlottingOptions& options)
 {
   auto in = getInstance(options.instance);
 
-  // in->writeline(log::format("set term %1% noraise", options.mode));
   in->writeline(log::format("set title \"%1%\"", replaceStr(options.title, "_", "\\\\_")));
 
   if (not options.x.label.empty())
@@ -163,7 +162,6 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
   in->writeline("set border back");
   in->writeline("set style data boxplot");
   in->writeline("set style fill solid 0.5 border -1");
-  in->writeline("unset key");
 
   if (options.sorted)
     in->writeline("set style boxplot sorted");
@@ -190,9 +188,7 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
 
   // xticks
   for (const auto& xtick : options.values.begin()->second)
-  {
     xtick_titles.push_back(replaceStr(xtick.first, "_", "\\\\_"));
-  }
 
   in->writeline("set bmargin 6");
 
@@ -226,11 +222,8 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
         in->write(", ");
     }
   }
-  // in->writeline(") scale 0.0 rotate by 45 right offset 4, 0");
-
   in->writeline(") scale 0.0 center");
 
-  // plot
   // Set Data block in order
   std::vector<int> index;
 
@@ -248,6 +241,7 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
     }
   }
 
+  // plot
   ctr = 0;
   in->write("plot ");
   for (std::size_t i = 0; i < n_xtick; ++i)
@@ -255,69 +249,15 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
     for (std::size_t j = 0; j < n_legend; ++j)
     {
       if (is_legend)
-      {
         in->writeline(log::format("'$data%1%' using (%2%):1 title \"%3%\" lt %4%%5%", index[ctr],
                                   x_offsets[i] + j * boxwidth, (i == 0) ? legend_titles[j] : "", j + 1,
                                   (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
-      }
       else
-      {
         in->writeline(log::format("'$data%1%' using (%2%):1%3%", ctr + 1, ctr + 1,
                                   (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
-      }
       ctr++;
     }
   }
-
-  // configurePlot(options);
-  // auto in = getInstance(options.instance);
-
-  // in->writeline("set datafile separator \",\"");
-
-  // in->writeline("set style data boxplot");
-  // in->writeline("set style fill solid 0.5 border -1");
-  // in->writeline("unset key");
-
-  // if (options.sorted)
-  //   in->writeline("set style boxplot sorted");
-
-  // if (options.outliers)
-  //   in->writeline("set style boxplot outliers pointtype 7");
-  // else
-  //   in->writeline("set style boxplot nooutliers");
-
-  // auto n = options.values.size();
-
-  // in->write("set xtics (");
-  // auto it1 = options.values.begin();
-  // for (std::size_t i = 0; i < n; ++i, ++it1)
-  // {
-  //   in->write(log::format("\"%1%\" %2%", it1->first, i + 1));
-  //   if (i != n - 1)
-  //     in->write(", ");
-  // }
-  // in->writeline(") scale 0.0 rotate by 45 right offset 4, 0");
-
-  // in->write("plot ");
-  // for (std::size_t i = 0; i < n; ++i)
-  // {
-  //   in->write(log::format("'%1%' using (%2%):1 pointsize .1",  // TODO reduce pointsize outliers automatically?
-  //                         (i == 0) ? "-" : "",                 //
-  //                         i + 1));
-  //   if (i != n - 1)
-  //     in->write(", ");
-  // }
-
-  // in->flush();
-
-  // auto it2 = options.values.begin();
-  // for (std::size_t i = 0; i < n; ++i, ++it2)
-  // {
-  //   for (const auto& point : it2->second)
-  //     in->writeline(log::format("%1%", point));
-
-  //   in->writeline("e");
-  // }
 }
 
 void GNUPlotHelper::bargraph(const BarGraphOptions& options)
@@ -424,22 +364,10 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
         in->write(", ");
     }
   }
-  // in->writeline(") scale 0.0 rotate by 45 right offset 4, 0");
 
   in->writeline(") scale 0.0 center");
 
-  // double start = (is_legend) ? -(double(n_legend) / 2.0 * boxwidth - boxwidth / 2.0) : 0.0;
-
-  // for (int i = 0; i < n_legend; ++i)
-  // {
-  //   x_offsets.push_back(std::to_string(start));
-  //   start += boxwidth;
-  // }
-
-  // plot
-  // Set Data block in order
   std::vector<int> index;
-
   if (is_legend)
   {
     int idx = 0;
@@ -461,18 +389,14 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
     for (std::size_t j = 0; j < n_legend; ++j)
     {
       if (is_legend)
-      {
         in->writeline(log::format("'$data%1%' using (%2%):1 title \"%3%\" with boxes lt %4%, '$data%1%' u "
                                   "(%2%):1:1 title \"\" with labels offset char 0,1%5%",
                                   index[ctr], x_offsets[i] + j * boxwidth, (i == 0) ? legend_titles[j] : "", j + 1,
                                   (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
-      }
       else
-      {
         in->writeline(log::format("'$data%1%' using (%2%):1 with boxes, '$data%1%' u "
                                   "(%2%):1:1 with labels offset char 0,1%3%",
                                   ctr + 1, ctr + 1, (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
-      }
       ctr++;
     }
   }
@@ -586,19 +510,6 @@ void GNUPlotDataSet::dumpBoxPlot(const std::string& metric, const std::vector<Da
   bpo.y.label = metric;
   bpo.y.min = 0.;
 
-  // for (const auto& query : datasets.data)
-  // {
-  //   const auto& name = query.first;
-  //   const auto& points = query.second;
-
-  //   std::vector<double> values;
-  //   for (const auto& run : points)
-  //   {
-  //     values.emplace_back(toMetricDouble(run->metrics[metric]));
-  //   }
-
-  //   bpo.values.emplace(name, values);
-  // }
   fillDataSet(metric, datasets, xtick_set, legend_set, bpo.values);
 
   if (bpo.values.empty())
