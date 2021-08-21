@@ -10,7 +10,7 @@
 
     <!-- Configuration as YAML text -->
     <rosparam>
-      filename: /home/captain-yoshi/.ros/db/raw_collision_check.yaml
+      filepath: /home/captain-yoshi/.ros/db/raw_collision_check.yaml
       filters:
         - type/COLLISION CHECK
       aggregate:
