@@ -9,9 +9,19 @@
   <node name="gnuplot_dataset" pkg="moveit_benchmark_suite" type="gnuplot_dataset" respawn="false" required="true" output="screen" launch-prefix="$(arg launch_prefix)">
 
     <rosparam>
-      files:
-        - /home/captain-yoshi/.ros/db/collision_check1.yaml
-        - /home/captain-yoshi/.ros/db/collision_check2.yaml
+      filepaths:
+        - /home/captain-yoshi/.ros/db/mp1.yaml
+      xtick_filters:
+        - config/scene/
+      legend_filters:
+        - config/collision_detector/
+      metrics:
+        - time: boxplot
+        - correct: boxplot
+      gnuplot:
+          n_row: 1
+          n_col: 2
+          output_script: true
     </rosparam>
 
   </node>
