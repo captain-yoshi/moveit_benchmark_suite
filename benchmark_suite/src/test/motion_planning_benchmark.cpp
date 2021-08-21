@@ -88,8 +88,6 @@ void PlanningProfiler::computeBuiltinMetrics(uint32_t options, const PlanningQue
 
   run.metrics["time"] = run.time;
   run.metrics["success"] = run.success;
-  run.metrics["planner_name"] = query.planner->getName();
-  run.metrics["robot_name"] = query.planner->getRobot()->getName();
   run.metrics["thread_id"] = (int)run.thread_id;
   run.metrics["process_id"] = (int)run.process_id;
 }
