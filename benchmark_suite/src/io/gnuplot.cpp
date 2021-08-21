@@ -159,7 +159,8 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
     }
   }
   in->writeline("set datafile separator \",\"");
-
+  // in->writeline("set border 10 front lt black linewidth 1.000 dashtype solid");
+  in->writeline("set border back");
   in->writeline("set style data boxplot");
   in->writeline("set style fill solid 0.5 border -1");
   in->writeline("unset key");
