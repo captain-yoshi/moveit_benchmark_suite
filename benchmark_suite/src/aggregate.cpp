@@ -16,12 +16,12 @@ int main(int argc, char** argv)
   ros::NodeHandle pnh("~");
 
   // Parse config from the parameter server
-  std::string filepath;
+  std::string file;
   std::vector<std::string> filter_list;
   XmlRpc::XmlRpcValue agg_list;
   std::vector<AggregateConfig> cfg_list;
 
-  pnh.getParam("filepath", filepath);
+  pnh.getParam("file", file);
   pnh.getParam("filters", filter_list);
   pnh.getParam("aggregate", agg_list);
 
@@ -47,13 +47,13 @@ int main(int argc, char** argv)
 
   // Load datasets from file
   std::vector<DataSetPtr> datasets;
-  auto node = YAML::LoadFile(filepath);
+  auto node = YAML::LoadFile(file);
   for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
     datasets.push_back(std::make_shared<DataSet>(it->as<DataSet>()));
 
   if (datasets.empty())
   {
-    ROS_WARN_STREAM(log::format("No datasets loaded from file '%1%'", filepath));
+    ROS_WARN_STREAM(log::format("No datasets loaded from file '%1%'", file));
     return 0;
   }
 
@@ -125,12 +125,12 @@ int main(int argc, char** argv)
   BenchmarkSuiteDataSetOutputter output;
 
   std::string date = IO::getDateStr();
-  std::string out_filepath = log::format("aggregate_%1%", date);
+  std::string out_file = log::format("aggregate_%1%", date);
 
   for (const auto& dataset : datasets)
-    output.dump(*dataset, out_filepath);
+    output.dump(*dataset, out_file);
 
-  ROS_INFO_STREAM(log::format("Successfully created new dataset: '%1%.yaml'", out_filepath));
+  ROS_INFO_STREAM(log::format("Successfully created new dataset: '%1%.yaml'", out_file));
 
   return 0;
 }

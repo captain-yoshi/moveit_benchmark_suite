@@ -15,7 +15,7 @@ int main(int argc, char** argv)
   ros::NodeHandle pnh("~");
 
   // Parse config from the parameter server
-  std::vector<std::string> filepaths;
+  std::vector<std::string> files;
   std::vector<std::string> xtick_list;
   std::vector<std::string> legend_list;
   XmlRpc::XmlRpcValue metric_node;
@@ -24,7 +24,7 @@ int main(int argc, char** argv)
   int nrow = 1;
   int ncol = 1;
 
-  pnh.getParam("filepaths", filepaths);
+  pnh.getParam("files", files);
   pnh.getParam("xtick_filters", xtick_list);
   pnh.getParam("legend_filters", legend_list);
   pnh.getParam("metrics", metric_node);
@@ -61,16 +61,16 @@ int main(int argc, char** argv)
 
   // Load datasets from file
   std::vector<DataSetPtr> datasets;
-  for (const auto& filepath : filepaths)
+  for (const auto& file : files)
   {
-    auto node = YAML::LoadFile(filepath);
+    auto node = YAML::LoadFile(file);
     for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
       datasets.push_back(std::make_shared<DataSet>(it->as<DataSet>()));
   }
 
   if (datasets.empty())
   {
-    ROS_WARN_STREAM(log::format("No datasets loaded from filepaths"));
+    ROS_WARN_STREAM(log::format("No datasets loaded from files"));
     return 0;
   }
 
