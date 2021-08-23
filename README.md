@@ -1,26 +1,20 @@
 # MoveIt! Benchmark Suite
-
 The Benchmark Suite goal is to implement standard tasks at varying levels of difficulty that can be achieved with several robots for which a MoveIt configuration is available.
 
-**The benchmark suite is under development. The API is unstable and incomplete.**
+This project was initially started as part of GSoC 2021 (all the way up to this [commit](https://github.com/captain-yoshi/moveit_benchmark_suite/commit/f0ce81dcdf8a3905f44dfd0ae4438be6e536521a)). More details are included in [MoveIt issue #2717](https://github.com/ros-planning/moveit/issues/2717).
 
-## Pipelines
-There are different pipelines/backends that will be used to benchmark MoveIt.
 
-### ~~Planning Scene~~
-Backend for adding/removing/updating collision objects for different planning scenes.
+### Benchmarks
+The benchmark suite can run benchmarks, aggregate data and plot data with GNUPlot. A detail look of these pipelines is available [here](/.docs/bm_pipeline.md). Documention for each benchmark is available [here](/.docs/benchmarks/).
 
-### Motion Planning
-There are currently 2 backends supported for motion planning: `PlanningPipeline` and the `MoveGroupInterface`.
 
-### ~~Composite Motion Planning~~
-Backend for MTC and the old MoveGroupInterface PickPlace.
+### Resources pkg
+The [resources package](/resources/) keeps all the necessary information to run the benchmarks (object mesh, object metadata, scenes, requests, configuration for IK and motion planning).
 
-### ~~Controller~~
-Backend for MTC and the old MoveGroupInterface PickPlace.
-## Requirements
+
+### Requirements
 - The [scene_parser](https://github.com/captain-yoshi/scene_parser) package.
-- Add STOMP planning pipeline in the `move_group.launch` when using the `MoveGroupInterface` pipeline.
+- To benchmark STOMP with the `MoveGroupInterface` you need to add the planning pipeline in the `move_group.launch`.
 ```xml
 <!-- STOMP -->
 <include ns="stomp" file="$(find moveit_resources_panda_moveit_config)/launch/planning_pipeline.launch.xml">
@@ -28,14 +22,6 @@ Backend for MTC and the old MoveGroupInterface PickPlace.
 </include>
 ```
 
-## Issues
-- Decide wheter or not we use the robow_flex library, or use what we need for motion planning.
-- Properly attribute Zachary's work.
-- Refactor comments?
-- GNUPlot boxplot not visible when data has no variation (straight line is hidden by the graph border).
-- Add units to metrics. 
-- Load benchmark options for motion planning (currently hard-coded). 
 
-
-## Attribution
-This code is heavily based on [robowflex_library](https://github.com/KavrakiLab/robowflex) from Zachary Kingston. 
+### Attribution
+Some section of code is based on [robowflex_library](https://github.com/KavrakiLab/robowflex) from Zachary Kingston.
