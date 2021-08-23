@@ -1,4 +1,4 @@
-motion_planning_config:
+benchmark_config:
   parameters:
     name: "Planning pipeline"
     runs: 5                      # Number of runs per scene, interface, collision detector and each planning algorithm

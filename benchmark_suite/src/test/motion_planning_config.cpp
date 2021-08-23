@@ -24,7 +24,7 @@ void MotionPlanningConfig::readBenchmarkConfig(const std::string& ros_namespace)
   ros::NodeHandle nh(ros_namespace);
 
   XmlRpc::XmlRpcValue benchmark_config;
-  if (nh.getParam("motion_planning_config", benchmark_config))
+  if (nh.getParam("benchmark_config", benchmark_config))
   {
     readBenchmarkParameters(nh);
     readBenchmarkInterfaces(nh);
@@ -37,7 +37,7 @@ void MotionPlanningConfig::readBenchmarkConfig(const std::string& ros_namespace)
   }
   else
   {
-    ROS_WARN("No motion_planning_config found on param server");
+    ROS_WARN("No 'benchmark_config' found on param server");
   }
 }
 
@@ -79,9 +79,9 @@ void MotionPlanningConfig::getPlanningPipelineNames(std::vector<std::string>& pl
 
 void MotionPlanningConfig::readBenchmarkParameters(ros::NodeHandle& nh)
 {
-  nh.param(std::string("motion_planning_config/parameters/name"), benchmark_name_, std::string(""));
-  nh.param(std::string("motion_planning_config/parameters/runs"), runs_, 10);
-  nh.param(std::string("motion_planning_config/parameters/timeout"), timeout_, 10.0);
+  nh.param(std::string("benchmark_config/parameters/name"), benchmark_name_, std::string(""));
+  nh.param(std::string("benchmark_config/parameters/runs"), runs_, 10);
+  nh.param(std::string("benchmark_config/parameters/timeout"), timeout_, 10.0);
 
   ROS_INFO("Benchmark name: '%s'", benchmark_name_.c_str());
   ROS_INFO("Benchmark #runs: %d", runs_);
@@ -93,7 +93,7 @@ void MotionPlanningConfig::readBenchmarkInterfaces(ros::NodeHandle& nh)
   interfaces_.clear();
 
   XmlRpc::XmlRpcValue interface_configs;
-  if (nh.getParam("motion_planning_config/interface", interface_configs))
+  if (nh.getParam("benchmark_config/interface", interface_configs))
   {
     if (interface_configs.getType() != XmlRpc::XmlRpcValue::TypeArray)
     {
@@ -115,7 +115,7 @@ void MotionPlanningConfig::readBenchmarkCollisionDetectors(ros::NodeHandle& nh)
   collision_detectors_.clear();
 
   XmlRpc::XmlRpcValue collision_detector_configs;
-  if (nh.getParam("motion_planning_config/collision_detector", collision_detector_configs))
+  if (nh.getParam("benchmark_config/collision_detector", collision_detector_configs))
   {
     if (collision_detector_configs.getType() != XmlRpc::XmlRpcValue::TypeArray)
     {
@@ -137,7 +137,7 @@ void MotionPlanningConfig::readPlannerConfigs(ros::NodeHandle& nh)
   planning_pipelines_.clear();
 
   XmlRpc::XmlRpcValue pipeline_configs;
-  if (nh.getParam("motion_planning_config/planning_pipelines", pipeline_configs))
+  if (nh.getParam("benchmark_config/planning_pipelines", pipeline_configs))
   {
     if (pipeline_configs.getType() != XmlRpc::XmlRpcValue::TypeArray)
     {
