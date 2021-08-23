@@ -94,15 +94,19 @@ public:
 
   using PostRunCallback = std::function<void(DataSetPtr dataset, const Query& query)>;
 
+  using PostBenchmarkCallback = std::function<void(DataSetPtr dataset)>;
+
   /** \brief Set the post-dataset callback function.
    *  \param[in] callback Callback to use.
    */
-  void setPostQueryCallback(const PostQueryCallback& callback);
+  void addPostQueryCallback(const PostQueryCallback& callback);
 
   /** \brief Set the post-query callback function.
    *  \param[in] callback Callback to use.
    */
-  void setPostRunCallback(const PostRunCallback& callback);
+  void addPostRunCallback(const PostRunCallback& callback);
+
+  void addPostBenchmarkCallback(const PostBenchmarkCallback& callback);
 
   /** \brief Run benchmarking on this experiment.
    *  Note that, for some planners, multiple threads cannot be used without polluting the dataset, due
@@ -126,8 +130,9 @@ private:
   std::vector<QueryPtr> queries_;  ///< Queries to test.
   QuerySetup query_setup_;
 
-  PostQueryCallback complete_callback_;  ///< Post-run callback with dataset.
-  PostRunCallback post_callback_;        ///< Post-run callback.
+  std::vector<PostQueryCallback> post_query_callbacks_;          ///< Post-run callback with dataset.
+  std::vector<PostRunCallback> post_run_callbacks_;              ///< Post-run callback.
+  std::vector<PostBenchmarkCallback> post_benchmark_callbacks_;  ///< Post-run callback.
 };
 
 /** \brief An abstract class for outputting benchmark results.

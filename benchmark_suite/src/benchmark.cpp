@@ -46,14 +46,18 @@ const std::vector<QueryPtr>& Benchmark::getQueries() const
 /** \brief Set the post-dataset callback function.
  *  \param[in] callback Callback to use.
  */
-void Benchmark::setPostQueryCallback(const PostQueryCallback& callback)
+void Benchmark::addPostQueryCallback(const PostQueryCallback& callback)
 {
-  complete_callback_ = callback;
+  post_query_callbacks_.push_back(callback);
 };
 
-void Benchmark::setPostRunCallback(const PostRunCallback& callback)
+void Benchmark::addPostRunCallback(const PostRunCallback& callback)
 {
-  post_callback_ = callback;
+  post_run_callbacks_.push_back(callback);
+}
+void Benchmark::addPostBenchmarkCallback(const PostBenchmarkCallback& callback)
+{
+  post_benchmark_callbacks_.push_back(callback);
 }
 
 /** \brief Run benchmarking on this experiment.
@@ -111,14 +115,16 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
       // data->query->name = query->name;
       dataset->addDataPoint(query->name, data);
 
-      if (complete_callback_)
-        complete_callback_(dataset, *query);
+      for (const auto& post_query_cb : post_query_callbacks_)
+        post_query_cb(dataset, *query);
     }
     query_index++;
 
-    if (post_callback_)
-      post_callback_(dataset, *query);
+    for (const auto& post_run_cb : post_run_callbacks_)
+      post_run_cb(dataset, *query);
   }
+  for (const auto& post_benchmark_cb : post_benchmark_callbacks_)
+    post_benchmark_cb(dataset);
 
   dataset->finish = std::chrono::high_resolution_clock::now();
   dataset->time = IO::getSeconds(dataset->start, dataset->finish);
