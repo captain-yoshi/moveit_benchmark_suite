@@ -1,7 +1,7 @@
 # Benchmark Pipeline
 The are three major pipelines to analyse a benchmark 1) [run benchmark](#run-benchmark) 2) [aggregate data](#aggregate-data) and 3) [plot data](#plot-data). The following sections will be explainded with the motion planning benchmark example but is valid for other benchmarks.
 
-You can also benchmark, aggregate and plot in one step!
+You can also benchmark, aggregate and plot in [one step](#run-aggregate-and-plot)!
 
 
 ## Run benchmark
@@ -150,16 +150,18 @@ You can skip this step if youre only interested in the `raw data` acquired by th
 
 It is sometimes usefull to aggregate data from datasets. To do so, configure the `aggregate.launch` file to aggregate the desired metrics:
 ```yaml
-file: /home/captain-yoshi/.ros/db/mp.yaml
-filters:                                        # Defaults to empty, filter in datasets and/or data
-- type/COLLISION CHECK
-  uuid/89d79e7d-f662-4355-9397-e86e662f3480
-aggregate:
-- raw_metric: time                              # The original metric
-  new_metric: collision_checks_per_seconds      # The aggregated metric name
-  type: frequency                               # string that maps to an aggregate method
-
+aggregate_config:
+  file: /home/captain-yoshi/.ros/db/mp.yaml
+  filters:                                          # Defaults to empty
+    - type/COLLISION CHECK
+    - uuid/89d79e7d-f662-4355-9397-e86e662f3480
+  aggregate:
+    - raw_metric: time                              # The original metric
+      new_metric: collision_checks_per_seconds      # The aggregated metric name
+      type: frequency                               # string that maps to an aggregate method
 ```
+**NOTE**: The root key `aggregate_config` is set in the param tag. If there is not param tag, you MUST add the root key in the YAML text. 
+
 Run the aggregate node.
 ```bash
 roslaunch moveit_benchmark_suite aggregate.launch
@@ -177,25 +179,27 @@ This will create a new file containing the dataset/s raw data + aggregated data.
 
 
 ## Plot data
-GNUPlot was choosen to speedup developpment because another project had worked on it ([robowflex](https://github.com/KavrakiLab/robowflex)). The minimum required version is 5.0 because this project uses the [inline datablocks](http://www.bersch.net/gnuplot-doc/inline-data-and-datablocks.html#inline-data) feature. Only the boxplot and bar graphs type are supported
+GNUPlot was choosen to speedup developpment because another project had worked on it ([robowflex](https://github.com/KavrakiLab/robowflex)). The minimum required version is 5.0 because this project uses the [inline datablocks](http://www.bersch.net/gnuplot-doc/inline-data-and-datablocks.html#inline-data) feature. Only the boxplot and bar graphs type are supported.
 
 Configure the rosparam tag in the `gnuplot_dataset.launch` file which is YAML text.
 ```yaml
-files:                                      # List of files
-  - /home/captain-yoshi/.ros/db/mp.yaml
-xtick_filters:                              # Defaults to all datasets pair-wise config with uuid
-  - config/scene/
-legend_filters:                             # Defaults to empty list, add filter value/s as a legend in GNUPlot
-  - config/collision_detector/
-metrics:                                    # Metrics to plot: Key = metric name, Value = type of plot
-  - time: boxplot
-  - correct: boxplot
-gnuplot:                                    # GNUPlot configuration
-    n_row: 1                                # Defaults to 1, subplot number of rows
-    n_col: 2                                # Defaults to 1, subplot number of columns
-    output_script: true                     # Defaults to false, create file containing GNUPlot script
-    debug: true                             # Defaults to false, output GNUPlot script to cmd line
+gnuplot_config:
+  files:                                      # List of files
+    - /home/captain-yoshi/.ros/db/mp.yaml
+  xtick_filters:                              # Defaults to all datasets pair-wise config with uuid
+    - config/scene/
+  legend_filters:                             # Defaults to empty list, add filter value/s as a legend in GNUPlot
+    - config/collision_detector/
+  metrics:                                    # Metrics to plot: Key = metric name, Value = type of plot
+    - time: boxplot
+    - correct: boxplot
+  options:                                    # GNUPlot configuration
+      n_row: 1                                # Defaults to 1, subplot number of rows
+      n_col: 2                                # Defaults to 1, subplot number of columns
+      output_script: true                     # Defaults to false, create file containing GNUPlot script
+      debug: true                             # Defaults to false, output GNUPlot script to cmd line
 ```
+**NOTE**: The root key `gnuplot_config` is set in the param tag. If there is not param tag, you MUST add the root key in the YAML text. 
 
 Plot desired metrics.
 ```bash
@@ -245,3 +249,45 @@ set:
 <p align="center">
 <img src="/.docs/images/gnuplot_subplot_example.png"/>
 </p>
+
+## Run, Aggregate and Plot
+You can aggregate and/or plot after the benchmark is completed in one step. All you have to do is to add a YAML configuration in the param server benchmark node. Either by creating a new rosparam tag in a launch file or adding it directly to a YAML file (Ex. the [motion planning](/benchmark_suite/examples/motion_planning.yaml) benchmark). 
+```yaml
+aggregate_config:
+  filters:                            # Optionnal
+    - config/scene/empty-scene
+  aggregate:                          # Required
+    - raw_metric: time
+      new_metric: avg_time
+      type: average
+    - raw_metric: waypoints
+      new_metric: avg_waypoints
+      type: average
+    - raw_metric: length
+      new_metric: avg_length
+      type: average
+    - raw_metric: success
+      new_metric: avg_success
+      type: average
+    - raw_metric: correct
+      new_metric: avg_correct
+      type: average
+
+
+gnuplot_config:
+  xtick_filters:                       # REQUIRED
+    - config/scene/
+  legend_filters:                      # Optionnal
+    - config/collision_detector/
+  metrics:                             # REQUIRED
+    - time: boxplot
+    - avg_correct: bargraph
+  options:                             # Optionnal
+      n_row: 2
+      n_col: 1
+```
+**NOTE**: These are the same parameters used in the [aggregate](#aggregate-data) and [plot data](#plot-data) sections. The only parameter not used is the `file/files` because it only affects the current dataset. 
+
+
+
+
