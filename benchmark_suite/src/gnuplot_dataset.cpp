@@ -15,48 +15,21 @@ int main(int argc, char** argv)
   ros::NodeHandle pnh("~");
 
   // Parse config from the parameter server
-  std::vector<std::string> files;
-  std::vector<std::string> xtick_list;
-  std::vector<std::string> legend_list;
-  XmlRpc::XmlRpcValue metric_node;
-  XmlRpc::XmlRpcValue gnuplot_node;
-  std::vector<std::pair<std::string, std::string>> metrics;
-  int nrow = 1;
-  int ncol = 1;
+  IO::GNUPlotConfig config(ros::this_node::getName());
 
-  pnh.getParam("files", files);
-  pnh.getParam("xtick_filters", xtick_list);
-  pnh.getParam("legend_filters", legend_list);
-  pnh.getParam("metrics", metric_node);
-  pnh.getParam("gnuplot", gnuplot_node);
+  const std::vector<std::string>& files = config.getFiles();
+  const std::vector<std::string>& xticks = config.getXticks();
+  const std::vector<std::string>& legends = config.getLegends();
+  const std::vector<IO::GNUPlotConfigMetric>& metrics = config.getMetrics();
+  const IO::GNUPlotConfigOption& option = config.getOption();
 
-  ROS_ASSERT(metric_node.getType() == XmlRpc::XmlRpcValue::TypeArray);
-  for (int i = 0; i < metric_node.size(); ++i)
-  // for (XmlRpc::XmlRpcValue::const_iterator it = metric_node.begin(); it != metric_node.end(); ++it)
-  {
-    std::string key = metric_node[i].begin()->first;
-    ROS_ASSERT(metric_node[i].begin()->second.getType() == XmlRpc::XmlRpcValue::TypeString);
-    std::string val = metric_node[i].begin()->second;
-    metrics.push_back({ key, val });
-  }
-
-  ROS_ASSERT(gnuplot_node.getType() == XmlRpc::XmlRpcValue::TypeStruct);
-  // for (int i = 0; i < gnuplot_node.size(); ++i)
-  for (XmlRpc::XmlRpcValue::const_iterator it = gnuplot_node.begin(); it != gnuplot_node.end(); ++it)
-  {
-    if (it->first.compare("n_row") == 0)
-      nrow = static_cast<int>(it->second);
-    else if (it->first.compare("n_col") == 0)
-      ncol = static_cast<int>(it->second);
-  }
-
-  // Create token filters
+  // Create token for xtick and legend
   TokenSet xtick_filters;
-  for (const auto& xtick : xtick_list)
+  for (const auto& xtick : xticks)
     xtick_filters.insert(Token(xtick));
 
   TokenSet legend_filters;
-  for (const auto& legend : legend_list)
+  for (const auto& legend : legends)
     legend_filters.insert(Token(legend));
 
   // Load datasets from file
@@ -78,11 +51,11 @@ int main(int argc, char** argv)
   IO::GNUPlotDataSet plot;
 
   for (const auto& metric : metrics)
-    plot.addMetric(metric.first, metric.second);
+    plot.addMetric(metric.name, metric.type);
 
   IO::GNUPlotHelper::MultiPlotOptions mpo;
-  mpo.layout.row = nrow;
-  mpo.layout.col = ncol;
+  mpo.layout.row = option.n_row;
+  mpo.layout.col = option.n_col;
 
   plot.dump(datasets, mpo, xtick_filters, legend_filters);
 
