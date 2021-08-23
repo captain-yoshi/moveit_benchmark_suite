@@ -222,6 +222,54 @@ int main(int argc, char** argv)
   for (const auto& query : queries)
     benchmark.addQuery(query);
 
+  // Aggregate
+  AggregateConfig agg_config;
+  if (agg_config.isConfigAvailable(ros::this_node::getName()))
+    agg_config.setNamespace(ros::this_node::getName());
+
+  const std::vector<std::string>& filter_names = agg_config.getFilterNames();
+  const std::vector<AggregateParams> params = agg_config.getAggregateParams();
+
+  TokenSet filters;
+  for (const auto& filter : filter_names)
+    filters.insert(Token(filter));
+
+  if (agg_config.isConfigAvailable(ros::this_node::getName()))
+    benchmark.addPostBenchmarkCallback([&](DataSetPtr dataset) { aggregate::dataset(dataset, filters, params); });
+
+  // Plot
+  IO::GNUPlotConfig plt_config;
+  if (plt_config.isConfigAvailable(ros::this_node::getName()))
+    plt_config.setNamespace(ros::this_node::getName());
+
+  const std::vector<std::string>& files = plt_config.getFiles();
+  const std::vector<std::string>& xticks = plt_config.getXticks();
+  const std::vector<std::string>& legends = plt_config.getLegends();
+  const std::vector<IO::GNUPlotConfigMetric>& metrics = plt_config.getMetrics();
+  const IO::GNUPlotConfigOption& option = plt_config.getOption();
+
+  // Create token for xtick and legend
+  TokenSet xtick_filters;
+  for (const auto& xtick : xticks)
+    xtick_filters.insert(Token(xtick));
+
+  TokenSet legend_filters;
+  for (const auto& legend : legends)
+    legend_filters.insert(Token(legend));
+
+  IO::GNUPlotDataSet plot;
+
+  for (const auto& metric : metrics)
+    plot.addMetric(metric.name, metric.type);
+
+  IO::GNUPlotHelper::MultiPlotOptions mpo;
+  mpo.layout.row = option.n_row;
+  mpo.layout.col = option.n_col;
+
+  if (plt_config.isConfigAvailable(ros::this_node::getName()))
+    benchmark.addPostBenchmarkCallback(
+        [&](DataSetPtr dataset) { plot.dump(dataset, mpo, xtick_filters, legend_filters); });
+
   // Run benchmark
   auto dataset = benchmark.run();
 
@@ -232,7 +280,12 @@ int main(int argc, char** argv)
     filename = log::format("%1%_%2%", dataset->name, dataset->date);
   output.dump(*dataset, filename);
 
-  // ros::waitForShutdown();
+  // Add wait to see GNUPlot
+  if (plt_config.isConfigAvailable(ros::this_node::getName()))
+  {
+    ROS_WARN("Press CTL-C when finished with GNUPlot");
+    ros::waitForShutdown();
+  }
 
   return 0;
 }
