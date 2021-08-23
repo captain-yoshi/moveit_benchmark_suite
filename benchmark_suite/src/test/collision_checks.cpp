@@ -191,7 +191,7 @@ int main(int argc, char** argv)
     benchmark.addQuery(query);
 
   // Aggregate time metric into collision checks / second
-  benchmark.setPostRunCallback([&](DataSetPtr dataset, const Query& query) {
+  benchmark.addPostRunCallback([&](DataSetPtr dataset, const Query& query) {
     aggregate::toFrequency("time", "collision_checks_per_second", dataset, query);
   });
 

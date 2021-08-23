@@ -38,20 +38,52 @@
 
 #pragma once
 
+#include <ros/node_handle.h>
+
 #include <moveit_benchmark_suite/dataset.h>
-//#include <moveit_benchmark_suite/planning.h>
 #include <moveit_benchmark_suite/io.h>
 #include <moveit_benchmark_suite/log.h>
-
-//#include <moveit_benchmark_suite/trajectory.h>
+#include <moveit_benchmark_suite/token.h>
 
 namespace moveit_benchmark_suite
 {
-struct AggregateConfig
+struct AggregateParams
 {
   std::string raw_metric;
   std::string new_metric;
   std::string type;
+};
+
+class AggregateConfig
+{
+public:
+  /** \brief Constructor */
+  AggregateConfig();
+  /** \brief Constructor accepting a custom namespace for parameter lookup */
+  AggregateConfig(const std::string& ros_namespace);
+  /** \brief Destructor */
+  virtual ~AggregateConfig();
+
+  /** \brief Set the ROS namespace the node handle should use for parameter lookup */
+  void setNamespace(const std::string& ros_namespace);
+
+  /** \brief Get the specified number of benchmark query runs */
+  const std::string& getFile() const;
+  const std::vector<std::string>& getFilterNames() const;
+  const std::vector<AggregateParams>& getAggregateParams() const;
+
+  bool isConfigAvailable(const std::string& ros_namespace);
+
+protected:
+  void readConfig(const std::string& ros_namespace);
+
+  void readFile(ros::NodeHandle& nh);
+  void readFilterNames(ros::NodeHandle& nh);
+  void readAggregateParams(ros::NodeHandle& nh);
+
+  std::string file_;
+  std::vector<std::string> filters_;
+  std::vector<AggregateParams> params_;
 };
 
 namespace aggregate
@@ -62,44 +94,16 @@ static const std::string FREQUENCY_KEY = "frequency";
 using Callback = std::function<void(const std::string& metric, const std::string& new_metric, DataSetPtr& dataset,
                                     const Query& query)>;
 
-void toFrequency(const std::string& metric, const std::string& new_metric, DataSetPtr& dataset, const Query& query)
-{
-  auto it = dataset->data.find(query.name);
-  if (it != dataset->data.end())
-  {
-    if (it->second.empty())
-      return;
+void toFrequency(const std::string& metric, const std::string& new_metric, DataSetPtr& dataset, const Query& query);
+void toMean(const std::string& metric, const std::string& new_metric, DataSetPtr& dataset, const Query& query);
 
-    double acc = 0;
-    for (const auto& data : it->second)
-      acc += toMetricDouble(data->metrics[metric]);
-
-    double frequency = it->second.size() / acc;
-    it->second[0]->metrics[new_metric] = frequency;
-  }
-};
-
-void toMean(const std::string& metric, const std::string& new_metric, DataSetPtr& dataset, const Query& query)
-{
-  auto it = dataset->data.find(query.name);
-  if (it != dataset->data.end())
-  {
-    if (it->second.empty())
-      return;
-
-    double acc = 0;
-    for (const auto& data : it->second)
-      acc += toMetricDouble(data->metrics[metric]);
-
-    double mean = acc / it->second.size();
-    it->second[0]->metrics[new_metric] = mean;
-  }
-};
-
-const std::map<std::string, Callback> CallbackMap = {
+static const std::map<std::string, Callback> CallbackMap = {
   { AVERAGE_KEY, &toMean },
   { FREQUENCY_KEY, &toFrequency },
 };
+
+void dataset(DataSetPtr& datasets, const TokenSet& filters, const std::vector<AggregateParams>& agg_params);
+void dataset(std::vector<DataSetPtr>& datasets, const TokenSet& filters, const std::vector<AggregateParams>& agg_params);
 
 }  // namespace aggregate
 }  // namespace moveit_benchmark_suite

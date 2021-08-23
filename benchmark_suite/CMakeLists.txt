@@ -55,6 +55,7 @@ add_library(${PROJECT_NAME}
   src/token.cpp
   src/dataset.cpp
   src/benchmark.cpp
+  src/aggregation.cpp
   src/robot.cpp
   src/scene.cpp
   src/log.cpp
