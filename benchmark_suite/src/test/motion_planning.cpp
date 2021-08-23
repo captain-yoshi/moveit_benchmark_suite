@@ -66,7 +66,7 @@ int main(int argc, char** argv)
 
   // Parse filename
   std::string filename;
-  pnh.getParam("output", filename);
+  pnh.getParam("filename", filename);
 
   // Parse scene
   SceneParser parser;

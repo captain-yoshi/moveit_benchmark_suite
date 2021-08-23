@@ -7,7 +7,7 @@
   <arg     if="$(arg debug)" name="launch_prefix" value="gdb --args" />
 
   <!-- Output file -->
-  <arg name="output" default="" />
+  <arg name="filename" default="" />
 
   <!-- Load robot -->
   <include file="$(find moveit_resources_panda_moveit_config)/launch/demo.launch">
@@ -48,6 +48,6 @@
   <!-- Launch benchmark node -->
   <node name="benchmark" pkg="moveit_benchmark_suite" type="motion_planning" output="screen" required="true" launch-prefix="$(arg launch_prefix)">
     <rosparam command="load" file="$(arg options_file)"/>
-    <param name="output" value="$(arg output)"/>
+    <param name="filename" value="$(arg filename)"/>
   </node>
 </launch>
