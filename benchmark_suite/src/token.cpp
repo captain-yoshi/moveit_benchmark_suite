@@ -46,6 +46,12 @@ std::vector<std::string> splitStr(std::string s, std::string delimiter)
   std::string token;
   std::vector<std::string> res;
 
+  if (delimiter.empty())
+  {
+    res.push_back(s);
+    return res;
+  }
+
   while ((pos_end = s.find(delimiter, pos_start)) != std::string::npos)
   {
     token = s.substr(pos_start, pos_end - pos_start);
@@ -80,7 +86,7 @@ Token::Token(const std::string& token, const std::string& del) : token(token), d
     keys.pop_back();
   }
 
-  if (keys.empty())
+  if (keys.empty() || keys[0].empty())
     reset();
   else if (keys.size() == 1 && keys[0].empty())
     reset();
