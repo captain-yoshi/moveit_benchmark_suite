@@ -53,8 +53,13 @@ bool PlanningProfiler::profilePlan(const QueryPtr& query_base,  //
   response.success = response.response.error_code_.val == moveit_msgs::MoveItErrorCodes::SUCCESS;
 
   if (response.success)
+  {
     response.trajectory = std::make_shared<Trajectory>(response.response.trajectory_);
 
+    moveit_msgs::RobotTrajectory trajectory_msg;
+    response.response.trajectory_->getRobotTrajectoryMsg(trajectory_msg);
+    response.trajectory->useMessage(response.response.trajectory_->getFirstWayPoint(), trajectory_msg);
+  }
   result.success = response.success;
   result.hostname = IO::getHostname();
   result.process_id = IO::getProcessID();
