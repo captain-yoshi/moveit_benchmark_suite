@@ -117,6 +117,7 @@ void MoveGroupPlanner::preRun(const planning_scene::PlanningSceneConstPtr& scene
                             request.workspace_parameters.min_corner.z, request.workspace_parameters.max_corner.x,
                             request.workspace_parameters.max_corner.y, request.workspace_parameters.max_corner.z);
 
+  // Goal constraints
   auto gc = request.goal_constraints;
   if (gc.empty())
   {
@@ -160,6 +161,9 @@ void MoveGroupPlanner::preRun(const planning_scene::PlanningSceneConstPtr& scene
       // TODO add tolerance
     }
   }
+
+  // Path constraints
+  move_group_->setPathConstraints(request.path_constraints);
 
   // Planning scene
   moveit::planning_interface::PlanningSceneInterface psi;
