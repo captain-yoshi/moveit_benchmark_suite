@@ -1,13 +1,17 @@
 <?xml version="1.0" ?>
 <launch>
 
+  <!-- Output directory, defaults to ~/.ros or ROS_HOME environment variable -->
+  <arg name="path" default="" />
+  <!-- Output filename (wo/ extension), defaults to "experiment name" + "date of experiment" -->
+  <arg name="filename" default="" />
+  <arg name="use_rviz" default="false" />
+
   <!-- By default, we are not in debug mode -->
   <arg name="debug" default="false" />
   <arg unless="$(arg debug)" name="launch_prefix" value="" />
   <arg     if="$(arg debug)" name="launch_prefix" value="gdb --args" />
 
-  <!-- Output file -->
-  <arg name="filename" default="" />
 
   <!-- Load robot -->
   <include file="$(find moveit_resources_panda_moveit_config)/launch/demo.launch">
@@ -48,6 +52,7 @@
   <!-- Launch benchmark node -->
   <node name="benchmark" pkg="moveit_benchmark_suite" type="motion_planning" output="screen" required="true" launch-prefix="$(arg launch_prefix)">
     <rosparam command="load" file="$(arg options_file)"/>
+    <param name="path" value="$(arg path)"/>
     <param name="filename" value="$(arg filename)"/>
   </node>
 </launch>

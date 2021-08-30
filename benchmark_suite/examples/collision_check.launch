@@ -3,10 +3,12 @@
   <!-- Configuration parameters -->
   <arg name="visualization" default="false" doc="turns on and off visualization with rviz"/>
 
-  <!-- Output file -->
-  <arg name="output" default="" />
+  <!-- Output directory, defaults to ~/.ros or ROS_HOME environment variable -->
+  <arg name="path" default="" />
+  <!-- Output filename (wo/ extension), defaults to "experiment name" + "date of experiment" -->
+  <arg name="filename" default="" />
 
-<!-- By default, we are not in debug mode -->
+  <!-- By default, we are not in debug mode -->
   <arg name="debug" default="false" />
   <arg unless="$(arg debug)" name="launch_prefix" value="" />
   <arg     if="$(arg debug)" name="launch_prefix" value="gdb --args" />
@@ -21,8 +23,8 @@
   <node name="collision_checks" pkg="moveit_benchmark_suite" type="collision_checks" respawn="false" output="screen" launch-prefix="$(arg launch_prefix)">
     <rosparam command="load" file="$(find moveit_resources_panda_moveit_config)/config/kinematics.yaml"/>
 
-
-    <param name="output" value="$(arg output)"/>
+    <param name="path" value="$(arg path)"/>
+    <param name="filename" value="$(arg filename)"/>
     <param name="visualization" value="$(arg visualization)" type="bool"/>
   </node>
 
