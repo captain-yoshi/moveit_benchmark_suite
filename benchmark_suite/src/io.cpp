@@ -200,6 +200,24 @@ const std::string IO::runCommand(const std::string& cmd)
   return result;
 }
 
+std::string IO::getFilePath(const std::string& file)
+{
+  boost::filesystem::path path(file);
+  path = expandHome(path);
+  path = expandSymlinks(path);
+
+  return path.parent_path().string();
+}
+
+std::string IO::getFileName(const std::string& file)
+{
+  boost::filesystem::path path(file);
+  path = expandHome(path);
+  path = expandSymlinks(path);
+
+  return path.filename().string();
+}
+
 void IO::createFile(std::ofstream& out, const std::string& file)
 {
   boost::filesystem::path path(file);
