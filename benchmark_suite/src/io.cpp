@@ -248,8 +248,6 @@ void IO::createFile(std::ofstream& out, const std::string& file)
     boost::filesystem::create_directories(parent);
 
   out.open(path.string(), std::ofstream::out | std::ofstream::app);
-
-  ROS_INFO_STREAM("Creating file: " + path.string());
 }
 
 const CPUInfo IO::getHardwareCPU()
