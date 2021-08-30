@@ -111,6 +111,8 @@ const std::pair<bool, YAML::Node> loadFileToYAML(const std::string& path);
 
 std::string getFilePath(const std::string& file);
 std::string getFileName(const std::string& file);
+std::string getAbsFile(const std::string& file);
+std::string getEnvironmentPath(const std::string& env);
 
 /** \brief Creates a file and opens an output stream. Creates directories if they do not exist.
  *  \param[out] out Output stream to initialize.

@@ -218,6 +218,24 @@ std::string IO::getFileName(const std::string& file)
   return path.filename().string();
 }
 
+std::string IO::getAbsFile(const std::string& file)
+{
+  boost::filesystem::path path(file);
+  path = expandHome(path);
+  path = expandSymlinks(path);
+
+  return path.string();
+}
+
+std::string IO::getEnvironmentPath(const std::string& env)
+{
+  const char* home = std::getenv(env.c_str());
+  if (home == nullptr)
+    return "";
+
+  return home;
+}
+
 void IO::createFile(std::ofstream& out, const std::string& file)
 {
   boost::filesystem::path path(file);
