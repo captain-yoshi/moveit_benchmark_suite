@@ -1,6 +1,9 @@
 <?xml version="1.0" ?>
 <launch>
 
+  <arg name="input_file" />
+  <arg name="output_file" default="" />
+
   <!-- By default, we are not in debug mode -->
   <arg name="debug" default="false" />
   <arg unless="$(arg debug)" name="launch_prefix" value="" />
@@ -10,7 +13,6 @@
 
     <!-- Configuration as YAML text -->
     <rosparam param="aggregate_config">
-      file: /home/captain-yoshi/.ros/db/raw_collision_check.yaml
       filters:
         - type/COLLISION CHECK
       aggregate:
@@ -19,5 +21,7 @@
           type: frequency
     </rosparam>
 
+    <param name="input_file" value="$(arg input_file)"/>
+    <param name="output_file" value="$(arg output_file)"/>
   </node>
 </launch>

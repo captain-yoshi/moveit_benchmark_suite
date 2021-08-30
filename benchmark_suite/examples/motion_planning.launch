@@ -1,10 +1,7 @@
 <?xml version="1.0" ?>
 <launch>
 
-  <!-- Output directory, defaults to ~/.ros or ROS_HOME environment variable -->
-  <arg name="path" default="" />
-  <!-- Output filename (wo/ extension), defaults to "experiment name" + "date of experiment" -->
-  <arg name="filename" default="" />
+  <arg name="output_file" default="" />
   <arg name="use_rviz" default="false" />
 
   <!-- By default, we are not in debug mode -->
@@ -52,7 +49,6 @@
   <!-- Launch benchmark node -->
   <node name="benchmark" pkg="moveit_benchmark_suite" type="motion_planning" output="screen" required="true" launch-prefix="$(arg launch_prefix)">
     <rosparam command="load" file="$(arg options_file)"/>
-    <param name="path" value="$(arg path)"/>
-    <param name="filename" value="$(arg filename)"/>
+    <param name="output_file" value="$(arg output_file)"/>
   </node>
 </launch>

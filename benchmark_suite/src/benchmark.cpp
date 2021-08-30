@@ -159,21 +159,61 @@ BenchmarkSuiteDataSetOutputter::~BenchmarkSuiteDataSetOutputter()
 {
 }
 
-void BenchmarkSuiteDataSetOutputter::dump(const DataSet& dataset, const std::string& filename)
+void BenchmarkSuiteDataSetOutputter::dump(const DataSet& dataset, const std::string& filepath,
+                                          const std::string& filename)
 {
   std::ofstream out;
-  std::string extension = ".yaml";
-  IO::createFile(out, filename + extension);
+  std::string ext = ".yaml";
+  std::string out_file;
+  std::string out_filepath;
+  std::string out_filename;
 
-  // Necessary if we append to the end of the file
-  out << "\n";
+  // Create filename if not specified and add extension
+  out_filename = filename;
+  if (out_filename.empty())
+    out_filename = log::format("aggregate_%1%", IO::getDateStr());
+
+  // TODO verify if filename has already the yaml or yml extension
+  out_filename = out_filename + ext;
+
+  // Set filepath as ROS_HOME
+  out_filepath = filepath;
+  if (out_filepath.empty())
+    out_filepath = IO::getEnvironmentPath("ROS_HOME");
+
+  // Set filepath as default ROS default home path
+  if (out_filepath.empty())
+  {
+    out_filepath = IO::getEnvironmentPath("HOME");
+    out_filepath = out_filepath + "/.ros";
+  }
+  else if (out_filepath[0] != '/')
+  {
+    std::string tmp = out_filepath;
+    out_filepath = IO::getEnvironmentPath("HOME");
+    out_filepath = out_filepath + "/.ros";
+    out_filepath = out_filepath + "/" + tmp;
+  }
+
+  if (!out_filepath.empty() && out_filepath.back() != '/')
+    out_filepath = out_filepath + '/';
+
+  if (!IO::createFile(out, out_filepath + out_filename))
+  {
+    ROS_ERROR_STREAM(log::format("File creation failed for: '%1%'", out_filepath + out_filename));
+    return;
+  }
 
   YAML::Node node;
   node["dataset"] = dataset;
 
+  // Add dataset as a sequence
   YAML::Node root_node;
   root_node.push_back(node);
 
+  out << "\n";  // Necessary for appending a dataset with right indentation
   out << root_node;
   out.close();
+
+  ROS_INFO_STREAM(log::format("Successfully created dataset: '%1%'", out_filepath + out_filename));
 }

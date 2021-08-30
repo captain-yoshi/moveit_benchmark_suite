@@ -68,7 +68,6 @@ public:
   void setNamespace(const std::string& ros_namespace);
 
   /** \brief Get the specified number of benchmark query runs */
-  const std::string& getFile() const;
   const std::vector<std::string>& getFilterNames() const;
   const std::vector<AggregateParams>& getAggregateParams() const;
 
@@ -77,11 +76,9 @@ public:
 protected:
   void readConfig(const std::string& ros_namespace);
 
-  void readFile(ros::NodeHandle& nh);
   void readFilterNames(ros::NodeHandle& nh);
   void readAggregateParams(ros::NodeHandle& nh);
 
-  std::string file_;
   std::vector<std::string> filters_;
   std::vector<AggregateParams> params_;
 };

@@ -15,10 +15,27 @@ int main(int argc, char** argv)
 
   ros::NodeHandle pnh("~");
 
+  // Parse directory and filename
+  std::string in_file;
+  std::string in_filepath;
+  std::string in_filename;
+  std::string out_file;
+  std::string out_filepath;
+  std::string out_filename;
+
+  pnh.getParam("input_file", in_file);
+  pnh.getParam("output_file", out_file);
+
+  in_filepath = IO::getFilePath(in_file);
+  in_filename = IO::getFileName(in_file);
+  out_filepath = IO::getFilePath(out_file);
+  out_filename = IO::getFileName(out_file);
+
+  in_file = IO::getAbsFile(in_file);
+
   // Parse config from the parameter server
   AggregateConfig config(ros::this_node::getName());
 
-  const std::string& file = config.getFile();
   const std::vector<std::string>& filter_names = config.getFilterNames();
   const std::vector<AggregateParams> params = config.getAggregateParams();
 
@@ -29,13 +46,13 @@ int main(int argc, char** argv)
 
   // Load datasets from file
   std::vector<DataSetPtr> datasets;
-  auto node = YAML::LoadFile(file);
+  auto node = YAML::LoadFile(in_file);
   for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
     datasets.push_back(std::make_shared<DataSet>(it->as<DataSet>()));
 
   if (datasets.empty())
   {
-    ROS_WARN_STREAM(log::format("No datasets loaded from file '%1%'", file));
+    ROS_WARN_STREAM(log::format("No datasets loaded from file '%1%'", in_file));
     return 0;
   }
 
@@ -44,12 +61,8 @@ int main(int argc, char** argv)
   // Save to file
   BenchmarkSuiteDataSetOutputter output;
 
-  std::string out_file = log::format("aggregate_%1%", IO::getDateStr());
-
   for (const auto& dataset : datasets)
-    output.dump(*dataset, out_file);
-
-  ROS_INFO_STREAM(log::format("Successfully created new dataset: '%1%.yaml'", out_file));
+    output.dump(*dataset, out_filepath, out_filename);
 
   return 0;
 }

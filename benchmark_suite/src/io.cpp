@@ -35,7 +35,7 @@ boost::filesystem::path expandHome(const boost::filesystem::path& in)
 
   boost::filesystem::path out;
   for (const auto& p : in)
-    out /= (p.string() == "~") ? home : p;
+    out /= (p.string() == "~") ? std::string(home) + "/" : p;
 
   return out;
 }
@@ -211,9 +211,16 @@ std::string IO::getFilePath(const std::string& file)
 
 std::string IO::getFileName(const std::string& file)
 {
+  bool is_dot = false;
+  if (!file.empty() && file.back() == '.')
+    is_dot = true;
+
   boost::filesystem::path path(file);
   path = expandHome(path);
   path = expandSymlinks(path);
+
+  if (!is_dot && path.filename().string().compare(".") == 0)
+    return "";
 
   return path.filename().string();
 }
@@ -236,7 +243,7 @@ std::string IO::getEnvironmentPath(const std::string& env)
   return home;
 }
 
-void IO::createFile(std::ofstream& out, const std::string& file)
+bool IO::createFile(std::ofstream& out, const std::string& file)
 {
   boost::filesystem::path path(file);
   path = expandHome(path);
@@ -248,6 +255,11 @@ void IO::createFile(std::ofstream& out, const std::string& file)
     boost::filesystem::create_directories(parent);
 
   out.open(path.string(), std::ofstream::out | std::ofstream::app);
+
+  if (out.fail())
+    return false;
+
+  return true;
 }
 
 const CPUInfo IO::getHardwareCPU()

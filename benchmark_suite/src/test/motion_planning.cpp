@@ -65,10 +65,13 @@ int main(int argc, char** argv)
   QuerySetup query_setup;
 
   // Parse output directory and filename
-  std::string path;
+  std::string file;
+  std::string filepath;
   std::string filename;
-  pnh.getParam("path", path);
-  pnh.getParam("filename", filename);
+  pnh.getParam("output_file", file);
+
+  filepath = IO::getFilePath(file);
+  filename = IO::getFileName(file);
 
   // Parse scene
   SceneParser parser;
@@ -277,10 +280,7 @@ int main(int argc, char** argv)
 
   // Dump metrics to a logfile
   BenchmarkSuiteDataSetOutputter output;
-
-  if (filename.empty())
-    filename = log::format("%1%_%2%", dataset->name, dataset->date);
-  output.dump(*dataset, path + filename);
+  output.dump(*dataset, filepath, filename);
 
   // Add wait to see GNUPlot
   if (plt_config.isConfigAvailable(ros::this_node::getName()))

@@ -118,7 +118,7 @@ std::string getEnvironmentPath(const std::string& env);
  *  \param[out] out Output stream to initialize.
  *  \param[in] file File to create and open.
  */
-void createFile(std::ofstream& out, const std::string& file);
+bool createFile(std::ofstream& out, const std::string& file);
 
 /** \brief Creates a temporary file and opens an output stream.
  *  \param[out] out Output stream to initialize.

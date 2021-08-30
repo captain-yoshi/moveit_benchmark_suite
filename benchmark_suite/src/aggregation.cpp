@@ -34,7 +34,6 @@ void AggregateConfig::readConfig(const std::string& ros_namespace)
   XmlRpc::XmlRpcValue benchmark_config;
   if (nh.getParam("aggregate_config", benchmark_config))
   {
-    readFile(nh);
     readFilterNames(nh);
     readAggregateParams(nh);
   }
@@ -43,10 +42,7 @@ void AggregateConfig::readConfig(const std::string& ros_namespace)
     ROS_WARN("No 'aggregate_config' found on param server");
   }
 }
-void AggregateConfig::readFile(ros::NodeHandle& nh)
-{
-  nh.getParam("aggregate_config/file", file_);
-}
+
 void AggregateConfig::readFilterNames(ros::NodeHandle& nh)
 {
   nh.getParam("aggregate_config/filters", filters_);
@@ -73,10 +69,6 @@ void AggregateConfig::readAggregateParams(ros::NodeHandle& nh)
   }
 }
 
-const std::string& AggregateConfig::getFile() const
-{
-  return file_;
-}
 const std::vector<std::string>& AggregateConfig::getFilterNames() const
 {
   return filters_;
