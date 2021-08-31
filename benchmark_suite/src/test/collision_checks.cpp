@@ -157,7 +157,7 @@ int main(int argc, char** argv)
     collision_detection::CollisionRequest req;
     req.distance = false;
 
-    std::string self_collision = "environment-collision";
+    std::string self_collision = "self-collision";
     if (scene->getWorld()->size() != 0)
     {
       req.contacts = true;
@@ -166,7 +166,7 @@ int main(int argc, char** argv)
       // If distance is turned on it will slow down the collision checking a lot. Try reducing the
       // number of contacts consequently.
       // req.distance = true;
-      self_collision = "self-collision";
+      self_collision = "environment-collision";
     }
     for (auto& state : sampled_states)
     {
