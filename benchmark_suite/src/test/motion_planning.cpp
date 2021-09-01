@@ -174,8 +174,8 @@ int main(int argc, char** argv)
 
   // Setup benchmark
   PlanningProfiler profiler;
-  profiler.options_.metrics =
-      PlanningProfiler::WAYPOINTS | PlanningProfiler::CORRECT | PlanningProfiler::LENGTH | PlanningProfiler::SMOOTHNESS;
+  profiler.options_.metrics = PlanningProfiler::WAYPOINTS | PlanningProfiler::CORRECT | PlanningProfiler::LENGTH |
+                              PlanningProfiler::SMOOTHNESS | PlanningProfiler::CLEARANCE;
 
   // template <typename ProfilerType, typename QueryType, typename DataSetTypePtr>
 
