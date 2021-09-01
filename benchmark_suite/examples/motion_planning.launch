@@ -45,7 +45,7 @@
   </group>
 
   <!-- Benchmark options file -->
-  <arg name="options_file" default="$(find moveit_benchmark_suite)/examples/motion_planning.yaml"/>
+  <arg name="options_file" default="$(find moveit_benchmark_suite)/config/motion_planning.yaml"/>
 
   <!-- Launch benchmark node -->
   <node name="benchmark" pkg="moveit_benchmark_suite" type="motion_planning" output="screen" clear_params="true" required="true" launch-prefix="$(arg launch_prefix)">
