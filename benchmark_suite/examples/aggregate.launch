@@ -14,11 +14,11 @@
     <!-- Configuration as YAML text -->
     <rosparam param="aggregate_config">
       filters:
-        - type/COLLISION CHECK
+        - type/MOTION PLANNING
       aggregate:
         - raw_metric: time
-          new_metric: collision_checks_per_seconds
-          type: frequency
+          new_metric: avg_time
+          type: average
     </rosparam>
 
     <param name="input_file" value="$(arg input_file)"/>
