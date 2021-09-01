@@ -902,7 +902,6 @@ void GNUPlotConfig::readConfig(const std::string& ros_namespace)
   XmlRpc::XmlRpcValue benchmark_config;
   if (nh.getParam("gnuplot_config", benchmark_config))
   {
-    readFiles(nh);
     readXticks(nh);
     readLegends(nh);
     readMetrics(nh);
@@ -910,11 +909,6 @@ void GNUPlotConfig::readConfig(const std::string& ros_namespace)
   }
   else
     ROS_WARN("No 'gnuplot_config' found on param server");
-}
-
-void GNUPlotConfig::readFiles(ros::NodeHandle& nh)
-{
-  nh.getParam("gnuplot_config/files", files_);
 }
 
 void GNUPlotConfig::readXticks(ros::NodeHandle& nh)
@@ -965,10 +959,6 @@ void GNUPlotConfig::readOption(ros::NodeHandle& nh)
   }
 }
 
-const std::vector<std::string>& GNUPlotConfig::getFiles() const
-{
-  return files_;
-}
 const std::vector<std::string>& GNUPlotConfig::getXticks() const
 {
   return xticks_;

@@ -270,7 +270,6 @@ public:
   void setNamespace(const std::string& ros_namespace);
 
   /** \brief Get the specified number of benchmark query runs */
-  const std::vector<std::string>& getFiles() const;
   const std::vector<std::string>& getXticks() const;
   const std::vector<std::string>& getLegends() const;
   const std::vector<GNUPlotConfigMetric>& getMetrics() const;
@@ -281,13 +280,11 @@ public:
 protected:
   void readConfig(const std::string& ros_namespace);
 
-  void readFiles(ros::NodeHandle& nh);
   void readXticks(ros::NodeHandle& nh);
   void readLegends(ros::NodeHandle& nh);
   void readMetrics(ros::NodeHandle& nh);
   void readOption(ros::NodeHandle& nh);
 
-  std::vector<std::string> files_;
   std::vector<std::string> xticks_;
   std::vector<std::string> legends_;
   std::vector<GNUPlotConfigMetric> metrics_;

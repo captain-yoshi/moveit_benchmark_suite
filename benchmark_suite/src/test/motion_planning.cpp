@@ -255,7 +255,6 @@ int main(int argc, char** argv)
   if (plt_config.isConfigAvailable(ros::this_node::getName()))
     plt_config.setNamespace(ros::this_node::getName());
 
-  const std::vector<std::string>& files = plt_config.getFiles();
   const std::vector<std::string>& xticks = plt_config.getXticks();
   const std::vector<std::string>& legends = plt_config.getLegends();
   const std::vector<IO::GNUPlotConfigMetric>& metrics = plt_config.getMetrics();
