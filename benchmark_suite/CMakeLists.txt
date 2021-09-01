@@ -78,8 +78,8 @@ if("${catkin_LIBRARIES}" MATCHES "moveit_collision_detection_bullet")
   target_link_libraries(collision_checks fcl ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 endif()
 
-add_executable(gnuplot_dataset src/gnuplot_dataset.cpp)
-target_link_libraries(gnuplot_dataset ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
+add_executable(plot_dataset src/plot_dataset.cpp)
+target_link_libraries(plot_dataset ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
 add_executable(aggregate src/aggregate.cpp)
 target_link_libraries(aggregate ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
@@ -95,7 +95,7 @@ install(TARGETS
   motion_planning
   mtc_runtask
   collision_checks
-  gnuplot_dataset
+  plot_dataset
   aggregate
 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
