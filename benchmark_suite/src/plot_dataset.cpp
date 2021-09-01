@@ -14,10 +14,14 @@ int main(int argc, char** argv)
 
   ros::NodeHandle pnh("~");
 
+  // Parse input file
+  std::vector<std::string> files;
+  pnh.getParam("input_files", files);
+
   // Parse config from the parameter server
   IO::GNUPlotConfig config(ros::this_node::getName());
 
-  const std::vector<std::string>& files = config.getFiles();
+  // const std::vector<std::string>& files = config.getFiles();
   const std::vector<std::string>& xticks = config.getXticks();
   const std::vector<std::string>& legends = config.getLegends();
   const std::vector<IO::GNUPlotConfigMetric>& metrics = config.getMetrics();
