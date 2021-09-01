@@ -48,7 +48,7 @@
   <arg name="options_file" default="$(find moveit_benchmark_suite)/examples/motion_planning.yaml"/>
 
   <!-- Launch benchmark node -->
-  <node name="benchmark" pkg="moveit_benchmark_suite" type="motion_planning" output="screen" required="true" launch-prefix="$(arg launch_prefix)">
+  <node name="benchmark" pkg="moveit_benchmark_suite" type="motion_planning" output="screen" clear_params="true" required="true" launch-prefix="$(arg launch_prefix)">
     <rosparam command="load" file="$(arg options_file)"/>
     <param name="name" value="$(arg name)"/>
     <param name="output_file" value="$(arg output_file)"/>
