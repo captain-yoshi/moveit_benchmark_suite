@@ -31,7 +31,7 @@ int main(int argc, char** argv)
   out_filepath = IO::getFilePath(out_file);
   out_filename = IO::getFileName(out_file);
 
-  in_file = IO::getAbsFile(in_file);
+  in_file = IO::getAbsDataSetFile(in_file);
 
   // Parse config from the parameter server
   AggregateConfig config(ros::this_node::getName());

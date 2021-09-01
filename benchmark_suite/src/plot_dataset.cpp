@@ -40,7 +40,9 @@ int main(int argc, char** argv)
   std::vector<DataSetPtr> datasets;
   for (const auto& file : files)
   {
-    auto node = YAML::LoadFile(file);
+    std::string abs_file = IO::getAbsDataSetFile(file);
+
+    auto node = YAML::LoadFile(abs_file);
     for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
       datasets.push_back(std::make_shared<DataSet>(it->as<DataSet>()));
   }

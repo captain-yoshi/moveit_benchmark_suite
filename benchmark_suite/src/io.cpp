@@ -225,13 +225,35 @@ std::string IO::getFileName(const std::string& file)
   return path.filename().string();
 }
 
-std::string IO::getAbsFile(const std::string& file)
+std::string IO::getAbsDataSetFile(const std::string& file)
 {
   boost::filesystem::path path(file);
   path = expandHome(path);
   path = expandSymlinks(path);
 
-  return path.string();
+  std::string filepath = path.parent_path().string();
+
+  if (filepath.empty())
+    filepath = IO::getEnvironmentPath("ROS_HOME");
+
+  // Set filepath as default ROS default home path
+  if (filepath.empty())
+  {
+    filepath = IO::getEnvironmentPath("HOME");
+    filepath = filepath + "/.ros";
+  }
+  else if (filepath[0] != '/')
+  {
+    std::string tmp = filepath;
+    filepath = IO::getEnvironmentPath("HOME");
+    filepath = filepath + "/.ros";
+    filepath = filepath + "/" + tmp;
+  }
+
+  if (!filepath.empty() && filepath.back() != '/')
+    filepath = filepath + '/';
+
+  return filepath + path.filename().string() + ".yaml";
 }
 
 std::string IO::getEnvironmentPath(const std::string& env)
