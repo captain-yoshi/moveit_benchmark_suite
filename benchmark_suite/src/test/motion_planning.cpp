@@ -64,6 +64,10 @@ int main(int argc, char** argv)
   // Prepare query setup
   QuerySetup query_setup;
 
+  // Parse benchmark name
+  std::string bm_name;
+  pnh.getParam("name", bm_name);
+
   // Parse output directory and filename
   std::string file;
   std::string filepath;
@@ -217,7 +221,11 @@ int main(int argc, char** argv)
     }
   }
 
-  Benchmark benchmark(benchmark_name,  // Name of benchmark
+  // Param server overrides benchmark config
+  if (bm_name.empty())
+    bm_name = benchmark_name;
+
+  Benchmark benchmark(bm_name,  // Name of benchmark
                       BenchmarkType::MOTION_PLANNING,
                       profiler,     // Options for internal profiler
                       query_setup,  // Number of trials

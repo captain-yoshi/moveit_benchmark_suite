@@ -1,6 +1,7 @@
 <?xml version="1.0" ?>
 <launch>
 
+  <arg name="name" default="" />
   <arg name="output_file" default="" />
   <arg name="use_rviz" default="false" />
 
@@ -49,6 +50,7 @@
   <!-- Launch benchmark node -->
   <node name="benchmark" pkg="moveit_benchmark_suite" type="motion_planning" output="screen" required="true" launch-prefix="$(arg launch_prefix)">
     <rosparam command="load" file="$(arg options_file)"/>
+    <param name="name" value="$(arg name)"/>
     <param name="output_file" value="$(arg output_file)"/>
   </node>
 </launch>
