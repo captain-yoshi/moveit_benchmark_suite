@@ -160,7 +160,7 @@ private:
     Instance(Instance const&) = delete;
     void operator=(Instance const&) = delete;
 
-    bool debug_{ true };
+    bool debug_{ false };
 
 #if IS_BOOST_164
     boost::process::opstream input_;
