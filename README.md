@@ -8,6 +8,10 @@ This project was initially started as part of GSoC 2021 (all the way up to this 
 The benchmark suite can run benchmarks, aggregate data and plot data with GNUPlot. A detail look of these pipelines is available [here](/.docs/bm_pipeline.md). Documention for each benchmark is available [here](/.docs/benchmarks/).
 
 
+### Regression
+For benchmarking regression, read this [section](/.docs/regression.md).
+
+
 ### Resources pkg
 The [resources package](/resources/) keeps all the necessary information to run the benchmarks (object mesh, object metadata, scenes, requests, configuration for IK and motion planning).
 
