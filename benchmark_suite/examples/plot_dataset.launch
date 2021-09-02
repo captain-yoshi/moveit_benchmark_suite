@@ -14,7 +14,7 @@
       xtick_filters:
         - config/scene/
       legend_filters:
-        - config/collision_detector/
+        - sw/moveit/git_commit/
       metrics:
         - time: boxplot
         - avg_time: bargraph
