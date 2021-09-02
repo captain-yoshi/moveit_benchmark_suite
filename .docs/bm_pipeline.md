@@ -4,14 +4,37 @@ The are three major pipelines to analyse a benchmark 1) [run benchmark](#run-ben
 You can also benchmark, aggregate and plot in [one step](#run-aggregate-and-plot)!
 
 
+
 ## Run benchmark
 You can see the [motion planning benchmark](/.docs/benchmarks/motion_planning.md) for a detailed look on how to configure and run the benchmark. A list of available benchmarks is available [here](/.docs/benchmarks).
-
+u
 After configuring the benchmark, run it:
 ```bash
 roslaunch moveit_benchmark_suite motion_planning.launch
 ```
 The benchmark will output a YAML file containing the dataset metadata and metrics. In case the file already exists, the dataset will be appended at the end of the file.
+
+### File convention
+By default the output directory is set to the `ROS_HOME` environment variable. If empty, then this path is used `~/.ros`. The default output filename follows this representation `<name+date>.yaml`. However this behavior can be changed by setting the appropriate ros arguments 
+
+
+Example of filepath location and filename:
+```bash
+roslaunch moveit_benchmark_suite motion_planning
+# Output => ~/.ros/<name+date>.yaml
+
+roslaunch moveit_benchmark_suite motion_planning name:=benchmark_name
+# Output => ~/.ros/<benchmark_name+date>.yaml
+
+roslaunch moveit_benchmark_suite motion_planning output_file:=~/
+# Output => ~/<name+date>.yaml
+
+roslaunch moveit_benchmark_suite motion_planning name:=dummy output_file:=~/filename
+# Output => ~/filename.yaml
+
+roslaunch moveit_benchmark_suite motion_planning output_file:=/my/absolute/path
+# Output => /my/absolute/path/<name+date>.yaml
+```
 
 ### DataSet
 A dataset is a collection of metadata collected for each benchmark. The output is a YAML file compliant with the [1.2 specification](https://yaml.org/spec/1.2/spec.html).
@@ -148,10 +171,9 @@ In a dataset, metrics can either be a single value or a sequence of values.
 ## Aggregate data
 You can skip this step if youre only interested in the `raw data` acquired by the benchmark.
 
-It is sometimes usefull to aggregate data from datasets. To do so, configure the `aggregate.launch` file to aggregate the desired metrics:
+It is sometimes usefull to aggregate data from datasets. To do so, configure the `aggregate.launch` file to aggregate the desired metrics.:
 ```yaml
 aggregate_config:
-  file: /home/captain-yoshi/.ros/db/mp.yaml
   filters:                                          # Defaults to empty
     - type/COLLISION CHECK
     - uuid/89d79e7d-f662-4355-9397-e86e662f3480
@@ -164,7 +186,7 @@ aggregate_config:
 
 Run the aggregate node.
 ```bash
-roslaunch moveit_benchmark_suite aggregate.launch
+roslaunch moveit_benchmark_suite aggregate.launch input_file:=path/to/dataset
 ```
 This will create a new file containing the dataset/s raw data + aggregated data.
 ```yaml
@@ -176,7 +198,7 @@ This will create a new file containing the dataset/s raw data + aggregated data.
       time : [ 0.1, 0.4, 0,2]         # Raw data
       avg_time: 0.23                  # Aggregated data
 ```
-
+The output path and filename can be specified by the arg `output_file`. THe path defaults to ROS_HOME or ~/.ros and the filename follows this structure `<aggregate+date>.yaml`.
 
 ## Plot data
 GNUPlot was choosen to speedup developpment because another project had worked on it ([robowflex](https://github.com/KavrakiLab/robowflex)). The minimum required version is 5.0 because this project uses the [inline datablocks](http://www.bersch.net/gnuplot-doc/inline-data-and-datablocks.html#inline-data) feature. Only the boxplot and bar graphs type are supported.
@@ -184,8 +206,6 @@ GNUPlot was choosen to speedup developpment because another project had worked o
 Configure the rosparam tag in the `gnuplot_dataset.launch` file which is YAML text.
 ```yaml
 gnuplot_config:
-  files:                                      # List of files
-    - /home/captain-yoshi/.ros/db/mp.yaml
   xtick_filters:                              # Defaults to all datasets pair-wise config with uuid
     - config/scene/
   legend_filters:                             # Defaults to empty list, add filter value/s as a legend in GNUPlot
@@ -203,7 +223,7 @@ gnuplot_config:
 
 Plot desired metrics.
 ```bash
-roslaunch moveit_benchmark_suite gnuplot_dataset.launch
+roslaunch moveit_benchmark_suite plot_dataset.launch input_files:="[path/to/filename, other/filename]"
 ```
 Seeing an empty plot probably means that you loaded the wrong dataset file and/or have wrong filter names.
 
@@ -286,8 +306,3 @@ gnuplot_config:
       n_row: 2
       n_col: 1
 ```
-**NOTE**: These are the same parameters used in the [aggregate](#aggregate-data) and [plot data](#plot-data) sections. The only parameter not used is the `file/files` because it only affects the current dataset. 
-
-
-
-
