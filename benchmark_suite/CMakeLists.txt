@@ -84,9 +84,6 @@ target_link_libraries(plot_dataset ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 add_executable(aggregate src/aggregate.cpp)
 target_link_libraries(aggregate ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
-add_executable(yaml_test src/test/yaml_test.cpp)
-target_link_libraries(yaml_test ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
-
 install(DIRECTORY include/${PROJECT_NAME}/
 	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 
