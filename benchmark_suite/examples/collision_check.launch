@@ -18,7 +18,7 @@
 
   <include file="$(find moveit_resources_panda_moveit_config)/launch/planning_context.launch"/>
 
-  <node name="collision_checks" pkg="moveit_benchmark_suite" type="collision_checks" respawn="false" clear_params="true" output="screen" launch-prefix="$(arg launch_prefix)">
+  <node name="collision_checks" pkg="moveit_benchmark_suite" type="collision_checks" respawn="false" clear_params="true" output="screen" launch-prefix="$(arg launch_prefix)" required="true">
     <rosparam command="load" file="$(find moveit_resources_panda_moveit_config)/config/kinematics.yaml"/>
 
     <param name="output_file" value="$(arg output_file)"/>
