@@ -12,4 +12,6 @@ for node in motion_planning collision_check; do
     roslaunch moveit_benchmark_suite "${node}.launch" output_file:="${file}"
 done
 
-### Output ~/.ros/benchmark.yaml containing 2 datasets (motion planning and collision check)
+echo "==="
+echo "Output $file contains 2 datasets (motion planning and collision check)"
+echo "==="
