@@ -253,7 +253,7 @@ std::string IO::getAbsDataSetFile(const std::string& file)
   if (!filepath.empty() && filepath.back() != '/')
     filepath = filepath + '/';
 
-  return filepath + path.filename().string() + ".yaml";
+  return filepath + path.filename().string();
 }
 
 std::string IO::getEnvironmentPath(const std::string& env)
