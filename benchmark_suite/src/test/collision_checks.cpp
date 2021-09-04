@@ -127,7 +127,7 @@ int main(int argc, char** argv)
   clutterWorld(planning_scene, 100, CollisionObjectType::MESH);
   scene_msgs.emplace_back();
   planning_scene->getPlanningSceneMsg(scene_msgs.back());  // Cluttered world
-  scene_msgs.back().name = "cluter-world";
+  scene_msgs.back().name = "clutter-world";
   query_setup.addQuery("scene", scene_msgs.back().name, "");
 
   // Setup scenes with pair wise collision detector
@@ -213,7 +213,7 @@ int main(int argc, char** argv)
 
   TokenSet xtick;
   // filter_set.insert(Token("query_setup", ""));
-  xtick.insert(Token("query_setup/scene", "cluter-world"));
+  xtick.insert(Token("query_setup/scene", "clutter-world"));
   xtick.insert(Token("query_setup/scene", "empty-world"));
 
   TokenSet legend;
