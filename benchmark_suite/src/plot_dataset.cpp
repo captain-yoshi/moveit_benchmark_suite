@@ -42,9 +42,15 @@ int main(int argc, char** argv)
   {
     std::string abs_file = IO::getAbsDataSetFile(file);
 
-    auto node = YAML::LoadFile(abs_file);
-    for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
-      datasets.push_back(std::make_shared<DataSet>(it->as<DataSet>()));
+    try {
+      auto node = YAML::LoadFile(abs_file);
+      for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
+        datasets.push_back(std::make_shared<DataSet>(it->as<DataSet>()));
+    }
+    catch(const YAML::BadFile& e){
+      ROS_FATAL_STREAM("Specified input file '" << abs_file << "' does not exist.");
+      return 1;
+    }
   }
 
   if (datasets.empty())
