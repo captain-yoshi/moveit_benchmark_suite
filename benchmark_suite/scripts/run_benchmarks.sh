@@ -8,10 +8,10 @@ else
     file="$(pwd)/benchmark.yaml"
 fi
 
-for node in motion_planning collision_check; do
-    roslaunch moveit_benchmark_suite "${node}.launch" output_file:="${file}"
+for launch in $(ls $(rospack find moveit_benchmark_suite 2>&-)/benchmarks 2>&-); do
+    roslaunch moveit_benchmark_suite "${launch}" output_file:="${file}"
 done
 
 echo "==="
-echo "Output $file contains 2 datasets (motion planning and collision check)"
+echo "Benchmark datasets were written to output '$file'"
 echo "==="
