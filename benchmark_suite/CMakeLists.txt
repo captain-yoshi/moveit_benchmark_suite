@@ -7,35 +7,35 @@ find_package(Eigen3 REQUIRED)
 find_package(fcl REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
-	eigen_conversions
-	geometric_shapes
-	geometry_msgs
-	moveit_core
-	moveit_ros_planning
-	moveit_ros_planning_interface
-	moveit_visual_tools
-	roscpp
-	visualization_msgs
-	scene_parser
+  eigen_conversions
+  geometric_shapes
+  geometry_msgs
+  moveit_core
+  moveit_ros_planning
+  moveit_ros_planning_interface
+  moveit_visual_tools
+  roscpp
+  visualization_msgs
+  scene_parser
   moveit_benchmark_suite_resources
   rosparam_shortcuts
 )
 
 catkin_package(
-	LIBRARIES
-		${PROJECT_NAME}
-	INCLUDE_DIRS
-		include
-	CATKIN_DEPENDS
-		geometric_shapes
-		geometry_msgs
-		moveit_core
-		moveit_ros_planning
-		moveit_ros_planning_interface
-		roscpp
-		moveit_visual_tools
-		visualization_msgs
-		scene_parser
+  LIBRARIES
+    ${PROJECT_NAME}
+  INCLUDE_DIRS
+    include
+  CATKIN_DEPENDS
+    geometric_shapes
+    geometry_msgs
+    moveit_core
+    moveit_ros_planning
+    moveit_ros_planning_interface
+    roscpp
+    moveit_visual_tools
+    visualization_msgs
+    scene_parser
     moveit_benchmark_suite_resources
     rosparam_shortcuts
 )
@@ -78,7 +78,7 @@ add_executable(aggregate src/aggregate.cpp)
 target_link_libraries(aggregate ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
 install(DIRECTORY include/${PROJECT_NAME}/
-	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 
 install(TARGETS
   ${PROJECT_NAME}
@@ -86,6 +86,6 @@ install(TARGETS
   collision_checks
   plot_dataset
   aggregate
-	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
