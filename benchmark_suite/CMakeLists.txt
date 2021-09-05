@@ -18,8 +18,6 @@ find_package(catkin REQUIRED COMPONENTS
 	visualization_msgs
 	scene_parser
   moveit_benchmark_suite_resources
-  moveit_task_constructor_core
-	moveit_task_constructor_msgs
   rosparam_shortcuts
 )
 
@@ -39,8 +37,6 @@ catkin_package(
 		visualization_msgs
 		scene_parser
     moveit_benchmark_suite_resources
-    moveit_task_constructor_core
-	  moveit_task_constructor_msgs
     rosparam_shortcuts
 )
 
@@ -65,13 +61,10 @@ add_library(${PROJECT_NAME}
   src/test/motion_planning_config.cpp
   src/test/motion_planning_benchmark.cpp
   src/test/collision_checks_benchmark.cpp
-  src/test/mtc_pickplace.cpp)
+)
 
 add_executable(motion_planning src/test/motion_planning.cpp)
 target_link_libraries(motion_planning ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
-
-add_executable(mtc_runtask src/test/mtc_runtask.cpp)
-target_link_libraries(mtc_runtask ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
 if("${catkin_LIBRARIES}" MATCHES "moveit_collision_detection_bullet")
   add_executable(collision_checks src/test/collision_checks.cpp)
@@ -90,7 +83,6 @@ install(DIRECTORY include/${PROJECT_NAME}/
 install(TARGETS
   ${PROJECT_NAME}
   motion_planning
-  mtc_runtask
   collision_checks
   plot_dataset
   aggregate

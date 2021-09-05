@@ -8,10 +8,14 @@ else
     file="$(pwd)/benchmark.yaml"
 fi
 
-for launch in $(ls $(rospack find moveit_benchmark_suite 2>&-)/benchmarks 2>&-); do
-    roslaunch moveit_benchmark_suite "${launch}" output_file:="${file}"
+for pkg_benchmarks in $(rospack plugins moveit_benchmark_suite --attrib=benchmarks | cut -d' ' -f2-); do
+    for launch in ${pkg_benchmarks}/*.launch; do
+        roslaunch "${launch}" output_file:="${file}"
+    done
 done
 
+
+echo
 echo "==="
 echo "Benchmark datasets were written to output '$file'"
 echo "==="

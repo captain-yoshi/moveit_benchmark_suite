@@ -1,18 +1,15 @@
 <package format="2">
-	<name>moveit_benchmark_suite</name>
+	<name>moveit_benchmark_suite_mtc</name>
 	<version>0.0.0</version>
-	<description>Benchmark backend for testing MoveIt</description>
+	<description>Benchmark backend for testing MoveIt Task Constructor</description>
 
 	<license>BSD</license>
 	<maintainer email="captain.yoshisaur@gmail.com">Captain Yoshi</maintainer>
 
 	<buildtool_depend>catkin</buildtool_depend>
 
-	<depend>boost</depend>
 	<depend>yaml-cpp</depend>
 
-	<depend>geometric_shapes</depend>
-	<depend>geometry_msgs</depend>
 	<depend>eigen_conversions</depend>
 	<depend>roscpp</depend>
 	<depend>moveit_core</depend>
@@ -21,7 +18,10 @@
 	<depend>visualization_msgs</depend>
 	<depend>moveit_visual_tools</depend>
 	<depend>scene_parser</depend>
+	<depend>moveit_benchmark_suite</depend>
 	<depend>moveit_benchmark_suite_resources</depend>
+	<depend>moveit_task_constructor_core</depend>
+	<depend>moveit_task_constructor_msgs</depend>
 	<depend>rosparam_shortcuts</depend>
 
 	<export>

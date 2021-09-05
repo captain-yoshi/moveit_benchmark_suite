@@ -37,9 +37,10 @@
 // ROS
 #include <ros/ros.h>
 
-// MTC pick/place demo implementation
-#include <moveit_benchmark_suite/test/mtc_pickplace.h>
 #include <scene_parser/scene_parser.h>
+
+// MTC pick/place demo implementation
+#include "mtc_pickplace.h"
 
 constexpr char LOGNAME[] = "moveit_benchmark_suite_run_task";
 
@@ -87,7 +88,7 @@ int main(int argc, char** argv)
   if (pick_place_task.plan())
   {
     ROS_INFO_NAMED(LOGNAME, "Planning succeded");
-    if (pnh.param("execute_", false))
+    if (pnh.param("execute", false))
     {
       pick_place_task.execute();
       ROS_INFO_NAMED(LOGNAME, "Execution complete");
@@ -102,7 +103,7 @@ int main(int argc, char** argv)
     ROS_INFO_NAMED(LOGNAME, "Planning failed");
   }
 
-  // Keep introspection alive
-  ros::waitForShutdown();
+  // Keep alive for introspection
+  //ros::waitForShutdown();
   return 0;
 }
