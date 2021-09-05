@@ -68,7 +68,11 @@ int main(int argc, char** argv)
   std::string file;
   std::string filepath;
   std::string filename;
-  pnh.getParam("output_file", file);
+  constexpr char OUTPUT_PARAMETER[] = "output_file";
+  if(!pnh.getParam(OUTPUT_PARAMETER, file)){
+    ROS_FATAL_STREAM("Parameter '" << OUTPUT_PARAMETER << "' is not set.");
+    return 1;
+  }
 
   filepath = IO::getFilePath(file);
   filename = IO::getFileName(file);
