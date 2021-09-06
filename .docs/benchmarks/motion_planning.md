@@ -23,7 +23,7 @@ The robot, scenes and requests are configured in the [motion_planning.launch](be
   <!-- Scene -->
   <group ns="scenes" clear_params="true">
     <param name="empty-scene"  command="$(find xacro)/xacro '$(find moveit_benchmark_suite_resources)/db/empty_scene.urdf.xacro'"/>
-    <param name="bbt-primitve" command="$(find xacro)/xacro '$(find moveit_benchmark_suite_resources)/db/bbt/panda/scene_primitive.urdf.xacro'"/>
+    <param name="bbt-primitive" command="$(find xacro)/xacro '$(find moveit_benchmark_suite_resources)/db/bbt/panda/scene_primitive.urdf.xacro'"/>
     <param name="bbt-mesh"     command="$(find xacro)/xacro '$(find moveit_benchmark_suite_resources)/db/bbt/panda/scene_mesh_hq.urdf.xacro'"/>
   </group>
 

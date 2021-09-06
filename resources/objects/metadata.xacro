@@ -11,7 +11,7 @@
   <xacro:property name="drill"      value="${load_yaml(pkg_path + 'drill.yaml')['drill']}"/>
   <xacro:property name="mug"        value="${load_yaml(pkg_path + 'mug.yaml')['mug']}"/>
   <xacro:property name="plate"      value="${load_yaml(pkg_path + 'plate.yaml')['plate']}"/>
-  <xacro:property name="soupecan"   value="${load_yaml(pkg_path + 'soupecan.yaml')['soupecan']}"/>
+  <xacro:property name="soupcan"   value="${load_yaml(pkg_path + 'soupcan.yaml')['soupcan']}"/>
   <xacro:property name="woodblock"  value="${load_yaml(pkg_path + 'woodblock.yaml')['woodblock']}"/>
 
 </robot>

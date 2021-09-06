@@ -139,7 +139,7 @@ Query configuration:
         jc: ~
       scene:
         bbt-mesh: ~
-        bbt-primitve: ~
+        bbt-primitive: ~
         empty-scene: ~
 
 ```

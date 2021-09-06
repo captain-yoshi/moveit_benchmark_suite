@@ -163,7 +163,6 @@ void BenchmarkSuiteDataSetOutputter::dump(const DataSet& dataset, const std::str
                                           const std::string& filename)
 {
   std::ofstream out;
-  std::string ext = ".yaml";
   std::string out_file;
   std::string out_filepath;
   std::string out_filename;
@@ -172,9 +171,6 @@ void BenchmarkSuiteDataSetOutputter::dump(const DataSet& dataset, const std::str
   out_filename = filename;
   if (out_filename.empty())
     out_filename = log::format("%1%_%2%", dataset.name, IO::getDateStr());
-
-  // TODO verify if filename has already the yaml or yml extension
-  out_filename = out_filename + ext;
 
   // Set filepath as ROS_HOME
   out_filepath = filepath;

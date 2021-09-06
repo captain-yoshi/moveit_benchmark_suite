@@ -24,7 +24,7 @@ benchmark_config:
 
 ##############################################################################
 #
-# OPTIONNAL: Use to Aggregate and/or Plot after the benchmark is completed
+# OPTIONAL: Use to Aggregate and/or Plot after the benchmark is completed
 #
 ##############################################################################
 
