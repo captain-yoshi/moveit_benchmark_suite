@@ -46,4 +46,10 @@ private:
   std::map<std::string, collision_detection::CollisionPluginPtr> plugins_;  ///< Loaded plugins.
 };
 
+void getTransformsFromTf(std::vector<geometry_msgs::TransformStamped>& transforms,
+                         const robot_model::RobotModelConstPtr& rm);
+
+void addTransformsToSceneMsg(const std::vector<geometry_msgs::TransformStamped>& transforms,
+                             moveit_msgs::PlanningScene& scene_msg);
+
 }  // namespace moveit_benchmark_suite

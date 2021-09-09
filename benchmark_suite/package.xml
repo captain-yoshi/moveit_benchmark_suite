@@ -9,8 +9,8 @@
 	<buildtool_depend>catkin</buildtool_depend>
 
 	<depend>boost</depend>
+	<depend>tf2_ros</depend>
 	<depend>yaml-cpp</depend>
-
 	<depend>geometric_shapes</depend>
 	<depend>geometry_msgs</depend>
 	<depend>eigen_conversions</depend>

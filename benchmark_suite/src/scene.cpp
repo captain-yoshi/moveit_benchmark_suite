@@ -1,5 +1,8 @@
 #include <moveit_benchmark_suite/scene.h>
 
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+
 using namespace moveit_benchmark_suite;
 
 CollisionPluginLoader::CollisionPluginLoader()
@@ -56,4 +59,45 @@ bool CollisionPluginLoader::activate(const std::string& name, const planning_sce
     return it->second->initialize(scene, exclusive);
 
   return false;
+}
+
+void moveit_benchmark_suite::getTransformsFromTf(std::vector<geometry_msgs::TransformStamped>& transforms,
+                                                 const robot_model::RobotModelConstPtr& rm)
+{
+  const std::string& target = rm->getModelFrame();
+
+  tf2_ros::Buffer tf_buffer_;
+  tf2_ros::TransformListener tfListener(tf_buffer_);
+
+  ros::Duration(1.0).sleep();
+
+  std::vector<std::string> all_frame_names;
+  tf_buffer_._getFrameStrings(all_frame_names);
+  for (const std::string& all_frame_name : all_frame_names)
+  {
+    if (all_frame_name == target || rm->hasLinkModel(all_frame_name))
+      continue;
+
+    geometry_msgs::TransformStamped f;
+    try
+    {
+      f = tf_buffer_.lookupTransform(target, all_frame_name, ros::Time(0));
+    }
+    catch (tf2::TransformException& ex)
+    {
+      ROS_WARN_STREAM("Unable to transform object from frame '" << all_frame_name << "' to planning frame '" << target
+                                                                << "' (" << ex.what() << ")");
+      continue;
+    }
+    f.header.frame_id = all_frame_name;
+    f.child_frame_id = target;
+    transforms.push_back(f);
+  }
+}
+
+void moveit_benchmark_suite::addTransformsToSceneMsg(const std::vector<geometry_msgs::TransformStamped>& transforms,
+                                                     moveit_msgs::PlanningScene& scene_msg)
+{
+  for (const auto& transform : transforms)
+    scene_msg.fixed_frame_transforms.push_back(transform);
 }
