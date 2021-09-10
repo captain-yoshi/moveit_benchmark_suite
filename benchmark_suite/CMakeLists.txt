@@ -7,6 +7,7 @@ find_package(Eigen3 REQUIRED)
 find_package(fcl REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
+  tf2_ros
   eigen_conversions
   geometric_shapes
   geometry_msgs
@@ -27,6 +28,7 @@ catkin_package(
   INCLUDE_DIRS
     include
   CATKIN_DEPENDS
+    tf2_ros
     geometric_shapes
     geometry_msgs
     moveit_core

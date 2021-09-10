@@ -61,6 +61,14 @@ int main(int argc, char** argv)
 
   ros::NodeHandle pnh("~");
 
+  // Setup robot
+  auto robot = std::make_shared<Robot>("robot", "robot_description");
+  robot->initialize();
+
+  // Get transforms from tf listener
+  std::vector<geometry_msgs::TransformStamped> transforms;
+  getTransformsFromTf(transforms, robot->getModelConst());
+
   // Prepare query setup
   QuerySetup query_setup;
 
@@ -92,6 +100,9 @@ int main(int argc, char** argv)
     scene_msgs.back().is_diff = true;
     parser.getCollisionObjects(scene_msgs.back().world.collision_objects);
 
+    // If tf add it to the planning scene
+    addTransformsToSceneMsg(transforms, scene_msgs.back());
+
     query_setup.addQuery("scene", scene.first, "");
   }
 
@@ -120,10 +131,6 @@ int main(int argc, char** argv)
   const std::set<std::string>& collision_detectors = config.getCollisionDetectors();
   const std::map<std::string, std::vector<std::string>>& planning_pipelines =
       config.getPlanningPipelineConfigurations();
-
-  // Setup robot
-  auto robot = std::make_shared<Robot>("robot", "robot_description");
-  robot->initialize();
 
   // Setup scenes
   std::vector<planning_scene::PlanningScenePtr> scenes;
