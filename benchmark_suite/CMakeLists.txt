@@ -17,7 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_visual_tools
   roscpp
   visualization_msgs
-  scene_parser
+  urdf_to_scene
   moveit_benchmark_suite_resources
   rosparam_shortcuts
 )
@@ -37,7 +37,7 @@ catkin_package(
     roscpp
     moveit_visual_tools
     visualization_msgs
-    scene_parser
+    urdf_to_scene
     moveit_benchmark_suite_resources
     rosparam_shortcuts
 )

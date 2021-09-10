@@ -37,7 +37,7 @@
 // ROS
 #include <ros/ros.h>
 
-#include <scene_parser/scene_parser.h>
+#include <urdf_to_scene/scene_parser.h>
 
 // MTC pick/place demo implementation
 #include "mtc_pickplace.h"

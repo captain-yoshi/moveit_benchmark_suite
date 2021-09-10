@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_task_constructor_msgs
   roscpp
   rosparam_shortcuts
-  scene_parser
+  urdf_to_scene
 )
 
 catkin_package()

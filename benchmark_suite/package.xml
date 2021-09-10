@@ -20,7 +20,7 @@
 	<depend>moveit_ros_planning_interface</depend>
 	<depend>visualization_msgs</depend>
 	<depend>moveit_visual_tools</depend>
-	<depend>scene_parser</depend>
+	<depend>urdf_to_scene</depend>
 	<depend>moveit_benchmark_suite_resources</depend>
 	<depend>rosparam_shortcuts</depend>
 
