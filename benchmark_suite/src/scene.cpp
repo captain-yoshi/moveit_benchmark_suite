@@ -61,43 +61,73 @@ bool CollisionPluginLoader::activate(const std::string& name, const planning_sce
   return false;
 }
 
-void moveit_benchmark_suite::getTransformsFromTf(std::vector<geometry_msgs::TransformStamped>& transforms,
-                                                 const robot_model::RobotModelConstPtr& rm)
+void moveit_benchmark_suite::getVirtualModelTransform(std::vector<geometry_msgs::TransformStamped>& transforms,
+                                                      const robot_model::RobotModelConstPtr& robot, double timeout)
 {
-  const std::string& target = rm->getModelFrame();
+  auto tf_buffer = std::make_shared<tf2_ros::Buffer>();
+  auto tf_listener = std::make_shared<tf2_ros::TransformListener>(*tf_buffer);
+  planning_scene::PlanningScene scene(robot);
 
-  tf2_ros::Buffer tf_buffer_;
-  tf2_ros::TransformListener tfListener(tf_buffer_);
+  const std::string& root_link = robot->getRootLinkName();
+  std::string virtual_frame;
+  geometry_msgs::TransformStamped transform;
 
-  ros::Duration(1.0).sleep();
-
-  std::vector<std::string> all_frame_names;
-  tf_buffer_._getFrameStrings(all_frame_names);
-  for (const std::string& all_frame_name : all_frame_names)
+  // SRDF has virtual joints
+  if (robot->getSRDF() && !robot->getSRDF()->getVirtualJoints().empty())
   {
-    if (all_frame_name == target || rm->hasLinkModel(all_frame_name))
-      continue;
+    // Must parse virtual joints for the case where the virtual joint type is `fixed`
+    for (const auto& virtual_joint : robot->getSRDF()->getVirtualJoints())
+    {
+      if (virtual_joint.child_link_.compare(root_link) == 0)
+      {
+        virtual_frame = virtual_joint.parent_frame_;
+        break;
+      }
+    }
 
-    geometry_msgs::TransformStamped f;
+    // Prioritize virtual joint from srdf, then check tf listener. A fixed joint type will
+    // never find a transform from the scene.
+    if (!scene.knowsFrameTransform(virtual_frame) &&
+        !tf_buffer->canTransform(virtual_frame, root_link, ros::Time{ 0 }, ros::Duration{ timeout }))
+    {
+      ROS_FATAL("can't transform to model frame");
+      return;
+    }
+
     try
     {
-      f = tf_buffer_.lookupTransform(target, all_frame_name, ros::Time(0));
+      transform = tf_buffer->lookupTransform(virtual_frame, root_link, ros::Time(0), ros::Duration{ timeout });
+      transforms.push_back(transform);
     }
     catch (tf2::TransformException& ex)
     {
-      ROS_WARN_STREAM("Unable to transform object from frame '" << all_frame_name << "' to planning frame '" << target
+      ROS_WARN("%s", ex.what());
+    }
+    return;
+  }
+
+  // No virtual joints, check all tf listener names (that are not part of the robot) against root link
+  ros::Duration(timeout).sleep();  // Needed because tf names must be available
+
+  std::vector<std::string> all_frame_names;
+  tf_buffer->_getFrameStrings(all_frame_names);
+
+  for (const std::string& tf_frame_name : all_frame_names)
+  {
+    if (robot->hasLinkModel(tf_frame_name))
+      continue;
+
+    try
+    {
+      transform = tf_buffer->lookupTransform(tf_frame_name, root_link, ros::Time(0));
+      transforms.push_back(transform);
+      return;
+    }
+    catch (tf2::TransformException& ex)
+    {
+      ROS_WARN_STREAM("Unable to transform object from frame '" << tf_frame_name << "' to planning frame '" << root_link
                                                                 << "' (" << ex.what() << ")");
       continue;
     }
-    f.header.frame_id = all_frame_name;
-    f.child_frame_id = target;
-    transforms.push_back(f);
   }
-}
-
-void moveit_benchmark_suite::addTransformsToSceneMsg(const std::vector<geometry_msgs::TransformStamped>& transforms,
-                                                     moveit_msgs::PlanningScene& scene_msg)
-{
-  for (const auto& transform : transforms)
-    scene_msg.fixed_frame_transforms.push_back(transform);
 }

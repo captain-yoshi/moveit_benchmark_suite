@@ -65,9 +65,9 @@ int main(int argc, char** argv)
   auto robot = std::make_shared<Robot>("robot", "robot_description");
   robot->initialize();
 
-  // Get transforms from tf listener
+  // Get virtual transforms from robot model or tf listener
   std::vector<geometry_msgs::TransformStamped> transforms;
-  getTransformsFromTf(transforms, robot->getModelConst());
+  getVirtualModelTransform(transforms, robot->getModelConst(), 1.0);
 
   // Prepare query setup
   QuerySetup query_setup;
@@ -100,8 +100,9 @@ int main(int argc, char** argv)
     scene_msgs.back().is_diff = true;
     parser.getCollisionObjects(scene_msgs.back().world.collision_objects);
 
-    // If tf add it to the planning scene
-    addTransformsToSceneMsg(transforms, scene_msgs.back());
+    // Add virtual transform
+    for (const auto& transform : transforms)
+      scene_msgs.back().fixed_frame_transforms.push_back(transform);
 
     query_setup.addQuery("scene", scene.first, "");
   }
