@@ -73,7 +73,7 @@ GNUPlotHelper::Instance::Instance()
 
   gnuplot_ = bp::child(bp::search_path("gnuplot"),  //"-persist",  //
                        bp::std_err > error_,        //
-                       // bp::std_out > output_,                //
+                       bp::std_out > output_,       //
                        bp::std_in < input_);
 #else
   throw std::runtime_error("GNUPlot helper not supported, Boost 1.64 and above is required!");

@@ -208,7 +208,7 @@ private:
 
 #if IS_BOOST_164
     boost::process::opstream input_;
-    // boost::process::ipstream output_;
+    boost::process::ipstream output_;
     boost::process::ipstream error_;
     boost::process::child gnuplot_;
 #endif
