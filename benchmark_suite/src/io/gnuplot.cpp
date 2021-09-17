@@ -40,6 +40,27 @@ std::string QtTerminal::getCmd() const
 }
 
 ///
+/// SvgTerminal
+///
+
+SvgTerminal::SvgTerminal() : GNUPlotTerminal(TERMINAL_SVG_STR)
+{
+}
+
+SvgTerminal::SvgTerminal(const TerminalSize& size) : GNUPlotTerminal(TERMINAL_SVG_STR), size(size)
+{
+}
+
+SvgTerminal::~SvgTerminal()
+{
+}
+
+std::string SvgTerminal::getCmd() const
+{
+  return log::format("set term %1% size %2%,%3%", mode, size.x, size.y);
+}
+
+///
 /// GNUPlotHelper
 ///
 

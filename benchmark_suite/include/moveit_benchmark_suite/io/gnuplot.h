@@ -19,6 +19,7 @@ namespace moveit_benchmark_suite
 namespace IO
 {
 static std::string TERMINAL_QT_STR = "qt";
+static std::string TERMINAL_SVG_STR = "svg";
 
 struct TerminalSize
 {
@@ -51,6 +52,22 @@ public:
   /** \brief Virtual destructor for cleaning up resources.
    */
   ~QtTerminal() override;
+
+  // Get GNUPlot command as a string
+  std::string getCmd() const override;
+
+  TerminalSize size = { .x = 640, .y = 480 };
+};
+
+// Produces files in the W3C Scalable Vector Graphics format
+class SvgTerminal : public GNUPlotTerminal
+{
+public:
+  SvgTerminal();
+  SvgTerminal(const TerminalSize& size);
+  /** \brief Virtual destructor for cleaning up resources.
+   */
+  ~SvgTerminal() override;
 
   // Get GNUPlot command as a string
   std::string getCmd() const override;
