@@ -14,6 +14,32 @@ namespace bp = boost::process;
 #endif
 
 ///
+/// GNUPlotTerminal
+///
+
+GNUPlotTerminal::GNUPlotTerminal(const std::string& mode) : mode(mode){};
+
+///
+/// QtTerminal
+///
+QtTerminal::QtTerminal() : GNUPlotTerminal(TERMINAL_QT_STR)
+{
+}
+
+QtTerminal::QtTerminal(const TerminalSize& size) : GNUPlotTerminal(TERMINAL_QT_STR), size(size)
+{
+}
+
+QtTerminal::~QtTerminal()
+{
+}
+
+std::string QtTerminal::getCmd() const
+{
+  return log::format("set term %1% noraise size %2%,%3%", mode, size.x, size.y);
+}
+
+///
 /// GNUPlotHelper
 ///
 
@@ -56,10 +82,10 @@ void GNUPlotHelper::Instance::flush()
     std::cout << std::endl;
 #endif
 }
-void GNUPlotHelper::configureTerminal(const QtTerminalOptions& options)
+void GNUPlotHelper::configureTerminal(const std::string& instance_id, const GNUPlotTerminal& terminal)
 {
-  auto in = getInstance(options.instance);
-  in->writeline(log::format("set term %1% noraise size %2%,%3%", options.mode, options.size.x, options.size.y));
+  auto in = getInstance(instance_id);
+  in->writeline(terminal.getCmd());
 }
 
 void GNUPlotHelper::configurePlot(const PlottingOptions& options)
@@ -447,17 +473,19 @@ void GNUPlotDataSet::addMetric(const std::string& metric, const std::string& plo
     addMetric(metric, it->second);
 };
 
-void GNUPlotDataSet::dump(const DataSetPtr& dataset, const GNUPlotHelper::MultiPlotOptions& mpo,
-                          const TokenSet& xtick_set, const TokenSet& legend_set)
+void GNUPlotDataSet::dump(const DataSetPtr& dataset, const GNUPlotTerminal& terminal,
+                          const GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set,
+                          const TokenSet& legend_set)
 {
   std::vector<DataSetPtr> datasets;
   datasets.push_back(dataset);
 
-  dump(datasets, mpo, xtick_set, legend_set);
+  dump(datasets, terminal, mpo, xtick_set, legend_set);
 };
 
-void GNUPlotDataSet::dump(const std::vector<DataSetPtr>& datasets, const GNUPlotHelper::MultiPlotOptions& mpo,
-                          const TokenSet& xtick_set, const TokenSet& legend_set)
+void GNUPlotDataSet::dump(const std::vector<DataSetPtr>& datasets, const GNUPlotTerminal& terminal,
+                          const GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set,
+                          const TokenSet& legend_set)
 {
   if (plot_types_.empty())
   {
@@ -465,14 +493,10 @@ void GNUPlotDataSet::dump(const std::vector<DataSetPtr>& datasets, const GNUPlot
     return;
   }
 
-  GNUPlotHelper::QtTerminalOptions to;
-  to.size.x = 1280;
-  to.size.y = 720;
-
   if (mpo.layout.row * mpo.layout.col < plot_types_.size())
     ROS_WARN("Metrics cannot fit in plot layout");
 
-  helper_.configureTerminal(to);
+  helper_.configureTerminal(mpo.instance, terminal);
   if (plot_types_.size() > 1)
     helper_.multiplot(mpo);
 

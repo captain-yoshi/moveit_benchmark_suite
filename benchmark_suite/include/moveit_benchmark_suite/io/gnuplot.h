@@ -18,6 +18,46 @@ namespace moveit_benchmark_suite
 {
 namespace IO
 {
+static std::string TERMINAL_QT_STR = "qt";
+
+struct TerminalSize
+{
+  double x = 640;
+  double y = 480;
+};
+
+/** \brief An abstract class for GNUPlot terminal. */
+class GNUPlotTerminal
+{
+public:
+  GNUPlotTerminal(const std::string& mode);
+
+  /** \brief Virtual destructor for cleaning up resources.
+   */
+  virtual ~GNUPlotTerminal() = default;
+
+  // Get GNUPlot command as a string
+  virtual std::string getCmd() const = 0;
+
+  const std::string mode;
+};
+
+// Generates output in a separate window with the Qt library
+class QtTerminal : public GNUPlotTerminal
+{
+public:
+  QtTerminal();
+  QtTerminal(const TerminalSize& size);
+  /** \brief Virtual destructor for cleaning up resources.
+   */
+  ~QtTerminal() override;
+
+  // Get GNUPlot command as a string
+  std::string getCmd() const override;
+
+  TerminalSize size = { .x = 640, .y = 480 };
+};
+
 /** \brief Helper class to open a pipe to a GNUPlot instance for live visualization of data.
  */
 class GNUPlotHelper
@@ -43,20 +83,7 @@ public:
     std::string instance{ "default" };
   };
 
-  struct QtTerminalOptions : InstanceOptions
-  {
-    struct Size
-    {
-      double x = 720;
-      double y = 480;
-    };
-
-    Size size;
-
-    const std::string mode{ "qt" };  ///< Terminal mode for GNUPlot
-  };
-
-  void configureTerminal(const QtTerminalOptions& options);
+  void configureTerminal(const std::string& instance_id, const GNUPlotTerminal& terminal);
 
   /** \name Plotting
       \{ */
@@ -208,10 +235,10 @@ public:
   void addMetric(const std::string& metric, const PlotType& plottype);
   void addMetric(const std::string& metric, const std::string& plottype);
 
-  void dump(const DataSetPtr& dataset, const GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set,
-            const TokenSet& legend_set = {});
-  void dump(const std::vector<DataSetPtr>& datasets, const GNUPlotHelper::MultiPlotOptions& mpo,
+  void dump(const DataSetPtr& dataset, const GNUPlotTerminal& terminal, const GNUPlotHelper::MultiPlotOptions& mpo,
             const TokenSet& xtick_set, const TokenSet& legend_set = {});
+  void dump(const std::vector<DataSetPtr>& datasets, const GNUPlotTerminal& terminal,
+            const GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set, const TokenSet& legend_set = {});
 
 private:
   void dumpBoxPlot(const std::string& metric, const std::vector<DataSetPtr>& results, const TokenSet& xtick_set,

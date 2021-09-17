@@ -66,11 +66,14 @@ Benchmark::Benchmark(const std::string& name,  //
     for (const auto& metric : metrics)
       plot.addMetric(metric.name, metric.type);
 
+    IO::QtTerminal terminal;
+
     IO::GNUPlotHelper::MultiPlotOptions mpo;
     mpo.layout.row = option.n_row;
     mpo.layout.col = option.n_col;
 
-    addPostBenchmarkCallback([=](DataSetPtr dataset) { plot.dump(dataset, mpo, xtick_filters, legend_filters); });
+    addPostBenchmarkCallback(
+        [=](DataSetPtr dataset) { plot.dump(dataset, terminal, mpo, xtick_filters, legend_filters); });
   }
 };
 

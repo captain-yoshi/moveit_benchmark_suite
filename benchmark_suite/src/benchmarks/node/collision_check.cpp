@@ -212,6 +212,8 @@ int main(int argc, char** argv)
   plot.addMetric("time", IO::GNUPlotDataSet::BoxPlot);
   plot.addMetric("collision_checks_per_second", IO::GNUPlotDataSet::BarGraph);
 
+  IO::QtTerminal terminal;
+
   IO::GNUPlotHelper::MultiPlotOptions mpo;
   mpo.layout.row = 2;
   mpo.layout.col = 1;
@@ -225,7 +227,7 @@ int main(int argc, char** argv)
   legend.insert(Token("query_setup/collision_detector", "Bullet"));
   // legend_set.insert(Token("hardware/cpu/vendor_id", ""));
 
-  plot.dump(dataset, mpo, xtick, legend);
+  plot.dump(dataset, terminal, mpo, xtick, legend);
 
   // Dump metrics to a logfile
   BenchmarkSuiteDataSetOutputter output;
