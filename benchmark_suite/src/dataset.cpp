@@ -106,6 +106,19 @@ std::vector<DataPtr> DataSet::getFlatData() const
   return r;
 }
 
+std::set<std::string> DataSet::getMetricNames()
+{
+  std::set<std::string> names;
+
+  if (data.empty() || data.begin()->second.empty())
+    return names;
+
+  for (const auto& metric_map : data.begin()->second[0]->metrics)
+    names.insert(metric_map.first);
+
+  return names;
+}
+
 void DataSet::eraseMetric(const std::string& metric)
 {
   for (const auto& data_map : data)

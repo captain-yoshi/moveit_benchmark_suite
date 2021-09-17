@@ -215,6 +215,8 @@ public:
   void eraseMetric(const std::string& metric);
 
   std::vector<DataPtr> getFlatData() const;
+
+  std::set<std::string> getMetricNames();
 };
 
 class Profiler
