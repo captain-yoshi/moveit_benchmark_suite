@@ -199,6 +199,9 @@ private:
 
     /** \} */
 
+    boost::process::ipstream& getOutput();
+    boost::process::ipstream& getError();
+
   private:
     // non-copyable
     Instance(Instance const&) = delete;

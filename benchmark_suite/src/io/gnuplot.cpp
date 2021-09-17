@@ -103,6 +103,17 @@ void GNUPlotHelper::Instance::flush()
     std::cout << std::endl;
 #endif
 }
+
+boost::process::ipstream& GNUPlotHelper::Instance::getOutput()
+{
+  return output_;
+}
+
+boost::process::ipstream& GNUPlotHelper::Instance::getError()
+{
+  return error_;
+}
+
 void GNUPlotHelper::configureTerminal(const std::string& instance_id, const GNUPlotTerminal& terminal)
 {
   auto in = getInstance(instance_id);
