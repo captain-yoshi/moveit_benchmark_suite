@@ -12,6 +12,7 @@
 
 #if IS_BOOST_164
 #include <boost/process.hpp>
+#include <boost/asio/io_service.hpp>
 #endif
 
 namespace moveit_benchmark_suite
@@ -99,6 +100,9 @@ public:
   {
     std::string instance{ "default" };
   };
+
+  std::set<std::string> getInstanceNames() const;
+  void getInstanceOutput(const std::string& instance, std::string& output);
 
   void configureTerminal(const std::string& instance_id, const GNUPlotTerminal& terminal);
 
@@ -190,6 +194,8 @@ private:
      */
     Instance();
 
+    ~Instance();
+
     /** \name Raw Input
         \{ */
 
@@ -199,8 +205,8 @@ private:
 
     /** \} */
 
-    boost::process::ipstream& getOutput();
-    boost::process::ipstream& getError();
+    std::shared_ptr<std::future<std::vector<char>>> getOutput();
+    std::shared_ptr<std::future<std::vector<char>>> getError();
 
   private:
     // non-copyable
@@ -209,10 +215,13 @@ private:
 
     bool debug_{ false };
 
+    boost::asio::io_service svc_;
+    std::thread th_;
+
 #if IS_BOOST_164
     boost::process::opstream input_;
-    boost::process::ipstream output_;
-    boost::process::ipstream error_;
+    std::shared_ptr<std::future<std::vector<char>>> output_ = std::make_shared<std::future<std::vector<char>>>();
+    std::shared_ptr<std::future<std::vector<char>>> error_ = std::make_shared<std::future<std::vector<char>>>();
     boost::process::child gnuplot_;
 #endif
   };

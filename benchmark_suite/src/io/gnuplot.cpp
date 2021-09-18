@@ -7,10 +7,14 @@
 
 #include <cmath>
 
+#include <boost/iostreams/device/array.hpp>
+#include <boost/iostreams/stream_buffer.hpp>
+
 using namespace moveit_benchmark_suite::IO;
 
 #if IS_BOOST_164
 namespace bp = boost::process;
+namespace bio = boost::iostreams;
 #endif
 
 ///
@@ -72,12 +76,21 @@ GNUPlotHelper::Instance::Instance()
     throw std::runtime_error("GNUPlot not found, please install!");
 
   gnuplot_ = bp::child(bp::search_path("gnuplot"),  //"-persist",  //
-                       bp::std_err > error_,        //
-                       bp::std_out > output_,       //
-                       bp::std_in < input_);
+                       bp::std_err > *error_,       //
+                       bp::std_out > *output_,      //
+                       bp::std_in < input_, svc_);
+
+  th_ = std::thread([&] { svc_.run(); });
+
 #else
   throw std::runtime_error("GNUPlot helper not supported, Boost 1.64 and above is required!");
 #endif
+}
+
+GNUPlotHelper::Instance::~Instance()
+{
+  svc_.stop();
+  th_.detach();
 }
 
 void GNUPlotHelper::Instance::write(const std::string& line)
@@ -104,14 +117,45 @@ void GNUPlotHelper::Instance::flush()
 #endif
 }
 
-boost::process::ipstream& GNUPlotHelper::Instance::getOutput()
+std::shared_ptr<std::future<std::vector<char>>> GNUPlotHelper::Instance::getOutput()
 {
   return output_;
 }
 
-boost::process::ipstream& GNUPlotHelper::Instance::getError()
+std::shared_ptr<std::future<std::vector<char>>> GNUPlotHelper::Instance::getError()
 {
   return error_;
+}
+
+std::set<std::string> GNUPlotHelper::getInstanceNames() const
+{
+  std::set<std::string> instance_set;
+
+  for (const auto& instance : instances_)
+    instance_set.insert(instance.first);
+  return instance_set;
+}
+
+void GNUPlotHelper::getInstanceOutput(const std::string& instance, std::string& output)
+{
+  auto in = getInstance(instance);
+
+  // Kill gnuplot process
+  in->writeline("exit");
+
+  auto future_out = in->getOutput();
+  auto raw = future_out->get();
+
+  std::vector<std::string> data;
+  std::string line;
+  bio::stream_buffer<bio::array_source> sb(raw.data(), raw.size());
+  std::istream is(&sb);
+
+  for (std::string line; std::getline(is, line);)
+    output.append(line + "\n");
+
+  if (is.fail())
+    ROS_ERROR("Internal error: istream failed");
 }
 
 void GNUPlotHelper::configureTerminal(const std::string& instance_id, const GNUPlotTerminal& terminal)
