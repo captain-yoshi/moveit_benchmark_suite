@@ -672,15 +672,6 @@ bool GNUPlotDataSet::validOverlap(const TokenSet& xtick_set, const TokenSet& leg
   if (overlap_ctr > xtick_set.size())
     return false;
 
-  for (const auto& t1 : legend_set)
-  {
-    for (const auto& t2 : xtick_set)
-    {
-      if (token::overlap(t1, t2))
-        return false;
-    }
-  }
-
   return true;
 }
 
@@ -851,7 +842,21 @@ bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& meta
   node = YAML::Clone(metadata);
   node[DATA_CONFIG_KEY] = data->query->group_name_map;
 
-  for (const auto& token : xtick_set)
+  TokenSet xlabel_set;
+
+  // Default to all data config group value
+  if (xtick_set.empty())
+  {
+    for (const auto& id : data->query->group_name_map)
+      xlabel_set.insert(Token(std::string("config/" + id.first + "/" + id.second)));
+  }
+  else
+  {
+    for (const auto& xlabel : xtick_set)
+      xlabel_set.insert(xlabel);
+  }
+
+  for (const auto& token : xlabel_set)
   {
     YAML::Node res;
     if (!token::compareToNode(token, node, res))
