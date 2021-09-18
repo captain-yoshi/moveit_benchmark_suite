@@ -269,6 +269,8 @@ public:
   void dump(const std::vector<DataSetPtr>& datasets, const GNUPlotTerminal& terminal,
             const GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set, const TokenSet& legend_set = {});
 
+  GNUPlotHelper& getGNUPlotHelper();
+
 private:
   void dumpBoxPlot(const std::string& metric, const std::vector<DataSetPtr>& results, const TokenSet& xtick_set,
                    const TokenSet& legend_set);

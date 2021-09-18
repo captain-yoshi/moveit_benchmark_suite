@@ -601,6 +601,11 @@ void GNUPlotDataSet::dump(const std::vector<DataSetPtr>& datasets, const GNUPlot
   }
 };
 
+GNUPlotHelper& GNUPlotDataSet::getGNUPlotHelper()
+{
+  return helper_;
+}
+
 void GNUPlotDataSet::dumpBoxPlot(const std::string& metric, const std::vector<DataSetPtr>& datasets,
                                  const TokenSet& xtick_set, const TokenSet& legend_set)
 
