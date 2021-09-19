@@ -153,9 +153,6 @@ void GNUPlotHelper::getInstanceOutput(const std::string& instance, std::string& 
 
   for (std::string line; std::getline(is, line);)
     output.append(line + "\n");
-
-  if (is.fail())
-    ROS_ERROR("Internal error: istream failed");
 }
 
 void GNUPlotHelper::configureTerminal(const std::string& instance_id, const GNUPlotTerminal& terminal)
