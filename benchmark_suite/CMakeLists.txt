@@ -87,6 +87,9 @@ target_link_libraries(plot_dataset ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 add_executable(aggregate src/aggregate.cpp)
 target_link_libraries(aggregate ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
+add_executable(generate_plots src/generate_plots.cpp)
+target_link_libraries(generate_plots ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
+
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 
@@ -96,6 +99,7 @@ install(TARGETS
   motion_planning_pp
   collision_check
   plot_dataset
+  generate_plots
   aggregate
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
