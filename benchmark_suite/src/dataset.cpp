@@ -119,6 +119,10 @@ void DataSet::eraseMetric(const std::string& metric)
 
 Profiler::~Profiler(){};
 
+void Profiler::profileSetup(const QueryPtr& query) const
+{
+}
+
 bool Profiler::profilePlan(const QueryPtr& query, Data& result) const
 {
   return false;

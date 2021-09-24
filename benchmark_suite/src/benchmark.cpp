@@ -103,6 +103,8 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
     if (it == dataset->query_names.end())
       dataset->query_names.emplace_back(query->name);
 
+    profiler_.profileSetup(query);
+
     for (std::size_t j = 0; j < trials_; ++j)
     {
       ROS_INFO_STREAM("");

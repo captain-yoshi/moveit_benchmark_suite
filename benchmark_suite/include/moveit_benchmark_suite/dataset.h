@@ -232,6 +232,8 @@ public:
     return derived_ptr;
   };
 
+  void profileSetup(const QueryPtr& query) const;
+
   virtual bool profilePlan(const QueryPtr& query, Data& result) const;
 };
 
