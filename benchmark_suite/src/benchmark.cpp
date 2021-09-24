@@ -172,7 +172,7 @@ void BenchmarkSuiteDataSetOutputter::dump(const DataSet& dataset, const std::str
   // Create filename if not specified and add extension
   out_filename = filename;
   if (out_filename.empty())
-    out_filename = log::format("%1%_%2%", dataset.name, IO::getDateStr());
+    out_filename = log::format("%1%_%2%", dataset.name, IO::getDateStr() + ".yaml");
 
   // Set filepath as ROS_HOME
   out_filepath = filepath;
