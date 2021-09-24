@@ -1,8 +1,7 @@
 # MoveIt! Benchmark Suite
 The Benchmark Suite goal is to implement standard tasks at varying levels of difficulty that can be achieved with several robots for which a MoveIt configuration is available.
 
-This project was initially started as part of GSoC 2021 (all the way up to this [commit](https://github.com/captain-yoshi/moveit_benchmark_suite/commit/f0ce81dcdf8a3905f44dfd0ae4438be6e536521a)). More details are included in [MoveIt issue #2717](https://github.com/ros-planning/moveit/issues/2717).
-
+**The benchmark suite is under development. The API is unstable and incomplete.**
 
 ### Benchmarks
 The benchmark suite can run benchmarks, aggregate data and plot data with GNUPlot. A detail look of these pipelines is available [here](/.docs/bm_pipeline.md). Documention for each benchmark is available [here](/.docs/benchmarks/).
