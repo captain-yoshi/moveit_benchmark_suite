@@ -44,7 +44,7 @@
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/utils/robot_model_test_utils.h>
 
-#include <moveit_benchmark_suite/test/collision_checks_benchmark.h>
+#include <moveit_benchmark_suite/benchmarks/collision_checks_benchmark.h>
 #include <moveit_benchmark_suite/scene.h>
 #include <moveit_benchmark_suite/benchmark.h>
 #include <moveit_benchmark_suite/aggregation.h>

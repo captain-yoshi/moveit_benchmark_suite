@@ -34,7 +34,7 @@
 
 /* Author: Jens Petit */
 
-#include <moveit_benchmark_suite/test/collision_checks_benchmark.h>
+#include <moveit_benchmark_suite/benchmarks/collision_checks_benchmark.h>
 #include <moveit_benchmark_suite/io.h>
 #include <chrono>
 

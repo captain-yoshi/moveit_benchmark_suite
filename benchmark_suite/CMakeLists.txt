@@ -60,7 +60,7 @@ add_library(${PROJECT_NAME}
   src/planning.cpp
   src/trajectory.cpp
   src/io/gnuplot.cpp
-  src/benchmarks/motion_planning_config.cpp
+  src/config/motion_planning_config.cpp
   src/benchmarks/motion_planning_benchmark.cpp
   src/benchmarks/collision_checks_benchmark.cpp
 )
