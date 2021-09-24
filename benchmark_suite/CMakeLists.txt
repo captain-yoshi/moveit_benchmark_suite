@@ -62,15 +62,15 @@ add_library(${PROJECT_NAME}
   src/io/gnuplot.cpp
   src/config/motion_planning_config.cpp
   src/benchmarks/motion_planning_benchmark.cpp
-  src/benchmarks/collision_checks_benchmark.cpp
+  src/benchmarks/collision_check_benchmark.cpp
 )
 
 add_executable(motion_planning src/benchmarks/motion_planning.cpp)
 target_link_libraries(motion_planning ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
 if("${catkin_LIBRARIES}" MATCHES "moveit_collision_detection_bullet")
-  add_executable(collision_checks src/benchmarks/collision_checks.cpp)
-  target_link_libraries(collision_checks fcl ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
+  add_executable(collision_check src/benchmarks/collision_check.cpp)
+  target_link_libraries(collision_check fcl ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 endif()
 
 add_executable(plot_dataset src/plot_dataset.cpp)
@@ -85,7 +85,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
 install(TARGETS
   ${PROJECT_NAME}
   motion_planning
-  collision_checks
+  collision_check
   plot_dataset
   aggregate
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

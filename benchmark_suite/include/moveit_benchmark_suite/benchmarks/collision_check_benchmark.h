@@ -49,7 +49,7 @@
 
 namespace moveit_benchmark_suite
 {
-namespace collision_checks
+namespace collision_check
 {
 static const std::string ROBOT_DESCRIPTION = "robot_description";
 
@@ -182,5 +182,5 @@ public:
 
   Options options_;
 };
-}  // namespace collision_checks
+}  // namespace collision_check
 }  // namespace moveit_benchmark_suite

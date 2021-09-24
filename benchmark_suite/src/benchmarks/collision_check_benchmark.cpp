@@ -34,11 +34,11 @@
 
 /* Author: Jens Petit */
 
-#include <moveit_benchmark_suite/benchmarks/collision_checks_benchmark.h>
+#include <moveit_benchmark_suite/benchmarks/collision_check_benchmark.h>
 #include <moveit_benchmark_suite/io.h>
 #include <chrono>
 
-using namespace moveit_benchmark_suite::collision_checks;
+using namespace moveit_benchmark_suite::collision_check;
 
 /** \brief Clutters the world of the planning scene with random objects in a certain area around the origin. All added
  *  objects are not in collision with the robot.
@@ -46,8 +46,8 @@ using namespace moveit_benchmark_suite::collision_checks;
  *   \param planning_scene The planning scene
  *   \param num_objects The number of objects to be cluttered
  *   \param CollisionObjectType Type of object to clutter (mesh or box) */
-void moveit_benchmark_suite::collision_checks::clutterWorld(const planning_scene::PlanningScenePtr& planning_scene,
-                                                            const size_t num_objects, CollisionObjectType type)
+void moveit_benchmark_suite::collision_check::clutterWorld(const planning_scene::PlanningScenePtr& planning_scene,
+                                                           const size_t num_objects, CollisionObjectType type)
 {
   ROS_INFO("Cluttering scene...");
 
@@ -135,10 +135,10 @@ void moveit_benchmark_suite::collision_checks::clutterWorld(const planning_scene
  *  \param num_states Number of desired states
  *  \param scene The planning scene
  *  \param robot_states Result vector */
-void moveit_benchmark_suite::collision_checks::findStates(const RobotStateSelector desired_states,
-                                                          unsigned int num_states,
-                                                          const planning_scene::PlanningScenePtr& scene,
-                                                          std::vector<moveit::core::RobotState>& robot_states)
+void moveit_benchmark_suite::collision_check::findStates(const RobotStateSelector desired_states,
+                                                         unsigned int num_states,
+                                                         const planning_scene::PlanningScenePtr& scene,
+                                                         std::vector<moveit::core::RobotState>& robot_states)
 {
   moveit::core::RobotState& current_state{ scene->getCurrentStateNonConst() };
   collision_detection::CollisionRequest req;

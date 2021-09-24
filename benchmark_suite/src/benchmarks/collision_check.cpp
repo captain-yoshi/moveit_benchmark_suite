@@ -44,18 +44,18 @@
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/utils/robot_model_test_utils.h>
 
-#include <moveit_benchmark_suite/benchmarks/collision_checks_benchmark.h>
+#include <moveit_benchmark_suite/benchmarks/collision_check_benchmark.h>
 #include <moveit_benchmark_suite/scene.h>
 #include <moveit_benchmark_suite/benchmark.h>
 #include <moveit_benchmark_suite/aggregation.h>
 #include <moveit_benchmark_suite/io/gnuplot.h>
 
 using namespace moveit_benchmark_suite;
-using namespace moveit_benchmark_suite::collision_checks;
+using namespace moveit_benchmark_suite::collision_check;
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "collision_checks");
+  ros::init(argc, argv, "collision_check");
   ros::AsyncSpinner spinner(1);
   spinner.start();
 
@@ -69,7 +69,8 @@ int main(int argc, char** argv)
   std::string filepath;
   std::string filename;
   constexpr char OUTPUT_PARAMETER[] = "output_file";
-  if(!pnh.getParam(OUTPUT_PARAMETER, file)){
+  if (!pnh.getParam(OUTPUT_PARAMETER, file))
+  {
     ROS_FATAL_STREAM("Parameter '" << OUTPUT_PARAMETER << "' is not set.");
     return 1;
   }
