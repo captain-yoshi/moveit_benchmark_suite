@@ -1,5 +1,6 @@
 #include <moveit_benchmark_suite/benchmark.h>
 #include <moveit_benchmark_suite/log.h>
+#include <moveit_benchmark_suite/aggregation.h>
 
 #include <queue>
 
@@ -22,7 +23,55 @@ Benchmark::Benchmark(const std::string& name,  //
   , allowed_time_(allowed_time)
   , trials_(trials)
   , timeout_(timeout)
-  , profiler_(profiler){};
+  , profiler_(profiler)
+{
+  // Aggregate if config is found
+  AggregateConfig agg_config;
+  if (agg_config.isConfigAvailable(ros::this_node::getName()))
+  {
+    agg_config.setNamespace(ros::this_node::getName());
+
+    const std::vector<std::string>& filter_names = agg_config.getFilterNames();
+    const std::vector<AggregateParams> params = agg_config.getAggregateParams();
+
+    TokenSet filters;
+    for (const auto& filter : filter_names)
+      filters.insert(Token(filter));
+
+    addPostBenchmarkCallback([=](DataSetPtr dataset) { aggregate::dataset(dataset, filters, params); });
+  }
+
+  // Plot with gnuplot if config is found
+  IO::GNUPlotConfig plt_config;
+  if (plt_config.isConfigAvailable(ros::this_node::getName()))
+  {
+    plot_flag = true;
+    plt_config.setNamespace(ros::this_node::getName());
+
+    const std::vector<std::string>& xticks = plt_config.getXticks();
+    const std::vector<std::string>& legends = plt_config.getLegends();
+    const std::vector<IO::GNUPlotConfigMetric>& metrics = plt_config.getMetrics();
+    const IO::GNUPlotConfigOption& option = plt_config.getOption();
+
+    // Create token for xtick and legend
+    TokenSet xtick_filters;
+    for (const auto& xtick : xticks)
+      xtick_filters.insert(Token(xtick));
+
+    TokenSet legend_filters;
+    for (const auto& legend : legends)
+      legend_filters.insert(Token(legend));
+
+    for (const auto& metric : metrics)
+      plot.addMetric(metric.name, metric.type);
+
+    IO::GNUPlotHelper::MultiPlotOptions mpo;
+    mpo.layout.row = option.n_row;
+    mpo.layout.col = option.n_col;
+
+    addPostBenchmarkCallback([=](DataSetPtr dataset) { plot.dump(dataset, mpo, xtick_filters, legend_filters); });
+  }
+};
 
 /** \brief Add a query to the experiment for profiling.
  *  \param[in] planner_name Name to associate with this query. Does not need to be unique.
@@ -147,6 +196,11 @@ void Benchmark::fillMetaData(DataSetPtr& dataset) const
   dataset->metadata[DATASET_DATE_KEY] = to_simple_string(dataset->date);
   dataset->metadata[DATASET_TOTAL_TIME_KEY] = dataset->time;
   dataset->metadata[DATASET_CONFIG_KEY] = dataset->query_setup.query_setup;
+}
+
+bool Benchmark::getPlotFlag()
+{
+  return plot_flag;
 }
 
 ///

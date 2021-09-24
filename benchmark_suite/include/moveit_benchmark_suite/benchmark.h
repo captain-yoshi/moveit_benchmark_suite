@@ -43,6 +43,7 @@
 //#include <moveit_benchmark_suite/planning.h>
 #include <moveit_benchmark_suite/io.h>
 #include <moveit_benchmark_suite/log.h>
+#include <moveit_benchmark_suite/io/gnuplot.h>
 
 //#include <moveit_benchmark_suite/trajectory.h>
 
@@ -116,6 +117,8 @@ public:
    */
   DataSetPtr run(std::size_t n_threads = 1) const;
 
+  bool getPlotFlag();
+
 private:
   void fillMetaData(DataSetPtr& dataset) const;
 
@@ -133,6 +136,9 @@ private:
   std::vector<PostQueryCallback> post_query_callbacks_;          ///< Post-run callback with dataset.
   std::vector<PostRunCallback> post_run_callbacks_;              ///< Post-run callback.
   std::vector<PostBenchmarkCallback> post_benchmark_callbacks_;  ///< Post-run callback.
+
+  IO::GNUPlotDataSet plot;
+  bool plot_flag = false;
 };
 
 /** \brief An abstract class for outputting benchmark results.
