@@ -208,10 +208,10 @@ public:
   void addMetric(const std::string& metric, const PlotType& plottype);
   void addMetric(const std::string& metric, const std::string& plottype);
 
-  void dump(const DataSetPtr& dataset, GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set,
+  void dump(const DataSetPtr& dataset, const GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set,
             const TokenSet& legend_set = {});
-  void dump(const std::vector<DataSetPtr>& datasets, GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set,
-            const TokenSet& legend_set = {});
+  void dump(const std::vector<DataSetPtr>& datasets, const GNUPlotHelper::MultiPlotOptions& mpo,
+            const TokenSet& xtick_set, const TokenSet& legend_set = {});
 
 private:
   void dumpBoxPlot(const std::string& metric, const std::vector<DataSetPtr>& results, const TokenSet& xtick_set,

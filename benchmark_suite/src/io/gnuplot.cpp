@@ -447,8 +447,8 @@ void GNUPlotDataSet::addMetric(const std::string& metric, const std::string& plo
     addMetric(metric, it->second);
 };
 
-void GNUPlotDataSet::dump(const DataSetPtr& dataset, GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set,
-                          const TokenSet& legend_set)
+void GNUPlotDataSet::dump(const DataSetPtr& dataset, const GNUPlotHelper::MultiPlotOptions& mpo,
+                          const TokenSet& xtick_set, const TokenSet& legend_set)
 {
   std::vector<DataSetPtr> datasets;
   datasets.push_back(dataset);
@@ -456,7 +456,7 @@ void GNUPlotDataSet::dump(const DataSetPtr& dataset, GNUPlotHelper::MultiPlotOpt
   dump(datasets, mpo, xtick_set, legend_set);
 };
 
-void GNUPlotDataSet::dump(const std::vector<DataSetPtr>& datasets, GNUPlotHelper::MultiPlotOptions& mpo,
+void GNUPlotDataSet::dump(const std::vector<DataSetPtr>& datasets, const GNUPlotHelper::MultiPlotOptions& mpo,
                           const TokenSet& xtick_set, const TokenSet& legend_set)
 {
   if (plot_types_.empty())
