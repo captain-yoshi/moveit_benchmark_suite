@@ -33,7 +33,7 @@
  *********************************************************************/
 
 /* Author: Captain Yoshi
-   Desc:
+   Desc: Motion planning benchmark node
 */
 #include <ros/ros.h>
 
@@ -47,7 +47,7 @@
 #include <moveit_benchmark_suite/aggregation.h>
 #include <moveit_benchmark_suite/io/gnuplot.h>
 #include <moveit_benchmark_suite/scene.h>
-#include <moveit_benchmark_suite/benchmarks/config/motion_planning_config.h>
+#include <moveit_benchmark_suite/benchmarks/builder/motion_planning.h>
 #include <moveit_benchmark_suite/benchmarks/motion_planning_benchmark.h>
 #include <map>
 
@@ -61,20 +61,9 @@ int main(int argc, char** argv)
 
   ros::NodeHandle pnh("~");
 
-  // Setup robot
-  auto robot = std::make_shared<Robot>("robot", "robot_description");
-  robot->initialize();
-
-  // Get transforms from tf listener
-  std::vector<geometry_msgs::TransformStamped> transforms;
-  getTransformsFromTf(transforms, robot->getModelConst());
-
-  // Prepare query setup
-  QuerySetup query_setup;
-
   // Parse benchmark name
-  std::string bm_name;
-  pnh.getParam("name", bm_name);
+  std::string benchmark_name;
+  pnh.getParam("name", benchmark_name);
 
   // Parse output directory and filename
   std::string file;
@@ -85,160 +74,35 @@ int main(int argc, char** argv)
   filepath = IO::getFilePath(file);
   filename = IO::getFileName(file);
 
-  // Parse scene
-  SceneParser parser;
-  std::vector<moveit_msgs::PlanningScene> scene_msgs;
+  // Build queries
+  MotionPlanningBuilder builder;
+  builder.buildQueries();
 
-  std::map<std::string, std::string> scene_param_map;
-  pnh.getParam("/scenes", scene_param_map);
+  const auto& queries = builder.getQueries();
+  const auto& query_setup = builder.getQuerySetup();
+  const auto& config = builder.getConfig();
 
-  for (const auto& scene : scene_param_map)
-  {
-    parser.loadURDF(scene.second);
-    scene_msgs.emplace_back();
-    scene_msgs.back().name = scene.first;
-    scene_msgs.back().is_diff = true;
-    parser.getCollisionObjects(scene_msgs.back().world.collision_objects);
-
-    // If tf add it to the planning scene
-    addTransformsToSceneMsg(transforms, scene_msgs.back());
-
-    query_setup.addQuery("scene", scene.first, "");
-  }
-
-  // Parse request
-  std::map<std::string, std::string> request_map;
-  pnh.getParam("/requests", request_map);
-
-  std::vector<std::pair<std::string, moveit_msgs::MotionPlanRequest>> requests;
-  for (const auto& request : request_map)
-  {
-    requests.emplace_back();
-    auto node = YAML::LoadFile(request.second);
-
-    requests.back().first = request.first;
-    requests.back().second = node.as<moveit_msgs::MotionPlanRequest>();
-    query_setup.addQuery("request", request.first, request.second);
-  }
-
-  // Parse benchmark config
-  MotionPlanningConfig config(ros::this_node::getName());
-
-  const std::string& benchmark_name = config.getBenchmarkName();
-  double timeout = config.getTimeout();
   double trials = config.getNumRuns();
-  const std::set<std::string>& interfaces = config.getInterfaces();
-  const std::set<std::string>& collision_detectors = config.getCollisionDetectors();
-  const std::map<std::string, std::vector<std::string>>& planning_pipelines =
-      config.getPlanningPipelineConfigurations();
+  double timeout = config.getTimeout();
 
-  // Setup scenes
-  std::vector<planning_scene::PlanningScenePtr> scenes;
-  CollisionPluginLoader plugin;
+  // Param server overrides benchmark config
+  if (benchmark_name.empty())
+    benchmark_name = config.getBenchmarkName();
 
-  for (const auto& cd : collision_detectors)
-  {
-    query_setup.addQuery("collision_detector", cd, "");
-
-    plugin.load(cd);
-    for (const auto& scene_msg : scene_msgs)
-    {
-      scenes.emplace_back();
-      scenes.back() = std::make_shared<planning_scene::PlanningScene>(robot->getModelConst());
-      scenes.back()->usePlanningSceneMsg(scene_msg);
-      plugin.activate(cd, scenes.back(), true);
-    }
-  }
-
-  // Setup planners
-  std::vector<std::pair<std::string, PlannerPtr>> pipelines;
-
-  for (const auto& interface : interfaces)
-  {
-    query_setup.addQuery("interface", interface, "");
-    if (interface.compare("PlanningPipeline") == 0)
-    {
-      for (const auto& pipeline_name : planning_pipelines)
-      {
-        auto pipeline = std::make_shared<PipelinePlanner>(robot, pipeline_name.first);
-        pipeline->initialize(pipeline_name.first);
-        pipelines.emplace_back();
-        pipelines.back().first = interface;
-        pipelines.back().second = pipeline;
-      }
-    }
-    else if (interface.compare("MoveGroupInterface") == 0)
-      for (const auto& pipeline_name : planning_pipelines)
-      {
-        auto pipeline = std::make_shared<MoveGroupPlanner>(robot, pipeline_name.first);
-        pipelines.emplace_back();
-        pipelines.back().first = interface;
-        pipelines.back().second = pipeline;
-      }
-    else
-      ROS_WARN("Invalid configuration for interface name: %s", interface.c_str());
-  }
-
-  // Setup benchmark
+  // Setup profiler
   PlanningProfiler profiler;
   profiler.options_.metrics = PlanningProfiler::WAYPOINTS | PlanningProfiler::CORRECT | PlanningProfiler::LENGTH |
                               PlanningProfiler::SMOOTHNESS | PlanningProfiler::CLEARANCE;
 
-  // template <typename ProfilerType, typename QueryType, typename DataSetTypePtr>
-
-  // Create and a queries to the benchmark
-  std::vector<PlanningQueryPtr> queries;
-  for (const auto& scene : scenes)
-  {
-    for (auto& request : requests)
-    {
-      for (const auto& pipeline : pipelines)
-      {
-        request.second.pipeline_id = pipeline.second->getName();
-        request.second.allowed_planning_time = timeout;
-
-        const auto& it = planning_pipelines.find(request.second.pipeline_id);
-        if (it != planning_pipelines.end())
-        {
-          for (const auto& planner : it->second)
-          {
-            query_setup.addQuery("planner", planner, "");
-
-            request.second.planner_id = planner;
-            std::string query_name = planner + "\\n" + scene->getName() + "\\n" +
-                                     scene->getActiveCollisionDetectorName() + "\\n" + pipeline.first + "\\n" +
-                                     request.first;
-
-            QueryGroupName query_gn = { { "scene", scene->getName() },
-                                        { "planner", planner },
-                                        { "collision_detector", scene->getActiveCollisionDetectorName() },
-                                        { "interface", pipeline.first },
-                                        { "request", request.first } };
-
-            PlanningQueryPtr query =
-                std::make_shared<PlanningQuery>(query_name, query_gn, scene, pipeline.second, request.second);
-            // PlanningQuery query(query_name, scene, pipeline, request);
-            // QueryPtr query = std::make_shared<Query>();
-            queries.push_back(query);
-          }
-        }
-        else
-          ROS_ERROR("Cannot find pipeline id in configuration: %s", request.second.pipeline_id.c_str());
-      }
-    }
-  }
-
-  // Param server overrides benchmark config
-  if (bm_name.empty())
-    bm_name = benchmark_name;
-
-  Benchmark benchmark(bm_name,  // Name of benchmark
+  // Setup benchmark
+  Benchmark benchmark(benchmark_name,  // Name of benchmark
                       BenchmarkType::MOTION_PLANNING,
                       profiler,     // Options for internal profiler
                       query_setup,  // Number of trials
                       timeout,      // Timeout allowed for ALL queries
                       trials);
 
+  // Add queries
   for (const auto& query : queries)
     benchmark.addQuery(query);
 
