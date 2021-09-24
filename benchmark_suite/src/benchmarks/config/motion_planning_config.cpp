@@ -30,6 +30,8 @@ void MotionPlanningConfig::readBenchmarkConfig(const std::string& ros_namespace)
     readBenchmarkInterfaces(nh);
     readBenchmarkCollisionDetectors(nh);
     readPlannerConfigs(nh);
+    readMotionPlanRequests(nh);
+    readScenes(nh);
 
     if (interfaces_.find("MoveGroupInterface") != interfaces_.end() &&
         collision_detectors_.find("Bullet") != collision_detectors_.end())
@@ -75,6 +77,16 @@ void MotionPlanningConfig::getPlanningPipelineNames(std::vector<std::string>& pl
   planning_pipeline_names.clear();
   for (const std::pair<const std::string, std::vector<std::string>>& planning_pipeline : planning_pipelines_)
     planning_pipeline_names.push_back(planning_pipeline.first);
+}
+
+const std::map<std::string, std::string>& MotionPlanningConfig::getScenes() const
+{
+  return scene_map_;
+}
+
+const std::map<std::string, std::string>& MotionPlanningConfig::getMotionPlanRequests() const
+{
+  return request_map_;
 }
 
 void MotionPlanningConfig::readBenchmarkParameters(ros::NodeHandle& nh)
@@ -178,4 +190,14 @@ void MotionPlanningConfig::readPlannerConfigs(ros::NodeHandle& nh)
       planning_pipelines_[pipeline_name] = planners;
     }
   }
+}
+
+void MotionPlanningConfig::readMotionPlanRequests(ros::NodeHandle& nh)
+{
+  nh.getParam("/requests", request_map_);
+}
+
+void MotionPlanningConfig::readScenes(ros::NodeHandle& nh)
+{
+  nh.getParam("/scenes", scene_map_);
 }
