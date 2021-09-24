@@ -47,7 +47,7 @@
 #include <moveit_benchmark_suite/aggregation.h>
 #include <moveit_benchmark_suite/io/gnuplot.h>
 #include <moveit_benchmark_suite/scene.h>
-#include <moveit_benchmark_suite/config/motion_planning_config.h>
+#include <moveit_benchmark_suite/benchmarks/config/motion_planning_config.h>
 #include <moveit_benchmark_suite/benchmarks/motion_planning_benchmark.h>
 #include <map>
 
