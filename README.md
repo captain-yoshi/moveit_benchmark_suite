@@ -16,7 +16,7 @@ The [resources package](/resources/) keeps all the necessary information to run 
 
 
 ### Requirements
-- The [scene_parser](https://github.com/captain-yoshi/scene_parser) package.
+- The [urdf_to_scene](https://github.com/captain-yoshi/urdf_to_scene) package.
 - To benchmark STOMP with the `MoveGroupInterface` you need to add the planning pipeline in the `move_group.launch`.
 ```xml
 <!-- STOMP -->
