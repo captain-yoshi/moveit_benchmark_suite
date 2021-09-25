@@ -27,15 +27,10 @@ void MotionPlanningConfig::readBenchmarkConfig(const std::string& ros_namespace)
   if (nh.getParam("benchmark_config", benchmark_config))
   {
     readBenchmarkParameters(nh);
-    readBenchmarkInterfaces(nh);
     readBenchmarkCollisionDetectors(nh);
     readPlannerConfigs(nh);
     readMotionPlanRequests(nh);
     readScenes(nh);
-
-    if (interfaces_.find("MoveGroupInterface") != interfaces_.end() &&
-        collision_detectors_.find("Bullet") != collision_detectors_.end())
-      ROS_ERROR("The MoveGroupInterface is incompatible with Bullet");
   }
   else
   {
@@ -56,10 +51,6 @@ double MotionPlanningConfig::getTimeout() const
 const std::string& MotionPlanningConfig::getBenchmarkName() const
 {
   return benchmark_name_;
-}
-const std::set<std::string>& MotionPlanningConfig::getInterfaces() const
-{
-  return interfaces_;
 }
 
 const std::set<std::string>& MotionPlanningConfig::getCollisionDetectors() const
@@ -98,28 +89,6 @@ void MotionPlanningConfig::readBenchmarkParameters(ros::NodeHandle& nh)
   ROS_INFO("Benchmark name: '%s'", benchmark_name_.c_str());
   ROS_INFO("Benchmark #runs: %d", runs_);
   ROS_INFO("Benchmark timeout: %f secs", timeout_);
-}
-
-void MotionPlanningConfig::readBenchmarkInterfaces(ros::NodeHandle& nh)
-{
-  interfaces_.clear();
-
-  XmlRpc::XmlRpcValue interface_configs;
-  if (nh.getParam("benchmark_config/interface", interface_configs))
-  {
-    if (interface_configs.getType() != XmlRpc::XmlRpcValue::TypeArray)
-    {
-      ROS_ERROR("Expected a list of interface configurations to benchmark");
-      return;
-    }
-
-    for (int i = 0; i < interface_configs.size(); ++i)  // NOLINT(modernize-loop-convert)
-    {
-      std::string interface_name = interface_configs[i];
-      interfaces_.insert(interface_name);
-      ROS_INFO("Interface name: '%s'", interface_name.c_str());
-    }
-  }
 }
 
 void MotionPlanningConfig::readBenchmarkCollisionDetectors(ros::NodeHandle& nh)
