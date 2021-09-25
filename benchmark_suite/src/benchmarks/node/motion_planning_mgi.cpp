@@ -75,7 +75,7 @@ int main(int argc, char** argv)
   filename = IO::getFileName(file);
 
   // Build queries
-  MotionPlanningBuilder builder;
+  MoveGroupInterfaceBuilder builder;
   builder.buildQueries();
 
   const auto& queries = builder.getQueries();
@@ -96,7 +96,7 @@ int main(int argc, char** argv)
 
   // Setup benchmark
   Benchmark benchmark(benchmark_name,  // Name of benchmark
-                      BenchmarkType::MOTION_PLANNING,
+                      BenchmarkType::MOTION_PLANNING_MGI,
                       profiler,     // Options for internal profiler
                       query_setup,  // Number of trials
                       timeout,      // Timeout allowed for ALL queries

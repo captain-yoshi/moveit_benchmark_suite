@@ -65,7 +65,7 @@ void MotionPlanningBuilder::buildQueries()
     {
       for (const auto& pipeline : pipelines_)
       {
-        request.second.pipeline_id = pipeline.second->getName();
+        request.second.pipeline_id = pipeline->getName();
         request.second.allowed_planning_time = mp_config_.getTimeout();
 
         const auto& it = planning_pipelines.find(request.second.pipeline_id);
@@ -77,17 +77,17 @@ void MotionPlanningBuilder::buildQueries()
 
             request.second.planner_id = planner;
             std::string query_name = planner + "\\n" + scene->getName() + "\\n" +
-                                     scene->getActiveCollisionDetectorName() + "\\n" + pipeline.first + "\\n" +
+                                     scene->getActiveCollisionDetectorName() + "\\n" + pipeline->getName() + "\\n" +
                                      request.first;
 
             QueryGroupName query_gn = { { "scene", scene->getName() },
+                                        { "pipeline", pipeline->getName() },
                                         { "planner", planner },
                                         { "collision_detector", scene->getActiveCollisionDetectorName() },
-                                        { "interface", pipeline.first },
                                         { "request", request.first } };
 
             PlanningQueryPtr query =
-                std::make_shared<PlanningQuery>(query_name, query_gn, scene, pipeline.second, request.second);
+                std::make_shared<PlanningQuery>(query_name, query_gn, scene, pipeline, request.second);
 
             queries_.push_back(query);
           }
@@ -130,6 +130,8 @@ void MotionPlanningBuilder::buildScenes()
   // Prepare scenes
   for (const auto& scene : scene_map)
   {
+    query_setup_.addQuery("scene", scene.first, "");
+
     parser.loadURDF(scene.second);
     scene_msgs.emplace_back();
     scene_msgs.back().name = scene.first;
@@ -140,8 +142,6 @@ void MotionPlanningBuilder::buildScenes()
     std::vector<geometry_msgs::TransformStamped> transforms;
     getTransformsFromTf(transforms, robot_->getModelConst());
     addTransformsToSceneMsg(transforms, scene_msgs.back());
-
-    query_setup_.addQuery("scene", scene.first, "");
   }
 
   // Create scenes for each collision detector pair wise
@@ -178,34 +178,30 @@ void MotionPlanningBuilder::buildRequests()
   }
 }
 
-void MotionPlanningBuilder::buildPlanners()
+void PlanningPipelineBuilder::buildPlanners()
 {
   const auto& planning_pipelines = mp_config_.getPlanningPipelineConfigurations();
-  const auto& interfaces = mp_config_.getInterfaces();
 
-  for (const auto& interface : interfaces)
+  for (const auto& pipeline_name : planning_pipelines)
   {
-    query_setup_.addQuery("interface", interface, "");
-    if (interface.compare("PlanningPipeline") == 0)
-    {
-      for (const auto& pipeline_name : planning_pipelines)
-      {
-        auto pipeline = std::make_shared<PipelinePlanner>(robot_, pipeline_name.first);
-        pipeline->initialize(pipeline_name.first);
-        pipelines_.emplace_back();
-        pipelines_.back().first = interface;
-        pipelines_.back().second = pipeline;
-      }
-    }
-    else if (interface.compare("MoveGroupInterface") == 0)
-      for (const auto& pipeline_name : planning_pipelines)
-      {
-        auto pipeline = std::make_shared<MoveGroupPlanner>(robot_, pipeline_name.first);
-        pipelines_.emplace_back();
-        pipelines_.back().first = interface;
-        pipelines_.back().second = pipeline;
-      }
-    else
-      ROS_WARN("Invalid configuration for interface: %s", interface.c_str());
+    query_setup_.addQuery("pipeline", pipeline_name.first, "");
+
+    auto pipeline = std::make_shared<PipelinePlanner>(robot_, pipeline_name.first);
+    pipeline->initialize(pipeline_name.first);
+    pipelines_.emplace_back();
+    pipelines_.back() = pipeline;
+  }
+}
+
+void MoveGroupInterfaceBuilder::buildPlanners()
+{
+  const auto& planning_pipelines = mp_config_.getPlanningPipelineConfigurations();
+  for (const auto& pipeline_name : planning_pipelines)
+  {
+    query_setup_.addQuery("pipeline", pipeline_name.first, "");
+
+    auto pipeline = std::make_shared<MoveGroupPlanner>(robot_, pipeline_name.first);
+    pipelines_.emplace_back();
+    pipelines_.back() = pipeline;
   }
 }

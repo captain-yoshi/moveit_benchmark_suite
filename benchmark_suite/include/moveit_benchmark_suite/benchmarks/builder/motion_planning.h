@@ -57,9 +57,8 @@ protected:
   void buildRobot();
   void buildScenes();
   void buildRequests();
-  void buildPlanners();
+  virtual void buildPlanners() = 0;
 
-private:
   QuerySetup query_setup_;
   MotionPlanningConfig mp_config_;
 
@@ -68,7 +67,19 @@ private:
   RobotPtr robot_;
   std::vector<planning_scene::PlanningScenePtr> scenes_;
   std::vector<std::pair<std::string, moveit_msgs::MotionPlanRequest>> requests_;
-  std::vector<std::pair<std::string, PlannerPtr>> pipelines_;
+  std::vector<PlannerPtr> pipelines_;
+};
+
+class PlanningPipelineBuilder : public MotionPlanningBuilder
+{
+public:
+  void buildPlanners() override;
+};
+
+class MoveGroupInterfaceBuilder : public MotionPlanningBuilder
+{
+public:
+  void buildPlanners() override;
 };
 
 }  // namespace moveit_benchmark_suite
