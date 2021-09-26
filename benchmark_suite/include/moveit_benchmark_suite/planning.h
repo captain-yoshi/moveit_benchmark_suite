@@ -93,7 +93,7 @@ public:
   PipelinePlanner(PipelinePlanner const&) = delete;
   void operator=(PipelinePlanner const&) = delete;
 
-  bool initialize(const std::string& planning_pipeline_name);
+  bool initialize();
   /** \brief Plan a motion given a \a request and a \a scene.
    *  Uses the planning pipeline's generatePlan() method, which goes through planning adapters.
    *  \param[in] scene A planning scene for the same \a robot_ to compute the plan in.

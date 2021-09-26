@@ -187,7 +187,7 @@ void PlanningPipelineBuilder::buildPlanners()
     query_setup_.addQuery("pipeline", pipeline_name.first, "");
 
     auto pipeline = std::make_shared<PipelinePlanner>(robot_, pipeline_name.first);
-    pipeline->initialize(pipeline_name.first);
+    pipeline->initialize();
     pipelines_.emplace_back();
     pipelines_.back() = pipeline;
   }

@@ -33,18 +33,19 @@ PipelinePlanner::PipelinePlanner(const RobotPtr& robot, const std::string& name)
 {
 }
 
-bool PipelinePlanner::initialize(const std::string& planning_pipeline_name)
+bool PipelinePlanner::initialize()
 {
   ros::NodeHandle pnh("~");
   // Initialize planning pipelines from configured child namespaces
-  ros::NodeHandle child_nh(pnh, planning_pipeline_name);
+  const auto& pipeline_name = getName();
+  ros::NodeHandle child_nh(pnh, pipeline_name);
   pipeline_ = std::make_shared<planning_pipeline::PlanningPipeline>(robot_->getModelConst(), child_nh,
                                                                     "planning_plugin", "request_adapters");
 
   // Verify the pipeline has successfully initialized a planner
   if (!pipeline_->getPlannerManager())
   {
-    ROS_ERROR("Failed to initialize planning pipeline '%s'", planning_pipeline_name.c_str());
+    ROS_ERROR("Failed to initialize planning pipeline '%s'", pipeline_name.c_str());
     return false;
   }
 
