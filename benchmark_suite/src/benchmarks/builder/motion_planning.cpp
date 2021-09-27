@@ -45,6 +45,10 @@
 
 using namespace moveit_benchmark_suite;
 
+///
+/// MotionPlanningBuilder
+///
+
 void MotionPlanningBuilder::buildQueries()
 {
   // Read config
@@ -86,10 +90,7 @@ void MotionPlanningBuilder::buildQueries()
                                         { "collision_detector", scene->getActiveCollisionDetectorName() },
                                         { "request", request.first } };
 
-            PlanningQueryPtr query =
-                std::make_shared<PlanningQuery>(query_name, query_gn, scene, pipeline, request.second);
-
-            queries_.push_back(query);
+            appendQuery(query_name, query_gn, scene, pipeline, request.second);
           }
         }
         else
@@ -178,6 +179,10 @@ void MotionPlanningBuilder::buildRequests()
   }
 }
 
+///
+/// PlanningPipelineBuilder
+///
+
 void PlanningPipelineBuilder::buildPlanners()
 {
   const auto& planning_pipelines = mp_config_.getPlanningPipelineConfigurations();
@@ -193,6 +198,22 @@ void PlanningPipelineBuilder::buildPlanners()
   }
 }
 
+void PlanningPipelineBuilder::appendQuery(const std::string& name, const QueryGroupName& setup,
+                                          const planning_scene::PlanningScenePtr& scene, const PlannerPtr& planner,
+                                          const moveit_msgs::MotionPlanRequest& request)
+{
+  auto derived_planner = std::dynamic_pointer_cast<PipelinePlanner>(planner);
+
+  PlanningPipelineQueryPtr query =
+      std::make_shared<PlanningPipelineQuery>(name, setup, scene, derived_planner, request);
+
+  queries_.push_back(query);
+}
+
+///
+/// MoveGroupInterfaceBuilder
+///
+
 void MoveGroupInterfaceBuilder::buildPlanners()
 {
   const auto& planning_pipelines = mp_config_.getPlanningPipelineConfigurations();
@@ -200,8 +221,20 @@ void MoveGroupInterfaceBuilder::buildPlanners()
   {
     query_setup_.addQuery("pipeline", pipeline_name.first, "");
 
-    auto pipeline = std::make_shared<MoveGroupPlanner>(robot_, pipeline_name.first);
+    auto pipeline = std::make_shared<MoveGroupInterfacePlanner>(robot_, pipeline_name.first);
     pipelines_.emplace_back();
     pipelines_.back() = pipeline;
   }
+}
+
+void MoveGroupInterfaceBuilder::appendQuery(const std::string& name, const QueryGroupName& setup,
+                                            const planning_scene::PlanningScenePtr& scene, const PlannerPtr& planner,
+                                            const moveit_msgs::MotionPlanRequest& request)
+{
+  auto derived_planner = std::dynamic_pointer_cast<MoveGroupInterfacePlanner>(planner);
+
+  MoveGroupInterfaceQueryPtr query =
+      std::make_shared<MoveGroupInterfaceQuery>(name, setup, scene, derived_planner, request);
+
+  queries_.push_back(query);
 }

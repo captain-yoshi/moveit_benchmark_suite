@@ -58,6 +58,9 @@ protected:
   void buildScenes();
   void buildRequests();
   virtual void buildPlanners() = 0;
+  virtual void appendQuery(const std::string& name, const QueryGroupName& setup,
+                           const planning_scene::PlanningScenePtr& scene, const PlannerPtr& planner,
+                           const moveit_msgs::MotionPlanRequest& request) = 0;
 
   QuerySetup query_setup_;
   MotionPlanningConfig mp_config_;
@@ -74,12 +77,20 @@ class PlanningPipelineBuilder : public MotionPlanningBuilder
 {
 public:
   void buildPlanners() override;
+
+protected:
+  void appendQuery(const std::string& name, const QueryGroupName& setup, const planning_scene::PlanningScenePtr& scene,
+                   const PlannerPtr& planner, const moveit_msgs::MotionPlanRequest& request) override;
 };
 
 class MoveGroupInterfaceBuilder : public MotionPlanningBuilder
 {
 public:
   void buildPlanners() override;
+
+protected:
+  void appendQuery(const std::string& name, const QueryGroupName& setup, const planning_scene::PlanningScenePtr& scene,
+                   const PlannerPtr& planner, const moveit_msgs::MotionPlanRequest& request) override;
 };
 
 }  // namespace moveit_benchmark_suite
