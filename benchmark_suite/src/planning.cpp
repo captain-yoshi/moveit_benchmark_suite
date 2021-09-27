@@ -9,6 +9,9 @@ using namespace moveit_benchmark_suite;
 ///
 /// Planner
 ///
+Planner::~Planner()
+{
+}
 
 const RobotPtr Planner::getRobot() const
 {
@@ -20,16 +23,15 @@ const std::string& Planner::getName() const
   return name_;
 }
 
-void Planner::preRun(const planning_scene::PlanningSceneConstPtr& scene,
-                     const planning_interface::MotionPlanRequest& request)
-{
-}
-
 ///
 /// PipelinePlanner
 ///
 
 PipelinePlanner::PipelinePlanner(const RobotPtr& robot, const std::string& name) : Planner(robot, name)
+{
+}
+
+PipelinePlanner::~PipelinePlanner()
 {
 }
 
@@ -70,33 +72,23 @@ planning_interface::MotionPlanResponse PipelinePlanner::plan(const planning_scen
 /// MoveGroupInterfacePlanner
 ///
 
-MoveGroupPlanner::MoveGroupPlanner(const RobotPtr& robot, const std::string& name) : Planner(robot, name)
+MoveGroupInterfacePlanner::MoveGroupInterfacePlanner(const RobotPtr& robot, const std::string& name)
+  : Planner(robot, name)
 {
 }
 
-planning_interface::MotionPlanResponse MoveGroupPlanner::plan(const planning_scene::PlanningSceneConstPtr& scene,
-                                                              const planning_interface::MotionPlanRequest& request)
+MoveGroupInterfacePlanner::~MoveGroupInterfacePlanner()
 {
-  planning_interface::MotionPlanResponse response;
-  if (move_group_)
-  {
-    moveit::planning_interface::MoveGroupInterface::Plan plan;
-
-    response.error_code_ = move_group_->plan(plan);
-    if (response.error_code_.val == moveit_msgs::MoveItErrorCodes::SUCCESS)
-    {
-      robot_trajectory::RobotTrajectoryPtr robot_trajectory =
-          std::make_shared<robot_trajectory::RobotTrajectory>(getRobot()->getModelConst(), request.group_name);
-      robot_trajectory->setRobotTrajectoryMsg(scene->getCurrentState(), plan.trajectory_);
-
-      response.trajectory_ = robot_trajectory;
-    }
-  }
-  return response;
 }
 
-void MoveGroupPlanner::preRun(const planning_scene::PlanningSceneConstPtr& scene,
-                              const planning_interface::MotionPlanRequest& request)
+moveit::planning_interface::MoveItErrorCode
+MoveGroupInterfacePlanner::plan(moveit::planning_interface::MoveGroupInterface::Plan& plan)
+{
+  return move_group_->plan(plan);
+}
+
+void MoveGroupInterfacePlanner::preRun(const planning_scene::PlanningSceneConstPtr& scene,
+                                       const planning_interface::MotionPlanRequest& request)
 {
   // Convert request to MoveGroupInterface
   move_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(request.group_name);
