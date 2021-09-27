@@ -90,7 +90,7 @@ int main(int argc, char** argv)
     benchmark_name = config.getBenchmarkName();
 
   // Setup profiler
-  PlanningProfiler profiler;
+  PlanningPipelineProfiler profiler;
   profiler.options_.metrics = PlanningProfiler::WAYPOINTS | PlanningProfiler::CORRECT | PlanningProfiler::LENGTH |
                               PlanningProfiler::SMOOTHNESS | PlanningProfiler::CLEARANCE;
 

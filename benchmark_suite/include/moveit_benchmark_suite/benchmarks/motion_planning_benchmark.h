@@ -49,6 +49,8 @@ namespace moveit_benchmark_suite
 MOVEIT_CLASS_FORWARD(PlanData);
 MOVEIT_CLASS_FORWARD(PlanDataSet);
 MOVEIT_CLASS_FORWARD(PlanningQuery);
+MOVEIT_CLASS_FORWARD(PlanningPipelineQuery);
+MOVEIT_CLASS_FORWARD(MoveGroupInterfaceQuery);
 
 struct PlanningQuery : public Query
 {
@@ -63,13 +65,33 @@ struct PlanningQuery : public Query
    *  \param[in] request Request to give planner.
    */
   PlanningQuery(const std::string& name,
-                const QueryGroupName& group_name_map,                //
-                const planning_scene::PlanningSceneConstPtr& scene,  //
-                const PlannerPtr& planner,                           //
-                const planning_interface::MotionPlanRequest& request);
+                const QueryGroupName& group_name_map,  //
+                const planning_scene::PlanningSceneConstPtr& scene);
 
-  planning_scene::PlanningSceneConstPtr scene;    ///< Scene used for the query.
-  PlannerPtr planner;                             ///< Planner used for the query.
+  planning_scene::PlanningSceneConstPtr scene;  ///< Scene used for the query.
+};
+
+struct PlanningPipelineQuery : public PlanningQuery
+{
+  PlanningPipelineQuery(const std::string& name,
+                        const QueryGroupName& group_name_map,                //
+                        const planning_scene::PlanningSceneConstPtr& scene,  //
+                        const PipelinePlannerPtr& planner,                   //
+                        const planning_interface::MotionPlanRequest& request);
+
+  PipelinePlannerPtr planner;                     ///< Planner used for the query.
+  planning_interface::MotionPlanRequest request;  ///< Request used for the query.
+};
+
+struct MoveGroupInterfaceQuery : public PlanningQuery
+{
+  MoveGroupInterfaceQuery(const std::string& name,
+                          const QueryGroupName& group_name_map,                //
+                          const planning_scene::PlanningSceneConstPtr& scene,  //
+                          const MoveGroupInterfacePlannerPtr& planner,         //
+                          const planning_interface::MotionPlanRequest& request);
+
+  MoveGroupInterfacePlannerPtr planner;           ///< Planner used for the query.
   planning_interface::MotionPlanRequest request;  ///< Request used for the query.
 };
 
@@ -105,10 +127,7 @@ public:
    */
   struct Options
   {
-    uint32_t metrics{ uint32_t(~0) };     ///< Bitmask of which metrics to compute after planning.
-    bool progress{ true };                ///< If true, captures planner progress properties (if they exist).
-    bool progress_at_least_once{ true };  ///< If true, will always run the progress loop at least once.
-    double progress_update_rate{ 0.1 };   ///< Update rate for progress callbacks.
+    uint32_t metrics{ uint32_t(~0) };  ///< Bitmask of which metrics to compute after planning.
   };
 
   /** \brief Profiling a single plan using a \a planner.
@@ -119,11 +138,11 @@ public:
    *  \param[out] result The results of profiling.
    *  \return True if planning succeeded, false on failure.
    */
-  bool profilePlan(const QueryPtr& query, Data& result) const override;
+  virtual bool profilePlan(const QueryPtr& query, Data& result) const = 0;
 
   Options options_;
 
-private:
+protected:
   /** \brief Compute the built-in metrics according to the provided bitmask \a options.
    *  \param[in] options Bitmask of which built-in metrics to compute.
    *  \param[in] scene Scene used for planning and metric computation.
@@ -131,6 +150,18 @@ private:
    */
   void computeBuiltinMetrics(uint32_t options, const PlanningQuery& query, const PlanningResponse& response,
                              const planning_scene::PlanningSceneConstPtr& scene, Data& run) const;
+};
+
+class PlanningPipelineProfiler : public PlanningProfiler
+{
+public:
+  bool profilePlan(const QueryPtr& query, Data& result) const override;
+};
+
+class MoveGroupInterfaceProfiler : public PlanningProfiler
+{
+public:
+  bool profilePlan(const QueryPtr& query, Data& result) const override;
 };
 
 }  // namespace moveit_benchmark_suite
