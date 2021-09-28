@@ -96,7 +96,7 @@ void MotionPlanningConfig::readBenchmarkCollisionDetectors(ros::NodeHandle& nh)
   collision_detectors_.clear();
 
   XmlRpc::XmlRpcValue collision_detector_configs;
-  if (nh.getParam("benchmark_config/collision_detector", collision_detector_configs))
+  if (nh.getParam("benchmark_config/collision_detectors", collision_detector_configs))
   {
     if (collision_detector_configs.getType() != XmlRpc::XmlRpcValue::TypeArray)
     {
