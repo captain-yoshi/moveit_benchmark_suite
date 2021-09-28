@@ -109,6 +109,9 @@ int main(int argc, char** argv)
   // Run benchmark
   auto dataset = benchmark.run();
 
+  if (!dataset)
+    return 0;
+
   // Dump metrics to logfile
   BenchmarkSuiteDataSetOutputter output;
   output.dump(*dataset, filepath, filename);
