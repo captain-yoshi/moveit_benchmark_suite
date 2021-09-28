@@ -271,7 +271,7 @@ set:
 </p>
 
 ## Run, Aggregate and Plot
-You can aggregate and/or plot after the benchmark is completed in one step. All you have to do is to add a YAML configuration in the param server benchmark node. Either by creating a new rosparam tag in a launch file or adding it directly to a YAML file (Ex. the [motion planning](/benchmark_suite/examples/motion_planning.yaml) benchmark). 
+You can aggregate and/or plot after the benchmark is completed in one step. All you have to do is to add a YAML configuration in the param server benchmark node. Either by creating a new rosparam tag in a launch file or adding it directly to a YAML file (Ex. the [motion planning](/benchmark_suite/config/motion_planning_pp.yaml) benchmark). 
 ```yaml
 aggregate_config:
   filters:                            # Optionnal
