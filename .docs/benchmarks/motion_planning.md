@@ -1,5 +1,5 @@
 # Motion Planning
-The motion planning benchmark.
+The motion planning can be tested against the PlanningPipeline and the MoveGroupInterface. The latter should be slower as the request is forwarded through the actionlib stack.
 
 
 ### Metrics
@@ -15,7 +15,7 @@ The motion planning benchmark.
 
 
 ### Configuration
-The robot, scenes and requests are configured in the [motion_planning.launch](benchmark_suite/examples/motion_planning.launch) file.
+The robot, scenes and requests are configured in the [motion_planning_pp.launch](benchmark_suite/benchmarks/motion_planning.launch) file. The scenes are stored in a `xacro` format created by the [urdf_to_scene](https://github.com/captain-yoshi/urdf_to_scene) package.
 ```xml
 <launch>
   ...
@@ -40,7 +40,7 @@ The robot, scenes and requests are configured in the [motion_planning.launch](be
 </launch>
 
 ```
-The scenes are stored in a `xacro` format created by the scene_parser package.
+**Note:** The `MoveGroupInterface` requires to set the collision detector in the launch file because it cannot be changed through the current API. Unlike the PlanningPipeline, you can't benchmark multiple collision detectors in one pass with the MoveGroupInterface.
 
 A request is a `moveit_msgs/MotionPlanRequest.msg`. Only these field are required:
 ```yaml
@@ -66,29 +66,26 @@ TrajectoryConstraints trajectory_constraints
 **Note**: The other fields will be overridden by the benchmark.
 
 
-The other configurations are set in the [motion_planning.yaml](benchmark_suite/examples/motion_planning.yaml).
+The other configurations are set in the [motion_planning_pp.yaml](benchmark_suite/config/motion_planning_pp.yaml).
 ```yaml
 benchmark_config:
 
   parameters:
-    name: "Motion Planning"             # Name of benchmark
+    name: "MP PlanningPipeline"         # Name of benchmark
     trials: 5                           # Number of runs per scene, interface, collision detector and each planning algorithm
     timeout: 5                          # Default 10.0
 
-  interface:                            # List of interfaces to benchmark planners
-    - PlanningPipeline
-    - MoveGroupInterface                # *Multithreading not supported
-
-  collision_detector:                   # REQUIRED list of collision detectors
+  collision_detectors:                   # REQUIRED list of collision detectors
     - FCL
     - Bullet                            # Not configurable when using the MoveGroupInterface
 
   planning_pipelines:
     - name: ompl                        # REQUIRED
       planners:                         # REQUIRED
-        - RRTConnectkConfigDefault
+        - RRTConnectkConfigDefault      # REQUIRED
         - RRTkConfigDefault
     - name: stomp
       planners:
         - STOMP
 ```
+**Note:** The `MoveGroupInterface` does not have the collision_detectors parameter in the yaml file. 

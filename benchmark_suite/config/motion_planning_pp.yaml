@@ -1,0 +1,58 @@
+benchmark_config:
+  parameters:
+    name: "PlanningPipeline"
+    runs: 5                             # Number of runs per scene, interface, collision detector and each planning algorithm
+    timeout: 5                          # Default 10.0
+
+  collision_detectors:
+    - FCL
+    #- Bullet                            # Not configurable when using the MoveGroupInterface
+
+  planning_pipelines:
+    - name: ompl                        # REQUIRED
+      planners:                         # REQUIRED
+        - RRTConnectkConfigDefault
+        #- RRTkConfigDefault
+    #- name: stomp
+    #  planners:
+    #    - STOMP
+
+
+##############################################################################
+#
+# OPTIONAL: Use to Aggregate and/or Plot after the benchmark is completed
+#
+##############################################################################
+
+#aggregate_config:
+#  #filters:                            # Optionnal
+#  #  - type/COLLISION CHECK
+#  aggregate:                           # Required
+#    - raw_metric: time
+#      new_metric: avg_time
+#      type: average
+#    - raw_metric: waypoints
+#      new_metric: avg_waypoints
+#      type: average
+#    - raw_metric: length
+#      new_metric: avg_length
+#      type: average
+#    - raw_metric: success
+#      new_metric: avg_success
+#      type: average
+#    - raw_metric: correct
+#      new_metric: avg_correct
+#      type: average
+
+
+#gnuplot_config:
+#  xtick_filters:                       # REQUIRED
+#    - config/scene/
+#  legend_filters:                      # Optionnal
+#    - config/collision_detector/
+#  metrics:                             # REQUIRED
+#    - time: boxplot
+#    - avg_correct: bargraph
+#  options:                             # Optionnal
+#      n_row: 2
+#      n_col: 1

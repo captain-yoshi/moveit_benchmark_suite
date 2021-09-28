@@ -75,7 +75,7 @@ int main(int argc, char** argv)
   filename = IO::getFileName(file);
 
   // Build queries
-  MotionPlanningBuilder builder;
+  MoveGroupInterfaceBuilder builder;
   builder.buildQueries();
 
   const auto& queries = builder.getQueries();
@@ -90,13 +90,13 @@ int main(int argc, char** argv)
     benchmark_name = config.getBenchmarkName();
 
   // Setup profiler
-  PlanningProfiler profiler;
+  MoveGroupInterfaceProfiler profiler;
   profiler.options_.metrics = PlanningProfiler::WAYPOINTS | PlanningProfiler::CORRECT | PlanningProfiler::LENGTH |
                               PlanningProfiler::SMOOTHNESS | PlanningProfiler::CLEARANCE;
 
   // Setup benchmark
   Benchmark benchmark(benchmark_name,  // Name of benchmark
-                      BenchmarkType::MOTION_PLANNING,
+                      BenchmarkType::MOTION_PLANNING_MGI,
                       profiler,     // Options for internal profiler
                       query_setup,  // Number of trials
                       timeout,      // Timeout allowed for ALL queries
@@ -108,6 +108,9 @@ int main(int argc, char** argv)
 
   // Run benchmark
   auto dataset = benchmark.run();
+
+  if (!dataset)
+    return 0;
 
   // Dump metrics to logfile
   BenchmarkSuiteDataSetOutputter output;

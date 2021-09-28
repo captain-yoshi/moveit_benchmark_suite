@@ -144,6 +144,12 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
   // Metadata as a YAML node
   fillMetaData(dataset);
 
+  if (queries_.empty())
+  {
+    ROS_ERROR("Cannot run benchmark, no query available");
+    return nullptr;
+  }
+
   int query_index = 0;
   for (const auto& query : queries_)
   {

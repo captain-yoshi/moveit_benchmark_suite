@@ -69,7 +69,6 @@ public:
   /** \brief Get all planning pipeline names */
   void getPlanningPipelineNames(std::vector<std::string>& planning_pipeline_names) const;
 
-  const std::set<std::string>& getInterfaces() const;
   const std::set<std::string>& getCollisionDetectors() const;
   const std::map<std::string, std::string>& getScenes() const;
   const std::map<std::string, std::string>& getMotionPlanRequests() const;
@@ -79,7 +78,6 @@ protected:
 
   // Read benchmark config from YAML file
   void readBenchmarkParameters(ros::NodeHandle& nh);
-  void readBenchmarkInterfaces(ros::NodeHandle& nh);
   void readBenchmarkCollisionDetectors(ros::NodeHandle& nh);
   void readPlannerConfigs(ros::NodeHandle& nh);
 
@@ -91,7 +89,6 @@ protected:
   int runs_;
   double timeout_;
   std::string benchmark_name_;
-  std::set<std::string> interfaces_;
   std::set<std::string> collision_detectors_;
   std::map<std::string, std::vector<std::string>> planning_pipelines_;
 

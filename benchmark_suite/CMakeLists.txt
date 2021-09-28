@@ -67,8 +67,11 @@ add_library(${PROJECT_NAME}
   src/benchmarks/collision_check_benchmark.cpp
 )
 
-add_executable(motion_planning src/benchmarks/node/motion_planning.cpp)
-target_link_libraries(motion_planning ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
+add_executable(motion_planning_mgi src/benchmarks/node/motion_planning_mgi.cpp)
+target_link_libraries(motion_planning_mgi ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
+
+add_executable(motion_planning_pp src/benchmarks/node/motion_planning_pp.cpp)
+target_link_libraries(motion_planning_pp ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
 if("${catkin_LIBRARIES}" MATCHES "moveit_collision_detection_bullet")
   add_executable(collision_check src/benchmarks/node/collision_check.cpp)
@@ -86,7 +89,8 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 install(TARGETS
   ${PROJECT_NAME}
-  motion_planning
+  motion_planning_mgi
+  motion_planning_pp
   collision_check
   plot_dataset
   aggregate

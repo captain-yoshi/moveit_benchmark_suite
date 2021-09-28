@@ -57,9 +57,11 @@ protected:
   void buildRobot();
   void buildScenes();
   void buildRequests();
-  void buildPlanners();
+  virtual void buildPlanners() = 0;
+  virtual void appendQuery(const std::string& name, const QueryGroupName& setup,
+                           const planning_scene::PlanningScenePtr& scene, const PlannerPtr& planner,
+                           const moveit_msgs::MotionPlanRequest& request) = 0;
 
-private:
   QuerySetup query_setup_;
   MotionPlanningConfig mp_config_;
 
@@ -68,7 +70,27 @@ private:
   RobotPtr robot_;
   std::vector<planning_scene::PlanningScenePtr> scenes_;
   std::vector<std::pair<std::string, moveit_msgs::MotionPlanRequest>> requests_;
-  std::vector<std::pair<std::string, PlannerPtr>> pipelines_;
+  std::vector<PlannerPtr> pipelines_;
+};
+
+class PlanningPipelineBuilder : public MotionPlanningBuilder
+{
+public:
+  void buildPlanners() override;
+
+protected:
+  void appendQuery(const std::string& name, const QueryGroupName& setup, const planning_scene::PlanningScenePtr& scene,
+                   const PlannerPtr& planner, const moveit_msgs::MotionPlanRequest& request) override;
+};
+
+class MoveGroupInterfaceBuilder : public MotionPlanningBuilder
+{
+public:
+  void buildPlanners() override;
+
+protected:
+  void appendQuery(const std::string& name, const QueryGroupName& setup, const planning_scene::PlanningScenePtr& scene,
+                   const PlannerPtr& planner, const moveit_msgs::MotionPlanRequest& request) override;
 };
 
 }  // namespace moveit_benchmark_suite

@@ -10,27 +10,14 @@
   <arg unless="$(arg debug)" name="launch_prefix" value="" />
   <arg     if="$(arg debug)" name="launch_prefix" value="gdb --args" />
 
-
   <!-- Load robot -->
   <include file="$(find moveit_resources_panda_moveit_config)/launch/demo.launch">
     <arg name="use_rviz" value="false"/>
     <!--<arg name="debug" value="$(arg debug)"/>-->
   </include>
 
-  <!-- Load planning pipelines -->
-  <group ns="benchmark">
-    <include ns="ompl" file="$(find moveit_resources_panda_moveit_config)/launch/planning_pipeline.launch.xml">
-      <arg name="pipeline" value="ompl" />
-    </include>
-
-    <include ns="chomp" file="$(find moveit_resources_panda_moveit_config)/launch/planning_pipeline.launch.xml">
-      <arg name="pipeline" value="chomp" />
-    </include>
-
-    <include ns="stomp" file="$(find moveit_resources_panda_moveit_config)/launch/planning_pipeline.launch.xml">
-      <arg name="pipeline" value="stomp" />
-    </include>
-  </group>
+  <!-- Collision detector -->
+  <rosparam param="/move_group/collision_detector">FCL</rosparam>
 
   <!-- Scene -->
   <group ns="scenes" clear_params="true">
@@ -45,10 +32,10 @@
   </group>
 
   <!-- Benchmark options file -->
-  <arg name="options_file" default="$(find moveit_benchmark_suite)/config/motion_planning.yaml"/>
+  <arg name="options_file" default="$(find moveit_benchmark_suite)/config/motion_planning_mgi.yaml"/>
 
   <!-- Launch benchmark node -->
-  <node name="benchmark" pkg="moveit_benchmark_suite" type="motion_planning" output="screen" clear_params="true" required="true" launch-prefix="$(arg launch_prefix)">
+  <node name="benchmark" pkg="moveit_benchmark_suite" type="motion_planning_mgi" output="screen" clear_params="true" required="true" launch-prefix="$(arg launch_prefix)">
     <rosparam command="load" file="$(arg options_file)"/>
     <param name="name" value="$(arg name)"/>
     <param name="output_file" value="$(arg output_file)"/>

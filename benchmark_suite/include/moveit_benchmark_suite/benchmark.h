@@ -51,7 +51,8 @@ namespace moveit_benchmark_suite
 {
 namespace BenchmarkType
 {
-const std::string MOTION_PLANNING = "MOTION PLANNING";
+const std::string MOTION_PLANNING_PP = "MOTION PLANNING PP";
+const std::string MOTION_PLANNING_MGI = "MOTION PLANNING MGI";
 const std::string COLLISION_CHECK = "COLLISION CHECK";
 
 }  // namespace BenchmarkType
