@@ -4,9 +4,8 @@ benchmark_config:
     runs: 5                             # Number of runs per scene, interface, collision detector and each planning algorithm
     timeout: 5                          # Default 10.0
 
-  collision_detectors:
+  collision_detectors:                  # REQUIRED [FCL, Bullet]
     - FCL
-    #- Bullet                            # Not configurable when using the MoveGroupInterface
 
   planning_pipelines:
     - name: ompl                        # REQUIRED

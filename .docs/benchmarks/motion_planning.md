@@ -40,7 +40,7 @@ The robot, scenes and requests are configured in the [motion_planning_pp.launch]
 </launch>
 
 ```
-**Note:** The `MoveGroupInterface` requires to set the collision detector in the launch file because it cannot be changed through the current API. Unlike the PlanningPipeline, you can't benchmark multiple collision detectors in one pass with the MoveGroupInterface.
+**Note:** Unlike the `PlanningPipeline``, you can't benchmark multiple collision detectors in one pass with the `MoveGroupInterface`.
 
 A request is a `moveit_msgs/MotionPlanRequest.msg`. Only these field are required:
 ```yaml
@@ -75,9 +75,9 @@ benchmark_config:
     trials: 5                           # Number of runs per scene, interface, collision detector and each planning algorithm
     timeout: 5                          # Default 10.0
 
-  collision_detectors:                   # REQUIRED list of collision detectors
+  collision_detectors:                  # REQUIRED
     - FCL
-    - Bullet                            # Not configurable when using the MoveGroupInterface
+    - Bullet
 
   planning_pipelines:
     - name: ompl                        # REQUIRED
@@ -88,4 +88,4 @@ benchmark_config:
       planners:
         - STOMP
 ```
-**Note:** The `MoveGroupInterface` does not have the collision_detectors parameter in the yaml file. 
+**Note:** The `MoveGroupInterface` has the `collision_detector` parameter in the yaml file.

@@ -24,7 +24,7 @@ void MotionPlanningConfig::readBenchmarkConfig(const std::string& ros_namespace)
   ros::NodeHandle nh(ros_namespace);
 
   XmlRpc::XmlRpcValue benchmark_config;
-  if (nh.getParam("benchmark_config", benchmark_config))
+  if (nh.getParam("/benchmark_config", benchmark_config))
   {
     readBenchmarkParameters(nh);
     readBenchmarkCollisionDetectors(nh);
@@ -34,7 +34,7 @@ void MotionPlanningConfig::readBenchmarkConfig(const std::string& ros_namespace)
   }
   else
   {
-    ROS_WARN("No 'benchmark_config' found on param server");
+    ROS_WARN("No '/benchmark_config' found on param server");
   }
 }
 
@@ -82,9 +82,9 @@ const std::map<std::string, std::string>& MotionPlanningConfig::getMotionPlanReq
 
 void MotionPlanningConfig::readBenchmarkParameters(ros::NodeHandle& nh)
 {
-  nh.param(std::string("benchmark_config/parameters/name"), benchmark_name_, std::string(""));
-  nh.param(std::string("benchmark_config/parameters/runs"), runs_, 10);
-  nh.param(std::string("benchmark_config/parameters/timeout"), timeout_, 10.0);
+  nh.param(std::string("/benchmark_config/parameters/name"), benchmark_name_, std::string(""));
+  nh.param(std::string("/benchmark_config/parameters/runs"), runs_, 10);
+  nh.param(std::string("/benchmark_config/parameters/timeout"), timeout_, 10.0);
 
   ROS_INFO("Benchmark name: '%s'", benchmark_name_.c_str());
   ROS_INFO("Benchmark #runs: %d", runs_);
@@ -93,37 +93,27 @@ void MotionPlanningConfig::readBenchmarkParameters(ros::NodeHandle& nh)
 
 void MotionPlanningConfig::readBenchmarkCollisionDetectors(ros::NodeHandle& nh)
 {
+  std::string cd_name;
   collision_detectors_.clear();
 
   XmlRpc::XmlRpcValue collision_detector_configs;
-  if (nh.getParam("benchmark_config/collision_detectors", collision_detector_configs))
+  if (nh.getParam("/benchmark_config/collision_detectors", collision_detector_configs))
   {
     if (collision_detector_configs.getType() != XmlRpc::XmlRpcValue::TypeArray)
     {
-      if (collision_detector_configs.getType() != XmlRpc::XmlRpcValue::TypeString)
-      {
-        ROS_ERROR("Expected a list or a string of collision detector configurations to benchmark");
-        return;
-      }
-
-      std::string cd_name = collision_detector_configs;
-      collision_detectors_.insert(cd_name);
-      ROS_INFO("Collision detector name: '%s'", cd_name.c_str());
+      ROS_ERROR("Expected a list of collision detector configurations to benchmark");
       return;
     }
 
     for (int i = 0; i < collision_detector_configs.size(); ++i)  // NOLINT(modernize-loop-convert)
     {
-      std::string cd_name = collision_detector_configs[i];
+      cd_name = static_cast<std::string>(collision_detector_configs[i]);
       collision_detectors_.insert(cd_name);
       ROS_INFO("Collision detector name: '%s'", cd_name.c_str());
     }
-    return;
   }
 
-  // Try getting the collision detector from ROS parameters
-  std::string cd_name;
-  if (nh.getParam("/move_group/collision_detector", cd_name))
+  else if (nh.getParam("/benchmark_config/collision_detector", cd_name))
   {
     collision_detectors_.insert(cd_name);
     ROS_INFO("Collision detector name: '%s'", cd_name.c_str());
@@ -135,7 +125,7 @@ void MotionPlanningConfig::readPlannerConfigs(ros::NodeHandle& nh)
   planning_pipelines_.clear();
 
   XmlRpc::XmlRpcValue pipeline_configs;
-  if (nh.getParam("benchmark_config/planning_pipelines", pipeline_configs))
+  if (nh.getParam("/benchmark_config/planning_pipelines", pipeline_configs))
   {
     if (pipeline_configs.getType() != XmlRpc::XmlRpcValue::TypeArray)
     {

@@ -10,14 +10,18 @@
   <arg unless="$(arg debug)" name="launch_prefix" value="" />
   <arg     if="$(arg debug)" name="launch_prefix" value="gdb --args" />
 
+
+  <!-- Benchmark options file -->
+  <arg name="options_file" default="$(find moveit_benchmark_suite)/config/motion_planning_mgi.yaml"/>
+  <rosparam command="load" file="$(arg options_file)"/>
+
   <!-- Load robot -->
+  <!-- the following should say `from="move_group/collision_detector"` but that does not work. See https://github.com/ros/ros_comm/issues/2188 for more information -->
+  <remap from="~collision_detector" to="/benchmark_config/collision_detector"/>
   <include file="$(find moveit_resources_panda_moveit_config)/launch/demo.launch">
     <arg name="use_rviz" value="false"/>
     <!--<arg name="debug" value="$(arg debug)"/>-->
   </include>
-
-  <!-- Collision detector -->
-  <rosparam param="/move_group/collision_detector">FCL</rosparam>
 
   <!-- Scene -->
   <group ns="scenes" clear_params="true">
@@ -31,12 +35,8 @@
     <param name="jc" value="$(find moveit_benchmark_suite_resources)/db/bbt/panda/request_goal_jc.yaml"/>
   </group>
 
-  <!-- Benchmark options file -->
-  <arg name="options_file" default="$(find moveit_benchmark_suite)/config/motion_planning_mgi.yaml"/>
-
   <!-- Launch benchmark node -->
   <node name="benchmark" pkg="moveit_benchmark_suite" type="motion_planning_mgi" output="screen" clear_params="true" required="true" launch-prefix="$(arg launch_prefix)">
-    <rosparam command="load" file="$(arg options_file)"/>
     <param name="name" value="$(arg name)"/>
     <param name="output_file" value="$(arg output_file)"/>
   </node>
