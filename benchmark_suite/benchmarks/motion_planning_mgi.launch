@@ -16,6 +16,9 @@
     <!--<arg name="debug" value="$(arg debug)"/>-->
   </include>
 
+  <!-- Collision detector -->
+  <rosparam param="/move_group/collision_detector">FCL</rosparam>
+
   <!-- Scene -->
   <group ns="scenes" clear_params="true">
     <param name="empty-scene" command="$(find xacro)/xacro '$(find moveit_benchmark_suite_resources)/db/empty_scene.urdf.xacro'"/>
