@@ -1,6 +1,6 @@
 benchmark_config:
   parameters:
-    name: "PlanningPipeline"
+    name: "MP PlanningPipeline"
     runs: 5                             # Number of runs per scene, interface, collision detector and each planning algorithm
     timeout: 5                          # Default 10.0
 
