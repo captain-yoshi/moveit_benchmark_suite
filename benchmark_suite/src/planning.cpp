@@ -58,14 +58,11 @@ bool PipelinePlanner::initialize()
   return true;
 }
 
-planning_interface::MotionPlanResponse PipelinePlanner::plan(const planning_scene::PlanningSceneConstPtr& scene,
-                                                             const planning_interface::MotionPlanRequest& request)
+void PipelinePlanner::plan(const planning_scene::PlanningSceneConstPtr& scene,
+                           const planning_interface::MotionPlanRequest& request,
+                           planning_interface::MotionPlanResponse& response)
 {
-  planning_interface::MotionPlanResponse response;
-
-  if (pipeline_)
-    pipeline_->generatePlan(scene, request, response);
-  return response;
+  pipeline_->generatePlan(scene, request, response);
 }
 
 ///

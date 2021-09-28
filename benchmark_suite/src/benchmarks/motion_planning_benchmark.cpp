@@ -90,7 +90,7 @@ bool PlanningPipelineProfiler::profilePlan(const QueryPtr& query_base, Data& res
   PlanningResponse response;
   result.start = std::chrono::high_resolution_clock::now();
 
-  response.response = query->planner->plan(query->scene, query->request);
+  query->planner->plan(query->scene, query->request, response.response);
 
   result.finish = std::chrono::high_resolution_clock::now();
   result.time = IO::getSeconds(result.start, result.finish);
