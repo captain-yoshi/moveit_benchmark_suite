@@ -159,7 +159,8 @@ void MotionPlanningBuilder::buildScenes()
       scenes_.emplace_back();
       scenes_.back() = std::make_shared<planning_scene::PlanningScene>(robot_->getModelConst());
       scenes_.back()->usePlanningSceneMsg(scene_msg);
-      plugin.activate(cd, scenes_.back(), true);
+      if (!plugin.activate(cd, scenes_.back(), true))
+        scenes_.pop_back();
     }
   }
 }
