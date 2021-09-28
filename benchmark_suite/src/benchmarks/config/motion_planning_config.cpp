@@ -100,7 +100,15 @@ void MotionPlanningConfig::readBenchmarkCollisionDetectors(ros::NodeHandle& nh)
   {
     if (collision_detector_configs.getType() != XmlRpc::XmlRpcValue::TypeArray)
     {
-      ROS_ERROR("Expected a list of collision detector configurations to benchmark");
+      if (collision_detector_configs.getType() != XmlRpc::XmlRpcValue::TypeString)
+      {
+        ROS_ERROR("Expected a list or a string of collision detector configurations to benchmark");
+        return;
+      }
+
+      std::string cd_name = collision_detector_configs;
+      collision_detectors_.insert(cd_name);
+      ROS_INFO("Collision detector name: '%s'", cd_name.c_str());
       return;
     }
 
