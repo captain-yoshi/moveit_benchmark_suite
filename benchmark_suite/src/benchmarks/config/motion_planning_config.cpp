@@ -118,6 +118,15 @@ void MotionPlanningConfig::readBenchmarkCollisionDetectors(ros::NodeHandle& nh)
       collision_detectors_.insert(cd_name);
       ROS_INFO("Collision detector name: '%s'", cd_name.c_str());
     }
+    return;
+  }
+
+  // Try getting the collision detector from ROS parameters
+  std::string cd_name;
+  if (nh.getParam("/move_group/collision_detector", cd_name))
+  {
+    collision_detectors_.insert(cd_name);
+    ROS_INFO("Collision detector name: '%s'", cd_name.c_str());
   }
 }
 
