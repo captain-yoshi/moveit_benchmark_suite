@@ -32,41 +32,50 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Modified version of Zachary Kingston robowflex
-   Desc:
+/* Author: Captain Yoshi
+   Desc: Parse aggregate configuration from ros param server
 */
 
 #pragma once
 
 #include <ros/node_handle.h>
 
-#include <moveit_benchmark_suite/dataset.h>
-#include <moveit_benchmark_suite/io.h>
-#include <moveit_benchmark_suite/log.h>
-#include <moveit_benchmark_suite/token.h>
-
-#include <moveit_benchmark_suite/config/aggregate_config.h>
-
 namespace moveit_benchmark_suite
 {
-namespace aggregate
+struct AggregateParams
 {
-static const std::string AVERAGE_KEY = "average";
-static const std::string FREQUENCY_KEY = "frequency";
-
-using Callback = std::function<void(const std::string& metric, const std::string& new_metric, DataSetPtr& dataset,
-                                    const Query& query)>;
-
-void toFrequency(const std::string& metric, const std::string& new_metric, DataSetPtr& dataset, const Query& query);
-void toMean(const std::string& metric, const std::string& new_metric, DataSetPtr& dataset, const Query& query);
-
-static const std::map<std::string, Callback> CallbackMap = {
-  { AVERAGE_KEY, &toMean },
-  { FREQUENCY_KEY, &toFrequency },
+  std::string raw_metric;
+  std::string new_metric;
+  std::string type;
 };
 
-void dataset(DataSetPtr& datasets, const TokenSet& filters, const std::vector<AggregateParams>& agg_params);
-void dataset(std::vector<DataSetPtr>& datasets, const TokenSet& filters, const std::vector<AggregateParams>& agg_params);
+class AggregateConfig
+{
+public:
+  /** \brief Constructor */
+  AggregateConfig();
+  /** \brief Constructor accepting a custom namespace for parameter lookup */
+  AggregateConfig(const std::string& ros_namespace);
+  /** \brief Destructor */
+  virtual ~AggregateConfig();
 
-}  // namespace aggregate
+  /** \brief Set the ROS namespace the node handle should use for parameter lookup */
+  void setNamespace(const std::string& ros_namespace);
+
+  /** \brief Get the specified number of benchmark query runs */
+  const std::vector<std::string>& getFilterNames() const;
+  const std::vector<AggregateParams>& getAggregateParams() const;
+
+  bool isConfigAvailable(const std::string& ros_namespace);
+
+protected:
+  void readConfig(const std::string& ros_namespace);
+
+  void readFilterNames(ros::NodeHandle& nh);
+  void readAggregateParams(ros::NodeHandle& nh);
+
+  std::vector<std::string> filters_;
+  std::vector<AggregateParams> params_;
+};
+
 }  // namespace moveit_benchmark_suite

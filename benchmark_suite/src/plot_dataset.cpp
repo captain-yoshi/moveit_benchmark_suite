@@ -1,6 +1,7 @@
 
 #include <ros/ros.h>
 #include <moveit_benchmark_suite/io/gnuplot.h>
+#include <moveit_benchmark_suite/config/gnuplot_config.h>
 #include <moveit_benchmark_suite/yaml.h>
 #include <moveit_benchmark_suite/benchmark.h>
 
@@ -19,13 +20,13 @@ int main(int argc, char** argv)
   pnh.getParam("input_files", files);
 
   // Parse config from the parameter server
-  IO::GNUPlotConfig config(ros::this_node::getName());
+  GNUPlotConfig config(ros::this_node::getName());
 
   // const std::vector<std::string>& files = config.getFiles();
   const std::vector<std::string>& xticks = config.getXticks();
   const std::vector<std::string>& legends = config.getLegends();
-  const std::vector<IO::GNUPlotConfigMetric>& metrics = config.getMetrics();
-  const IO::GNUPlotConfigOption& option = config.getOption();
+  const std::vector<GNUPlotConfigMetric>& metrics = config.getMetrics();
+  const GNUPlotConfigOption& option = config.getOption();
 
   // Create token for xtick and legend
   TokenSet xtick_filters;
@@ -42,12 +43,14 @@ int main(int argc, char** argv)
   {
     std::string abs_file = IO::getAbsDataSetFile(file);
 
-    try {
+    try
+    {
       auto node = YAML::LoadFile(abs_file);
       for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
         datasets.push_back(std::make_shared<DataSet>(it->as<DataSet>()));
     }
-    catch(const YAML::BadFile& e){
+    catch (const YAML::BadFile& e)
+    {
       ROS_FATAL_STREAM("Specified input file '" << abs_file << "' does not exist.");
       return 1;
     }

@@ -1,6 +1,7 @@
 #include <moveit_benchmark_suite/benchmark.h>
 #include <moveit_benchmark_suite/log.h>
 #include <moveit_benchmark_suite/aggregation.h>
+#include <moveit_benchmark_suite/config/gnuplot_config.h>
 
 #include <queue>
 
@@ -42,7 +43,7 @@ Benchmark::Benchmark(const std::string& name,  //
   }
 
   // Plot with gnuplot if config is found
-  IO::GNUPlotConfig plt_config;
+  GNUPlotConfig plt_config;
   if (plt_config.isConfigAvailable(ros::this_node::getName()))
   {
     plot_flag = true;
@@ -50,8 +51,8 @@ Benchmark::Benchmark(const std::string& name,  //
 
     const std::vector<std::string>& xticks = plt_config.getXticks();
     const std::vector<std::string>& legends = plt_config.getLegends();
-    const std::vector<IO::GNUPlotConfigMetric>& metrics = plt_config.getMetrics();
-    const IO::GNUPlotConfigOption& option = plt_config.getOption();
+    const std::vector<GNUPlotConfigMetric>& metrics = plt_config.getMetrics();
+    const GNUPlotConfigOption& option = plt_config.getOption();
 
     // Create token for xtick and legend
     TokenSet xtick_filters;

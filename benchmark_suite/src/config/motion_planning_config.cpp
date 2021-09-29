@@ -1,5 +1,5 @@
 
-#include <moveit_benchmark_suite/benchmarks/config/motion_planning_config.h>
+#include <moveit_benchmark_suite/config/motion_planning_config.h>
 
 using namespace moveit_benchmark_suite;
 

@@ -40,7 +40,7 @@
 
 #include <moveit_benchmark_suite/dataset.h>
 #include <moveit_benchmark_suite/benchmarks/motion_planning_benchmark.h>
-#include <moveit_benchmark_suite/benchmarks/config/motion_planning_config.h>
+#include <moveit_benchmark_suite/config/motion_planning_config.h>
 
 namespace moveit_benchmark_suite
 {
