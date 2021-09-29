@@ -748,6 +748,8 @@ bool GNUPlotDataSet::filterDataSet(const TokenSet& legend_set, const TokenSet& f
   for (const auto& dataset : datasets)
   {
     bool add = true;
+    std::set<std::string> dataset_fail;
+    std::set<std::string> dataset_success;
     for (const auto& t : all_set)
     {
       YAML::Node node;
@@ -764,13 +766,34 @@ bool GNUPlotDataSet::filterDataSet(const TokenSet& legend_set, const TokenSet& f
             break;
           }
         }
+        else if (token::hasValue(t) && t.key_root.compare(DATASET_CONFIG_KEY))
+        {
+          dataset_fail.insert(t.group);
+        }
         else
         {
           add = false;
           break;
         }
       }
+      else
+      {
+        if (t.key_root.compare(DATASET_CONFIG_KEY))
+        {
+          dataset_success.insert(t.group);
+        }
+      }
     }
+
+    for (const auto& group_fail : dataset_fail)
+    {
+      if (dataset_success.find(group_fail) == dataset_success.end())
+      {
+        add = false;
+        break;
+      }
+    }
+
     if (add)
       filtered_datasets.push_back(dataset);
   }
@@ -784,11 +807,20 @@ bool GNUPlotDataSet::filterDataLegend(const DataPtr& data, const YAML::Node& met
   node = YAML::Clone(metadata);
   node[DATA_CONFIG_KEY] = data->query->group_name_map;
 
+  std::set<std::string> dataset_fail;
+  std::set<std::string> dataset_success;
+
   for (const auto& token : legend_set)
   {
     YAML::Node res;
-    if (!token::compareToNode(token, node, res))
-      return false;
+
+    if (token::compareToNode(token, node, res))
+      dataset_success.insert(token.group);
+    else
+    {
+      dataset_fail.insert(token.group);
+      continue;
+    }
 
     if (token::hasValue(token))
       if (token.key_root.compare(DATA_CONFIG_KEY) == 0)
@@ -823,7 +855,11 @@ bool GNUPlotDataSet::filterDataLegend(const DataPtr& data, const YAML::Node& met
 
     legend_name += del;
   }
-
+  for (const auto& group_fail : dataset_fail)
+  {
+    if (dataset_success.find(group_fail) == dataset_success.end())
+      return false;
+  }
   // Remove trailing delimiter
   if (!legend_name.empty())
     for (int i = 0; i < del.size(); ++i)
@@ -853,11 +889,21 @@ bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& meta
       xlabel_set.insert(xlabel);
   }
 
+  std::set<std::string> dataset_fail;
+  std::set<std::string> dataset_success;
+
   for (const auto& token : xlabel_set)
   {
     YAML::Node res;
-    if (!token::compareToNode(token, node, res))
-      return false;
+    // if (!token::compareToNode(token, node, res))
+    //  return false;
+    if (token::compareToNode(token, node, res))
+      dataset_success.insert(token.group);
+    else
+    {
+      dataset_fail.insert(token.group);
+      continue;
+    }
 
     if (!xtick_name.empty())
       continue;
@@ -963,6 +1009,12 @@ bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& meta
     }
 
     xtick_name += del;
+  }
+
+  for (const auto& group_fail : dataset_fail)
+  {
+    if (dataset_success.find(group_fail) == dataset_success.end())
+      return false;
   }
 
   if (xtick_name.empty())
