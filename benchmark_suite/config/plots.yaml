@@ -1,0 +1,12 @@
+html_config:
+  # PP vs MGI time of RRTConnect over all scenes
+  - title: PP vs MGI
+    legend_filters:
+      - type/MOTION PLANNING PP
+      - type/MOTION PLANNING MGI
+    xtick_filters:
+      - config/scene/
+      - config/planner/RRTConnect
+      - config/collision_detector/FCL
+    metrics:
+      - time: boxplot
