@@ -566,11 +566,13 @@ void GNUPlotDataSet::dump(const std::vector<DataSetPtr>& datasets, const GNUPlot
     return;
   }
 
-  if (mpo.layout.row * mpo.layout.col < plot_types_.size())
+  int layout_size = mpo.layout.row * mpo.layout.col;
+
+  if (layout_size < plot_types_.size())
     ROS_WARN("Metrics cannot fit in plot layout");
 
   helper_.configureTerminal(mpo.instance, terminal);
-  if (plot_types_.size() > 1)
+  if (layout_size > 1)
     helper_.multiplot(mpo);
 
   if (!validOverlap(xtick_set, legend_set))
