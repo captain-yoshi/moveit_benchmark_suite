@@ -5,6 +5,7 @@
 #include <moveit_benchmark_suite/yaml.h>
 #include <moveit_benchmark_suite/benchmark.h>
 #include <moveit_benchmark_suite/config/html_config.h>
+#include <moveit_benchmark_suite/aggregation.h>
 
 using namespace moveit_benchmark_suite;
 
@@ -45,7 +46,20 @@ int main(int argc, char** argv)
     return 0;
   }
 
-  // Generate plots to HTML
+  // Aggregate (Optional)
+  AggregateConfig config(ros::this_node::getName());
+
+  const std::vector<std::string>& filter_names = config.getFilterNames();
+  const std::vector<AggregateParams> agg_params = config.getAggregateParams();
+
+  // Create token filters
+  TokenSet agg_filters;
+  for (const auto& filter : filter_names)
+    agg_filters.insert(Token(filter));
+
+  aggregate::dataset(datasets, agg_filters, agg_params);
+
+  // Build HTML
   IO::HTMLPlot html;
   HTMLConfig html_conf(ros::this_node::getName());
 
