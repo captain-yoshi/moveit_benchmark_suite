@@ -1020,10 +1020,12 @@ bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& meta
       return false;
   }
 
-  if (xtick_name.empty())
-    return false;
-  else
+  if (!xtick_name.empty())
     for (int i = 0; i < del.size(); ++i)
       xtick_name.pop_back();  // Remove trailing delimiter
+
+  if (xtick_name.empty())
+    return false;
+
   return true;
 }
