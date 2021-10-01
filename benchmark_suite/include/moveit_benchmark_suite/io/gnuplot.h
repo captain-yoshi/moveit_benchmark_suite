@@ -12,12 +12,70 @@
 
 #if IS_BOOST_164
 #include <boost/process.hpp>
+#include <boost/asio/io_service.hpp>
 #endif
 
 namespace moveit_benchmark_suite
 {
 namespace IO
 {
+static std::string TERMINAL_QT_STR = "qt";
+static std::string TERMINAL_SVG_STR = "svg";
+
+struct TerminalSize
+{
+  double x = 640;
+  double y = 480;
+};
+
+/** \brief An abstract class for GNUPlot terminal. */
+class GNUPlotTerminal
+{
+public:
+  GNUPlotTerminal(const std::string& mode);
+
+  /** \brief Virtual destructor for cleaning up resources.
+   */
+  virtual ~GNUPlotTerminal() = default;
+
+  // Get GNUPlot command as a string
+  virtual std::string getCmd() const = 0;
+
+  const std::string mode;
+};
+
+// Generates output in a separate window with the Qt library
+class QtTerminal : public GNUPlotTerminal
+{
+public:
+  QtTerminal();
+  QtTerminal(const TerminalSize& size);
+  /** \brief Virtual destructor for cleaning up resources.
+   */
+  ~QtTerminal() override;
+
+  // Get GNUPlot command as a string
+  std::string getCmd() const override;
+
+  TerminalSize size = { .x = 640, .y = 480 };
+};
+
+// Produces files in the W3C Scalable Vector Graphics format
+class SvgTerminal : public GNUPlotTerminal
+{
+public:
+  SvgTerminal();
+  SvgTerminal(const TerminalSize& size);
+  /** \brief Virtual destructor for cleaning up resources.
+   */
+  ~SvgTerminal() override;
+
+  // Get GNUPlot command as a string
+  std::string getCmd() const override;
+
+  TerminalSize size = { .x = 640, .y = 480 };
+};
+
 /** \brief Helper class to open a pipe to a GNUPlot instance for live visualization of data.
  */
 class GNUPlotHelper
@@ -43,20 +101,10 @@ public:
     std::string instance{ "default" };
   };
 
-  struct QtTerminalOptions : InstanceOptions
-  {
-    struct Size
-    {
-      double x = 720;
-      double y = 480;
-    };
+  std::set<std::string> getInstanceNames() const;
+  void getInstanceOutput(const std::string& instance, std::string& output);
 
-    Size size;
-
-    const std::string mode{ "qt" };  ///< Terminal mode for GNUPlot
-  };
-
-  void configureTerminal(const QtTerminalOptions& options);
+  void configureTerminal(const std::string& instance_id, const GNUPlotTerminal& terminal);
 
   /** \name Plotting
       \{ */
@@ -146,6 +194,8 @@ private:
      */
     Instance();
 
+    ~Instance();
+
     /** \name Raw Input
         \{ */
 
@@ -155,6 +205,9 @@ private:
 
     /** \} */
 
+    std::shared_ptr<std::future<std::vector<char>>> getOutput();
+    std::shared_ptr<std::future<std::vector<char>>> getError();
+
   private:
     // non-copyable
     Instance(Instance const&) = delete;
@@ -162,10 +215,13 @@ private:
 
     bool debug_{ false };
 
+    boost::asio::io_service svc_;
+    std::thread th_;
+
 #if IS_BOOST_164
     boost::process::opstream input_;
-    // boost::process::ipstream output_;
-    boost::process::ipstream error_;
+    std::shared_ptr<std::future<std::vector<char>>> output_ = std::make_shared<std::future<std::vector<char>>>();
+    std::shared_ptr<std::future<std::vector<char>>> error_ = std::make_shared<std::future<std::vector<char>>>();
     boost::process::child gnuplot_;
 #endif
   };
@@ -208,10 +264,12 @@ public:
   void addMetric(const std::string& metric, const PlotType& plottype);
   void addMetric(const std::string& metric, const std::string& plottype);
 
-  void dump(const DataSetPtr& dataset, const GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set,
-            const TokenSet& legend_set = {});
-  void dump(const std::vector<DataSetPtr>& datasets, const GNUPlotHelper::MultiPlotOptions& mpo,
+  void dump(const DataSetPtr& dataset, const GNUPlotTerminal& terminal, const GNUPlotHelper::MultiPlotOptions& mpo,
             const TokenSet& xtick_set, const TokenSet& legend_set = {});
+  void dump(const std::vector<DataSetPtr>& datasets, const GNUPlotTerminal& terminal,
+            const GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set, const TokenSet& legend_set = {});
+
+  GNUPlotHelper& getGNUPlotHelper();
 
 private:
   void dumpBoxPlot(const std::string& metric, const std::vector<DataSetPtr>& results, const TokenSet& xtick_set,

@@ -1,0 +1,91 @@
+html_config:
+  # PP vs MGI time of RRTConnect over all scenes
+  - title: PP vs MGI
+    legend_filters:
+      - type/MOTION PLANNING PP
+      - type/MOTION PLANNING MGI
+    xtick_filters:
+      - config/scene/
+      - config/planner/RRTConnect
+      - config/collision_detector/FCL
+    metrics:
+      - time: boxplot
+
+  # Scenes & goal constraints
+  - title: Scenes & goal constraints
+    legend_filters:
+      - type/MOTION PLANNING PP
+      - config/scene/
+    xtick_filters:
+      - config/planner/RRTConnect
+      #- config/planner/BST
+      - config/collision_detector/FCL
+    metrics:
+      - time: boxplot
+      - avg_success: bargraph
+      - avg_correct: bargraph
+
+  - title: Planners vs Scenes
+    legend_filters:
+      - type/MOTION PLANNING PP
+      - config/scene/
+    xtick_filters:
+      - config/planner/
+      - config/collision_detector/FCL
+      - config/request/jc
+      - config/pipeline/ompl
+    metrics:
+      - time: boxplot
+      - avg_success: bargraph
+      - avg_correct: bargraph
+
+  - title: Planners vs Collision Detectors
+    legend_filters:
+      - type/MOTION PLANNING PP
+      - config/collision_detector/
+    xtick_filters:
+      - config/scene/bbt-mesh
+      - config/planner/
+      - config/request/jc
+      - config/pipeline/ompl
+    metrics:
+      - time: boxplot
+      - avg_success: bargraph
+      - avg_correct: bargraph
+
+  - title: Planners vs Collision Detectors
+    legend_filters:
+      - type/MOTION PLANNING PP
+      - config/collision_detector/
+    xtick_filters:
+      - config/scene/bbt-primitive
+      - config/planner/
+      - config/request/jc
+      - config/pipeline/ompl
+    metrics:
+      - time: boxplot
+      - avg_success: bargraph
+      - avg_correct: bargraph
+
+  - title: Planners vs Collision Detectors
+    legend_filters:
+      - type/MOTION PLANNING PP
+      - config/collision_detector/
+    xtick_filters:
+      - config/scene/empty-scene
+      - config/planner/
+      - config/request/jc
+      - config/pipeline/ompl
+    metrics:
+      - time: boxplot
+      - avg_success: bargraph
+      - avg_correct: bargraph
+
+aggregate_config:
+  aggregate:
+    - raw_metric: success
+      new_metric: avg_success
+      type: average
+    - raw_metric: correct
+      new_metric: avg_correct
+      type: average

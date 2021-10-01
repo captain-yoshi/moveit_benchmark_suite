@@ -95,6 +95,12 @@ Token::Token(const std::string& token, const std::string& del) : token(token), d
     n_key = keys.size();
     key_root = keys[0];
     createTokenNode(0, node);
+
+    // Create group
+    for (int i = 0; i < n_key; ++i)
+      group += keys[i] + del;
+    for (int j = 0; j < del.size(); ++j)
+      group.pop_back();
   }
 }
 

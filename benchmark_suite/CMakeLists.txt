@@ -60,9 +60,11 @@ add_library(${PROJECT_NAME}
   src/planning.cpp
   src/trajectory.cpp
   src/io/handler.cpp
+  src/io/htmlplot.cpp
   src/io/gnuplot.cpp
   src/config/aggregate_config.cpp
   src/config/gnuplot_config.cpp
+  src/config/html_config.cpp
   src/config/motion_planning_config.cpp
   src/benchmarks/builder/motion_planning.cpp
   src/benchmarks/motion_planning_benchmark.cpp
@@ -86,6 +88,9 @@ target_link_libraries(plot_dataset ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 add_executable(aggregate src/aggregate.cpp)
 target_link_libraries(aggregate ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
+add_executable(generate_plots src/generate_plots.cpp)
+target_link_libraries(generate_plots ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
+
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 
@@ -95,6 +100,7 @@ install(TARGETS
   motion_planning_pp
   collision_check
   plot_dataset
+  generate_plots
   aggregate
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

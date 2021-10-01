@@ -7,11 +7,62 @@
 
 #include <cmath>
 
+#include <boost/iostreams/device/array.hpp>
+#include <boost/iostreams/stream_buffer.hpp>
+
 using namespace moveit_benchmark_suite::IO;
 
 #if IS_BOOST_164
 namespace bp = boost::process;
+namespace bio = boost::iostreams;
 #endif
+
+///
+/// GNUPlotTerminal
+///
+
+GNUPlotTerminal::GNUPlotTerminal(const std::string& mode) : mode(mode){};
+
+///
+/// QtTerminal
+///
+QtTerminal::QtTerminal() : GNUPlotTerminal(TERMINAL_QT_STR)
+{
+}
+
+QtTerminal::QtTerminal(const TerminalSize& size) : GNUPlotTerminal(TERMINAL_QT_STR), size(size)
+{
+}
+
+QtTerminal::~QtTerminal()
+{
+}
+
+std::string QtTerminal::getCmd() const
+{
+  return log::format("set term %1% noraise size %2%,%3%", mode, size.x, size.y);
+}
+
+///
+/// SvgTerminal
+///
+
+SvgTerminal::SvgTerminal() : GNUPlotTerminal(TERMINAL_SVG_STR)
+{
+}
+
+SvgTerminal::SvgTerminal(const TerminalSize& size) : GNUPlotTerminal(TERMINAL_SVG_STR), size(size)
+{
+}
+
+SvgTerminal::~SvgTerminal()
+{
+}
+
+std::string SvgTerminal::getCmd() const
+{
+  return log::format("set term %1% size %2%,%3%", mode, size.x, size.y);
+}
 
 ///
 /// GNUPlotHelper
@@ -25,12 +76,21 @@ GNUPlotHelper::Instance::Instance()
     throw std::runtime_error("GNUPlot not found, please install!");
 
   gnuplot_ = bp::child(bp::search_path("gnuplot"),  //"-persist",  //
-                       bp::std_err > error_,        //
-                       // bp::std_out > output_,                //
-                       bp::std_in < input_);
+                       bp::std_err > *error_,       //
+                       bp::std_out > *output_,      //
+                       bp::std_in < input_, svc_);
+
+  th_ = std::thread([&] { svc_.run(); });
+
 #else
   throw std::runtime_error("GNUPlot helper not supported, Boost 1.64 and above is required!");
 #endif
+}
+
+GNUPlotHelper::Instance::~Instance()
+{
+  svc_.stop();
+  th_.detach();
 }
 
 void GNUPlotHelper::Instance::write(const std::string& line)
@@ -56,10 +116,49 @@ void GNUPlotHelper::Instance::flush()
     std::cout << std::endl;
 #endif
 }
-void GNUPlotHelper::configureTerminal(const QtTerminalOptions& options)
+
+std::shared_ptr<std::future<std::vector<char>>> GNUPlotHelper::Instance::getOutput()
 {
-  auto in = getInstance(options.instance);
-  in->writeline(log::format("set term %1% noraise size %2%,%3%", options.mode, options.size.x, options.size.y));
+  return output_;
+}
+
+std::shared_ptr<std::future<std::vector<char>>> GNUPlotHelper::Instance::getError()
+{
+  return error_;
+}
+
+std::set<std::string> GNUPlotHelper::getInstanceNames() const
+{
+  std::set<std::string> instance_set;
+
+  for (const auto& instance : instances_)
+    instance_set.insert(instance.first);
+  return instance_set;
+}
+
+void GNUPlotHelper::getInstanceOutput(const std::string& instance, std::string& output)
+{
+  auto in = getInstance(instance);
+
+  // Kill gnuplot process
+  in->writeline("exit");
+
+  auto future_out = in->getOutput();
+  auto raw = future_out->get();
+
+  std::vector<std::string> data;
+  std::string line;
+  bio::stream_buffer<bio::array_source> sb(raw.data(), raw.size());
+  std::istream is(&sb);
+
+  for (std::string line; std::getline(is, line);)
+    output.append(line + "\n");
+}
+
+void GNUPlotHelper::configureTerminal(const std::string& instance_id, const GNUPlotTerminal& terminal)
+{
+  auto in = getInstance(instance_id);
+  in->writeline(terminal.getCmd());
 }
 
 void GNUPlotHelper::configurePlot(const PlottingOptions& options)
@@ -447,17 +546,19 @@ void GNUPlotDataSet::addMetric(const std::string& metric, const std::string& plo
     addMetric(metric, it->second);
 };
 
-void GNUPlotDataSet::dump(const DataSetPtr& dataset, const GNUPlotHelper::MultiPlotOptions& mpo,
-                          const TokenSet& xtick_set, const TokenSet& legend_set)
+void GNUPlotDataSet::dump(const DataSetPtr& dataset, const GNUPlotTerminal& terminal,
+                          const GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set,
+                          const TokenSet& legend_set)
 {
   std::vector<DataSetPtr> datasets;
   datasets.push_back(dataset);
 
-  dump(datasets, mpo, xtick_set, legend_set);
+  dump(datasets, terminal, mpo, xtick_set, legend_set);
 };
 
-void GNUPlotDataSet::dump(const std::vector<DataSetPtr>& datasets, const GNUPlotHelper::MultiPlotOptions& mpo,
-                          const TokenSet& xtick_set, const TokenSet& legend_set)
+void GNUPlotDataSet::dump(const std::vector<DataSetPtr>& datasets, const GNUPlotTerminal& terminal,
+                          const GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set,
+                          const TokenSet& legend_set)
 {
   if (plot_types_.empty())
   {
@@ -465,14 +566,10 @@ void GNUPlotDataSet::dump(const std::vector<DataSetPtr>& datasets, const GNUPlot
     return;
   }
 
-  GNUPlotHelper::QtTerminalOptions to;
-  to.size.x = 1280;
-  to.size.y = 720;
-
   if (mpo.layout.row * mpo.layout.col < plot_types_.size())
     ROS_WARN("Metrics cannot fit in plot layout");
 
-  helper_.configureTerminal(to);
+  helper_.configureTerminal(mpo.instance, terminal);
   if (plot_types_.size() > 1)
     helper_.multiplot(mpo);
 
@@ -500,6 +597,11 @@ void GNUPlotDataSet::dump(const std::vector<DataSetPtr>& datasets, const GNUPlot
     }
   }
 };
+
+GNUPlotHelper& GNUPlotDataSet::getGNUPlotHelper()
+{
+  return helper_;
+}
 
 void GNUPlotDataSet::dumpBoxPlot(const std::string& metric, const std::vector<DataSetPtr>& datasets,
                                  const TokenSet& xtick_set, const TokenSet& legend_set)
@@ -566,15 +668,6 @@ bool GNUPlotDataSet::validOverlap(const TokenSet& xtick_set, const TokenSet& leg
   }
   if (overlap_ctr > xtick_set.size())
     return false;
-
-  for (const auto& t1 : legend_set)
-  {
-    for (const auto& t2 : xtick_set)
-    {
-      if (token::overlap(t1, t2))
-        return false;
-    }
-  }
 
   return true;
 }
@@ -655,6 +748,8 @@ bool GNUPlotDataSet::filterDataSet(const TokenSet& legend_set, const TokenSet& f
   for (const auto& dataset : datasets)
   {
     bool add = true;
+    std::set<std::string> dataset_fail;
+    std::set<std::string> dataset_success;
     for (const auto& t : all_set)
     {
       YAML::Node node;
@@ -671,13 +766,34 @@ bool GNUPlotDataSet::filterDataSet(const TokenSet& legend_set, const TokenSet& f
             break;
           }
         }
+        else if (token::hasValue(t) && t.key_root.compare(DATASET_CONFIG_KEY))
+        {
+          dataset_fail.insert(t.group);
+        }
         else
         {
           add = false;
           break;
         }
       }
+      else
+      {
+        if (t.key_root.compare(DATASET_CONFIG_KEY))
+        {
+          dataset_success.insert(t.group);
+        }
+      }
     }
+
+    for (const auto& group_fail : dataset_fail)
+    {
+      if (dataset_success.find(group_fail) == dataset_success.end())
+      {
+        add = false;
+        break;
+      }
+    }
+
     if (add)
       filtered_datasets.push_back(dataset);
   }
@@ -691,18 +807,27 @@ bool GNUPlotDataSet::filterDataLegend(const DataPtr& data, const YAML::Node& met
   node = YAML::Clone(metadata);
   node[DATA_CONFIG_KEY] = data->query->group_name_map;
 
+  std::set<std::string> dataset_fail;
+  std::set<std::string> dataset_success;
+
   for (const auto& token : legend_set)
   {
     YAML::Node res;
-    if (!token::compareToNode(token, node, res))
-      return false;
+
+    if (token::compareToNode(token, node, res))
+      dataset_success.insert(token.group);
+    else
+    {
+      dataset_fail.insert(token.group);
+      continue;
+    }
 
     if (token::hasValue(token))
       if (token.key_root.compare(DATA_CONFIG_KEY) == 0)
         legend_name += token.value;
 
       else
-        legend_name += token.token + ": " + token.value;
+        legend_name += token.group + ": " + token.value;
     else
     {
       // try getting child node keys
@@ -725,12 +850,16 @@ bool GNUPlotDataSet::filterDataLegend(const DataPtr& data, const YAML::Node& met
         legend_name += filter_value;
 
       else
-        legend_name += token.token + ": " + filter_value;
+        legend_name += token.group + ": " + token.value;
     }
 
     legend_name += del;
   }
-
+  for (const auto& group_fail : dataset_fail)
+  {
+    if (dataset_success.find(group_fail) == dataset_success.end())
+      return false;
+  }
   // Remove trailing delimiter
   if (!legend_name.empty())
     for (int i = 0; i < del.size(); ++i)
@@ -746,11 +875,35 @@ bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& meta
   node = YAML::Clone(metadata);
   node[DATA_CONFIG_KEY] = data->query->group_name_map;
 
-  for (const auto& token : xtick_set)
+  TokenSet xlabel_set;
+
+  // Default to all data config group value
+  if (xtick_set.empty())
+  {
+    for (const auto& id : data->query->group_name_map)
+      xlabel_set.insert(Token(std::string("config/" + id.first + "/" + id.second)));
+  }
+  else
+  {
+    for (const auto& xlabel : xtick_set)
+      xlabel_set.insert(xlabel);
+  }
+
+  std::set<std::string> dataset_fail;
+  std::set<std::string> dataset_success;
+
+  for (const auto& token : xlabel_set)
   {
     YAML::Node res;
-    if (!token::compareToNode(token, node, res))
-      return false;
+    // if (!token::compareToNode(token, node, res))
+    //  return false;
+    if (token::compareToNode(token, node, res))
+      dataset_success.insert(token.group);
+    else
+    {
+      dataset_fail.insert(token.group);
+      continue;
+    }
 
     if (!xtick_name.empty())
       continue;
@@ -856,6 +1009,12 @@ bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& meta
     }
 
     xtick_name += del;
+  }
+
+  for (const auto& group_fail : dataset_fail)
+  {
+    if (dataset_success.find(group_fail) == dataset_success.end())
+      return false;
   }
 
   if (xtick_name.empty())

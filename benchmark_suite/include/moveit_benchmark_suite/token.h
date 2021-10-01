@@ -61,6 +61,7 @@ struct Token
   void reset();
 
   std::string token;
+  std::string group;
   std::string value;
   std::string del;
 
