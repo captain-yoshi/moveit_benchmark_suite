@@ -40,7 +40,7 @@ The robot, scenes and requests are configured in the [motion_planning_pp.launch]
 </launch>
 
 ```
-**Note:** Unlike the `PlanningPipeline``, you can't benchmark multiple collision detectors in one pass with the `MoveGroupInterface`.
+**Note:** Unlike the `PlanningPipeline`, you can't benchmark multiple collision detectors in one pass with the `MoveGroupInterface`.
 
 A request is a `moveit_msgs/MotionPlanRequest.msg`. Only these field are required:
 ```yaml
@@ -88,4 +88,4 @@ benchmark_config:
       planners:
         - STOMP
 ```
-**Note:** The `MoveGroupInterface` has the `collision_detector` parameter in the yaml file.
+**Note:** The `MoveGroupInterface` has the singular `collision_detector` parameter.

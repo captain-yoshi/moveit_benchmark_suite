@@ -1,5 +1,5 @@
 # Benchmark Pipeline
-The are three major pipelines to analyse a benchmark 1) [run benchmark](#run-benchmark) 2) [aggregate data](#aggregate-data) and 3) [plot data](#plot-data). The following sections will be explainded with the motion planning benchmark example but is valid for other benchmarks.
+The are three major pipelines to analyse a benchmark 1) [run benchmark](#run-benchmark) 2) [aggregate data](#aggregate-data) and 3) [plot data](#plot-data). The following sections will be explainded with the motion planning `PlanningPipeline` benchmark example but is valid for other benchmarks.
 
 You can also benchmark, aggregate and plot in [one step](#run-aggregate-and-plot)!
 
@@ -7,10 +7,10 @@ You can also benchmark, aggregate and plot in [one step](#run-aggregate-and-plot
 
 ## Run benchmark
 You can see the [motion planning benchmark](/.docs/benchmarks/motion_planning.md) for a detailed look on how to configure and run the benchmark. A list of available benchmarks is available [here](/.docs/benchmarks).
-u
+
 After configuring the benchmark, run it:
 ```bash
-roslaunch moveit_benchmark_suite motion_planning.launch
+roslaunch moveit_benchmark_suite motion_planning_pp.launch
 ```
 The benchmark will output a YAML file containing the dataset metadata and metrics. In case the file already exists, the dataset will be appended at the end of the file.
 
@@ -20,19 +20,19 @@ By default the output directory is set to the `ROS_HOME` environment variable. I
 
 Example of filepath location and filename:
 ```bash
-roslaunch moveit_benchmark_suite motion_planning
+roslaunch moveit_benchmark_suite motion_planning_pp.launch
 # Output => ~/.ros/<name+date>.yaml
 
-roslaunch moveit_benchmark_suite motion_planning name:=benchmark_name
+roslaunch moveit_benchmark_suite motion_planning_pp.launch name:=benchmark_name
 # Output => ~/.ros/<benchmark_name+date>.yaml
 
-roslaunch moveit_benchmark_suite motion_planning output_file:=~/
+roslaunch moveit_benchmark_suite motion_planning_pp.launch output_file:=~/
 # Output => ~/<name+date>.yaml
 
-roslaunch moveit_benchmark_suite motion_planning name:=dummy output_file:=~/filename
+roslaunch moveit_benchmark_suite motion_planning_pp.launch name:=dummy output_file:=~/filename
 # Output => ~/filename.yaml
 
-roslaunch moveit_benchmark_suite motion_planning output_file:=/my/absolute/path
+roslaunch moveit_benchmark_suite motion_planning_pp.launch output_file:=/my/absolute/path/
 # Output => /my/absolute/path/<name+date>.yaml
 ```
 
@@ -171,7 +171,7 @@ In a dataset, metrics can either be a single value or a sequence of values.
 ## Aggregate data
 You can skip this step if youre only interested in the `raw data` acquired by the benchmark.
 
-It is sometimes usefull to aggregate data from datasets. To do so, configure the `aggregate.launch` file to aggregate the desired metrics.:
+It is sometimes usefull to aggregate data from datasets. To do so, configure the `aggregate.launch` file to aggregate the desired metrics.
 ```yaml
 aggregate_config:
   filters:                                          # Defaults to empty
@@ -201,9 +201,10 @@ This will create a new file containing the dataset/s raw data + aggregated data.
 The output path and filename can be specified by the arg `output_file`. THe path defaults to ROS_HOME or ~/.ros and the filename follows this structure `<aggregate+date>.yaml`.
 
 ## Plot data
-GNUPlot was choosen to speedup developpment because another project had worked on it ([robowflex](https://github.com/KavrakiLab/robowflex)). The minimum required version is 5.0 because this project uses the [inline datablocks](http://www.bersch.net/gnuplot-doc/inline-data-and-datablocks.html#inline-data) feature. Only the boxplot and bar graphs type are supported.
+GNUPlot was choosen to speedup developpment because another project had worked on it ([robowflex](https://github.com/KavrakiLab/robowflex)). The minimum required version is 5.0 because this project uses the [inline datablocks](http://www.bersch.net/gnuplot-doc/inline-data-and-datablocks.html#inline-data) feature. At the moment, only boxplot and bar graphs are supported.
 
-Configure the rosparam tag in the `gnuplot_dataset.launch` file which is YAML text.
+### Plot with GNUPlot
+Configure the rosparam tag in the `plot_dataset.launch` file which is YAML text.
 ```yaml
 gnuplot_config:
   xtick_filters:                              # Defaults to all datasets pair-wise config with uuid
@@ -219,7 +220,6 @@ gnuplot_config:
       output_script: true                     # Defaults to false, create file containing GNUPlot script
       debug: true                             # Defaults to false, output GNUPlot script to cmd line
 ```
-**NOTE**: The root key `gnuplot_config` is set in the param tag. If there is not param tag, you MUST add the root key in the YAML text. 
 
 Plot desired metrics.
 ```bash
@@ -227,11 +227,34 @@ roslaunch moveit_benchmark_suite plot_dataset.launch input_files:="[path/to/file
 ```
 Seeing an empty plot probably means that you loaded the wrong dataset file and/or have wrong filter names.
 
+### Generate plots in HTML
+The `generate_plots` node creates an HTML file with embedded svg pictures. You can scroll the different images generated based on configurable filters and metrics. In this mode, the GNUPlot SVG terminal is used which produces a W3C Scalable Vector Graphics format.
+
+Configure the [plots.yaml](/benchmark_suite/config/plots.yaml).
+```yaml
+html_config:
+  - title: PP vs MGI
+    legend_filters:
+      - type/MOTION PLANNING PP
+      - type/MOTION PLANNING MGI
+    xtick_filters:
+      - config/scene/
+      - config/planner/RRTConnect
+      - config/collision_detector/FCL
+    metrics:
+      - time: boxplot
+```
+**Optional**: You can add the `aggregate_config` node to the yaml file to aggregate on the fly and plot the new aggregated metrics.
+
+Generate HTML:
+```bash
+roslaunch moveit_benchmark_suite generate_plots.launch input_files:="[path/to/filename, other/filename]"
+```
 
 ### Filters
-A file contains a list of datasets. Each dataset can contain a vast amount of information because of the combination of all pair-wise configuration. So filters are necessary to extract all the desired information. Without it, a plot would contain all the dataset information and it would be hard for the user to make sense of the data.
+A file can contain a list of datasets. Each dataset may contain vast amount of information because of the combination of all pair-wise configuration. So filters are necessary to extract all the desired information. Without it, a plot would contain all the dataset information and it would be hard for the user to make sense of the data.
 
-A filter is represented as a `Token` string with a `/` delimiters to represent multiple levels of keys. These keys represents the YAML dataset hierarchy. A token ending with a `/` will match any values of the last key. A token that does not end with a `/` is considered as a value and will match this value only. Of course you can add a list/set of filters to have a finer control of which data.
+A filter is represented as a `Token` string with a `/` delimiters to represent multiple levels of keys. These keys represents the YAML dataset hierarchy. A token ending with a `/` will match any values of the last key. A token that does not end with a `/` is considered a value and will match this value only. Of course you can add a list/set of filters to have a finer control over the data.
 ```cpp
 TokenSet filter;
 
@@ -260,15 +283,6 @@ set:
   item3: ~
 ```
 
-### GNUPlot examples
-
-<p align="center">
-<img src="/.docs/images/gnuplot_example.png"/>
-</p>
-
-<p align="center">
-<img src="/.docs/images/gnuplot_subplot_example.png"/>
-</p>
 
 ## Run, Aggregate and Plot
 You can aggregate and/or plot after the benchmark is completed in one step. All you have to do is to add a YAML configuration in the param server benchmark node. Either by creating a new rosparam tag in a launch file or adding it directly to a YAML file (Ex. the [motion planning](/benchmark_suite/config/motion_planning_pp.yaml) benchmark). 
@@ -306,3 +320,13 @@ gnuplot_config:
       n_row: 2
       n_col: 1
 ```
+
+# GNUPlot examples
+
+<p align="center">
+<img src="/.docs/images/gnuplot_example.png"/>
+</p>
+
+<p align="center">
+<img src="/.docs/images/gnuplot_subplot_example.png"/>
+</p>
