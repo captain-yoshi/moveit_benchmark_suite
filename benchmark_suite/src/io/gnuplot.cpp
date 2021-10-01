@@ -406,6 +406,7 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
 
   in->writeline(log::format("set boxwidth %1%", boxwidth));
   in->writeline("set style fill solid 0.5 border -1");
+  in->writeline(log::format("set offsets %1%, %1%, 0, 0", boxwidth));
 
   if (is_legend)
   {
