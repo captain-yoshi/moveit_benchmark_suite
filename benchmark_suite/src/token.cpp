@@ -65,6 +65,9 @@ std::vector<std::string> splitStr(std::string s, std::string delimiter)
 
 std::string replaceStr(std::string subject, const std::string& search, const std::string& replace)
 {
+  if (search.empty())
+    return subject;
+
   size_t pos = 0;
   while ((pos = subject.find(search, pos)) != std::string::npos)
   {
