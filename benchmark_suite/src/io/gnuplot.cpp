@@ -840,6 +840,45 @@ bool GNUPlotDataSet::fillDataSet(const std::string& metric_name, const std::vect
 
   plt_values.clear();
   plt_values = temp;
+
+  // Add missing labels with empty data
+  // TODO: works but MUST change logic in GNUPlot script
+  // if (plt_values.size() > 1)
+  // {
+  //   for (const auto& legend_map : temp)
+  //   {
+  //     for (const auto& label_map : legend_map.second)
+  //     {
+  //       for (const auto& legend_map2 : temp)
+  //       {
+  //         auto it = temp.find(legend_map2.first);
+  //         if (it == temp.end())
+  //           continue;
+  //         else
+  //         {
+  //           auto it1 = it->second.find(label_map.first);
+  //           if (it1 == it->second.end())
+  //           {
+  //             auto it2 = plt_values.find(legend_map2.first);
+  //             it2->second.insert({ label_map.first, {} });
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+
+  // Warn if legend labels are not of same size
+  int label_size = plt_values.begin()->second.size();
+  for (const auto& legend_map : plt_values)
+  {
+    if (legend_map.second.size() != label_size)
+    {
+      ROS_WARN("Missing labels in some legend, some labels will not plot.");
+      break;
+    }
+  }
+
   return true;
 }
 
