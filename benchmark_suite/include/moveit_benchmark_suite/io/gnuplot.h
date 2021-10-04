@@ -273,9 +273,9 @@ public:
 
 private:
   void dumpBoxPlot(const std::string& metric, const std::vector<DataSetPtr>& results, const TokenSet& xtick_set,
-                   const TokenSet& legend_set);
+                   const TokenSet& legend_set, const GNUPlotHelper::MultiPlotOptions& mpo);
   void dumpBarGraph(const std::string& metric, const std::vector<DataSetPtr>& results, const TokenSet& xtick_set,
-                    const TokenSet& legend_set);
+                    const TokenSet& legend_set, const GNUPlotHelper::MultiPlotOptions& mpo);
 
   bool fillDataSet(const std::string& metric, const std::vector<DataSetPtr>& datasets, const TokenSet& xtick_set,
                    const TokenSet& legend_set, GNUPlotHelper::PlotValues& plt_values);

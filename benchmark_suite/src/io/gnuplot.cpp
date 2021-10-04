@@ -585,11 +585,11 @@ void GNUPlotDataSet::dump(const std::vector<DataSetPtr>& datasets, const GNUPlot
     switch (pair.second)
     {
       case PlotType::BarGraph:
-        dumpBarGraph(pair.first, datasets, xtick_set, legend_set);
+        dumpBarGraph(pair.first, datasets, xtick_set, legend_set, mpo);
         break;
 
       case PlotType::BoxPlot:
-        dumpBoxPlot(pair.first, datasets, xtick_set, legend_set);
+        dumpBoxPlot(pair.first, datasets, xtick_set, legend_set, mpo);
         break;
 
       default:
@@ -605,11 +605,15 @@ GNUPlotHelper& GNUPlotDataSet::getGNUPlotHelper()
 }
 
 void GNUPlotDataSet::dumpBoxPlot(const std::string& metric, const std::vector<DataSetPtr>& datasets,
-                                 const TokenSet& xtick_set, const TokenSet& legend_set)
+                                 const TokenSet& xtick_set, const TokenSet& legend_set,
+                                 const GNUPlotHelper::MultiPlotOptions& mpo)
 
 {
   GNUPlotHelper::BoxPlotOptions bpo;
-  bpo.title = log::format("\\\"%1%\\\" for Experiment \\\"%2%\\\"", metric, datasets[0]->name);
+  if (mpo.title.empty())
+    bpo.title = log::format("\\\"%1%\\\" for Experiment \\\"%2%\\\"", metric, datasets[0]->name);
+  else
+    bpo.title = mpo.title;
   bpo.y.label = metric;
   bpo.y.min = 0.;
 
@@ -625,11 +629,15 @@ void GNUPlotDataSet::dumpBoxPlot(const std::string& metric, const std::vector<Da
 };
 
 void GNUPlotDataSet::dumpBarGraph(const std::string& metric, const std::vector<DataSetPtr>& datasets,
-                                  const TokenSet& xtick_set, const TokenSet& legend_set)
+                                  const TokenSet& xtick_set, const TokenSet& legend_set,
+                                  const GNUPlotHelper::MultiPlotOptions& mpo)
 {
   GNUPlotHelper::BarGraphOptions bgo;
   bgo.percent = false;
-  bgo.title = log::format("\\\"%1%\\\" for Experiment \\\"%2%\\\"", metric, datasets[0]->name);
+  if (mpo.title.empty())
+    bgo.title = log::format("\\\"%1%\\\" for Experiment \\\"%2%\\\"", metric, datasets[0]->name);
+  else
+    bgo.title = mpo.title;
   bgo.y.label = metric;
   bgo.y.min = 0.;
 

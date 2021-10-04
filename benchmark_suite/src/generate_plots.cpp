@@ -87,6 +87,7 @@ int main(int argc, char** argv)
 
       IO::SvgTerminal terminal;
       IO::GNUPlotHelper::MultiPlotOptions mpo;
+      mpo.title = config.title;
 
       plot.dump(datasets, terminal, mpo, xtick, legend);
 
