@@ -65,6 +65,9 @@ std::vector<std::string> splitStr(std::string s, std::string delimiter)
 
 std::string replaceStr(std::string subject, const std::string& search, const std::string& replace)
 {
+  if (search.empty())
+    return subject;
+
   size_t pos = 0;
   while ((pos = subject.find(search, pos)) != std::string::npos)
   {
@@ -99,8 +102,6 @@ Token::Token(const std::string& token, const std::string& del) : token(token), d
     // Create group
     for (int i = 0; i < n_key; ++i)
       group += keys[i] + del;
-    for (int j = 0; j < del.size(); ++j)
-      group.pop_back();
   }
 }
 

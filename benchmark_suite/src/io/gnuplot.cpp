@@ -489,14 +489,12 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
     for (std::size_t j = 0; j < n_legend; ++j)
     {
       if (is_legend)
-        in->writeline(log::format("'$data%1%' using (%2%):1 title \"%3%\" with boxes lt %4%, '$data%1%' u "
-                                  "(%2%):1:1 title \"\" with labels offset char 0,1%5%",
-                                  index[ctr], x_offsets[i] + j * boxwidth, (i == 0) ? legend_titles[j] : "", j + 1,
+        in->writeline(log::format("'$data%1%' using (%2%):1 title \"%3%\" with boxes lt %4%%5%", index[ctr],
+                                  x_offsets[i] + j * boxwidth, (i == 0) ? legend_titles[j] : "", j + 1,
                                   (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
       else
-        in->writeline(log::format("'$data%1%' using (%2%):1 with boxes, '$data%1%' u "
-                                  "(%2%):1:1 with labels offset char 0,1%3%",
-                                  ctr + 1, ctr + 1, (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
+        in->writeline(log::format("'$data%1%' using (%2%):1 with boxes %3%", ctr + 1, ctr + 1,
+                                  (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
       ctr++;
     }
   }
@@ -679,6 +677,8 @@ bool GNUPlotDataSet::fillDataSet(const std::string& metric_name, const std::vect
                                  const TokenSet& xtick_set, const TokenSet& legend_set,
                                  GNUPlotHelper::PlotValues& plt_values)
 {
+  std::string xlabel_del = "\\n";
+  std::string legend_del = " + ";
   std::vector<DataSetPtr> filtered_datasets;
 
   filterDataSet(legend_set, xtick_set, datasets, filtered_datasets);
@@ -696,8 +696,9 @@ bool GNUPlotDataSet::fillDataSet(const std::string& metric_name, const std::vect
 
       std::string legend_name;
       std::string xtick_name;
-      if (!filterDataLegend(data_vec[0], dataset->metadata, legend_set, legend_name, " + ") ||
-          !filterDataXtick(data_vec[0], dataset->metadata, xtick_set, legend_set, xtick_name, "\\n", multiple_datasets))
+      if (!filterDataLegend(data_vec[0], dataset->metadata, legend_set, legend_name, legend_del) ||
+          !filterDataXtick(data_vec[0], dataset->metadata, xtick_set, legend_set, xtick_name, xlabel_del,
+                           multiple_datasets))
         continue;
 
       if (data_vec.empty())
@@ -731,6 +732,106 @@ bool GNUPlotDataSet::fillDataSet(const std::string& metric_name, const std::vect
       }
     }
   }
+
+  // Filter out redundant xlabels
+  int n_labels = 0;
+  std::map<std::string, int> labels_map;
+  for (const auto& legend_map : plt_values)
+  {
+    for (const auto& labels : legend_map.second)
+    {
+      auto label_keys = splitStr(labels.first, xlabel_del);
+
+      for (const auto& key : label_keys)
+      {
+        auto it = labels_map.find(key);
+        if (it == labels_map.end())
+          labels_map.insert({ key, 1 });
+        else
+          it->second++;
+      }
+    }
+    n_labels += legend_map.second.size();
+  }
+
+  // Erase
+  for (auto it = labels_map.cbegin(); it != labels_map.cend() /* not hoisted */; /* no increment */)
+  {
+    if (plt_values.size() == it->second || it->second != n_labels)
+      labels_map.erase(it++);  // or "it = m.erase(it)" since C++11
+    else
+      ++it;
+  }
+
+  // Create new container with new xlabels keys
+  GNUPlotHelper::PlotValues temp;
+  for (const auto& legend_map : plt_values)
+  {
+    temp.insert({ legend_map.first, {} });
+    auto it = temp.find(legend_map.first);
+
+    for (const auto& labels : legend_map.second)
+    {
+      std::string new_key = labels.first;
+      for (const auto& rm : labels_map)
+      {
+        if (!rm.first.empty())
+        {
+          new_key = replaceStr(new_key, rm.first + xlabel_del, "");
+          new_key = replaceStr(new_key, rm.first, "");
+        }
+      }
+      it->second.insert({ new_key, std::move(labels.second) });
+    }
+  }
+
+  plt_values.clear();
+  plt_values = temp;
+  temp.clear();
+
+  // Filter out redundant legend
+  std::set<std::string> remove_set;
+  for (const auto& legend_map : plt_values)
+  {
+    auto keys = splitStr(legend_map.first, legend_del);
+
+    for (const auto& key : keys)
+    {
+      int ctr = 0;
+      for (const auto& legend_map_ : plt_values)
+      {
+        if (legend_map_.first.find(key) != std::string::npos)
+          ctr++;
+      }
+      if (ctr == plt_values.size())
+        remove_set.insert(key);
+    }
+  }
+
+  for (auto& legend_map : plt_values)
+  {
+    bool found = false;
+    std::string new_key = legend_map.first;
+    for (const auto& rm : remove_set)
+    {
+      if (!rm.empty())
+      {
+        new_key = replaceStr(legend_map.first, legend_del + rm, "");
+        new_key = replaceStr(legend_map.first, rm, "");
+      }
+    }
+
+    if (new_key.size() >= legend_del.size())
+    {
+      if (legend_del.compare(&new_key[new_key.size() - legend_del.size()]) == 0)
+        for (int i = 0; i < legend_del.size(); ++i)
+          new_key.pop_back();  // Remove trailing delimiter
+    }
+    temp.insert({ new_key, std::move(legend_map.second) });
+  }
+
+  plt_values.clear();
+  plt_values = temp;
   return true;
 }
 
@@ -867,6 +968,9 @@ bool GNUPlotDataSet::filterDataLegend(const DataPtr& data, const YAML::Node& met
   if (!legend_name.empty())
     for (int i = 0; i < del.size(); ++i)
       legend_name.pop_back();
+
+  if (legend_name.empty())
+    return false;
   return true;
 }
 
@@ -940,8 +1044,9 @@ bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& meta
         xtick_name += xtick_value;
       }
       else
+      {
         xtick_name += token.token + token.value;
-
+      }
       if (multiple_datasets)
       {
         bool found = false;
@@ -1020,10 +1125,12 @@ bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& meta
       return false;
   }
 
-  if (xtick_name.empty())
-    return false;
-  else
+  if (!xtick_name.empty())
     for (int i = 0; i < del.size(); ++i)
       xtick_name.pop_back();  // Remove trailing delimiter
+
+  if (xtick_name.empty())
+    return false;
+
   return true;
 }
