@@ -990,28 +990,30 @@ bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& meta
   node = YAML::Clone(metadata);
   node[DATA_CONFIG_KEY] = data->query->group_name_map;
 
-  TokenSet xlabel_set;
+  // Add missing default config groups
+  TokenSet xlabel_set = xtick_set;
+  for (const auto& id : data->query->group_name_map)
+  {
+    bool match = false;
 
-  // Default to all data config group value
-  if (xtick_set.empty())
-  {
-    for (const auto& id : data->query->group_name_map)
-      xlabel_set.insert(Token(std::string("config/" + id.first + "/" + id.second)));
-  }
-  else
-  {
-    for (const auto& xlabel : xtick_set)
-      xlabel_set.insert(xlabel);
+    for (const auto& xlabel : xlabel_set)
+    {
+      Token t(xlabel);
+      if (t.group.compare("config/" + id.first + "/") == 0)
+      {
+        match = true;
+        break;
+      }
+    }
+    if (!match)
+      xlabel_set.insert("config/" + id.first + "/" + id.second);
   }
 
   std::set<std::string> dataset_fail;
   std::set<std::string> dataset_success;
-
   for (const auto& token : xlabel_set)
   {
     YAML::Node res;
-    // if (!token::compareToNode(token, node, res))
-    //  return false;
     if (token::compareToNode(token, node, res))
       dataset_success.insert(token.group);
     else
@@ -1020,113 +1022,40 @@ bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& meta
       continue;
     }
 
-    if (!xtick_name.empty())
+    // Check token againt legend set
+    bool legend_match = false;
+    for (const auto& legend : legend_set)
+    {
+      if (legend.group.compare(token.group) == 0)
+      {
+        legend_match = true;
+        break;
+      }
+    }
+    if (legend_match)
       continue;
 
-    if (token::hasValue(token))
+    // Belongs to 'config/' node
+    if (token.key_root.compare(DATA_CONFIG_KEY) == 0)
     {
-      std::set<std::string> keys;
-      if (token.key_root.compare(DATA_CONFIG_KEY) == 0)
-      {
-        res = node[DATA_CONFIG_KEY];
-        auto node_kv = token::getChildNodeKeyValues(res);
-
-        for (const auto& kv : node_kv)
-        {
-          keys.insert(kv.second);
-          for (const auto& t : legend_set)
-          {
-            if (t.keys[1].compare(kv.first) == 0)
-              keys.erase(kv.second);
-          }
-        }
-        std::string xtick_value;
-        for (const auto& key : keys)
-        {
-          xtick_value += key;
-          xtick_value += del;
-        }
-        if (!xtick_value.empty())
-          for (int i = 0; i < del.size(); ++i)
-            xtick_value.pop_back();
-        xtick_name += xtick_value;
-      }
-      else
-      {
-        xtick_name += token.token + token.value;
-      }
-      if (multiple_datasets)
-      {
-        bool found = false;
-        for (const auto& t : legend_set)
-        {
-          if (t.key_root.compare("uuid") == 0)
-            found = true;
-        }
-        if (!found)
-          xtick_name += del + metadata[DATASET_UUID_KEY].as<std::string>();
-      }
+      auto label = token::getNodeValue(res);
+      xtick_name += label + del;
     }
-
     else
     {
-      std::set<std::string> keys;
-      if (token.key_root.compare(DATA_CONFIG_KEY) == 0)
-      {
-        res = node[DATA_CONFIG_KEY];
-        auto node_kv = token::getChildNodeKeyValues(res);
-
-        for (const auto& kv : node_kv)
-        {
-          keys.insert(kv.second);
-          for (const auto& t : legend_set)
-          {
-            if (t.keys[1].compare(kv.first) == 0)
-              keys.erase(kv.second);
-          }
-        }
-      }
+      auto label = token::getNodeValue(res);
+      if (!label.empty())
+        xtick_name += label + del;
       else
       {
-        // try getting child node keys
-        keys = token::getChildNodeKeys(res);
-
-        // get node value
-        if (keys.empty())
-          keys.insert(token::getNodeValue(res));
-      }
-
-      std::string xtick_value;
-      for (const auto& key : keys)
-      {
-        xtick_value += key;
-        xtick_value += del;
-      }
-      if (!xtick_value.empty())
-        for (int i = 0; i < del.size(); ++i)
-          xtick_value.pop_back();
-
-      if (token.key_root.compare(DATA_CONFIG_KEY) == 0)
-        xtick_name += xtick_value;
-      else
-        xtick_name += token.token + xtick_value;
-
-      if (multiple_datasets)
-      {
-        bool found = false;
-        for (const auto& t : legend_set)
-        {
-          if (t.key_root.compare("uuid") == 0)
-            found = true;
-        }
-        if (!found)
-          xtick_name += del + metadata[DATASET_UUID_KEY].as<std::string>();
+        auto labels = token::getChildNodeKeys(res);
+        for (const auto& label : labels)
+          xtick_name += label + del;
       }
     }
-
-    xtick_name += del;
   }
 
+  // Filter out if failure label not in success
   for (const auto& group_fail : dataset_fail)
   {
     if (dataset_success.find(group_fail) == dataset_success.end())
