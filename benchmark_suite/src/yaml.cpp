@@ -1919,6 +1919,7 @@ bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& n, moveit_benc
 
   rhs.name = node[DATASET_NAME_KEY].as<std::string>();
   rhs.type = node[DATASET_TYPE_KEY].as<std::string>();
+  rhs.uuid = node[DATASET_UUID_KEY].as<std::string>();
   rhs.date = boost::posix_time::time_from_string(node[DATASET_DATE_KEY].as<std::string>());
   rhs.date_utc = boost::posix_time::time_from_string(node[DATASET_DATE_UTC_KEY].as<std::string>());
   rhs.time = node[DATASET_TOTAL_TIME_KEY].as<double>();
