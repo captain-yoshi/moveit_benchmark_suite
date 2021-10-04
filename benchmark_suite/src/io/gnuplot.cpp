@@ -489,14 +489,12 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
     for (std::size_t j = 0; j < n_legend; ++j)
     {
       if (is_legend)
-        in->writeline(log::format("'$data%1%' using (%2%):1 title \"%3%\" with boxes lt %4%, '$data%1%' u "
-                                  "(%2%):1:1 title \"\" with labels offset char 0,1%5%",
-                                  index[ctr], x_offsets[i] + j * boxwidth, (i == 0) ? legend_titles[j] : "", j + 1,
+        in->writeline(log::format("'$data%1%' using (%2%):1 title \"%3%\" with boxes lt %4%%5%", index[ctr],
+                                  x_offsets[i] + j * boxwidth, (i == 0) ? legend_titles[j] : "", j + 1,
                                   (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
       else
-        in->writeline(log::format("'$data%1%' using (%2%):1 with boxes, '$data%1%' u "
-                                  "(%2%):1:1 with labels offset char 0,1%3%",
-                                  ctr + 1, ctr + 1, (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
+        in->writeline(log::format("'$data%1%' using (%2%):1 with boxes %3%", ctr + 1, ctr + 1,
+                                  (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
       ctr++;
     }
   }
@@ -793,16 +791,16 @@ bool GNUPlotDataSet::fillDataSet(const std::string& metric_name, const std::vect
 
   // Filter out redundant legend
   std::set<std::string> remove_set;
-  for (const auto& map1 : plt_values)
+  for (const auto& legend_map : plt_values)
   {
-    auto keys = splitStr(map1.first, "+");
+    auto keys = splitStr(legend_map.first, legend_del);
 
     for (const auto& key : keys)
     {
       int ctr = 0;
-      for (const auto& map2 : plt_values)
+      for (const auto& legend_map_ : plt_values)
       {
-        if (map2.first.find(key) != std::string::npos)
+        if (legend_map_.first.find(key) != std::string::npos)
           ctr++;
       }
       if (ctr == plt_values.size())
@@ -810,21 +808,26 @@ bool GNUPlotDataSet::fillDataSet(const std::string& metric_name, const std::vect
     }
   }
 
-  for (auto& map1 : plt_values)
+  for (auto& legend_map : plt_values)
   {
     bool found = false;
-    std::string new_key;
+    std::string new_key = legend_map.first;
     for (const auto& rm : remove_set)
     {
-      new_key = replaceStr(map1.first, " +" + rm, "");
-
-      if (new_key.empty())
-        new_key = replaceStr(map1.first, rm, "");
+      if (!rm.empty())
+      {
+        new_key = replaceStr(legend_map.first, legend_del + rm, "");
+        new_key = replaceStr(legend_map.first, rm, "");
+      }
     }
-    if (new_key.empty())
-      temp.insert({ map1.first, std::move(map1.second) });
-    else
-      temp.insert({ new_key, std::move(map1.second) });
+
+    if (new_key.size() >= legend_del.size())
+    {
+      if (legend_del.compare(&new_key[new_key.size() - legend_del.size()]) == 0)
+        for (int i = 0; i < legend_del.size(); ++i)
+          new_key.pop_back();  // Remove trailing delimiter
+    }
+    temp.insert({ new_key, std::move(legend_map.second) });
   }
 
   plt_values.clear();
