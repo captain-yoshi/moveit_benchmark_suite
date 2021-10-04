@@ -1,6 +1,5 @@
 html_config:
-  # PP vs MGI time of RRTConnect over all scenes
-  - title: PP vs MGI
+  - title: PlanningPipeline vs MoveGroupInterface
     legend_filters:
       - type/MOTION PLANNING PP
       - type/MOTION PLANNING MGI
@@ -8,17 +7,16 @@ html_config:
       - config/scene/
       - config/planner/RRTConnect
       - config/collision_detector/FCL
+      - config/request/jc-goal
     metrics:
       - time: boxplot
 
-  # Scenes & goal constraints
-  - title: Scenes & goal constraints
+  - title: Scenes vs Constraints
     legend_filters:
       - type/MOTION PLANNING PP
-      - config/scene/
+      - config/request/
     xtick_filters:
       - config/planner/RRTConnect
-      #- config/planner/BST
       - config/collision_detector/FCL
     metrics:
       - time: boxplot
@@ -32,49 +30,49 @@ html_config:
     xtick_filters:
       - config/planner/
       - config/collision_detector/FCL
-      - config/request/jc
+      - config/request/jc-goal
       - config/pipeline/ompl
     metrics:
       - time: boxplot
       - avg_success: bargraph
       - avg_correct: bargraph
 
-  - title: Planners vs Collision Detectors
+  - title: Planners vs Collision Detectors (mesh-scene)
     legend_filters:
       - type/MOTION PLANNING PP
       - config/collision_detector/
     xtick_filters:
       - config/scene/bbt-mesh
       - config/planner/
-      - config/request/jc
+      - config/request/jc-goal
       - config/pipeline/ompl
     metrics:
       - time: boxplot
       - avg_success: bargraph
       - avg_correct: bargraph
 
-  - title: Planners vs Collision Detectors
+  - title: Planners vs Collision Detectors (primitive-scene)
     legend_filters:
       - type/MOTION PLANNING PP
       - config/collision_detector/
     xtick_filters:
       - config/scene/bbt-primitive
       - config/planner/
-      - config/request/jc
+      - config/request/jc-goal
       - config/pipeline/ompl
     metrics:
       - time: boxplot
       - avg_success: bargraph
       - avg_correct: bargraph
 
-  - title: Planners vs Collision Detectors
+  - title: Planners vs Collision Detectors (empty-scene)
     legend_filters:
       - type/MOTION PLANNING PP
       - config/collision_detector/
     xtick_filters:
       - config/scene/empty-scene
       - config/planner/
-      - config/request/jc
+      - config/request/jc-goal
       - config/pipeline/ompl
     metrics:
       - time: boxplot
