@@ -1,97 +1,41 @@
 benchmark_config:
   parameters:
-    name: "debug-pp-fix-robert"
-    runs: 20                             # Number of runs per scene, interface, collision detector and each planning algorithm
+    name: Collision Check
+    runs: 5
 
-  robot_states:
-      - default:        package://moveit_benchmark_suite/db.yaml
-      - in_collision:   node://forward_robot_state
-      - rest:
-          joint_state:
-            header:
-              frame_id: panda_link0
-            name: [panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7, panda_finger_joint1, panda_finger_joint2]
-            position: [-0.366519, 0.401426, -0.0872665, -2.3911, 0.10472, 2.79253, -1.3439, 0.015, 0.015]
-
-
-
-
-  scenes:
-
-
-
-  interface:
-    #- PlanningPipeline
-    - MoveGroupInterface
+  robot_name: panda
 
   collision_detectors:
     - FCL
-    #- Bullet                            # Not configurable when using the MoveGroupInterface
+    - Bullet
 
-  planning_pipelines:
-    - name: ompl                        # REQUIRED
-      planners:                         # REQUIRED
-        - RRTConnectkConfigDefault
-        #- RRTkConfigDefault
-    #- name: stomp
-    #  planners:
-    #    - STOMP
+  robot_states:
+    - name: ready
+      robot_state:
+        joint_state:
+          header:
+            frame_id: panda_link0
+          name: [panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7]
+          position: [0, -0.785, 0, -2.356, 0, 1.571, 0.785]
 
-
-
-
-forward_robot_state:
-  joint_state:
-    header:
-      frame_id: panda_link0
-    name: [panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7, panda_finger_joint1, panda_finger_joint2]
-    position: [-0.366519, 0.401426, -0.0872665, -2.3911, 0.10472, 2.79253, -1.3439, 0.015, 0.015]
-
-
-
-
-
-##############################################################################
-#
-# OPTIONAL: Use to Aggregate and/or Plot after the benchmark is completed
-#
-##############################################################################
-
-#aggregate_config:
-#  #filters:                            # Optionnal
-#  #  - type/COLLISION CHECK
-#  aggregate:                           # Required
-#    - raw_metric: time
-#      new_metric: avg_time
-#      type: average
-#    - raw_metric: waypoints
-#      new_metric: avg_waypoints
-#      type: average
-#    - raw_metric: length
-#      new_metric: avg_length
-#      type: average
-#    - raw_metric: success
-#      new_metric: avg_success
-#      type: average
-#    - raw_metric: correct
-#      new_metric: avg_correct
-#      type: average
-#    - raw_metric: smoothness
-#      new_metric: avg_smoothness
-#      type: average
-#    - raw_metric: clearance
-#      new_metric: avg_clearance
-#      type: average
-#
-#
-#gnuplot_config:
-#  xtick_filters:                       # REQUIRED
-#    - config/collision_detector/
-#  legend_filters:                      # Optionnal
-#    - config/scene/
-#  metrics:                             # REQUIRED
-#    - time: boxplot
-#    - avg_success: bargraph
-#  options:                             # Optionnal
-#      n_row: 2
-#      n_col: 1
+  collision_requests:
+    - name: requests
+      distance: False
+      cost: False
+      contacts: True
+      max_contacts: 99
+      max_contacts_per_pair: 10
+      max_cost_sources: 1
+      verbose: False
+      
+  clutter_worlds:
+    - name: empty-world
+      n_objects: 0
+      
+    - name: clutter-world
+      robot_state: ready
+      n_objects: 1000
+      object_type: MESH
+      resource: package://moveit_resources_panda_description/meshes/collision/link5.stl
+      scale:
+        - bound: [0.3, 1.0]
