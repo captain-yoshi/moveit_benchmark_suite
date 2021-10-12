@@ -1016,8 +1016,9 @@ bool GNUPlotDataSet::filterDataLegend(const DataPtr& data, const YAML::Node& met
     for (int i = 0; i < del.size(); ++i)
       legend_name.pop_back();
 
-  if (legend_name.empty())
+  if (!legend_set.empty() && legend_name.empty())
     return false;
+
   return true;
 }
 
