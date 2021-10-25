@@ -157,3 +157,6 @@ bool Profiler::profilePlan(const QueryPtr& query, Data& result) const
 {
   return false;
 }
+void Profiler::visualize(const DataSet& dataset) const
+{
+}

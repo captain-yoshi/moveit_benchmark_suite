@@ -258,6 +258,7 @@ public:
   void profileSetup(const QueryPtr& query) const;
 
   virtual bool profilePlan(const QueryPtr& query, Data& result) const;
+  virtual void visualize(const DataSet& dataset) const;
 };
 
 }  // namespace moveit_benchmark_suite
