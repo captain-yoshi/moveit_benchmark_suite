@@ -47,11 +47,6 @@ const std::string& CollisionCheckConfig::getBenchmarkName() const
   return benchmark_name_;
 }
 
-bool CollisionCheckConfig::getVisualization() const
-{
-  return visualization_;
-}
-
 const std::string& CollisionCheckConfig::getRobotName() const
 {
   return robot_name_;
@@ -79,7 +74,6 @@ void CollisionCheckConfig::readParameters(ros::NodeHandle& nh)
 {
   nh.param(std::string("/benchmark_config/parameters/name"), benchmark_name_, std::string(""));
   nh.param(std::string("/benchmark_config/parameters/runs"), runs_, 10);
-  nh.param(std::string("/benchmark_config/parameters/visualize"), visualization_, false);
 
   ROS_INFO("Benchmark name: '%s'", benchmark_name_.c_str());
   ROS_INFO("Benchmark #runs: %d", runs_);

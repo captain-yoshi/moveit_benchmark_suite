@@ -97,7 +97,6 @@ int main(int argc, char** argv)
   double trials = config.getNumRuns();
   const auto& benchmark_name = config.getBenchmarkName();
   const auto& query_setup = builder.getQuerySetup();
-  bool visualize = config.getVisualization();
 
   // Setup profiler
   CollisionCheckProfiler profiler;
