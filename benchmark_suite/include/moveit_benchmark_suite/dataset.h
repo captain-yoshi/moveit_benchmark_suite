@@ -133,10 +133,13 @@ struct QuerySetup
 class Response
 {
 public:
+  Response() = default;
+
+  virtual ~Response(){};
   /** \name Planning Query and Response
       \{ */
 
-  bool success;  ///< Was the plan successful?
+  bool success = false;  ///< Was the plan successful?
 };
 
 /** */
