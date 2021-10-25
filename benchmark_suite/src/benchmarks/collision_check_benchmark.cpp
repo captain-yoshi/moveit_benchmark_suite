@@ -235,3 +235,31 @@ bool CollisionCheckProfiler::profilePlan(const QueryPtr& query_base,  //
 
   return result.success;
 }
+
+void CollisionCheckProfiler::visualize(const DataSet& dataset) const
+{
+  ros::NodeHandle nh;
+  ros::Publisher pub = nh.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
+  ros::Duration(0.5).sleep();
+
+  auto qr_list = dataset.getQueryResponse();
+  for (const auto& qr : qr_list)
+  {
+    // Downcasting query and response base class
+    auto query = getDerivedClass<CollisionCheckQuery>(qr.query);
+    auto response = getDerivedClass<CollisionCheckResponse>(qr.response);
+    if (!query || !response)
+      continue;
+
+    // Fill and publish planning scene
+    moveit_msgs::PlanningScene ps;
+    query->scene->getPlanningSceneMsg(ps);
+    moveit::core::robotStateToRobotStateMsg(*query->robot_state, ps.robot_state, true);
+
+    pub.publish(ps);
+
+    ROS_INFO("Query name: '%s'", query->name.c_str());
+    ROS_INFO("Press 'Enter' to view next query");
+    std::cin.ignore();
+  }
+}

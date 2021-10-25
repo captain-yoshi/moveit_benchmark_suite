@@ -179,6 +179,7 @@ public:
    *  \return True if planning succeeded, false on failure.
    */
   bool profilePlan(const QueryPtr& query, Data& result) const override;
+  void visualize(const DataSet& dataset) const override;
 
   Options options_;
 };

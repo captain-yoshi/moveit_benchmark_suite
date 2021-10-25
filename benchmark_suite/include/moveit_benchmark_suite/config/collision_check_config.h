@@ -88,6 +88,7 @@ public:
 
   int getNumRuns() const;
   const std::string& getBenchmarkName() const;
+  bool getVisualization() const;
 
   const std::string& getRobotName() const;
   const std::set<std::string>& getCollisionDetectors() const;
@@ -110,6 +111,7 @@ protected:
   // benchmark parameters
   int runs_;
   std::string benchmark_name_;
+  bool visualization_;
 
   // queries
   std::string robot_name_;
