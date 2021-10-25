@@ -1,7 +1,7 @@
 /*********************************************************************
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2019, Jens Petit
+ *  Copyright (c) 2021, Captain Yoshi
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
- *   * Neither the name of the copyright holder nor the names of its
+ *   * Neither the name of Bielefeld University nor the names of its
  *     contributors may be used to endorse or promote products derived
  *     from this software without specific prior written permission.
  *
@@ -32,7 +32,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Jens Petit */
+/* Author: Captain Yoshi
+   Desc: Collision checking benchmark node
+*/
 
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 #include <moveit/collision_plugin_loader/collision_plugin_loader.h>
@@ -50,8 +52,15 @@
 #include <moveit_benchmark_suite/aggregation.h>
 #include <moveit_benchmark_suite/io/gnuplot.h>
 
+#include <moveit_benchmark_suite/config/collision_check_config.h>
+#include <moveit_benchmark_suite/benchmarks/builder/collision_check.h>
+
 using namespace moveit_benchmark_suite;
 using namespace moveit_benchmark_suite::collision_check;
+
+// Parameter names
+constexpr char OUTPUT_PARAMETER[] = "output_file";
+constexpr char VISUALIZATION_PARAMETER[] = "visualization";
 
 int main(int argc, char** argv)
 {
@@ -61,14 +70,10 @@ int main(int argc, char** argv)
 
   ros::NodeHandle pnh("~");
 
-  // Prepare query setup
-  QuerySetup query_setup;
-
   // Parse output directory and filename
   std::string file;
   std::string filepath;
   std::string filename;
-  constexpr char OUTPUT_PARAMETER[] = "output_file";
   if (!pnh.getParam(OUTPUT_PARAMETER, file))
   {
     ROS_FATAL_STREAM("Parameter '" << OUTPUT_PARAMETER << "' is not set.");
@@ -78,162 +83,58 @@ int main(int argc, char** argv)
   filepath = IO::getFilePath(file);
   filename = IO::getFileName(file);
 
-  // TODO load configuration
-  std::vector<std::string> collision_detector_names = { "FCL", "Bullet" };
+  // Parse visualization flag
+  bool visualization = false;
+  pnh.getParam(VISUALIZATION_PARAMETER, visualization);
 
-  // Setup robot
-  moveit::core::RobotModelPtr robot_model;
-  robot_model = moveit::core::loadTestingRobotModel("panda");
+  // Build queries
+  CollisionCheckBuilder builder;
+  builder.buildQueries();
 
-  // Setup default scene
-  planning_scene::PlanningScenePtr planning_scene = std::make_shared<planning_scene::PlanningScene>(robot_model);
-  planning_scene_monitor::PlanningSceneMonitor psm(planning_scene, ROBOT_DESCRIPTION);
-  psm.startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE);
-  psm.startSceneMonitor();
-  planning_scene->setActiveCollisionDetector(collision_detection::CollisionDetectorAllocatorBullet::create());
+  const auto& queries = builder.getQueries();
+  const auto& config = builder.getConfig();
 
-  collision_detection::CollisionRequest req;
-  collision_detection::CollisionResult res;
-  collision_detection::AllowedCollisionMatrix acm{ collision_detection::AllowedCollisionMatrix(
-      robot_model->getLinkModelNames(), true) };
-  planning_scene->checkCollision(req, res, planning_scene->getCurrentState(), acm);
+  double trials = config.getNumRuns();
+  const auto& benchmark_name = config.getBenchmarkName();
+  const auto& query_setup = builder.getQuerySetup();
+  bool visualize = config.getVisualization();
 
-  // Setup robot states
-  std::vector<std::pair<std::string, moveit::core::RobotStatePtr>> sampled_states;
-  moveit::core::RobotState& current_state{ planning_scene->getCurrentStateNonConst() };
-  current_state.setToDefaultValues(current_state.getJointModelGroup("panda_arm"), "home");
-  current_state.update();
-
-  sampled_states.emplace_back();
-  sampled_states.back().first = "no-collision";
-  sampled_states.back().second = std::make_shared<moveit::core::RobotState>(current_state);
-
-  query_setup.addQuery("robot_state", sampled_states.back().first, "");
-
-  // bring the robot into a position which collides with the world clutter
-  double joint_2 = 1.5;
-  current_state.setJointPositions("panda_joint2", &joint_2);
-  current_state.update();
-
-  sampled_states.emplace_back();
-  sampled_states.back().first = "in-collision";
-  sampled_states.back().second = std::make_shared<moveit::core::RobotState>(current_state);
-
-  query_setup.addQuery("robot_state", sampled_states.back().first, "");
-
-  // Setup scene msg
-  std::vector<moveit_msgs::PlanningScene> scene_msgs;
-
-  scene_msgs.emplace_back();
-  planning_scene->getPlanningSceneMsg(scene_msgs.back());  // Empty world
-  scene_msgs.back().name = "empty-world";
-  query_setup.addQuery("scene", scene_msgs.back().name, "");
-
-  clutterWorld(planning_scene, 100, CollisionObjectType::MESH);
-  scene_msgs.emplace_back();
-  planning_scene->getPlanningSceneMsg(scene_msgs.back());  // Cluttered world
-  scene_msgs.back().name = "clutter-world";
-  query_setup.addQuery("scene", scene_msgs.back().name, "");
-
-  // Setup scenes with pair wise collision detector
-  std::vector<planning_scene::PlanningScenePtr> scenes;
-
-  CollisionPluginLoader plugin;
-
-  for (const auto& cd_name : collision_detector_names)
-  {
-    plugin.load(cd_name);
-    query_setup.addQuery("collision_detector", cd_name, "");
-    for (const auto& scene_msg : scene_msgs)
-    {
-      scenes.emplace_back();
-      scenes.back() = std::make_shared<planning_scene::PlanningScene>(robot_model);
-      scenes.back()->usePlanningSceneMsg(scene_msg);
-      plugin.activate(cd_name, scenes.back(), true);
-    }
-  }
-
-  // Create queries
-  std::vector<CollisionCheckQueryPtr> queries;
-  int ctr = 0;
-  for (const auto& scene : scenes)
-  {
-    // Create collision requests
-    collision_detection::CollisionRequest req;
-    req.distance = false;
-
-    std::string self_collision = "self-collision";
-    if (scene->getWorld()->size() != 0)
-    {
-      req.contacts = true;
-      req.max_contacts = 99;
-      req.max_contacts_per_pair = 10;
-      // If distance is turned on it will slow down the collision checking a lot. Try reducing the
-      // number of contacts consequently.
-      // req.distance = true;
-      self_collision = "environment-collision";
-    }
-    for (auto& state : sampled_states)
-    {
-      std::string query_name = "q" + std::to_string(++ctr);
-
-      QueryGroupName query_gn = { { "scene", scene->getName() },
-                                  { "collision_detector", scene->getActiveCollisionDetectorName() },
-                                  { "robot_state", state.first },
-                                  { "request", self_collision } };
-
-      queries.push_back(std::make_shared<CollisionCheckQuery>(query_name, query_gn, scene, state.second, req));
-    }
-  }
+  // Setup profiler
+  CollisionCheckProfiler profiler;
+  profiler.options_.metrics = CollisionCheckProfiler::DISTANCE | CollisionCheckProfiler::CONTACTS;
 
   // Setup benchmark
-  CollisionCheckProfiler profiler;
+  Benchmark benchmark(benchmark_name,                  // Name of benchmark
+                      BenchmarkType::COLLISION_CHECK,  // Benchamrk type
+                      profiler,                        // Options for internal profiler
+                      query_setup,                     // Query config for benchmark
+                      0,                               // Timeout allowed for ALL queries
+                      trials);                         // Number of trials
 
-  // template <typename ProfilerType, typename QueryType, typename DataSetTypePtr>
-  Benchmark benchmark("collision checks",  // Name of benchmark
-                      BenchmarkType::COLLISION_CHECK,
-                      profiler,  // Options for internal profiler
-                      query_setup,
-                      0,     // Timeout allowed for ALL queries
-                      100);  // Number of trials
-
+  // Add queries
   for (const auto& query : queries)
     benchmark.addQuery(query);
-
-  // Aggregate time metric into collision checks / second
-  benchmark.addPostRunCallback([&](DataSetPtr dataset, const Query& query) {
-    aggregate::toFrequency("time", "collision_checks_per_second", dataset, query);
-  });
 
   // Run benchmark
   auto dataset = benchmark.run();
 
-  IO::GNUPlotDataSet plot;
-  plot.addMetric("time", IO::GNUPlotDataSet::BoxPlot);
-  plot.addMetric("collision_checks_per_second", IO::GNUPlotDataSet::BarGraph);
+  if (!dataset)
+    return 0;
 
-  IO::QtTerminal terminal;
-
-  IO::GNUPlotHelper::MultiPlotOptions mpo;
-  mpo.layout.row = 2;
-  mpo.layout.col = 1;
-
-  TokenSet xtick;
-  // filter_set.insert(Token("query_setup", ""));
-  xtick.insert(Token("query_setup/scene", "clutter-world"));
-  xtick.insert(Token("query_setup/scene", "empty-world"));
-
-  TokenSet legend;
-  legend.insert(Token("query_setup/collision_detector", "Bullet"));
-  // legend_set.insert(Token("hardware/cpu/vendor_id", ""));
-
-  plot.dump(dataset, terminal, mpo, xtick, legend);
-
-  // Dump metrics to a logfile
+  // Dump metrics to logfile
   BenchmarkSuiteDataSetOutputter output;
   output.dump(*dataset, filepath, filename);
 
-  // ros::waitForShutdown();
+  // Wait if GNUPlot was configured
+  if (benchmark.getPlotFlag())
+  {
+    ROS_WARN("Press ENTER to continue");
+    std::cin.ignore();
+  }
+
+  // Visualize dataset results
+  if (visualization)
+    profiler.visualize(*dataset);
 
   return 0;
 }

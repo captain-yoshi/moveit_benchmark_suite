@@ -38,146 +38,11 @@
 #include <moveit_benchmark_suite/io.h>
 #include <chrono>
 
-using namespace moveit_benchmark_suite::collision_check;
+#include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include <moveit/move_group_interface/move_group_interface.h>
+#include <moveit/robot_state/conversions.h>
 
-/** \brief Clutters the world of the planning scene with random objects in a certain area around the origin. All added
- *  objects are not in collision with the robot.
- *
- *   \param planning_scene The planning scene
- *   \param num_objects The number of objects to be cluttered
- *   \param CollisionObjectType Type of object to clutter (mesh or box) */
-void moveit_benchmark_suite::collision_check::clutterWorld(const planning_scene::PlanningScenePtr& planning_scene,
-                                                           const size_t num_objects, CollisionObjectType type)
-{
-  ROS_INFO("Cluttering scene...");
-
-  random_numbers::RandomNumberGenerator num_generator = random_numbers::RandomNumberGenerator(123);
-
-  // allow all robot links to be in collision for world check
-  collision_detection::AllowedCollisionMatrix acm{ collision_detection::AllowedCollisionMatrix(
-      planning_scene->getRobotModel()->getLinkModelNames(), true) };
-
-  // set the robot state to home position
-  moveit::core::RobotState& current_state{ planning_scene->getCurrentStateNonConst() };
-  collision_detection::CollisionRequest req;
-  current_state.setToDefaultValues(current_state.getJointModelGroup("panda_arm"), "home");
-  current_state.update();
-
-  // load panda link5 as world collision object
-  std::string name;
-  shapes::ShapeConstPtr shape;
-  std::string kinect = "package://moveit_resources_panda_description/meshes/collision/link5.stl";
-
-  Eigen::Quaterniond quat;
-  Eigen::Isometry3d pos{ Eigen::Isometry3d::Identity() };
-
-  size_t added_objects{ 0 };
-  size_t i{ 0 };
-  // create random objects until as many added as desired or quit if too many attempts
-  while (added_objects < num_objects && i < num_objects * MAX_SEARCH_FACTOR_CLUTTER)
-  {
-    // add with random size and random position
-    pos.translation().x() = num_generator.uniformReal(-1.0, 1.0);
-    pos.translation().y() = num_generator.uniformReal(-1.0, 1.0);
-    pos.translation().z() = num_generator.uniformReal(0.0, 1.0);
-
-    quat.x() = num_generator.uniformReal(-1.0, 1.0);
-    quat.y() = num_generator.uniformReal(-1.0, 1.0);
-    quat.z() = num_generator.uniformReal(-1.0, 1.0);
-    quat.w() = num_generator.uniformReal(-1.0, 1.0);
-    quat.normalize();
-    pos.rotate(quat);
-
-    switch (type)
-    {
-      case CollisionObjectType::MESH:
-      {
-        shapes::Mesh* mesh = shapes::createMeshFromResource(kinect);
-        mesh->scale(num_generator.uniformReal(0.3, 1.0));
-        shape.reset(mesh);
-        name = "mesh";
-        break;
-      }
-      case CollisionObjectType::BOX:
-      {
-        shape =
-            std::make_shared<shapes::Box>(num_generator.uniformReal(0.05, 0.2), num_generator.uniformReal(0.05, 0.2),
-                                          num_generator.uniformReal(0.05, 0.2));
-        name = "box";
-        break;
-      }
-    }
-
-    name.append(std::to_string(i));
-    planning_scene->getWorldNonConst()->addToObject(name, shape, pos);
-
-    // try if it isn't in collision if yes, ok, if no remove.
-    collision_detection::CollisionResult res;
-    planning_scene->checkCollision(req, res, current_state, acm);
-
-    if (!res.collision)
-    {
-      added_objects++;
-    }
-    else
-    {
-      ROS_DEBUG_STREAM("Object was in collision, remove");
-      planning_scene->getWorldNonConst()->removeObject(name);
-    }
-
-    i++;
-  }
-  ROS_INFO_STREAM("Cluttered the planning scene with " << added_objects << " objects");
-}
-
-/** \brief Samples valid states of the robot which can be in collision if desired.
- *  \param desired_states Specifier for type for desired state
- *  \param num_states Number of desired states
- *  \param scene The planning scene
- *  \param robot_states Result vector */
-void moveit_benchmark_suite::collision_check::findStates(const RobotStateSelector desired_states,
-                                                         unsigned int num_states,
-                                                         const planning_scene::PlanningScenePtr& scene,
-                                                         std::vector<moveit::core::RobotState>& robot_states)
-{
-  moveit::core::RobotState& current_state{ scene->getCurrentStateNonConst() };
-  collision_detection::CollisionRequest req;
-
-  size_t i{ 0 };
-  while (robot_states.size() < num_states && i < num_states * MAX_SEARCH_FACTOR_STATES)
-  {
-    current_state.setToRandomPositions();
-    current_state.update();
-    collision_detection::CollisionResult res;
-    scene->checkSelfCollision(req, res);
-    ROS_INFO_STREAM("Found state " << (res.collision ? "in collision" : "not in collision"));
-
-    switch (desired_states)
-    {
-      case RobotStateSelector::IN_COLLISION:
-        if (res.collision)
-          robot_states.push_back(current_state);
-        break;
-      case RobotStateSelector::NOT_IN_COLLISION:
-        if (!res.collision)
-          robot_states.push_back(current_state);
-        break;
-      case RobotStateSelector::RANDOM:
-        robot_states.push_back(current_state);
-        break;
-    }
-    i++;
-  }
-
-  if (!robot_states.empty())
-  {
-    scene->setCurrentState(robot_states[0]);
-  }
-  else
-  {
-    ROS_ERROR_STREAM("Did not find any correct states.");
-  }
-}
+using namespace moveit_benchmark_suite;
 
 ///
 /// CollisionCheckQuery
@@ -206,16 +71,8 @@ bool CollisionCheckProfiler::profilePlan(const QueryPtr& query_base,  //
 
   CollisionCheckResponse response;
   // Plan
-  if (query->scene->getWorld()->size() == 0)
-  {
-    result.start = std::chrono::high_resolution_clock::now();
-    query->scene->checkSelfCollision(query->request, response.response);
-  }
-  else
-  {
-    result.start = std::chrono::high_resolution_clock::now();
-    query->scene->checkCollision(query->request, response.response, *query->robot_state);
-  }
+  result.start = std::chrono::high_resolution_clock::now();
+  query->scene->checkCollision(query->request, response.response, *query->robot_state);
 
   // Compute metrics and fill out results
   result.finish = std::chrono::high_resolution_clock::now();
@@ -227,8 +84,14 @@ bool CollisionCheckProfiler::profilePlan(const QueryPtr& query_base,  //
   result.thread_id = IO::getThreadID();
 
   result.success = true;
+
   // Compute metrics
   result.metrics["time"] = result.time;
+
+  if (query->request.contacts)
+    result.metrics["contact_count"] = response.response.contact_count;
+  if (query->request.distance)
+    result.metrics["closest_distance"] = response.response.distance;
 
   response.success = result.success;
   result.response = std::make_shared<CollisionCheckResponse>(response);
