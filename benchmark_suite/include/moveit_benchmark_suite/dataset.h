@@ -245,6 +245,16 @@ public:
     return derived_ptr;
   };
 
+  template <typename DerivedQuery>
+  std::shared_ptr<DerivedQuery> getDerivedClass(const ResponsePtr& query) const
+  {
+    auto derived_ptr = std::dynamic_pointer_cast<DerivedQuery>(query);
+    if (!derived_ptr)
+      ROS_ERROR_STREAM("Cannot downcast '" << typeid(DerivedQuery).name() << "' from Response base class'");
+
+    return derived_ptr;
+  };
+
   void profileSetup(const QueryPtr& query) const;
 
   virtual bool profilePlan(const QueryPtr& query, Data& result) const;
