@@ -169,6 +169,12 @@ public:
 class DataSet
 {
 public:
+  struct QueryResponse
+  {
+    QueryPtr query;
+    ResponsePtr response;
+  };
+
   std::string name;  ///< Name of this dataset.
   std::string type;  ///< Name of this dataset.
   std::string hostname;
@@ -220,6 +226,8 @@ public:
   std::vector<DataPtr> getFlatData() const;
 
   std::set<std::string> getMetricNames();
+
+  std::vector<QueryResponse> getQueryResponse() const;
 };
 
 class Profiler
