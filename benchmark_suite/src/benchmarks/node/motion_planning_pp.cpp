@@ -82,7 +82,7 @@ int main(int argc, char** argv)
   const auto& query_setup = builder.getQuerySetup();
   const auto& config = builder.getConfig();
 
-  double trials = config.getNumRuns();
+  std::size_t trials = config.getNumRuns();
   double timeout = config.getTimeout();
 
   // Param server overrides benchmark config
@@ -95,12 +95,13 @@ int main(int argc, char** argv)
                               PlanningProfiler::SMOOTHNESS | PlanningProfiler::CLEARANCE;
 
   // Setup benchmark
-  Benchmark benchmark(benchmark_name,  // Name of benchmark
-                      BenchmarkType::MOTION_PLANNING_PP,
-                      profiler,     // Options for internal profiler
-                      query_setup,  // Number of trials
-                      timeout,      // Timeout allowed for ALL queries
-                      trials);
+  BenchmarkOptions bm_options = { .trials = trials, .query_timeout = timeout };
+
+  Benchmark benchmark(benchmark_name,                     // Name of benchmark
+                      BenchmarkType::MOTION_PLANNING_PP,  // Type of benchmark
+                      profiler,                           // Options for internal profiler
+                      query_setup,                        // Number of trials
+                      bm_options);                        // Options for benchmark
 
   // Add queries
   for (const auto& query : queries)

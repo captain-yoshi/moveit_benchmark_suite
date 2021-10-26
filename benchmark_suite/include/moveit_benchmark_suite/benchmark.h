@@ -57,6 +57,18 @@ const std::string COLLISION_CHECK = "COLLISION CHECK";
 
 }  // namespace BenchmarkType
 
+struct BenchmarkOptions
+{
+  // Verbose
+  bool verbose_status_query = true;  // Verbose status before each query
+  bool verbose_status_run = false;   // Verbose status before each run
+
+  // Benchmark parameter
+  std::size_t trials = 10;   // Number of trials
+  double query_timeout = 0;  // Timeout for each query
+  double run_timeout = 0;    // Timeout for each run TODO
+};
+
 class Benchmark
 {
 public:
@@ -74,10 +86,7 @@ public:
   Benchmark(const std::string& name,  //
             const std::string& type,
             const Profiler& profiler,  //
-            const QuerySetup& setup_query,
-            double allowed_time = 60.0,  //
-            std::size_t trials = 100,    //
-            bool timeout = false);
+            const QuerySetup& setup_query, BenchmarkOptions = BenchmarkOptions());
 
   /** \brief Add a query to the experiment for profiling.
    *  \param[in] planner_name Name to associate with this query. Does not need to be unique.
@@ -125,14 +134,12 @@ private:
 
   const std::string name_;  ///< Name of this experiment.
   const std::string type_;  ///< Name of this experiment.
-  double allowed_time_;     ///< Allotted time to use for each query.
-  std::size_t trials_;      ///< Number of trials to run each query for.
-  bool timeout_;            ///< If true, will re-run planners on queries until total time taken has exceeded the
 
   // ProfilerType::Options options_;   ///< Options for profiler.
   const Profiler& profiler_;       ///< Profiler to use for extracting data.
   std::vector<QueryPtr> queries_;  ///< Queries to test.
   QuerySetup query_setup_;
+  BenchmarkOptions options_;
 
   std::vector<PostQueryCallback> post_query_callbacks_;          ///< Post-run callback with dataset.
   std::vector<PostRunCallback> post_run_callbacks_;              ///< Post-run callback.

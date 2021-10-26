@@ -94,7 +94,7 @@ int main(int argc, char** argv)
   const auto& queries = builder.getQueries();
   const auto& config = builder.getConfig();
 
-  double trials = config.getNumRuns();
+  std::size_t trials = config.getNumRuns();
   const auto& benchmark_name = config.getBenchmarkName();
   const auto& query_setup = builder.getQuerySetup();
 
@@ -103,12 +103,13 @@ int main(int argc, char** argv)
   profiler.options_.metrics = CollisionCheckProfiler::DISTANCE | CollisionCheckProfiler::CONTACTS;
 
   // Setup benchmark
+  BenchmarkOptions bm_options = { .verbose_status_query = false, .verbose_status_run = true, .trials = trials };
+
   Benchmark benchmark(benchmark_name,                  // Name of benchmark
-                      BenchmarkType::COLLISION_CHECK,  // Benchamrk type
+                      BenchmarkType::COLLISION_CHECK,  // Type of benchmark
                       profiler,                        // Options for internal profiler
-                      query_setup,                     // Query config for benchmark
-                      0,                               // Timeout allowed for ALL queries
-                      trials);                         // Number of trials
+                      query_setup,                     // Number of trials
+                      bm_options);                     // Options for benchmark
 
   // Add queries
   for (const auto& query : queries)

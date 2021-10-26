@@ -14,17 +14,8 @@ using namespace moveit_benchmark_suite;
 
 Benchmark::Benchmark(const std::string& name,  //
                      const std::string& type,  //
-                     const Profiler& profiler, const QuerySetup& query_setup,
-                     double allowed_time,  //
-                     std::size_t trials,   //
-                     bool timeout)
-  : name_(name)
-  , type_(type)
-  , query_setup_(query_setup)
-  , allowed_time_(allowed_time)
-  , trials_(trials)
-  , timeout_(timeout)
-  , profiler_(profiler)
+                     const Profiler& profiler, const QuerySetup& query_setup, BenchmarkOptions options)
+  : name_(name), type_(type), query_setup_(query_setup), profiler_(profiler), options_(options)
 {
   // Aggregate if config is found
   AggregateConfig agg_config;
@@ -130,9 +121,9 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
   dataset->date = IO::getDate(clock);
   dataset->date_utc = IO::getDateUTC(clock);
   dataset->start = std::chrono::high_resolution_clock::now();
-  dataset->allowed_time = allowed_time_;
-  dataset->trials = trials_;
-  dataset->run_till_timeout = timeout_;
+  dataset->allowed_time = options_.query_timeout;
+  dataset->trials = options_.trials;
+  dataset->run_till_timeout = options_.run_timeout;
   dataset->threads = n_threads;
   dataset->hostname = IO::getHostname();
 
@@ -164,11 +155,23 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
 
     profiler_.profileSetup(query);
 
-    for (std::size_t j = 0; j < trials_; ++j)
+    if (options_.verbose_status_run && options_.trials > 0)
+
     {
       ROS_INFO_STREAM("");
-      ROS_INFO_STREAM(log::format("Running Query %1% `%2%` Trial [%3%/%4%]",  //
-                                  query->name, query_index, j + 1, trials_));
+      ROS_INFO_STREAM(log::format("Running Query %1% `%2%` with %3% Trials",  //
+                                  query->name, query_index, options_.trials));
+    }
+
+    for (std::size_t j = 0; j < options_.trials; ++j)
+    {
+      if (options_.verbose_status_query)
+      {
+        ROS_INFO_STREAM("");
+        ROS_INFO_STREAM(log::format("Running Query %1% `%2%` Trial [%3%/%4%]",  //
+                                    query->name, query_index, j + 1, options_.trials));
+      }
+
       auto data = std::make_shared<Data>();
 
       profiler_.profilePlan(query, *data);
