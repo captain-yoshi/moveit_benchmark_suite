@@ -183,8 +183,6 @@ bool moveit_benchmark_suite::collision_check::clutterWorld(
   req.verbose = true;
   planning_scene->setCurrentState(robot_state);
 
-  planning_scene->getCurrentState().printStatePositions();
-
   std::string name;
   shapes::ShapeConstPtr shape;
 
@@ -254,7 +252,6 @@ bool moveit_benchmark_suite::collision_check::clutterWorld(
     i++;
   }
 
-  std::cout << planning_scene->getWorld()->size() << std::endl;
   if (added_objects != num_objects)
   {
     ROS_ERROR("Not able to add objects not in collision with %s %s", std::to_string(added_objects).c_str(),

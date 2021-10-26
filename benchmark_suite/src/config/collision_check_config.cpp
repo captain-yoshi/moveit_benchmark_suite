@@ -200,7 +200,6 @@ void CollisionCheckConfig::readCollisionRequests(ros::NodeHandle& nh)
 
 CollisionCheckConfig::CollisionObjectType CollisionCheckConfig::resolveCollisionObjectType(const std::string& input)
 {
-  std::cout << input << "!!!" << std::endl;
   if (input.compare("MESH") == 0)
     return CollisionObjectType::MESH;
   if (input.compare("BOX") == 0)
