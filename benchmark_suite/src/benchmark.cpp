@@ -159,8 +159,8 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
 
     {
       ROS_INFO_STREAM("");
-      ROS_INFO_STREAM(log::format("Running Query %1% `%2%` with %3% Trials",  //
-                                  query->name, query_index, options_.trials));
+      ROS_INFO_STREAM(log::format("Running Query [%1%/%2%] with %3% Trials '%4%'",  //
+                                  query_index + 1, queries_.size(), options_.trials, query->name));
     }
 
     for (std::size_t j = 0; j < options_.trials; ++j)
@@ -168,8 +168,8 @@ DataSetPtr Benchmark::run(std::size_t n_threads) const
       if (options_.verbose_status_query)
       {
         ROS_INFO_STREAM("");
-        ROS_INFO_STREAM(log::format("Running Query %1% `%2%` Trial [%3%/%4%]",  //
-                                    query->name, query_index, j + 1, options_.trials));
+        ROS_INFO_STREAM(log::format("Running Query [%1%/%2%] Trial [%3%/%4%] '%5%'",  //
+                                    query_index + 1, queries_.size(), j + 1, options_.trials, query->name));
       }
 
       auto data = std::make_shared<Data>();
