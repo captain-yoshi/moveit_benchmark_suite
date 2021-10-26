@@ -28,9 +28,9 @@ Benchmark::Benchmark(const std::string& name,  //
 {
   // Aggregate if config is found
   AggregateConfig agg_config;
-  if (agg_config.isConfigAvailable(ros::this_node::getName()))
+  if (agg_config.isConfigAvailable(""))
   {
-    agg_config.setNamespace(ros::this_node::getName());
+    agg_config.setNamespace("");
 
     const std::vector<std::string>& filter_names = agg_config.getFilterNames();
     const std::vector<AggregateParams> params = agg_config.getAggregateParams();
@@ -44,10 +44,10 @@ Benchmark::Benchmark(const std::string& name,  //
 
   // Plot with gnuplot if config is found
   GNUPlotConfig plt_config;
-  if (plt_config.isConfigAvailable(ros::this_node::getName()))
+  if (plt_config.isConfigAvailable(""))
   {
     plot_flag = true;
-    plt_config.setNamespace(ros::this_node::getName());
+    plt_config.setNamespace("");
 
     const std::vector<std::string>& xticks = plt_config.getXticks();
     const std::vector<std::string>& legends = plt_config.getLegends();

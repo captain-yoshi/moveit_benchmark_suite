@@ -13,9 +13,10 @@
     <arg name="load_robot_description" value="true" />
   </include>
 
-  <node name="collision_checks" pkg="moveit_benchmark_suite" type="collision_checks" respawn="false" clear_params="true" output="screen" launch-prefix="$(arg launch_prefix)" required="true">
-    <rosparam command="load" file="$(find moveit_resources_panda_moveit_config)/config/kinematics.yaml"/>
+  <rosparam command="load" file="$(find moveit_benchmark_suite)/config/collision_check.yaml"/>
+  <param name="benchmark_config_file" value="$(find moveit_benchmark_suite)/config/collision_check.yaml"/>
 
+  <node name="collision_checks" pkg="moveit_benchmark_suite" type="collision_check" respawn="false" clear_params="true" output="screen" launch-prefix="$(arg launch_prefix)" required="true">
     <param name="output_file" value="$(arg output_file)"/>
     <param name="visualization" value="$(arg visualization)" type="bool"/>
   </node>

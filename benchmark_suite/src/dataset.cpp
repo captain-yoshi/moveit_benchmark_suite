@@ -126,6 +126,23 @@ void DataSet::eraseMetric(const std::string& metric)
       d->metrics.erase(metric);
 }
 
+std::vector<DataSet::QueryResponse> DataSet::getQueryResponse() const
+{
+  std::vector<QueryResponse> qr;
+
+  for (const auto& d : data)
+  {
+    if (!d.second.empty())
+    {
+      qr.emplace_back();
+      qr.back().query = d.second.front()->query;
+      qr.back().response = d.second.front()->response;
+    }
+  }
+
+  return qr;
+}
+
 ///
 /// Profiler
 ///
@@ -139,4 +156,7 @@ void Profiler::profileSetup(const QueryPtr& query) const
 bool Profiler::profilePlan(const QueryPtr& query, Data& result) const
 {
   return false;
+}
+void Profiler::visualize(const DataSet& dataset) const
+{
 }

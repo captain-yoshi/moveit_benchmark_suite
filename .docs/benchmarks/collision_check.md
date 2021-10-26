@@ -1,3 +1,27 @@
+# Collision Check
+The collision check benchmark runs against the PlanningScene `checkCollision` method. The [orginal benchmark](https://github.com/ros-planning/moveit/blob/master/moveit_ros/planning/planning_components_tools/src/compare_collision_speed_checking_fcl_bullet.cpp) was created by Jens Petit.
+
+
+### Metrics
+| Name              | Description                            |
+|-------------------|----------------------------------------|
+| Time              |                                        |
+| Contact Count*    | Number of contacts returned            |
+| Distance*         | Closest distance between two bodies    |
+
+**Saved if configured in the CollisionRequest.*
+
+### Launch file
+Starts the panda moveit. Retrieves the configuration yaml file. See [collision_check.launch](/benchmark_suite/benchmarks/collision_check.launch).
+
+Arguments:
+- `output_file`: Path and/or filename of the dataset. Defaults to empty string.
+- `visualization`: Turn on visualization with RViz. Defaults to False.
+
+### Config file
+The [collision_check.yaml](/benchmark_suite/config/collision_check.yaml) file contains the necessary configuration for running the benchmark. The number of pair-wise combination is calculated like so: `PWC = collision_detectors * robot_states * clutter_worlds * collision_requests`
+
+```yaml
 benchmark_config:
   parameters:
     name: Collision Check         # Name of the benchmark dataset
@@ -46,3 +70,4 @@ benchmark_config:
       resource: package://moveit_resources_panda_description/meshes/collision/link5.stl
       scale:
         - bound: [0.3, 1.0]       # [Lower bound, Upper bound]
+```

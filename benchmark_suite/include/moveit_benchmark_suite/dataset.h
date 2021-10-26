@@ -133,10 +133,13 @@ struct QuerySetup
 class Response
 {
 public:
+  Response() = default;
+
+  virtual ~Response(){};
   /** \name Planning Query and Response
       \{ */
 
-  bool success;  ///< Was the plan successful?
+  bool success = false;  ///< Was the plan successful?
 };
 
 /** */
@@ -166,6 +169,12 @@ public:
 class DataSet
 {
 public:
+  struct QueryResponse
+  {
+    QueryPtr query;
+    ResponsePtr response;
+  };
+
   std::string name;  ///< Name of this dataset.
   std::string type;  ///< Name of this dataset.
   std::string hostname;
@@ -217,6 +226,8 @@ public:
   std::vector<DataPtr> getFlatData() const;
 
   std::set<std::string> getMetricNames();
+
+  std::vector<QueryResponse> getQueryResponse() const;
 };
 
 class Profiler
@@ -234,9 +245,20 @@ public:
     return derived_ptr;
   };
 
+  template <typename DerivedQuery>
+  std::shared_ptr<DerivedQuery> getDerivedClass(const ResponsePtr& query) const
+  {
+    auto derived_ptr = std::dynamic_pointer_cast<DerivedQuery>(query);
+    if (!derived_ptr)
+      ROS_ERROR_STREAM("Cannot downcast '" << typeid(DerivedQuery).name() << "' from Response base class'");
+
+    return derived_ptr;
+  };
+
   void profileSetup(const QueryPtr& query) const;
 
   virtual bool profilePlan(const QueryPtr& query, Data& result) const;
+  virtual void visualize(const DataSet& dataset) const;
 };
 
 }  // namespace moveit_benchmark_suite
