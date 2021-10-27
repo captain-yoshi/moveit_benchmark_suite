@@ -40,13 +40,13 @@
 #include <urdf_to_scene/scene_parser.h>
 
 // MTC pick/place demo implementation
-#include "mtc_pickplace.h"
+#include <moveit_benchmark_suite_mtc/pickplace.h>
 
-constexpr char LOGNAME[] = "moveit_benchmark_suite_run_task";
+constexpr char LOGNAME[] = "moveit_benchmark_suite_mtc_run_pickplace";
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "scene_parser");
+  ros::init(argc, argv, "run_pickplace");
   ros::AsyncSpinner spinner(1);
   spinner.start();
 
@@ -104,6 +104,6 @@ int main(int argc, char** argv)
   }
 
   // Keep alive for introspection
-  //ros::waitForShutdown();
+  ros::waitForShutdown();
   return 0;
 }

@@ -18,16 +18,17 @@ catkin_package()
 
 set(CMAKE_CXX_STANDARD 14)
 
-include_directories(${catkin_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS})
 
-add_executable(mtc_runtask
-  src/mtc_runtask.cpp
-  src/mtc_pickplace.cpp
+add_library(${PROJECT_NAME}
+  src/pickplace.cpp
 )
 
-target_link_libraries(mtc_runtask ${catkin_LIBRARIES})
+add_executable(run_pickplace src/run_pickplace.cpp)
 
-install(TARGETS mtc_runtask
+target_link_libraries(run_pickplace ${PROJECT_NAME} ${catkin_LIBRARIES})
+
+install(TARGETS run_pickplace
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

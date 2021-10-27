@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="output_file" default="" />
+
+  <param name="mtc_scene" command="xacro '$(find moveit_benchmark_suite_resources)/db/openshelf/panda/scene_mesh_hq.urdf.xacro'"/>
+
+  <!-- Run MTC pick and place -->
+  <node name="mtc_benchmark" pkg="moveit_benchmark_suite_mtc" type="run_pickplace" output="screen" required="true">
+    <param name="execute" value="false" />
+    <param name="output_file" value="$(arg output_file)" />
+    <rosparam command="load" file="$(find moveit_benchmark_suite_mtc)/config/pickplace.yaml" />
+  </node>
+</launch>
