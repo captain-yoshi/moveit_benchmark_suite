@@ -44,6 +44,9 @@
 
 constexpr char LOGNAME[] = "moveit_benchmark_suite_mtc_run_pickplace";
 
+using namespace moveit_benchmark_suite;
+using namespace moveit_benchmark_suite_mtc;
+
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "run_pickplace");

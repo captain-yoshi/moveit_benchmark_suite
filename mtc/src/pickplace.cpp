@@ -38,9 +38,7 @@
 
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
 
-namespace moveit
-{
-namespace benchmark_suite
+namespace moveit_benchmark_suite_mtc
 {
 constexpr char LOGNAME[] = "pick_place_task";
 
@@ -496,5 +494,4 @@ bool PickPlaceTask::execute()
 
   return true;
 }
-}  // namespace benchmark_suite
-}  // namespace moveit
+}  // namespace moveit_benchmark_suite_mtc

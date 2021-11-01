@@ -64,9 +64,7 @@
 
 #include <eigen_conversions/eigen_msg.h>
 
-namespace moveit
-{
-namespace benchmark_suite
+namespace moveit_benchmark_suite_mtc
 {
 using namespace moveit::task_constructor;
 
@@ -133,5 +131,4 @@ private:
   geometry_msgs::Pose place_pose_;
   double place_surface_offset_;
 };
-}  // namespace benchmark_suite
-}  // namespace moveit
+}  // namespace moveit_benchmark_suite_mtc
