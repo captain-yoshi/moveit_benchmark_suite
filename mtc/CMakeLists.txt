@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 3.1.3)
 project(moveit_benchmark_suite_mtc)
 
+find_library(YAML yaml-cpp REQUIRED)
+
 find_package(catkin REQUIRED COMPONENTS
   actionlib
   eigen_conversions
+  moveit_benchmark_suite
   moveit_benchmark_suite_resources
   moveit_core
   moveit_ros_planning_interface
@@ -26,7 +29,7 @@ add_library(${PROJECT_NAME}
 
 add_executable(run_pickplace src/run_pickplace.cpp)
 
-target_link_libraries(run_pickplace ${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(run_pickplace ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
 install(TARGETS run_pickplace
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
