@@ -1,0 +1,484 @@
+#include <moveit_benchmark_suite_mtc/pickplace_builder.h>
+#include <moveit_serialization/yaml-cpp/conversion/conversion.h>
+
+#include <rosparam_shortcuts/rosparam_shortcuts.h>
+
+#include <urdf_to_scene/scene_parser.h>
+
+using namespace moveit_benchmark_suite_mtc;
+
+constexpr char LOGNAME[] = "mtc_pick_place";
+
+///
+/// PickPlaceConfig
+///
+
+PickPlaceConfig::PickPlaceConfig()
+{
+}
+PickPlaceConfig::PickPlaceConfig(const std::string& ros_namespace)
+{
+  readBenchmarkConfig(ros_namespace);
+}
+
+/** \brief Set the ROS namespace the node handle should use for parameter lookup */
+void PickPlaceConfig::setNamespace(const std::string& ros_namespace)
+{
+  readBenchmarkConfig(ros_namespace);
+}
+
+const PickPlaceParameters& PickPlaceConfig::getParameters() const
+{
+  return parameters_;
+}
+const std::map<std::string, std::string>& PickPlaceConfig::getScenes() const
+{
+  return scene_map_;
+}
+
+const std::map<std::string, solvers::PlannerInterfacePtr>& PickPlaceConfig::getSolvers() const
+{
+  return solver_map_;
+}
+
+const std::map<std::string, moveit_msgs::Constraints>& PickPlaceConfig::getConstraints() const
+{
+  return constraints_map_;
+}
+
+const std::map<std::string, moveit_benchmark_suite_mtc::Task>& PickPlaceConfig::getTasks() const
+{
+  return task_map_;
+}
+
+SolverType PickPlaceConfig::resolveSolverType(const std::string& type)
+{
+  if (type.compare("sampling") == 0)
+    return SolverType::SAMPLING_BASED;
+  if (type.compare("cartesian") == 0)
+    return SolverType::CARTESIAN_PATH;
+  if (type.compare("joint_interpolation") == 0)
+    return SolverType::JOINT_INTERPOLATION;
+
+  return SolverType::INVALID;
+}
+
+void PickPlaceConfig::readBenchmarkConfig(const std::string& ros_namespace)
+{
+  ros::NodeHandle nh(ros_namespace);
+
+  XmlRpc::XmlRpcValue benchmark_config;
+  if (nh.getParam("/benchmark_config", benchmark_config))
+  {
+    readParameters(nh);
+    readSolvers(nh);
+    readConstraints(nh);
+    readTasks(nh);
+    readScenes(nh);
+  }
+  else
+  {
+    ROS_WARN("No '/benchmark_config' found on param server");
+  }
+}
+
+void PickPlaceConfig::readParameters(ros::NodeHandle& nh)
+{
+  auto& p = parameters_;
+  size_t errors = 0;
+
+  ros::NodeHandle pnh(nh, "/benchmark_config/parameters");
+
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "name", p.benchmark_name);
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "runs", p.runs);
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "timeout", p.timeout);
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "max_solutions", p.max_solutions);
+
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "arm_group_name", p.arm_group_name);
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "hand_group_name", p.hand_group_name);
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "eef_name", p.eef_name);
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "hand_frame", p.hand_frame);
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "world_frame", p.world_frame);
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "grasp_frame_transform", p.grasp_frame_transform);
+
+  // Predefined pose targets
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "hand_open_gap", p.hand_open_gap);
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "hand_close_gap", p.hand_close_gap);
+
+  // Target object
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "object_name", p.object_name);
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "object_dimensions", p.object_dimensions);
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "object_reference_frame", p.object_reference_frame);
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "surface_link", p.surface_link);
+
+  // Pick/Place metrics
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "approach_object_min_dist", p.approach_object_min_dist);
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "approach_object_max_dist", p.approach_object_max_dist);
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "lift_object_min_dist", p.lift_object_min_dist);
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "lift_object_max_dist", p.lift_object_max_dist);
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "place_surface_offset", p.place_surface_offset);
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "place_pose", p.place_pose);
+  rosparam_shortcuts::shutdownIfError(LOGNAME, errors);
+}
+
+void PickPlaceConfig::readSolvers(ros::NodeHandle& nh)
+{
+  XmlRpc::XmlRpcValue node;
+
+  if (nh.getParam("/benchmark_config/solvers", node))
+  {
+    if (node.getType() != XmlRpc::XmlRpcValue::TypeArray)
+    {
+      ROS_ERROR("Expected a list of solver configuration to benchmark");
+      return;
+    }
+
+    for (int i = 0; i < node.size(); ++i)  // NOLINT(modernize-loop-convert)
+    {
+      const auto& solver_node = node[i];
+
+      // Solver base class
+      const auto& name = static_cast<std::string>(solver_node["name"]);
+      const auto& type = static_cast<std::string>(solver_node["type"]);
+
+      SolverType solver_type = resolveSolverType(type);
+
+      switch (solver_type)
+      {
+        case SolverType::SAMPLING_BASED:
+        {
+          std::string piepline = static_cast<std::string>(solver_node["pipeline"]);
+          std::string planner = static_cast<std::string>(solver_node["planner"]);
+
+          auto solver = std::make_shared<solvers::PipelinePlanner>(piepline);
+          solver->setPlannerId(planner);
+
+          if (solver_node.hasMember("goal_joint_tolerance"))
+          {
+            double goal_joint_tolerance = static_cast<double>(solver_node["goal_joint_tolerance"]);
+            solver->setProperty("goal_joint_tolerance", goal_joint_tolerance);
+          }
+          if (solver_node.hasMember("goal_position_tolerance"))
+          {
+            double goal_position_tolerance = static_cast<double>(solver_node["goal_position_tolerance"]);
+            solver->setProperty("goal_position_tolerance", goal_position_tolerance);
+          }
+          if (solver_node.hasMember("goal_orientation_tolerance"))
+          {
+            double goal_orientation_tolerance = static_cast<double>(solver_node["goal_orientation_tolerance"]);
+            solver->setProperty("goal_orientation_tolerance", goal_orientation_tolerance);
+          }
+          if (solver_node.hasMember("max_velocity_scaling_factor"))
+          {
+            double max_velocity_scaling_factor = static_cast<double>(solver_node["max_velocity_scaling_factor"]);
+            solver->setProperty("max_velocity_scaling_factor", max_velocity_scaling_factor);
+          }
+          if (solver_node.hasMember("max_acceleration_scaling_factor"))
+          {
+            double max_acceleration_scaling_factor =
+                static_cast<double>(solver_node["max_acceleration_scaling_factor"]);
+            solver->setProperty("max_acc_scaling_factor", max_acceleration_scaling_factor);
+          }
+          solver_map_.insert({ name, solver });
+          break;
+        }
+        case SolverType::CARTESIAN_PATH:
+        {
+          auto solver = std::make_shared<solvers::CartesianPath>();
+
+          if (solver_node.hasMember("step_size"))
+          {
+            double step_size = static_cast<double>(solver_node["step_size"]);
+            solver->setStepSize(step_size);
+          }
+          if (solver_node.hasMember("jump_threshold"))
+          {
+            double jump_threshold = static_cast<double>(solver_node["jump_threshold"]);
+            solver->setJumpThreshold(jump_threshold);
+          }
+          if (solver_node.hasMember("min_fraction"))
+          {
+            double min_fraction = static_cast<double>(solver_node["min_fraction"]);
+            solver->setMinFraction(min_fraction);
+          }
+          if (solver_node.hasMember("max_velocity_scaling_factor"))
+          {
+            double max_velocity_scaling_factor = static_cast<double>(solver_node["max_velocity_scaling_factor"]);
+            solver->setMaxVelocityScaling(max_velocity_scaling_factor);
+          }
+          if (solver_node.hasMember("max_acceleration_scaling_factor"))
+          {
+            double max_acceleration_scaling_factor =
+                static_cast<double>(solver_node["max_acceleration_scaling_factor"]);
+            solver->setMaxAccelerationScaling(max_acceleration_scaling_factor);
+          }
+
+          solver_map_.insert({ name, solver });
+          break;
+        }
+        case SolverType::JOINT_INTERPOLATION:
+        {
+          auto solver = std::make_shared<solvers::JointInterpolationPlanner>();
+
+          if (solver_node.hasMember("max_step"))
+          {
+            double max_step = static_cast<double>(solver_node["max_step"]);
+            solver->setProperty("max_step", max_step);
+          }
+          if (solver_node.hasMember("max_velocity_scaling_factor"))
+          {
+            double max_velocity_scaling_factor = static_cast<double>(solver_node["max_velocity_scaling_factor"]);
+            solver->setProperty("max_velocity_scaling_factor", max_velocity_scaling_factor);
+          }
+          if (solver_node.hasMember("max_acceleration_scaling_factor"))
+          {
+            double max_acceleration_scaling_factor =
+                static_cast<double>(solver_node["max_acceleration_scaling_factor"]);
+            solver->setProperty("max_acceleration_scaling_factor", max_acceleration_scaling_factor);
+          }
+
+          solver_map_.insert({ name, solver });
+          break;
+        }
+
+        case SolverType::INVALID:
+        default:
+          ROS_WARN("Invalid solver type");
+          continue;
+      }
+    }
+  }
+}
+
+void PickPlaceConfig::readConstraints(ros::NodeHandle& nh)
+{
+  std::string file;
+  if (!nh.hasParam("/benchmark_config_file"))
+  {
+    ROS_ERROR("ROSPARAM '/benchmark_config_file' does not exist.");
+    return;
+  }
+
+  nh.getParam("/benchmark_config_file", file);
+
+  YAML::Node node;
+
+  try
+  {
+    node = YAML::LoadFile(file);
+  }
+  catch (const YAML::BadFile& e)
+  {
+    ROS_FATAL_STREAM("Specified input file '" << file << "' does not exist.");
+    return;
+  }
+
+  if (node["benchmark_config"]["path_constraints"])
+  {
+    const auto& path_constraints = node["benchmark_config"]["path_constraints"];
+
+    for (YAML::const_iterator it = path_constraints.begin(); it != path_constraints.end(); ++it)
+    {
+      const YAML::Node& path_constraint = *it;
+      auto name = path_constraint["name"].as<std::string>();
+      auto path_constraint_msg = path_constraint["path_constraint"].as<moveit_msgs::Constraints>();
+
+      constraints_map_.insert({ name, path_constraint_msg });
+
+      ROS_INFO("Path constraint name: '%s'", name.c_str());
+    }
+  }
+}
+
+void PickPlaceConfig::fillTaskStages(Task& task, const XmlRpc::XmlRpcValue& node)
+{
+  for (std::map<std::string, XmlRpc::XmlRpcValue>::const_iterator p = node.begin(); p != node.end(); ++p)
+  {
+    Stage stage;
+
+    if (p->second.hasMember("solver"))
+      stage.solver = static_cast<std::string>(p->second["solver"]);
+    if (p->second.hasMember("path_constraint"))
+      stage.path_constraints = static_cast<std::string>(p->second["path_constraint"]);
+    if (p->second.hasMember("timeout"))
+      stage.timeout = static_cast<double>(p->second["timeout"]);
+    else
+      stage.timeout = task.global_timeout;
+
+    task.stage_map.insert({ p->first, stage });
+  }
+}
+
+void PickPlaceConfig::readTasks(ros::NodeHandle& nh)
+{
+  XmlRpc::XmlRpcValue node;
+
+  if (nh.getParam("/benchmark_config/tasks", node))
+  {
+    if (node.getType() != XmlRpc::XmlRpcValue::TypeArray)
+    {
+      ROS_ERROR("Expected a list of tasks configuration to benchmark");
+      return;
+    }
+
+    for (int i = 0; i < node.size(); ++i)  // NOLINT(modernize-loop-convert)
+    {
+      const auto& task_node = node[i];
+
+      Task task;
+
+      std::string name = static_cast<std::string>(task_node["name"]);
+
+      // get globbal parameters
+      if (task_node.hasMember("solver"))
+        task.global_solver = static_cast<std::string>(task_node["solver"]);
+      if (task_node.hasMember("path_constraint"))
+        task.global_path_constraints = static_cast<std::string>(task_node["path_constraint"]);
+      if (task_node.hasMember("timeout"))
+        task.global_timeout = static_cast<double>(task_node["timeout"]);
+
+      if (task.global_solver.empty() && !task_node.hasMember("stages"))
+      {
+        ROS_WARN("Missing global solver for all stages or specific solver for each stages");
+        continue;
+      }
+
+      if (task_node.hasMember("stages"))
+        fillTaskStages(task, task_node["stages"]);
+
+      task_map_.insert({ name, task });
+    }
+  }
+}
+
+void PickPlaceConfig::readScenes(ros::NodeHandle& nh)
+{
+  nh.getParam("/scenes", scene_map_);
+}
+
+///
+/// CollisionCheckBuilder
+///
+
+void PickPlaceBuilder::buildQueries()
+{
+  // Read config
+  config_.setNamespace(ros::this_node::getName());
+  const auto& parameters = config_.getParameters();
+
+  // Build each components of a query
+  buildScenes();
+  buildTasks();
+  // Build queries
+  for (const auto& scene : scenes_)
+  {
+    for (auto& task : tasks_)
+    {
+      std::string query_name = scene.name + task.name;
+      QueryGroupName query_gn = { { "scene", scene.name }, { "task", task.name } };
+
+      auto query = std::make_shared<PickPlaceQuery>(query_name, query_gn, parameters, scene, task);
+      queries_.push_back(query);
+    }
+  }
+}
+
+const PickPlaceConfig& PickPlaceBuilder::getConfig() const
+{
+  return config_;
+}
+
+const std::vector<PickPlaceQueryPtr>& PickPlaceBuilder::getQueries() const
+{
+  return queries_;
+}
+
+const QuerySetup& PickPlaceBuilder::getQuerySetup() const
+{
+  return query_setup_;
+}
+
+void PickPlaceBuilder::buildScenes()
+{
+  SceneParser parser;
+
+  const auto& scene_map = config_.getScenes();
+
+  // Prepare scenes
+  for (const auto& scene : scene_map)
+  {
+    query_setup_.addQuery("scene", scene.first, "");
+
+    parser.loadURDF(scene.second);
+    scenes_.emplace_back();
+    scenes_.back().name = scene.first;
+    scenes_.back().is_diff = true;
+    parser.getCollisionObjects(scenes_.back().world.collision_objects);
+  }
+}
+
+void PickPlaceBuilder::buildTasks()
+{
+  const auto& task_map = config_.getTasks();
+  const auto& solver_map = config_.getSolvers();
+  const auto& constraint_map = config_.getConstraints();
+
+  for (auto& task : task_map)
+  {
+    query_setup_.addQuery("task", task.first, "");
+
+    // Fill task
+    std::map<StageName, StageProperty> stage_map;
+    for (const auto& stage : STAGE_NAME_SET)
+    {
+      StageProperty prop;
+
+      std::string planner_name;
+      std::string constraint_name;
+      double timeout;
+
+      auto it = task.second.stage_map.find(stage);
+      if (it == task.second.stage_map.end())
+      {
+        planner_name = task.second.global_solver;
+        constraint_name = task.second.global_path_constraints;
+        prop.timeout = task.second.global_timeout;
+      }
+      else
+      {
+        planner_name = it->second.solver;
+        constraint_name = it->second.path_constraints;
+        prop.timeout = it->second.timeout;
+      }
+
+      {  // Set solver
+        auto it = solver_map.find(planner_name);
+        if (it == solver_map.end())
+        {
+          ROS_ERROR("Cannot find planner '%s'", planner_name.c_str());
+          return;
+        }
+        prop.planner = it->second;
+      }
+
+      {  // Set constraint
+        if (!constraint_name.empty())
+        {
+          auto it = constraint_map.find(constraint_name);
+          if (it == constraint_map.end())
+          {
+            ROS_ERROR("Cannot find constraint '%s'", constraint_name.c_str());
+            return;
+          }
+          prop.constraint = it->second;
+        }
+      }
+      stage_map.insert({ stage, prop });
+    }
+    TaskProperty t;
+    t.name = task.first;
+    t.stage_map = stage_map;
+
+    tasks_.emplace_back(t);
+  }
+}
