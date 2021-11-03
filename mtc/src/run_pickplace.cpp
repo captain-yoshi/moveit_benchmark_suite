@@ -39,74 +39,77 @@
 
 #include <urdf_to_scene/scene_parser.h>
 
-// MTC pick/place demo implementation
-#include <moveit_benchmark_suite_mtc/pickplace.h>
+#include <moveit_benchmark_suite/io.h>
+#include <moveit_benchmark_suite/benchmark.h>
 
-constexpr char LOGNAME[] = "moveit_benchmark_suite_mtc_run_pickplace";
+// MTC pick/place demo implementation
+#include <moveit_benchmark_suite_mtc/pickplace_profiler.h>
+#include <moveit_benchmark_suite_mtc/pickplace_builder.h>
+
+constexpr char LOGNAME[] = "moveit_benchmark_suite_mtc_pickplace_benchmark";
 
 using namespace moveit_benchmark_suite;
 using namespace moveit_benchmark_suite_mtc;
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "run_pickplace");
+  ros::init(argc, argv, "pickplace_benchmark");
   ros::AsyncSpinner spinner(1);
   spinner.start();
 
   ros::NodeHandle pnh("~");
 
-  // Remove all scene objects
-  moveit::planning_interface::PlanningSceneInterface psi;
+  // Parse output directory and filename
+  std::string file;
+  std::string filepath;
+  std::string filename;
+  pnh.getParam("output_file", file);
+
+  filepath = IO::getFilePath(file);
+  filename = IO::getFileName(file);
+
+  // Build queries
+  PickPlaceBuilder builder;
+  builder.buildQueries();
+
+  const auto& queries = builder.getQueries();
+  const auto& query_setup = builder.getQuerySetup();
+  const auto& config = builder.getConfig();
+
+  const auto& params = config.getParameters();
+  std::size_t trials = params.runs;
+  const auto& benchmark_name = params.benchmark_name;
+
+  // Setup profiler
+
+  PickPlaceProfiler profiler(BenchmarkType::MTC_PICK_PLACE);
+  profiler.setQuerySetup(query_setup);
+
+  for (const auto& query : queries)
+    profiler.addQuery(query);
+
+  // Setup benchmark
+  Benchmark::Options options = { .trials = trials };
+
+  Benchmark benchmark(benchmark_name,  // Name of benchmark
+                      options);        // Options for benchmark
+
+  // Run benchmark
+  auto dataset = benchmark.run(profiler);
+
+  if (!dataset)
+    return 0;
+
+  // Dump metrics to logfile
+  BenchmarkSuiteDataSetOutputter output;
+  output.dump(*dataset, filepath, filename);
+
+  // Wait if GNUPlot was configured
+  if (benchmark.getPlotFlag())
   {
-    moveit_msgs::PlanningScene rm;
-    rm.is_diff = true;
-    rm.robot_state.is_diff = true;
-    rm.robot_state.attached_collision_objects.resize(1);
-    rm.robot_state.attached_collision_objects[0].object.operation = moveit_msgs::CollisionObject::REMOVE;
-    rm.world.collision_objects.resize(1);
-    rm.world.collision_objects[0].operation = moveit_msgs::CollisionObject::REMOVE;
-    psi.applyPlanningScene(rm);
+    ROS_WARN("Press ENTER to continue");
+    std::cin.ignore();
   }
 
-  // Parse URDF into a planning scene
-  SceneParser parser;
-  parser.loadURDF(pnh, "/mtc_scene");
-  const auto& ps = parser.getPlanningScene();
-
-  // Add collision objects to the planning scene
-  if (!psi.applyCollisionObjects(ps.world.collision_objects))
-  {
-    ROS_ERROR("Failed to apply collision objects");
-    return -1;
-  }
-
-  // Construct and run pick/place task
-  moveit::benchmark_suite::PickPlaceTask pick_place_task("pick_place_task", pnh);
-  pick_place_task.loadParameters();
-
-  pick_place_task.init();
-  pick_place_task.pick();
-  pick_place_task.place();
-
-  if (pick_place_task.plan())
-  {
-    ROS_INFO_NAMED(LOGNAME, "Planning succeded");
-    if (pnh.param("execute", false))
-    {
-      pick_place_task.execute();
-      ROS_INFO_NAMED(LOGNAME, "Execution complete");
-    }
-    else
-    {
-      ROS_INFO_NAMED(LOGNAME, "Execution disabled");
-    }
-  }
-  else
-  {
-    ROS_INFO_NAMED(LOGNAME, "Planning failed");
-  }
-
-  // Keep alive for introspection
-  ros::waitForShutdown();
   return 0;
 }
