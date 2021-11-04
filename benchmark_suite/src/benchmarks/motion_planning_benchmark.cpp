@@ -47,126 +47,92 @@ MoveGroupInterfaceQuery::MoveGroupInterfaceQuery(const std::string& name,       
 }
 
 ///
-/// PlanningProfiler
-///
-
-void PlanningProfiler::computeBuiltinMetrics(uint32_t options, const PlanningQuery& query,
-                                             const PlanningResponse& response,
-                                             const planning_scene::PlanningSceneConstPtr& scene, Data& run) const
-{
-  if (options & Metrics::WAYPOINTS)
-    run.metrics["waypoints"] = run.success ? int(response.trajectory->getNumWaypoints()) : int(0);
-
-  if (options & Metrics::LENGTH)
-    run.metrics["length"] = run.success ? response.trajectory->getLength() : 0.0;
-
-  if (options & Metrics::CORRECT)
-    run.metrics["correct"] = run.success ? response.trajectory->isCollisionFree(scene) : false;
-
-  if (options & Metrics::CLEARANCE)
-    run.metrics["clearance"] = run.success ? std::get<0>(response.trajectory->getClearance(scene)) : 0.0;
-
-  if (options & Metrics::SMOOTHNESS)
-    run.metrics["smoothness"] = run.success ? response.trajectory->getSmoothness() : 0.0;
-
-  run.metrics["time"] = run.time;
-  run.metrics["success"] = run.success;
-  run.metrics["thread_id"] = (int)run.thread_id;
-  run.metrics["process_id"] = (int)run.process_id;
-}
-
-///
 /// PlanningPipelineProfiler
 ///
 
-bool PlanningPipelineProfiler::profilePlan(const QueryPtr& query_base, Data& result) const
+PlanningPipelineProfiler::PlanningPipelineProfiler(const std::string& name)
+  : PlanningProfiler<PlanningPipelineQuery, PlanningResult>(name){};
+
+bool PlanningPipelineProfiler::runQuery(const PlanningPipelineQuery& query, Data& data) const
 {
-  // Get derived query
-  auto query = getDerivedClass<PlanningPipelineQuery>(query_base);
-  if (!query)
-    return false;
+  PlanningResult result;
+  data.start = std::chrono::high_resolution_clock::now();
 
-  // Benchmark function
-  PlanningResponse response;
-  result.start = std::chrono::high_resolution_clock::now();
+  query.planner->plan(query.scene, query.request, result.mp_response);
 
-  query->planner->plan(query->scene, query->request, response.response);
-
-  result.finish = std::chrono::high_resolution_clock::now();
-  result.time = IO::getSeconds(result.start, result.finish);
+  data.finish = std::chrono::high_resolution_clock::now();
+  data.time = IO::getSeconds(data.start, data.finish);
 
   // Compute metrics and fill out results
-  response.success = response.response.error_code_.val == moveit_msgs::MoveItErrorCodes::SUCCESS;
+  result.success = result.mp_response.error_code_.val == moveit_msgs::MoveItErrorCodes::SUCCESS;
 
-  if (response.success)
+  if (result.success)
   {
-    response.trajectory = std::make_shared<Trajectory>(response.response.trajectory_);
+    result.trajectory = std::make_shared<Trajectory>(result.mp_response.trajectory_);
 
     moveit_msgs::RobotTrajectory trajectory_msg;
-    response.response.trajectory_->getRobotTrajectoryMsg(trajectory_msg);
-    response.trajectory->useMessage(response.response.trajectory_->getFirstWayPoint(), trajectory_msg);
+    result.mp_response.trajectory_->getRobotTrajectoryMsg(trajectory_msg);
+    result.trajectory->useMessage(result.mp_response.trajectory_->getFirstWayPoint(), trajectory_msg);
   }
-  result.success = response.success;
-  result.hostname = IO::getHostname();
-  result.process_id = IO::getProcessID();
-  result.thread_id = IO::getThreadID();
-  result.query = std::make_shared<PlanningPipelineQuery>(*query);
-  result.response = std::make_shared<PlanningResponse>(response);
+  data.success = result.success;
+  data.hostname = IO::getHostname();
+  data.process_id = IO::getProcessID();
+  data.thread_id = IO::getThreadID();
+  data.query = std::make_shared<PlanningPipelineQuery>(query);
+  data.result = std::make_shared<PlanningResult>(result);
 
-  computeBuiltinMetrics(options_.metrics, *query, response, query->scene, result);
+  computeBuiltinMetrics(options.metrics, result, query.scene, data);
 
-  return result.success;
+  return data.success;
 }
 
 ///
 /// MoveGroupInterfaceProfiler
 ///
 
-bool MoveGroupInterfaceProfiler::profilePlan(const QueryPtr& query_base, Data& result) const
-{
-  // Get derived query
-  auto query = getDerivedClass<MoveGroupInterfaceQuery>(query_base);
-  if (!query)
-    return false;
+MoveGroupInterfaceProfiler::MoveGroupInterfaceProfiler(const std::string& name)
+  : PlanningProfiler<MoveGroupInterfaceQuery, PlanningResult>(name){};
 
+bool MoveGroupInterfaceProfiler::runQuery(const MoveGroupInterfaceQuery& query, Data& data) const
+{
   // Pre-run callback
-  query->planner->preRun(query->scene, query->request);
+  query.planner->preRun(query.scene, query.request);
 
   // Benchmark
-  PlanningResponse response;
+  PlanningResult result;
   moveit::planning_interface::MoveGroupInterface::Plan plan;
-  result.start = std::chrono::high_resolution_clock::now();
+  data.start = std::chrono::high_resolution_clock::now();
 
-  response.response.error_code_ = query->planner->plan(plan);
+  result.mp_response.error_code_ = query.planner->plan(plan);
 
-  result.finish = std::chrono::high_resolution_clock::now();
-  result.time = IO::getSeconds(result.start, result.finish);
+  data.finish = std::chrono::high_resolution_clock::now();
+  data.time = IO::getSeconds(data.start, data.finish);
 
   // Compute metrics and fill out results
-  response.success = response.response.error_code_.val == moveit_msgs::MoveItErrorCodes::SUCCESS;
+  result.success = result.mp_response.error_code_.val == moveit_msgs::MoveItErrorCodes::SUCCESS;
 
-  if (response.success)
+  if (result.success)
   {
     robot_trajectory::RobotTrajectoryPtr robot_trajectory = std::make_shared<robot_trajectory::RobotTrajectory>(
-        query->planner->getRobot()->getModelConst(), query->request.group_name);
-    robot_trajectory->setRobotTrajectoryMsg(query->scene->getCurrentState(), plan.trajectory_);
+        query.planner->getRobot()->getModelConst(), query.request.group_name);
+    robot_trajectory->setRobotTrajectoryMsg(query.scene->getCurrentState(), plan.trajectory_);
 
-    response.response.trajectory_ = robot_trajectory;
+    result.mp_response.trajectory_ = robot_trajectory;
 
-    response.trajectory = std::make_shared<Trajectory>(robot_trajectory);
+    result.trajectory = std::make_shared<Trajectory>(robot_trajectory);
 
     moveit_msgs::RobotTrajectory trajectory_msg;
-    response.response.trajectory_->getRobotTrajectoryMsg(trajectory_msg);
-    response.trajectory->useMessage(response.response.trajectory_->getFirstWayPoint(), trajectory_msg);
+    result.mp_response.trajectory_->getRobotTrajectoryMsg(trajectory_msg);
+    result.trajectory->useMessage(result.mp_response.trajectory_->getFirstWayPoint(), trajectory_msg);
   }
-  result.success = response.success;
-  result.hostname = IO::getHostname();
-  result.process_id = IO::getProcessID();
-  result.thread_id = IO::getThreadID();
-  result.query = std::make_shared<MoveGroupInterfaceQuery>(*query);
-  result.response = std::make_shared<PlanningResponse>(response);
+  data.success = result.success;
+  data.hostname = IO::getHostname();
+  data.process_id = IO::getProcessID();
+  data.thread_id = IO::getThreadID();
+  data.query = std::make_shared<MoveGroupInterfaceQuery>(query);
+  data.result = std::make_shared<PlanningResult>(result);
 
-  computeBuiltinMetrics(options_.metrics, *query, response, query->scene, result);
+  computeBuiltinMetrics(options.metrics, result, query.scene, data);
 
   return result.success;
 }

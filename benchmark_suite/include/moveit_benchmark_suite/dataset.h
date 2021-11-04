@@ -60,7 +60,6 @@ MOVEIT_CLASS_FORWARD(Query);
 MOVEIT_CLASS_FORWARD(Result);
 MOVEIT_CLASS_FORWARD(Data);
 MOVEIT_CLASS_FORWARD(DataSet);
-MOVEIT_CLASS_FORWARD(Profiler);
 
 // Dataset
 static const std::string DATASET_CONFIG_KEY = "config";
@@ -228,37 +227,6 @@ public:
   std::set<std::string> getMetricNames();
 
   std::vector<QueryResponse> getQueryResponse() const;
-};
-
-class Profiler
-{
-public:
-  virtual ~Profiler();
-
-  template <typename DerivedQuery>
-  std::shared_ptr<DerivedQuery> getDerivedClass(const QueryPtr& query) const
-  {
-    auto derived_ptr = std::dynamic_pointer_cast<DerivedQuery>(query);
-    if (!derived_ptr)
-      ROS_ERROR_STREAM("Cannot downcast '" << typeid(DerivedQuery).name() << "' from Query base class'");
-
-    return derived_ptr;
-  };
-
-  template <typename DerivedQuery>
-  std::shared_ptr<DerivedQuery> getDerivedClass(const ResponsePtr& query) const
-  {
-    auto derived_ptr = std::dynamic_pointer_cast<DerivedQuery>(query);
-    if (!derived_ptr)
-      ROS_ERROR_STREAM("Cannot downcast '" << typeid(DerivedQuery).name() << "' from Response base class'");
-
-    return derived_ptr;
-  };
-
-  void profileSetup(const QueryPtr& query) const;
-
-  virtual bool profilePlan(const QueryPtr& query, Data& result) const;
-  virtual void visualize(const DataSet& dataset) const;
 };
 
 }  // namespace moveit_benchmark_suite

@@ -60,60 +60,49 @@ CollisionCheckQuery::CollisionCheckQuery(const std::string& name,               
 /// Profiler
 ///
 
-bool CollisionCheckProfiler::profilePlan(const QueryPtr& query_base,  //
-                                         Data& result) const
+CollisionCheckProfiler::CollisionCheckProfiler(const std::string& name)
+  : Profiler<CollisionCheckQuery, CollisionCheckResult>(name){};
+
+bool CollisionCheckProfiler::runQuery(const CollisionCheckQuery& query,  //
+                                      Data& data) const
 {
-  auto query = getDerivedClass<CollisionCheckQuery>(query_base);
-  if (!query)
-    return false;
+  data.query = std::make_shared<CollisionCheckQuery>(query);
 
-  result.query = std::make_shared<CollisionCheckQuery>(*query);
-
-  CollisionCheckResponse response;
+  CollisionCheckResult result;
   // Plan
-  result.start = std::chrono::high_resolution_clock::now();
-  query->scene->checkCollision(query->request, response.response, *query->robot_state);
+  data.start = std::chrono::high_resolution_clock::now();
+  query.scene->checkCollision(query.request, result.collision_result, *query.robot_state);
 
   // Compute metrics and fill out results
-  result.finish = std::chrono::high_resolution_clock::now();
-  result.time = IO::getSeconds(result.start, result.finish);
-  result.success = true;
+  data.finish = std::chrono::high_resolution_clock::now();
+  data.time = IO::getSeconds(data.start, data.finish);
+  data.success = true;
 
-  result.hostname = IO::getHostname();
-  result.process_id = IO::getProcessID();
-  result.thread_id = IO::getThreadID();
-
-  result.success = true;
+  data.hostname = IO::getHostname();
+  data.process_id = IO::getProcessID();
+  data.thread_id = IO::getThreadID();
 
   // Compute metrics
-  result.metrics["time"] = result.time;
+  data.metrics["time"] = data.time;
+  if (query.request.contacts)
+    data.metrics["contact_count"] = result.collision_result.contact_count;
+  if (query.request.distance)
+    data.metrics["closest_distance"] = result.collision_result.distance;
 
-  if (query->request.contacts)
-    result.metrics["contact_count"] = response.response.contact_count;
-  if (query->request.distance)
-    result.metrics["closest_distance"] = response.response.distance;
+  data.result = std::make_shared<CollisionCheckResult>(result);
+  result.success = data.success;
 
-  response.success = result.success;
-  result.response = std::make_shared<CollisionCheckResponse>(response);
-
-  return result.success;
+  return data.success;
 }
 
-void CollisionCheckProfiler::visualize(const DataSet& dataset) const
+void CollisionCheckProfiler::visualizeQueries(const std::vector<CollisionCheckQueryPtr>& queries) const
 {
   ros::NodeHandle nh;
   ros::Publisher pub = nh.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
   ros::Duration(0.5).sleep();
 
-  auto qr_list = dataset.getQueryResponse();
-  for (const auto& qr : qr_list)
+  for (const auto& query : queries)
   {
-    // Downcasting query and response base class
-    auto query = getDerivedClass<CollisionCheckQuery>(qr.query);
-    auto response = getDerivedClass<CollisionCheckResponse>(qr.response);
-    if (!query || !response)
-      continue;
-
     // Fill and publish planning scene
     moveit_msgs::PlanningScene ps;
     query->scene->getPlanningSceneMsg(ps);
@@ -125,4 +114,9 @@ void CollisionCheckProfiler::visualize(const DataSet& dataset) const
     ROS_INFO("Press 'Enter' to view next query");
     std::cin.ignore();
   }
+}
+
+void CollisionCheckProfiler::visualizeQueries() const
+{
+  visualizeQueries(getQueries());
 }

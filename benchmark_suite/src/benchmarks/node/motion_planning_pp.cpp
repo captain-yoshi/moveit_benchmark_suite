@@ -90,25 +90,25 @@ int main(int argc, char** argv)
     benchmark_name = config.getBenchmarkName();
 
   // Setup profiler
-  PlanningPipelineProfiler profiler;
-  profiler.options_.metrics = PlanningProfiler::WAYPOINTS | PlanningProfiler::CORRECT | PlanningProfiler::LENGTH |
-                              PlanningProfiler::SMOOTHNESS | PlanningProfiler::CLEARANCE;
+  using Metric = PlanningPipelineProfiler::Metrics;
+
+  PlanningPipelineProfiler profiler(BenchmarkType::MOTION_PLANNING_PP);
+  profiler.setQuerySetup(query_setup);
+  profiler.options.metrics =
+      Metric::WAYPOINTS | Metric::CORRECT | Metric::LENGTH | Metric::SMOOTHNESS | Metric::CLEARANCE;
+
+  for (const auto& query : queries)
+    profiler.addQuery(query);
 
   // Setup benchmark
-  BenchmarkOptions bm_options = { .trials = trials, .query_timeout = timeout };
+  Benchmark::Options options = { .trials = trials, .query_timeout = timeout };
 
-  Benchmark benchmark(benchmark_name,                     // Name of benchmark
-                      BenchmarkType::MOTION_PLANNING_PP,  // Type of benchmark
-                      profiler,                           // Options for internal profiler
-                      query_setup,                        // Number of trials
-                      bm_options);                        // Options for benchmark
-
-  // Add queries
-  for (const auto& query : queries)
-    benchmark.addQuery(query);
+  Benchmark benchmark(benchmark_name,  // Name of benchmark
+                      options);        // Options for benchmark
+  benchmark.query_setup_ = query_setup;
 
   // Run benchmark
-  auto dataset = benchmark.run();
+  auto dataset = benchmark.run(profiler);
 
   if (!dataset)
     return 0;
