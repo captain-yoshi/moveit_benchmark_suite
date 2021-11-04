@@ -49,6 +49,7 @@ namespace moveit_benchmark_suite
 MOVEIT_CLASS_FORWARD(PlanData);
 MOVEIT_CLASS_FORWARD(PlanDataSet);
 MOVEIT_CLASS_FORWARD(PlanningQuery);
+MOVEIT_CLASS_FORWARD(PlanningResult);
 MOVEIT_CLASS_FORWARD(PlanningPipelineQuery);
 MOVEIT_CLASS_FORWARD(MoveGroupInterfaceQuery);
 
@@ -95,18 +96,15 @@ struct MoveGroupInterfaceQuery : public PlanningQuery
   planning_interface::MotionPlanRequest request;  ///< Request used for the query.
 };
 
-class PlanningResponse : public Response
+class PlanningResult : public Result
 {
 public:
   /** \name Planning Query and Response
       \{ */
 
   // PlanningQuery query;                              ///< Query evaluated to create this data.
-  planning_interface::MotionPlanResponse response;  ///< Planner response.
-  TrajectoryPtr trajectory;                         ///< The resulting trajectory, if available.
-
-  // std::vector<std::string> property_names;                   ///< Planner progress value names.
-  // std::vector<std::map<std::string, std::string>> progress;  ///< Planner progress data.
+  planning_interface::MotionPlanResponse mp_response;  ///< Planner response.
+  TrajectoryPtr trajectory;                            ///< The resulting trajectory, if available.
 };
 
 class PlanningProfiler : public Profiler
@@ -148,8 +146,29 @@ protected:
    *  \param[in] scene Scene used for planning and metric computation.
    *  \param[out] run Metric results.
    */
-  void computeBuiltinMetrics(uint32_t options, const PlanningQuery& query, const PlanningResponse& response,
-                             const planning_scene::PlanningSceneConstPtr& scene, Data& run) const;
+  void computeBuiltinMetrics(uint32_t options, const PlanningResult& result,
+                             const planning_scene::PlanningSceneConstPtr& scene, Data& run) const
+  {
+    if (options & Metrics::WAYPOINTS)
+      run.metrics["waypoints"] = run.success ? int(result.trajectory->getNumWaypoints()) : int(0);
+
+    if (options & Metrics::LENGTH)
+      run.metrics["length"] = run.success ? result.trajectory->getLength() : 0.0;
+
+    if (options & Metrics::CORRECT)
+      run.metrics["correct"] = run.success ? result.trajectory->isCollisionFree(scene) : false;
+
+    if (options & Metrics::CLEARANCE)
+      run.metrics["clearance"] = run.success ? std::get<0>(result.trajectory->getClearance(scene)) : 0.0;
+
+    if (options & Metrics::SMOOTHNESS)
+      run.metrics["smoothness"] = run.success ? result.trajectory->getSmoothness() : 0.0;
+
+    run.metrics["time"] = run.time;
+    run.metrics["success"] = run.success;
+    run.metrics["thread_id"] = (int)run.thread_id;
+    run.metrics["process_id"] = (int)run.process_id;
+  }
 };
 
 class PlanningPipelineProfiler : public PlanningProfiler

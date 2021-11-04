@@ -57,7 +57,7 @@
 namespace moveit_benchmark_suite
 {
 MOVEIT_CLASS_FORWARD(Query);
-MOVEIT_CLASS_FORWARD(Response);
+MOVEIT_CLASS_FORWARD(Result);
 MOVEIT_CLASS_FORWARD(Data);
 MOVEIT_CLASS_FORWARD(DataSet);
 MOVEIT_CLASS_FORWARD(Profiler);
@@ -130,12 +130,12 @@ struct QuerySetup
   std::map<QueryGroup, std::map<QueryName, QueryResource>> query_setup;
 };
 
-class Response
+class Result
 {
 public:
-  Response() = default;
+  Result() = default;
 
-  virtual ~Response(){};
+  virtual ~Result(){};
   /** \name Planning Query and Response
       \{ */
 
@@ -159,8 +159,8 @@ public:
   bool success;
 
   // Store query and response base class
-  QueryPtr query;        ///< Query evaluated to create this data.
-  ResponsePtr response;  ///< Planner response.
+  QueryPtr query;    ///< Query evaluated to create this data.
+  ResultPtr result;  ///< Planner response.
 
   /** Metrics */
   std::map<std::string, Metric> metrics;  ///< Map of metric name to value.
@@ -172,7 +172,7 @@ public:
   struct QueryResponse
   {
     QueryPtr query;
-    ResponsePtr response;
+    ResultPtr result;
   };
 
   std::string name;  ///< Name of this dataset.

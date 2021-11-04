@@ -72,15 +72,14 @@ struct CollisionCheckQuery : public Query
   collision_detection::CollisionRequest request;  ///< Request used for the query.
 };
 
-class CollisionCheckResponse : public Response
+class CollisionCheckResult : public Result
 {
 public:
   /** \name Planning Query and Response
       \{ */
 
   // CollisionCheckQuery query;                      ///< Query evaluated to create this data.
-  collision_detection::CollisionResult response;  ///< Planner response.
-  bool success;                                   ///< Was the plan successful?
+  collision_detection::CollisionResult collision_result;  ///< Planner response.
 };
 
 class CollisionCheckProfiler : public Profiler

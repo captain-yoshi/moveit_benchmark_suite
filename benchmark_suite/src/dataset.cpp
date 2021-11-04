@@ -136,7 +136,7 @@ std::vector<DataSet::QueryResponse> DataSet::getQueryResponse() const
     {
       qr.emplace_back();
       qr.back().query = d.second.front()->query;
-      qr.back().response = d.second.front()->response;
+      qr.back().result = d.second.front()->result;
     }
   }
 
