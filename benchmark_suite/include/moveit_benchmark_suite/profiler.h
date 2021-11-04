@@ -61,6 +61,8 @@ public:
   Profiler(const std::string& name) : name_(name){};
   virtual ~Profiler() = default;
   virtual bool runQuery(const DerivedQuery& query, Data& data) const = 0;
+  virtual void preRunQuery(DerivedQuery& query, Data& data){};
+  virtual void postRunQuery(const DerivedQuery& query, Data& data){};
 
   void addQuery(const DerivedQuery& query)
   {

@@ -177,7 +177,11 @@ public:
 
         auto data = std::make_shared<Data>();
 
+        profiler.preRunQuery(*query, *data);
+
         profiler.runQuery(*query, *data);
+
+        profiler.postRunQuery(*query, *data);
 
         // data->query->name = query->name;
         dataset->addDataPoint(query->name, data);
