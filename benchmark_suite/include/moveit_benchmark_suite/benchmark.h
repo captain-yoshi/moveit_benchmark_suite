@@ -180,14 +180,13 @@ public:
         profiler.preRunQuery(*query, *data);
         data->success = profiler.runQuery(*query, *data);
         profiler.postRunQuery(*query, *data);
-        // data.metrics["thread_id"] = (int)data.thread_id;
-        // data.metrics["process_id"] = (int)data.process_id;
+
+        data->query = query;
         data->hostname = IO::getHostname();
         data->process_id = IO::getProcessID();
         data->thread_id = IO::getThreadID();
         data->metrics["thread_id"] = data->thread_id;
         data->metrics["process_id"] = data->process_id;
-        data->query->name = query->name;
 
         dataset->addDataPoint(query->name, data);
 

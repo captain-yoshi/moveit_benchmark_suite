@@ -63,22 +63,17 @@ CollisionCheckQuery::CollisionCheckQuery(const std::string& name,               
 CollisionCheckProfiler::CollisionCheckProfiler(const std::string& name)
   : Profiler<CollisionCheckQuery, CollisionCheckResult>(name){};
 
-bool CollisionCheckProfiler::runQuery(const CollisionCheckQuery& query,  //
-                                      Data& data) const
+bool CollisionCheckProfiler::runQuery(const CollisionCheckQuery& query, Data& data) const
 {
-  data.query = std::make_shared<CollisionCheckQuery>(query);
-
   CollisionCheckResult result;
-  // Plan
+
+  // Profile time
   data.start = std::chrono::high_resolution_clock::now();
+
   query.scene->checkCollision(query.request, result.collision_result, *query.robot_state);
 
-  // Compute metrics and fill out results
   data.finish = std::chrono::high_resolution_clock::now();
   data.time = IO::getSeconds(data.start, data.finish);
-  data.success = true;
-
-  data.result = std::make_shared<CollisionCheckResult>(result);
 
   // Compute metrics
   computeMetrics(options.metrics, query, result, data);

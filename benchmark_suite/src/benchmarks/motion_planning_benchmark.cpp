@@ -56,6 +56,8 @@ PlanningPipelineProfiler::PlanningPipelineProfiler(const std::string& name)
 bool PlanningPipelineProfiler::runQuery(const PlanningPipelineQuery& query, Data& data) const
 {
   PlanningResult result;
+
+  // Profile time
   data.start = std::chrono::high_resolution_clock::now();
 
   query.planner->plan(query.scene, query.request, result.mp_response);
@@ -63,7 +65,7 @@ bool PlanningPipelineProfiler::runQuery(const PlanningPipelineQuery& query, Data
   data.finish = std::chrono::high_resolution_clock::now();
   data.time = IO::getSeconds(data.start, data.finish);
 
-  // Compute metrics and fill out results
+  // Compute results
   result.success = result.mp_response.error_code_.val == moveit_msgs::MoveItErrorCodes::SUCCESS;
 
   if (result.success)
@@ -75,9 +77,7 @@ bool PlanningPipelineProfiler::runQuery(const PlanningPipelineQuery& query, Data
     result.trajectory->useMessage(result.mp_response.trajectory_->getFirstWayPoint(), trajectory_msg);
   }
 
-  data.query = std::make_shared<PlanningPipelineQuery>(query);
-  data.result = std::make_shared<PlanningResult>(result);
-
+  // Compute metrics
   computeMetrics(options.metrics, query, result, data);
 
   return result.success;
@@ -92,12 +92,13 @@ MoveGroupInterfaceProfiler::MoveGroupInterfaceProfiler(const std::string& name)
 
 bool MoveGroupInterfaceProfiler::runQuery(const MoveGroupInterfaceQuery& query, Data& data) const
 {
+  PlanningResult result;
+  moveit::planning_interface::MoveGroupInterface::Plan plan;
+
   // Pre-run callback
   query.planner->preRun(query.scene, query.request);
 
-  // Benchmark
-  PlanningResult result;
-  moveit::planning_interface::MoveGroupInterface::Plan plan;
+  // Profile time
   data.start = std::chrono::high_resolution_clock::now();
 
   result.mp_response.error_code_ = query.planner->plan(plan);
@@ -105,7 +106,7 @@ bool MoveGroupInterfaceProfiler::runQuery(const MoveGroupInterfaceQuery& query, 
   data.finish = std::chrono::high_resolution_clock::now();
   data.time = IO::getSeconds(data.start, data.finish);
 
-  // Compute metrics and fill out results
+  // Compute results
   result.success = result.mp_response.error_code_.val == moveit_msgs::MoveItErrorCodes::SUCCESS;
 
   if (result.success)
@@ -123,9 +124,7 @@ bool MoveGroupInterfaceProfiler::runQuery(const MoveGroupInterfaceQuery& query, 
     result.trajectory->useMessage(result.mp_response.trajectory_->getFirstWayPoint(), trajectory_msg);
   }
 
-  data.query = std::make_shared<MoveGroupInterfaceQuery>(query);
-  data.result = std::make_shared<PlanningResult>(result);
-
+  // Compute metrics
   computeMetrics(options.metrics, query, result, data);
 
   return result.success;
