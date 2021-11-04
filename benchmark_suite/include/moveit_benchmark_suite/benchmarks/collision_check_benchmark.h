@@ -46,6 +46,7 @@
 #include <moveit/utils/robot_model_test_utils.h>
 
 #include <moveit_benchmark_suite/dataset.h>
+#include <moveit_benchmark_suite/profiler.h>
 
 namespace moveit_benchmark_suite
 {
@@ -72,46 +73,32 @@ struct CollisionCheckQuery : public Query
   collision_detection::CollisionRequest request;  ///< Request used for the query.
 };
 
-class CollisionCheckResponse : public Response
+class CollisionCheckResult : public Result
 {
 public:
   /** \name Planning Query and Response
       \{ */
 
   // CollisionCheckQuery query;                      ///< Query evaluated to create this data.
-  collision_detection::CollisionResult response;  ///< Planner response.
-  bool success;                                   ///< Was the plan successful?
+  collision_detection::CollisionResult collision_result;  ///< Planner response.
 };
 
-class CollisionCheckProfiler : public Profiler
+class CollisionCheckProfiler : public Profiler<CollisionCheckQuery, CollisionCheckResult>
 {
 public:
+  CollisionCheckProfiler(const std::string& name);
   /** \brief Bitmask options to select what metrics to compute for each run.
    */
   enum Metrics
   {
-    DISTANCE = 1 << 0,  ///< Number of waypoints in path.
-    CONTACTS = 1 << 1,  ///< Is the path correct (no collisions?).
+    DISTANCE = 1 << 0,  //
+    CONTACTS = 1 << 1,  //
   };
 
-  /** \brief Options for profiling.
-   */
-  struct Options
-  {
-    uint32_t metrics{ uint32_t(~0) };  ///< Bitmask of which metrics to compute after planning.
-  };
-
-  /** \brief Profiling a single plan using a \a planner.
-   *  \param[in] planner Planner to profile.
-   *  \param[in] scene Scene to plan in.
-   *  \param[in] request Planning request to profile.
-   *  \param[in] options The options for profiling.
-   *  \param[out] result The results of profiling.
-   *  \return True if planning succeeded, false on failure.
-   */
-  bool profilePlan(const QueryPtr& query, Data& result) const override;
-  void visualize(const DataSet& dataset) const override;
-
-  Options options_;
+  bool runQuery(const CollisionCheckQuery& query, Data& result) const override;
+  void computeMetrics(uint32_t options, const CollisionCheckQuery& query, const CollisionCheckResult& result,
+                      Data& data) const override;
+  void visualizeQueries(const std::vector<CollisionCheckQueryPtr>& queries) const override;
+  void visualizeQueries() const;
 };
 }  // namespace moveit_benchmark_suite

@@ -39,6 +39,7 @@
 #pragma once
 
 #include <moveit_benchmark_suite/dataset.h>
+#include <moveit_benchmark_suite/profiler.h>
 #include <moveit_benchmark_suite/planning.h>
 #include <moveit_benchmark_suite/io.h>
 
@@ -46,9 +47,8 @@
 
 namespace moveit_benchmark_suite
 {
-MOVEIT_CLASS_FORWARD(PlanData);
-MOVEIT_CLASS_FORWARD(PlanDataSet);
 MOVEIT_CLASS_FORWARD(PlanningQuery);
+MOVEIT_CLASS_FORWARD(PlanningResult);
 MOVEIT_CLASS_FORWARD(PlanningPipelineQuery);
 MOVEIT_CLASS_FORWARD(MoveGroupInterfaceQuery);
 
@@ -95,21 +95,19 @@ struct MoveGroupInterfaceQuery : public PlanningQuery
   planning_interface::MotionPlanRequest request;  ///< Request used for the query.
 };
 
-class PlanningResponse : public Response
+class PlanningResult : public Result
 {
 public:
   /** \name Planning Query and Response
       \{ */
 
   // PlanningQuery query;                              ///< Query evaluated to create this data.
-  planning_interface::MotionPlanResponse response;  ///< Planner response.
-  TrajectoryPtr trajectory;                         ///< The resulting trajectory, if available.
-
-  // std::vector<std::string> property_names;                   ///< Planner progress value names.
-  // std::vector<std::map<std::string, std::string>> progress;  ///< Planner progress data.
+  planning_interface::MotionPlanResponse mp_response;  ///< Planner response.
+  TrajectoryPtr trajectory;                            ///< The resulting trajectory, if available.
 };
 
-class PlanningProfiler : public Profiler
+template <typename DerivedQuery, typename DerivedResult>
+class PlanningProfiler : public Profiler<DerivedQuery, DerivedResult>
 {
 public:
   /** \brief Bitmask options to select what metrics to compute for each run.
@@ -123,12 +121,7 @@ public:
     SMOOTHNESS = 1 << 4,  ///< Smoothness of path.
   };
 
-  /** \brief Options for profiling.
-   */
-  struct Options
-  {
-    uint32_t metrics{ uint32_t(~0) };  ///< Bitmask of which metrics to compute after planning.
-  };
+  PlanningProfiler(const std::string& name) : Profiler<DerivedQuery, DerivedResult>(name){};
 
   /** \brief Profiling a single plan using a \a planner.
    *  \param[in] planner Planner to profile.
@@ -138,9 +131,7 @@ public:
    *  \param[out] result The results of profiling.
    *  \return True if planning succeeded, false on failure.
    */
-  virtual bool profilePlan(const QueryPtr& query, Data& result) const = 0;
-
-  Options options_;
+  virtual bool runQuery(const DerivedQuery& query, Data& data) const override = 0;
 
 protected:
   /** \brief Compute the built-in metrics according to the provided bitmask \a options.
@@ -148,20 +139,42 @@ protected:
    *  \param[in] scene Scene used for planning and metric computation.
    *  \param[out] run Metric results.
    */
-  void computeBuiltinMetrics(uint32_t options, const PlanningQuery& query, const PlanningResponse& response,
-                             const planning_scene::PlanningSceneConstPtr& scene, Data& run) const;
+  virtual void computeMetrics(uint32_t options, const DerivedQuery& query, const DerivedResult& result,
+                              Data& data) const override
+
+  {
+    data.metrics["time"] = data.time;
+    data.metrics["success"] = data.success;
+
+    if (options & Metrics::WAYPOINTS)
+      data.metrics["waypoints"] = data.success ? int(result.trajectory->getNumWaypoints()) : int(0);
+
+    if (options & Metrics::LENGTH)
+      data.metrics["length"] = data.success ? result.trajectory->getLength() : 0.0;
+
+    if (options & Metrics::CORRECT)
+      data.metrics["correct"] = data.success ? result.trajectory->isCollisionFree(query.scene) : false;
+
+    if (options & Metrics::CLEARANCE)
+      data.metrics["clearance"] = data.success ? std::get<0>(result.trajectory->getClearance(query.scene)) : 0.0;
+
+    if (options & Metrics::SMOOTHNESS)
+      data.metrics["smoothness"] = data.success ? result.trajectory->getSmoothness() : 0.0;
+  }
 };
 
-class PlanningPipelineProfiler : public PlanningProfiler
+class PlanningPipelineProfiler : public PlanningProfiler<PlanningPipelineQuery, PlanningResult>
 {
 public:
-  bool profilePlan(const QueryPtr& query, Data& result) const override;
+  PlanningPipelineProfiler(const std::string& name);
+  bool runQuery(const PlanningPipelineQuery& query, Data& data) const override;
 };
 
-class MoveGroupInterfaceProfiler : public PlanningProfiler
+class MoveGroupInterfaceProfiler : public PlanningProfiler<MoveGroupInterfaceQuery, PlanningResult>
 {
 public:
-  bool profilePlan(const QueryPtr& query, Data& result) const override;
+  MoveGroupInterfaceProfiler(const std::string& name);
+  bool runQuery(const MoveGroupInterfaceQuery& query, Data& data) const override;
 };
 
 }  // namespace moveit_benchmark_suite

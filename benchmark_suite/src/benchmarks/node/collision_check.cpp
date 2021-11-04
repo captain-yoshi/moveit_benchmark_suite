@@ -99,24 +99,23 @@ int main(int argc, char** argv)
   const auto& query_setup = builder.getQuerySetup();
 
   // Setup profiler
-  CollisionCheckProfiler profiler;
-  profiler.options_.metrics = CollisionCheckProfiler::DISTANCE | CollisionCheckProfiler::CONTACTS;
+  using Metric = CollisionCheckProfiler::Metrics;
+
+  CollisionCheckProfiler profiler(BenchmarkType::COLLISION_CHECK);
+  profiler.setQuerySetup(query_setup);
+  profiler.options.metrics = Metric::DISTANCE | Metric::CONTACTS;
+
+  for (const auto& query : queries)
+    profiler.addQuery(query);
 
   // Setup benchmark
-  BenchmarkOptions bm_options = { .verbose_status_query = false, .verbose_status_run = true, .trials = trials };
+  Benchmark::Options options = { .verbose_status_query = false, .verbose_status_run = true, .trials = trials };
 
-  Benchmark benchmark(benchmark_name,                  // Name of benchmark
-                      BenchmarkType::COLLISION_CHECK,  // Type of benchmark
-                      profiler,                        // Options for internal profiler
-                      query_setup,                     // Number of trials
-                      bm_options);                     // Options for benchmark
-
-  // Add queries
-  for (const auto& query : queries)
-    benchmark.addQuery(query);
+  Benchmark benchmark(benchmark_name,  // Name of benchmark
+                      options);        // Options for benchmark
 
   // Run benchmark
-  auto dataset = benchmark.run();
+  auto dataset = benchmark.run(profiler);
 
   if (!dataset)
     return 0;
@@ -134,7 +133,7 @@ int main(int argc, char** argv)
 
   // Visualize dataset results
   if (visualization)
-    profiler.visualize(*dataset);
+    profiler.visualizeQueries();
 
   return 0;
 }

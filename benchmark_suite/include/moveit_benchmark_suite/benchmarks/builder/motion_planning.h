@@ -50,7 +50,6 @@ public:
   void buildQueries();
 
   const MotionPlanningConfig& getConfig() const;
-  const std::vector<PlanningQueryPtr>& getQueries() const;
   const QuerySetup& getQuerySetup() const;
 
 protected:
@@ -65,8 +64,6 @@ protected:
   QuerySetup query_setup_;
   MotionPlanningConfig mp_config_;
 
-  std::vector<PlanningQueryPtr> queries_;
-
   RobotPtr robot_;
   std::vector<planning_scene::PlanningScenePtr> scenes_;
   std::vector<std::pair<std::string, moveit_msgs::MotionPlanRequest>> requests_;
@@ -77,20 +74,24 @@ class PlanningPipelineBuilder : public MotionPlanningBuilder
 {
 public:
   void buildPlanners() override;
+  const std::vector<PlanningPipelineQueryPtr>& getQueries() const;
 
 protected:
   void appendQuery(const std::string& name, const QueryGroupName& setup, const planning_scene::PlanningScenePtr& scene,
                    const PlannerPtr& planner, const moveit_msgs::MotionPlanRequest& request) override;
+  std::vector<PlanningPipelineQueryPtr> queries_;
 };
 
 class MoveGroupInterfaceBuilder : public MotionPlanningBuilder
 {
 public:
   void buildPlanners() override;
+  const std::vector<MoveGroupInterfaceQueryPtr>& getQueries() const;
 
 protected:
   void appendQuery(const std::string& name, const QueryGroupName& setup, const planning_scene::PlanningScenePtr& scene,
                    const PlannerPtr& planner, const moveit_msgs::MotionPlanRequest& request) override;
+  std::vector<MoveGroupInterfaceQueryPtr> queries_;
 };
 
 }  // namespace moveit_benchmark_suite

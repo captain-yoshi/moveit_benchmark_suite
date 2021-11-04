@@ -57,10 +57,9 @@
 namespace moveit_benchmark_suite
 {
 MOVEIT_CLASS_FORWARD(Query);
-MOVEIT_CLASS_FORWARD(Response);
+MOVEIT_CLASS_FORWARD(Result);
 MOVEIT_CLASS_FORWARD(Data);
 MOVEIT_CLASS_FORWARD(DataSet);
-MOVEIT_CLASS_FORWARD(Profiler);
 
 // Dataset
 static const std::string DATASET_CONFIG_KEY = "config";
@@ -130,12 +129,12 @@ struct QuerySetup
   std::map<QueryGroup, std::map<QueryName, QueryResource>> query_setup;
 };
 
-class Response
+class Result
 {
 public:
-  Response() = default;
+  Result() = default;
 
-  virtual ~Response(){};
+  virtual ~Result(){};
   /** \name Planning Query and Response
       \{ */
 
@@ -159,8 +158,8 @@ public:
   bool success;
 
   // Store query and response base class
-  QueryPtr query;        ///< Query evaluated to create this data.
-  ResponsePtr response;  ///< Planner response.
+  QueryPtr query;    ///< Query evaluated to create this data.
+  ResultPtr result;  ///< Planner response.
 
   /** Metrics */
   std::map<std::string, Metric> metrics;  ///< Map of metric name to value.
@@ -172,7 +171,7 @@ public:
   struct QueryResponse
   {
     QueryPtr query;
-    ResponsePtr response;
+    ResultPtr result;
   };
 
   std::string name;  ///< Name of this dataset.
@@ -228,37 +227,6 @@ public:
   std::set<std::string> getMetricNames();
 
   std::vector<QueryResponse> getQueryResponse() const;
-};
-
-class Profiler
-{
-public:
-  virtual ~Profiler();
-
-  template <typename DerivedQuery>
-  std::shared_ptr<DerivedQuery> getDerivedClass(const QueryPtr& query) const
-  {
-    auto derived_ptr = std::dynamic_pointer_cast<DerivedQuery>(query);
-    if (!derived_ptr)
-      ROS_ERROR_STREAM("Cannot downcast '" << typeid(DerivedQuery).name() << "' from Query base class'");
-
-    return derived_ptr;
-  };
-
-  template <typename DerivedQuery>
-  std::shared_ptr<DerivedQuery> getDerivedClass(const ResponsePtr& query) const
-  {
-    auto derived_ptr = std::dynamic_pointer_cast<DerivedQuery>(query);
-    if (!derived_ptr)
-      ROS_ERROR_STREAM("Cannot downcast '" << typeid(DerivedQuery).name() << "' from Response base class'");
-
-    return derived_ptr;
-  };
-
-  void profileSetup(const QueryPtr& query) const;
-
-  virtual bool profilePlan(const QueryPtr& query, Data& result) const;
-  virtual void visualize(const DataSet& dataset) const;
 };
 
 }  // namespace moveit_benchmark_suite
