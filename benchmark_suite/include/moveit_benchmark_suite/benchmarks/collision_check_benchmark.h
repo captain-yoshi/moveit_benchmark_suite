@@ -96,6 +96,8 @@ public:
   };
 
   bool runQuery(const CollisionCheckQuery& query, Data& result) const override;
+  void computeMetrics(uint32_t options, const CollisionCheckQuery& query, const CollisionCheckResult& result,
+                      Data& data) const override;
   void visualizeQueries(const std::vector<CollisionCheckQueryPtr>& queries) const override;
   void visualizeQueries() const;
 };

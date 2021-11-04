@@ -81,12 +81,20 @@ bool CollisionCheckProfiler::runQuery(const CollisionCheckQuery& query,  //
   data.result = std::make_shared<CollisionCheckResult>(result);
 
   // Compute metrics
-  data.metrics["time"] = data.time;
-  if (query.request.contacts)
-    data.metrics["contact_count"] = result.collision_result.contact_count;
-  if (query.request.distance)
-    data.metrics["closest_distance"] = result.collision_result.distance;
+  computeMetrics(options.metrics, query, result, data);
 
+  return true;
+}
+
+void CollisionCheckProfiler::computeMetrics(uint32_t options, const CollisionCheckQuery& query,
+                                            const CollisionCheckResult& result, Data& data) const
+{
+  data.metrics["time"] = data.time;
+
+  if (options & Metrics::CONTACTS && query.request.contacts)
+    data.metrics["contact_count"] = result.collision_result.contact_count;
+  if (options & Metrics::DISTANCE && query.request.distance)
+    data.metrics["closest_distance"] = result.collision_result.distance;
 }
 
 void CollisionCheckProfiler::visualizeQueries(const std::vector<CollisionCheckQueryPtr>& queries) const
