@@ -105,11 +105,6 @@ const MotionPlanningConfig& MotionPlanningBuilder::getConfig() const
   return mp_config_;
 }
 
-const std::vector<PlanningQueryPtr>& MotionPlanningBuilder::getQueries() const
-{
-  return queries_;
-}
-
 const QuerySetup& MotionPlanningBuilder::getQuerySetup() const
 {
   return query_setup_;
@@ -211,6 +206,11 @@ void PlanningPipelineBuilder::appendQuery(const std::string& name, const QueryGr
   queries_.push_back(query);
 }
 
+const std::vector<PlanningPipelineQueryPtr>& PlanningPipelineBuilder::getQueries() const
+{
+  return queries_;
+}
+
 ///
 /// MoveGroupInterfaceBuilder
 ///
@@ -238,4 +238,9 @@ void MoveGroupInterfaceBuilder::appendQuery(const std::string& name, const Query
       std::make_shared<MoveGroupInterfaceQuery>(name, setup, scene, derived_planner, request);
 
   queries_.push_back(query);
+}
+
+const std::vector<MoveGroupInterfaceQueryPtr>& MoveGroupInterfaceBuilder::getQueries() const
+{
+  return queries_;
 }
