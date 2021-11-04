@@ -131,7 +131,7 @@ public:
    *  \param[out] result The results of profiling.
    *  \return True if planning succeeded, false on failure.
    */
-  virtual bool runQuery(const DerivedQuery& query, Data& data) const = 0;
+  virtual bool runQuery(const DerivedQuery& query, Data& data) const override = 0;
 
 protected:
   /** \brief Compute the built-in metrics according to the provided bitmask \a options.
@@ -139,28 +139,27 @@ protected:
    *  \param[in] scene Scene used for planning and metric computation.
    *  \param[out] run Metric results.
    */
-  void computeBuiltinMetrics(uint32_t options, const PlanningResult& result,
-                             const planning_scene::PlanningSceneConstPtr& scene, Data& run) const
+  virtual void computeMetrics(uint32_t options, const DerivedQuery& query, const DerivedResult& result,
+                              Data& data) const override
+
   {
+    data.metrics["time"] = data.time;
+    data.metrics["success"] = data.success;
+
     if (options & Metrics::WAYPOINTS)
-      run.metrics["waypoints"] = run.success ? int(result.trajectory->getNumWaypoints()) : int(0);
+      data.metrics["waypoints"] = data.success ? int(result.trajectory->getNumWaypoints()) : int(0);
 
     if (options & Metrics::LENGTH)
-      run.metrics["length"] = run.success ? result.trajectory->getLength() : 0.0;
+      data.metrics["length"] = data.success ? result.trajectory->getLength() : 0.0;
 
     if (options & Metrics::CORRECT)
-      run.metrics["correct"] = run.success ? result.trajectory->isCollisionFree(scene) : false;
+      data.metrics["correct"] = data.success ? result.trajectory->isCollisionFree(query.scene) : false;
 
     if (options & Metrics::CLEARANCE)
-      run.metrics["clearance"] = run.success ? std::get<0>(result.trajectory->getClearance(scene)) : 0.0;
+      data.metrics["clearance"] = data.success ? std::get<0>(result.trajectory->getClearance(query.scene)) : 0.0;
 
     if (options & Metrics::SMOOTHNESS)
-      run.metrics["smoothness"] = run.success ? result.trajectory->getSmoothness() : 0.0;
-
-    run.metrics["time"] = run.time;
-    run.metrics["success"] = run.success;
-    run.metrics["thread_id"] = (int)run.thread_id;
-    run.metrics["process_id"] = (int)run.process_id;
+      data.metrics["smoothness"] = data.success ? result.trajectory->getSmoothness() : 0.0;
   }
 };
 

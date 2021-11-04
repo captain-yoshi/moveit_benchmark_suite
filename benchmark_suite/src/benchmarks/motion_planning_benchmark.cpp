@@ -81,7 +81,7 @@ bool PlanningPipelineProfiler::runQuery(const PlanningPipelineQuery& query, Data
   data.query = std::make_shared<PlanningPipelineQuery>(query);
   data.result = std::make_shared<PlanningResult>(result);
 
-  computeBuiltinMetrics(options.metrics, result, query.scene, data);
+  computeMetrics(options.metrics, query, result, data);
 
   return data.success;
 }
@@ -132,7 +132,7 @@ bool MoveGroupInterfaceProfiler::runQuery(const MoveGroupInterfaceQuery& query, 
   data.query = std::make_shared<MoveGroupInterfaceQuery>(query);
   data.result = std::make_shared<PlanningResult>(result);
 
-  computeBuiltinMetrics(options.metrics, result, query.scene, data);
+  computeMetrics(options.metrics, query, result, data);
 
   return result.success;
 }

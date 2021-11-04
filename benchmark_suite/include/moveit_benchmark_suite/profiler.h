@@ -64,6 +64,9 @@ public:
   virtual void preRunQuery(DerivedQuery& query, Data& data){};
   virtual void postRunQuery(const DerivedQuery& query, Data& data){};
 
+  virtual void computeMetrics(uint32_t options, const DerivedQuery& query, const DerivedResult& result,
+                              Data& data) const {};
+
   void addQuery(const DerivedQuery& query)
   {
     addQuery(std::make_shared<DerivedQuery>(query));
