@@ -74,16 +74,13 @@ bool PlanningPipelineProfiler::runQuery(const PlanningPipelineQuery& query, Data
     result.mp_response.trajectory_->getRobotTrajectoryMsg(trajectory_msg);
     result.trajectory->useMessage(result.mp_response.trajectory_->getFirstWayPoint(), trajectory_msg);
   }
-  data.success = result.success;
-  data.hostname = IO::getHostname();
-  data.process_id = IO::getProcessID();
-  data.thread_id = IO::getThreadID();
+
   data.query = std::make_shared<PlanningPipelineQuery>(query);
   data.result = std::make_shared<PlanningResult>(result);
 
   computeMetrics(options.metrics, query, result, data);
 
-  return data.success;
+  return result.success;
 }
 
 ///
@@ -125,10 +122,7 @@ bool MoveGroupInterfaceProfiler::runQuery(const MoveGroupInterfaceQuery& query, 
     result.mp_response.trajectory_->getRobotTrajectoryMsg(trajectory_msg);
     result.trajectory->useMessage(result.mp_response.trajectory_->getFirstWayPoint(), trajectory_msg);
   }
-  data.success = result.success;
-  data.hostname = IO::getHostname();
-  data.process_id = IO::getProcessID();
-  data.thread_id = IO::getThreadID();
+
   data.query = std::make_shared<MoveGroupInterfaceQuery>(query);
   data.result = std::make_shared<PlanningResult>(result);
 

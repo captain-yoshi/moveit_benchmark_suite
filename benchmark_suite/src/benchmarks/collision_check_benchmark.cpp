@@ -78,9 +78,7 @@ bool CollisionCheckProfiler::runQuery(const CollisionCheckQuery& query,  //
   data.time = IO::getSeconds(data.start, data.finish);
   data.success = true;
 
-  data.hostname = IO::getHostname();
-  data.process_id = IO::getProcessID();
-  data.thread_id = IO::getThreadID();
+  data.result = std::make_shared<CollisionCheckResult>(result);
 
   // Compute metrics
   data.metrics["time"] = data.time;
@@ -89,10 +87,6 @@ bool CollisionCheckProfiler::runQuery(const CollisionCheckQuery& query,  //
   if (query.request.distance)
     data.metrics["closest_distance"] = result.collision_result.distance;
 
-  data.result = std::make_shared<CollisionCheckResult>(result);
-  result.success = data.success;
-
-  return data.success;
 }
 
 void CollisionCheckProfiler::visualizeQueries(const std::vector<CollisionCheckQueryPtr>& queries) const
