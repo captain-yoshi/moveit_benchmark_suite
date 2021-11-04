@@ -95,10 +95,21 @@ public:
   {
   }
 
+  const QuerySetup& getQuerySetup() const
+  {
+    return query_setup_;
+  }
+
+  void setQuerySetup(const QuerySetup& query_setup)
+  {
+    query_setup_ = query_setup;
+  }
+
   Options options;
 
 private:
   const std::string name_;
+  QuerySetup query_setup_;
   std::vector<std::shared_ptr<DerivedQuery>> queries_;
   std::map<QueryName, std::vector<std::shared_ptr<DerivedResult>>> result_map_;
 };

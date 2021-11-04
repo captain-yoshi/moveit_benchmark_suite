@@ -135,7 +135,7 @@ public:
     dataset->moveitinfo = IO::getMoveitInfo();
     dataset->moveitbenchmarksuiteinfo = IO::getMoveitBenchmarkSuiteInfo();
 
-    dataset->query_setup = query_setup_;
+    dataset->query_setup = profiler.getQuerySetup();
 
     // Metadata as a YAML node
     fillMetaData(dataset);
@@ -155,8 +155,6 @@ public:
       const auto& it = std::find(dataset->query_names.begin(), dataset->query_names.end(), query->name);
       if (it == dataset->query_names.end())
         dataset->query_names.emplace_back(query->name);
-
-      // profiler_.profileSetup(query);
 
       if (options_.verbose_status_run && options_.trials > 0)
 
@@ -207,7 +205,6 @@ public:
     return dataset;
   };
 
-  QuerySetup query_setup_;  // TODO move to private
   bool getPlotFlag();
 
 private:

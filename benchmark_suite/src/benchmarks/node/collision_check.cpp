@@ -113,7 +113,7 @@ int main(int argc, char** argv)
 
   Benchmark benchmark(benchmark_name,  // Name of benchmark
                       options);        // Options for benchmark
-  benchmark.query_setup_ = query_setup;
+
   // Run benchmark
   auto dataset = benchmark.run(profiler);
 

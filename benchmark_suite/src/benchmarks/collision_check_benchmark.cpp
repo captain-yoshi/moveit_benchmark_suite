@@ -57,7 +57,7 @@ CollisionCheckQuery::CollisionCheckQuery(const std::string& name,               
 }
 
 ///
-/// Profiler
+/// CollisionCheckProfiler
 ///
 
 CollisionCheckProfiler::CollisionCheckProfiler(const std::string& name)
