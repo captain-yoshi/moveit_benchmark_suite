@@ -164,6 +164,9 @@ public:
                                     query_index + 1, queries.size(), options_.trials, query->name));
       }
 
+      // Initialize profiler
+      profiler.initialize(*query);
+
       for (std::size_t j = 0; j < options_.trials; ++j)
       {
         if (options_.verbose_status_query)
