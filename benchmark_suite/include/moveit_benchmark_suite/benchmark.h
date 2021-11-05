@@ -118,7 +118,6 @@ public:
     auto dataset = std::make_shared<DataSet>();
     dataset->name = name_;
     dataset->uuid = IO::generateUUID();
-    dataset->type = type_;
     boost::posix_time::microsec_clock clock;
     dataset->date = IO::getDate(clock);
     dataset->date_utc = IO::getDateUTC(clock);
@@ -135,6 +134,7 @@ public:
     dataset->moveitinfo = IO::getMoveitInfo();
     dataset->moveitbenchmarksuiteinfo = IO::getMoveitBenchmarkSuiteInfo();
 
+    dataset->type = profiler.getName();
     dataset->query_setup = profiler.getQuerySetup();
 
     // Metadata as a YAML node
@@ -214,7 +214,6 @@ private:
   void fillMetaData(DataSetPtr& dataset) const;
 
   const std::string name_;  ///< Name of this experiment.
-  const std::string type_;  ///< Name of this experiment.
 
   Options options_;
 

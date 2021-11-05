@@ -71,6 +71,11 @@ public:
   virtual void computeMetrics(uint32_t options, const DerivedQuery& query, const DerivedResult& result,
                               Data& data) const {};
 
+  const std::string& getName()
+  {
+    return name_;
+  };
+
   void addQuery(const DerivedQuery& query)
   {
     addQuery(std::make_shared<DerivedQuery>(query));
