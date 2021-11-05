@@ -64,7 +64,7 @@
 #include <moveit_task_constructor_msgs/ExecuteTaskSolutionAction.h>
 
 #include <moveit_benchmark_suite/dataset.h>
-#include <moveit_benchmark_suite_mtc/pickplace.h>
+#include <moveit_benchmark_suite_mtc/pickplace_profiler.h>
 
 namespace moveit_benchmark_suite_mtc
 {

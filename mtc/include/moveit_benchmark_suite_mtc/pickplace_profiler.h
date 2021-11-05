@@ -55,6 +55,7 @@
 #include <moveit/task_constructor/stages/move_relative.h>
 #include <moveit/task_constructor/stages/move_to.h>
 #include <moveit/task_constructor/stages/predicate_filter.h>
+#include <moveit/task_constructor/solvers/joint_interpolation.h>
 #include <moveit/task_constructor/solvers/cartesian_path.h>
 #include <moveit/task_constructor/solvers/pipeline_planner.h>
 #include <moveit_task_constructor_msgs/ExecuteTaskSolutionAction.h>
@@ -64,34 +65,141 @@
 
 #include <eigen_conversions/eigen_msg.h>
 
+#include <moveit_benchmark_suite/profiler.h>
+
 namespace moveit_benchmark_suite_mtc
 {
+using namespace moveit_benchmark_suite;
 using namespace moveit::task_constructor;
+
+MOVEIT_CLASS_FORWARD(PickPlaceQuery);
+MOVEIT_CLASS_FORWARD(PickPlaceResult);
+MOVEIT_CLASS_FORWARD(PickPlaceTask);
+
+using StageName = std::string;
+
+constexpr char STAGE_PRE_OPEN_HAND[] = "pre_open_hand";  // before object is picked-up
+constexpr char STAGE_MOVE_TO_PICK[] = "move_to_pick";
+constexpr char STAGE_APPROACH_OBJECT[] = "approach_object";
+constexpr char STAGE_CLOSE_HAND[] = "close_hand";
+constexpr char STAGE_LIFT_OBJECT[] = "lift_object";
+constexpr char STAGE_MOVE_TO_PLACE[] = "move_to_place";
+constexpr char STAGE_LOWER_OBJECT[] = "lower_object";
+constexpr char STAGE_POST_OPEN_HAND[] = "post_open_hand";  // after object is placed
+constexpr char STAGE_RETREAT[] = "retreat";
+
+static std::set<std::string> STAGE_NAME_SET = { STAGE_PRE_OPEN_HAND, STAGE_MOVE_TO_PICK,   STAGE_APPROACH_OBJECT,
+                                                STAGE_CLOSE_HAND,    STAGE_LIFT_OBJECT,    STAGE_MOVE_TO_PLACE,
+                                                STAGE_LOWER_OBJECT,  STAGE_POST_OPEN_HAND, STAGE_RETREAT };
+
+struct PickPlaceParameters
+{
+  std::string benchmark_name;
+  int runs;
+  int max_solutions;
+  double timeout;
+
+  // Planning group properties
+  std::string arm_group_name;
+  std::string eef_name;
+  std::string hand_group_name;
+  std::string hand_frame;
+
+  // Object + surface
+  std::vector<std::string> support_surfaces;
+  std::string object_reference_frame;
+  std::string surface_link;
+  std::string object_name;
+  std::string world_frame;
+  std::vector<double> object_dimensions;
+
+  // Predefined pose targets
+  double hand_open_gap;
+  double hand_close_gap;
+
+  moveit_msgs::RobotState hand_open_pose;
+  moveit_msgs::RobotState hand_close_pose;
+
+  // Pick metrics
+  Eigen::Isometry3d grasp_frame_transform;
+  double approach_object_min_dist;
+  double approach_object_max_dist;
+  double lift_object_min_dist;
+  double lift_object_max_dist;
+
+  // Place metrics
+  geometry_msgs::Pose place_pose;
+  double place_surface_offset;
+};
+
+enum class SolverType
+{
+  INVALID,
+  SAMPLING_BASED,
+  CARTESIAN_PATH,
+  JOINT_INTERPOLATION,
+};
+
+struct StageProperty
+{
+  solvers::PlannerInterfacePtr planner;
+  moveit_msgs::Constraints constraint;
+  double timeout;
+};
+
+struct TaskProperty
+{
+  std::string name;
+  std::map<StageName, StageProperty> stage_map;
+};
+
+struct PickPlaceQuery : public Query
+{
+  /** \brief Constructor. Fills in fields.
+   *  \param[in] name Name of this query.
+   *  \param[in] scene Scene to use.
+   *  \param[in] planner Planner to use to evaluate query.
+   *  \param[in] request Request to give planner.
+   */
+  PickPlaceQuery(const std::string& name,                  //
+                 const QueryGroupName& group_name_map,     //
+                 const PickPlaceParameters& parameters,    //
+                 const moveit_msgs::PlanningScene& scene,  //
+                 const TaskProperty& task);
+
+  PickPlaceParameters parameters;
+  moveit_msgs::PlanningScene scene;  ///< Scene used for the query.
+  TaskProperty task;
+};
+
+class PickPlaceResult : public Result
+{
+public:
+  /** \name Planning Query and Response
+      \{ */
+};
 
 class PickPlaceTask
 {
 public:
-  PickPlaceTask(const std::string& task_name, const ros::NodeHandle& nh);
+  PickPlaceTask(const std::string& task_name);
   ~PickPlaceTask() = default;
-  void loadParameters();
+
+  void loadParameters(const PickPlaceParameters& params, const TaskProperty& task_property);
 
   void init();
   void pick();
   void place();
-
   bool plan();
 
-  bool execute();
+  moveit::task_constructor::TaskPtr getTask();
 
 private:
-  ros::NodeHandle nh_;
-
   std::string task_name_;
   moveit::task_constructor::TaskPtr task_;
 
   // planners
-  std::shared_ptr<moveit::task_constructor::solvers::PipelinePlanner> sampling_planner_;
-  std::shared_ptr<moveit::task_constructor::solvers::CartesianPath> cartesian_planner_;
+  TaskProperty task_property_;
 
   // stage forward
   Stage* stage_forward_ptr_ = nullptr;
@@ -117,6 +225,9 @@ private:
   moveit_msgs::RobotState hand_open_pose_;
   moveit_msgs::RobotState hand_close_pose_;
 
+  // Planning
+  int max_solutions_;
+
   // Execution
   actionlib::SimpleActionClient<moveit_task_constructor_msgs::ExecuteTaskSolutionAction> execute_;
 
@@ -131,4 +242,27 @@ private:
   geometry_msgs::Pose place_pose_;
   double place_surface_offset_;
 };
+
+class PickPlaceProfiler : public Profiler<PickPlaceQuery, PickPlaceResult>
+{
+public:
+  enum Metrics
+  {
+    DISTANCE = 1 << 0,  //
+    CONTACTS = 1 << 1,  //
+  };
+
+  PickPlaceProfiler(const std::string& name);
+  void initialize(PickPlaceQuery& query) override;
+
+  void preRunQuery(PickPlaceQuery& query, Data& data) override;
+  bool runQuery(const PickPlaceQuery& query, Data& result) const override;
+  void computeMetrics(uint32_t options, const PickPlaceQuery& query, const PickPlaceResult& result,
+                      Data& data) const override;
+
+private:
+  PickPlaceTaskPtr pick_place_task;
+  // pick_place_task.loadParameters();
+};
+
 }  // namespace moveit_benchmark_suite_mtc

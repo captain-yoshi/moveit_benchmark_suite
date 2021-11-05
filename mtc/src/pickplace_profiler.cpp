@@ -34,7 +34,7 @@
    Desc:   A demo to show MoveIt Task Constructor in action
 */
 
-#include <moveit_benchmark_suite_mtc/pickplace.h>
+#include <moveit_benchmark_suite_mtc/pickplace_profiler.h>
 
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
 
@@ -42,33 +42,48 @@ namespace moveit_benchmark_suite_mtc
 {
 constexpr char LOGNAME[] = "pick_place_task";
 
-PickPlaceTask::PickPlaceTask(const std::string& task_name, const ros::NodeHandle& nh)
-  : nh_(nh), task_name_(task_name), execute_("execute_task_solution", true)
+///
+/// PickPlaceQuery
+///
+
+PickPlaceQuery::PickPlaceQuery(const std::string& name,                  //
+                               const QueryGroupName& group_name_map,     //
+                               const PickPlaceParameters& parameters,    //
+                               const moveit_msgs::PlanningScene& scene,  //
+                               const TaskProperty& task)
+  : Query(name, group_name_map), parameters(parameters), scene(scene), task(task){};
+
+///
+/// PickPlaceTask
+///
+
+PickPlaceTask::PickPlaceTask(const std::string& task_name)
+  : task_name_(task_name), execute_("execute_task_solution", true)
 {
 }
-void PickPlaceTask::loadParameters()
-{
-  /****************************************************
-   *                                                  *
-   *               Load Parameters                    *
-   *                                                  *
-   ***************************************************/
-  ROS_INFO_NAMED(LOGNAME, "Loading task parameters");
-  ros::NodeHandle pnh("~");
 
-  // Planning group properties
-  size_t errors = 0;
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "arm_group_name", arm_group_name_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "hand_group_name", hand_group_name_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "eef_name", eef_name_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "hand_frame", hand_frame_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "world_frame", world_frame_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "grasp_frame_transform", grasp_frame_transform_);
+void PickPlaceTask::loadParameters(const PickPlaceParameters& params, const TaskProperty& task_property)
+{
+  // Fill parameters
+  arm_group_name_ = params.arm_group_name;
+  hand_group_name_ = params.hand_group_name;
+  eef_name_ = params.eef_name;
+  hand_frame_ = params.hand_frame;
+  world_frame_ = params.world_frame;
+  grasp_frame_transform_ = params.grasp_frame_transform;
 
   // Predefined pose targets
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "hand_open_gap", hand_open_gap_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "hand_close_gap", hand_close_gap_);
+  hand_open_gap_ = params.hand_open_gap;
+  hand_close_gap_ = params.hand_close_gap;
 
+  // Target object
+  object_name_ = params.object_name;
+  object_dimensions_ = params.object_dimensions;
+  object_reference_frame_ = params.object_reference_frame;
+  surface_link_ = params.surface_link;
+  support_surfaces_ = { surface_link_ };
+
+  // TODO add to PickPlaceConfig
   hand_open_pose_.is_diff = true;
   hand_open_pose_.joint_state.name.resize(1);
   hand_open_pose_.joint_state.name[0] = "panda_finger_joint1";
@@ -81,21 +96,19 @@ void PickPlaceTask::loadParameters()
   hand_close_pose_.joint_state.position.resize(1);
   hand_close_pose_.joint_state.position[0] = hand_close_gap_ / 2.0;
 
-  // Target object
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "object_name", object_name_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "object_dimensions", object_dimensions_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "object_reference_frame", object_reference_frame_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "surface_link", surface_link_);
-  support_surfaces_ = { surface_link_ };
-
   // Pick/Place metrics
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "approach_object_min_dist", approach_object_min_dist_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "approach_object_max_dist", approach_object_max_dist_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "lift_object_min_dist", lift_object_min_dist_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "lift_object_max_dist", lift_object_max_dist_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "place_surface_offset", place_surface_offset_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "place_pose", place_pose_);
-  rosparam_shortcuts::shutdownIfError(LOGNAME, errors);
+  approach_object_max_dist_ = params.approach_object_max_dist;
+  lift_object_min_dist_ = params.lift_object_min_dist;
+  lift_object_max_dist_ = params.lift_object_max_dist;
+  place_surface_offset_ = params.place_surface_offset;
+  place_pose_ = params.place_pose;
+  approach_object_min_dist_ = params.approach_object_min_dist;
+
+  // Planning
+  max_solutions_ = params.max_solutions;
+
+  // Fill stages
+  task_property_ = task_property;
 }
 
 void PickPlaceTask::init()
@@ -110,16 +123,8 @@ void PickPlaceTask::init()
   Task& t = *task_;
   t.stages()->setName(task_name_);
   t.loadRobotModel();
-
-  // Sampling planner
-  sampling_planner_ = std::make_shared<solvers::PipelinePlanner>();
-  sampling_planner_->setProperty("goal_joint_tolerance", 1e-5);
-
-  // Cartesian planner
-  cartesian_planner_ = std::make_shared<solvers::CartesianPath>();
-  cartesian_planner_->setMaxVelocityScaling(1.0);
-  cartesian_planner_->setMaxAccelerationScaling(1.0);
-  cartesian_planner_->setStepSize(.01);
+  // const auto& robot_model = t.getRobotModel();
+  // t.setRobotModel(robot_model);
 
   // Set task properties
   t.setProperty("group", arm_group_name_);
@@ -144,6 +149,7 @@ void PickPlaceTask::init()
 void PickPlaceTask::pick()
 {
   Task& t = *task_;
+  auto& stage_map = task_property_.stage_map;
 
   /****************************************************
    *                                                  *
@@ -151,10 +157,15 @@ void PickPlaceTask::pick()
    *                                                  *
    ***************************************************/
   {  // Open Hand
-    auto stage = std::make_unique<stages::MoveTo>("open hand", sampling_planner_);
+    auto it = stage_map.find(STAGE_PRE_OPEN_HAND);
+    if (it == stage_map.end())
+      return;
+
+    auto stage = std::make_unique<stages::MoveTo>("open hand", it->second.planner);
     stage->setGroup(hand_group_name_);
     stage->setGoal(hand_open_pose_);
-    // stage->setGoal("open");
+    stage->setPathConstraints(it->second.constraint);
+    stage->setTimeout(it->second.timeout);
     t.add(std::move(stage));
   }
 
@@ -164,9 +175,14 @@ void PickPlaceTask::pick()
    *                                                  *
    ***************************************************/
   {  // Move-to pre-grasp
+    auto it = stage_map.find(STAGE_MOVE_TO_PICK);
+    if (it == stage_map.end())
+      return;
+
     auto stage = std::make_unique<stages::Connect>(
-        "move to pick", stages::Connect::GroupPlannerVector{ { arm_group_name_, sampling_planner_ } });
-    stage->setTimeout(5.0);
+        "move to pick", stages::Connect::GroupPlannerVector{ { arm_group_name_, it->second.planner } });
+    stage->setTimeout(it->second.timeout);
+    stage->setPathConstraints(it->second.constraint);
     stage->properties().configureInitFrom(Stage::PARENT);
     t.add(std::move(stage));
   }
@@ -185,7 +201,13 @@ void PickPlaceTask::pick()
   ---- *               Approach Object                    *
      ***************************************************/
     {
-      auto stage = std::make_unique<stages::MoveRelative>("approach object", cartesian_planner_);
+      auto it = stage_map.find(STAGE_APPROACH_OBJECT);
+      if (it == stage_map.end())
+        return;
+
+      auto stage = std::make_unique<stages::MoveRelative>("approach object", it->second.planner);
+      stage->setTimeout(it->second.timeout);
+      stage->setPathConstraints(it->second.constraint);
       stage->properties().set("marker_ns", "approach_object");
       stage->properties().set("link", hand_frame_);
       stage->properties().configureInitFrom(Stage::PARENT, { "group" });
@@ -237,9 +259,15 @@ void PickPlaceTask::pick()
   ---- *               Close Hand                      *
      ***************************************************/
     {
-      auto stage = std::make_unique<stages::MoveTo>("close hand", sampling_planner_);
+      auto it = stage_map.find(STAGE_CLOSE_HAND);
+      if (it == stage_map.end())
+        return;
+
+      auto stage = std::make_unique<stages::MoveTo>("close hand", it->second.planner);
       stage->setGroup(hand_group_name_);
       stage->setGoal(hand_close_pose_);
+      stage->setTimeout(it->second.timeout);
+      stage->setPathConstraints(it->second.constraint);
       grasp->insert(std::move(stage));
     }
 
@@ -266,8 +294,14 @@ void PickPlaceTask::pick()
   .... *               Lift object                        *
      ***************************************************/
     {
-      auto stage = std::make_unique<stages::MoveRelative>("lift object", cartesian_planner_);
+      auto it = stage_map.find(STAGE_LIFT_OBJECT);
+      if (it == stage_map.end())
+        return;
+
+      auto stage = std::make_unique<stages::MoveRelative>("lift object", it->second.planner);
       stage->properties().configureInitFrom(Stage::PARENT, { "group" });
+      stage->setTimeout(it->second.timeout);
+      stage->setPathConstraints(it->second.constraint);
       stage->setMinMaxDistance(lift_object_min_dist_, lift_object_max_dist_);
       stage->setIKFrame(hand_frame_);
       stage->properties().set("marker_ns", "lift_object");
@@ -297,6 +331,7 @@ void PickPlaceTask::pick()
 void PickPlaceTask::place()
 {
   Task& t = *task_;
+  auto& stage_map = task_property_.stage_map;
 
   /******************************************************
    *                                                    *
@@ -304,9 +339,14 @@ void PickPlaceTask::place()
    *                                                    *
    *****************************************************/
   {
+    auto it = stage_map.find(STAGE_MOVE_TO_PLACE);
+    if (it == stage_map.end())
+      return;
+
     auto stage = std::make_unique<stages::Connect>(
-        "move to place", stages::Connect::GroupPlannerVector{ { arm_group_name_, sampling_planner_ } });
-    stage->setTimeout(25.0);
+        "move to place", stages::Connect::GroupPlannerVector{ { arm_group_name_, it->second.planner } });
+    stage->setTimeout(it->second.timeout);
+    stage->setPathConstraints(it->second.constraint);
     stage->properties().configureInitFrom(Stage::PARENT);
     t.add(std::move(stage));
   }
@@ -325,7 +365,13 @@ void PickPlaceTask::place()
   ---- *          Lower Object                              *
      *****************************************************/
     {
-      auto stage = std::make_unique<stages::MoveRelative>("lower object", cartesian_planner_);
+      auto it = stage_map.find(STAGE_LOWER_OBJECT);
+      if (it == stage_map.end())
+        return;
+
+      auto stage = std::make_unique<stages::MoveRelative>("lower object", it->second.planner);
+      stage->setTimeout(it->second.timeout);
+      stage->setPathConstraints(it->second.constraint);
       stage->properties().set("marker_ns", "lower_object");
       stage->properties().set("link", hand_frame_);
       stage->properties().configureInitFrom(Stage::PARENT, { "group" });
@@ -370,7 +416,13 @@ void PickPlaceTask::place()
   ---- *          Open Hand                              *
      *****************************************************/
     {
-      auto stage = std::make_unique<stages::MoveTo>("open hand", sampling_planner_);
+      auto it = stage_map.find(STAGE_POST_OPEN_HAND);
+      if (it == stage_map.end())
+        return;
+
+      auto stage = std::make_unique<stages::MoveTo>("open hand", it->second.planner);
+      stage->setTimeout(it->second.timeout);
+      stage->setPathConstraints(it->second.constraint);
       stage->setGroup(hand_group_name_);
       stage->setGoal(hand_open_pose_);
       place->insert(std::move(stage));
@@ -400,8 +452,14 @@ void PickPlaceTask::place()
   ---- *          Retreat Motion                            *
      *****************************************************/
     {
-      auto stage = std::make_unique<stages::MoveRelative>("retreat after place", cartesian_planner_);
+      auto it = stage_map.find(STAGE_RETREAT);
+      if (it == stage_map.end())
+        return;
+
+      auto stage = std::make_unique<stages::MoveRelative>("retreat after place", it->second.planner);
       stage->properties().configureInitFrom(Stage::PARENT, { "group" });
+      stage->setTimeout(it->second.timeout);
+      stage->setPathConstraints(it->second.constraint);
       stage->setMinMaxDistance(.005, .25);
       stage->setIKFrame(hand_frame_);
       stage->properties().set("marker_ns", "retreat");
@@ -423,7 +481,7 @@ void PickPlaceTask::place()
    *****************************************************/
   /*
      {
-        auto stage = std::make_unique<stages::MoveTo>("move home", sampling_planner_);
+        auto stage = std::make_unique<stages::MoveTo>("move home", it->second.planner);
         stage->properties().configureInitFrom(Stage::PARENT, { "group" });
         stage->setGoal(arm_home_pose_);
         stage->restrictDirection(stages::MoveTo::FORWARD);
@@ -442,12 +500,10 @@ bool cb(const moveit::task_constructor::Stage& stage, unsigned int test)
 bool PickPlaceTask::plan()
 {
   ROS_INFO_NAMED(LOGNAME, "Start searching for task solutions");
-  ros::NodeHandle pnh("~");
-  int max_solutions = pnh.param<int>("max_solutions", 10);
 
   try
   {
-    task_->plan(max_solutions);
+    task_->plan(max_solutions_);
   }
   catch (InitStageException& e)
   {
@@ -477,21 +533,102 @@ bool PickPlaceTask::plan()
   return true;
 }
 
-bool PickPlaceTask::execute()
+moveit::task_constructor::TaskPtr PickPlaceTask::getTask()
 {
-  ROS_INFO_NAMED(LOGNAME, "Executing solution trajectory");
-  moveit_task_constructor_msgs::ExecuteTaskSolutionGoal execute_goal;
-  task_->solutions().front()->fillMessage(execute_goal.solution);
-  execute_.sendGoal(execute_goal);
-  execute_.waitForResult();
-  moveit_msgs::MoveItErrorCodes execute_result = execute_.getResult()->error_code;
+  return task_;
+}
 
-  if (execute_result.val != moveit_msgs::MoveItErrorCodes::SUCCESS)
+// bool PickPlaceTask::execute()
+// {
+//   ROS_INFO_NAMED(LOGNAME, "Executing solution trajectory");
+//   moveit_task_constructor_msgs::ExecuteTaskSolutionGoal execute_goal;
+//   task_->solutions().front()->fillMessage(execute_goal.solution);
+//   execute_.sendGoal(execute_goal);
+//   execute_.waitForResult();
+//   moveit_msgs::MoveItErrorCodes execute_result = execute_.getResult()->error_code;
+
+//   if (execute_result.val != moveit_msgs::MoveItErrorCodes::SUCCESS)
+//   {
+//     ROS_ERROR_STREAM_NAMED(LOGNAME, "Task execution failed and returned: " << execute_.getState().toString());
+//     return false;
+//   }
+
+//   return true;
+// }
+
+///
+/// PickPlaceProfiler
+///
+
+PickPlaceProfiler::PickPlaceProfiler(const std::string& name) : Profiler<PickPlaceQuery, PickPlaceResult>(name){};
+
+void PickPlaceProfiler::initialize(PickPlaceQuery& query)
+{
+  // Remove all scene objects
+  moveit::planning_interface::PlanningSceneInterface psi;
   {
-    ROS_ERROR_STREAM_NAMED(LOGNAME, "Task execution failed and returned: " << execute_.getState().toString());
-    return false;
+    moveit_msgs::PlanningScene rm;
+    rm.is_diff = true;
+    rm.robot_state.is_diff = true;
+    rm.robot_state.attached_collision_objects.resize(1);
+    rm.robot_state.attached_collision_objects[0].object.operation = moveit_msgs::CollisionObject::REMOVE;
+    rm.world.collision_objects.resize(1);
+    rm.world.collision_objects[0].operation = moveit_msgs::CollisionObject::REMOVE;
+    psi.applyPlanningScene(rm);
+  }
+
+  // Add collision objects to the planning scene
+  if (!psi.applyCollisionObjects(query.scene.world.collision_objects))
+  {
+    ROS_ERROR("Failed to apply collision objects");
+    return;
+  }
+
+  // Initialize PickPlaceTask
+  pick_place_task = std::make_shared<PickPlaceTask>(query.task.name);
+
+  pick_place_task->loadParameters(query.parameters, query.task);
+
+  pick_place_task->init();
+  pick_place_task->pick();
+  pick_place_task->place();
+}
+
+void PickPlaceProfiler::preRunQuery(PickPlaceQuery& query, Data& data)
+{
+  // Reset task for planning initial stages
+  auto task = pick_place_task->getTask();
+  task->reset();
+}
+
+bool PickPlaceProfiler::runQuery(const PickPlaceQuery& query, Data& data) const
+{
+  PickPlaceResult result;
+
+  // Profile time
+  data.start = std::chrono::high_resolution_clock::now();
+
+  data.success = pick_place_task->plan();
+
+  data.finish = std::chrono::high_resolution_clock::now();
+  data.time = IO::getSeconds(data.start, data.finish);
+
+  // Compute metrics
+  computeMetrics(options.metrics, query, result, data);
+
+  if (data.success)
+  {
+    auto task = pick_place_task->getTask();
   }
 
   return true;
 }
+
+void PickPlaceProfiler::computeMetrics(uint32_t options, const PickPlaceQuery& query, const PickPlaceResult& result,
+                                       Data& data) const
+{
+  data.metrics["time"] = data.time;
+  data.metrics["success"] = data.success;
+}
+
 }  // namespace moveit_benchmark_suite_mtc

@@ -24,7 +24,7 @@ set(CMAKE_CXX_STANDARD 14)
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME}
-  src/pickplace.cpp
+  src/pickplace_profiler.cpp
   src/pickplace_builder.cpp
 )
 
