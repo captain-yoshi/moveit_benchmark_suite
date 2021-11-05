@@ -28,11 +28,11 @@ add_library(${PROJECT_NAME}
   src/pickplace_builder.cpp
 )
 
-add_executable(run_pickplace src/run_pickplace.cpp)
+add_executable(pickplace src/pickplace_benchmark.cpp)
 
-target_link_libraries(run_pickplace ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
+target_link_libraries(pickplace ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
-install(TARGETS run_pickplace
+install(TARGETS pickplace
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
