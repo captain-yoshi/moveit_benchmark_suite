@@ -47,8 +47,8 @@
 #include <moveit_benchmark_suite/aggregation.h>
 #include <moveit_benchmark_suite/io/gnuplot.h>
 #include <moveit_benchmark_suite/scene.h>
-#include <moveit_benchmark_suite/benchmarks/builder/motion_planning.h>
-#include <moveit_benchmark_suite/benchmarks/motion_planning_benchmark.h>
+#include <moveit_benchmark_suite/benchmarks/builder/motion_planning_builder.h>
+#include <moveit_benchmark_suite/benchmarks/motion_planning_profiler.h>
 #include <map>
 
 using namespace moveit_benchmark_suite;
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
   filename = IO::getFileName(file);
 
   // Build queries
-  PlanningPipelineBuilder builder;
+  MoveGroupInterfaceBuilder builder;
   builder.buildQueries();
 
   const auto& queries = builder.getQueries();
@@ -90,9 +90,9 @@ int main(int argc, char** argv)
     benchmark_name = config.getBenchmarkName();
 
   // Setup profiler
-  using Metric = PlanningPipelineProfiler::Metrics;
+  using Metric = MoveGroupInterfaceProfiler::Metrics;
 
-  PlanningPipelineProfiler profiler(BenchmarkType::MOTION_PLANNING_PP);
+  MoveGroupInterfaceProfiler profiler(BenchmarkType::MOTION_PLANNING_MGI);
   profiler.setQuerySetup(query_setup);
   profiler.options.metrics =
       Metric::WAYPOINTS | Metric::CORRECT | Metric::LENGTH | Metric::SMOOTHNESS | Metric::CLEARANCE;

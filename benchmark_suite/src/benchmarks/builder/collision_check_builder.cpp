@@ -39,7 +39,7 @@
 #include <moveit_benchmark_suite/dataset.h>
 #include <moveit_benchmark_suite/scene.h>
 #include <moveit_benchmark_suite/yaml.h>
-#include <moveit_benchmark_suite/benchmarks/builder/collision_check.h>
+#include <moveit_benchmark_suite/benchmarks/builder/collision_check_builder.h>
 
 #include <moveit/robot_state/conversions.h>
 

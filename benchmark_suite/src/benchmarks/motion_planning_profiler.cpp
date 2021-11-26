@@ -1,4 +1,4 @@
-#include <moveit_benchmark_suite/benchmarks/motion_planning_benchmark.h>
+#include <moveit_benchmark_suite/benchmarks/motion_planning_profiler.h>
 #include <moveit_benchmark_suite/log.h>
 
 #include <queue>

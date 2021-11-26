@@ -39,7 +39,7 @@
 #include <moveit_benchmark_suite/dataset.h>
 #include <moveit_benchmark_suite/scene.h>
 #include <moveit_benchmark_suite/yaml.h>
-#include <moveit_benchmark_suite/benchmarks/builder/motion_planning.h>
+#include <moveit_benchmark_suite/benchmarks/builder/motion_planning_builder.h>
 
 #include <urdf_to_scene/scene_parser.h>
 

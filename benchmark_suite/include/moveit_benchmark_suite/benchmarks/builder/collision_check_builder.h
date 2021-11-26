@@ -33,65 +33,67 @@
  *********************************************************************/
 
 /* Author: Captain Yoshi
-   Desc: Build pair wise query combination for motion planning benchmarks
+   Desc: Build pair wise query combination for collision check benchmarks
 */
 
 #pragma once
 
 #include <moveit_benchmark_suite/dataset.h>
-#include <moveit_benchmark_suite/benchmarks/motion_planning_benchmark.h>
-#include <moveit_benchmark_suite/config/motion_planning_config.h>
+#include <moveit_benchmark_suite/robot.h>
+#include <moveit_benchmark_suite/benchmarks/collision_check_profiler.h>
+#include <moveit_benchmark_suite/config/collision_check_config.h>
 
 namespace moveit_benchmark_suite
 {
-class MotionPlanningBuilder
+class CollisionCheckBuilder
 {
 public:
   void buildQueries();
 
-  const MotionPlanningConfig& getConfig() const;
+  const CollisionCheckConfig& getConfig() const;
+  const std::vector<CollisionCheckQueryPtr>& getQueries() const;
   const QuerySetup& getQuerySetup() const;
 
 protected:
   void buildRobot();
   void buildScenes();
-  void buildRequests();
-  virtual void buildPlanners() = 0;
-  virtual void appendQuery(const std::string& name, const QueryGroupName& setup,
-                           const planning_scene::PlanningScenePtr& scene, const PlannerPtr& planner,
-                           const moveit_msgs::MotionPlanRequest& request) = 0;
 
   QuerySetup query_setup_;
-  MotionPlanningConfig mp_config_;
+  CollisionCheckConfig config_;
+
+  std::vector<CollisionCheckQueryPtr> queries_;
 
   RobotPtr robot_;
   std::vector<planning_scene::PlanningScenePtr> scenes_;
-  std::vector<std::pair<std::string, moveit_msgs::MotionPlanRequest>> requests_;
-  std::vector<PlannerPtr> pipelines_;
 };
 
-class PlanningPipelineBuilder : public MotionPlanningBuilder
+namespace collision_check
 {
-public:
-  void buildPlanners() override;
-  const std::vector<PlanningPipelineQueryPtr>& getQueries() const;
+static const std::string ROBOT_DESCRIPTION = "robot_description";
 
-protected:
-  void appendQuery(const std::string& name, const QueryGroupName& setup, const planning_scene::PlanningScenePtr& scene,
-                   const PlannerPtr& planner, const moveit_msgs::MotionPlanRequest& request) override;
-  std::vector<PlanningPipelineQueryPtr> queries_;
-};
+/** \brief Factor to compute the maximum number of trials random clutter generation. */
+static const int MAX_SEARCH_FACTOR_CLUTTER = 3;
 
-class MoveGroupInterfaceBuilder : public MotionPlanningBuilder
+/** \brief Factor to compute the maximum number of trials for random state generation. */
+static const int MAX_SEARCH_FACTOR_STATES = 30;
+
+/** \brief Defines a random robot state. */
+enum class RobotStateSelector
 {
-public:
-  void buildPlanners() override;
-  const std::vector<MoveGroupInterfaceQueryPtr>& getQueries() const;
-
-protected:
-  void appendQuery(const std::string& name, const QueryGroupName& setup, const planning_scene::PlanningScenePtr& scene,
-                   const PlannerPtr& planner, const moveit_msgs::MotionPlanRequest& request) override;
-  std::vector<MoveGroupInterfaceQueryPtr> queries_;
+  IN_COLLISION,
+  NOT_IN_COLLISION,
+  RANDOM,
 };
 
+/** \brief Clutters the world of the planning scene with random objects in a certain area around the origin. All added
+ *  objects are not in collision with the robot.
+ *
+ *   \param planning_scene The planning scene
+ *   \param num_objects The number of objects to be cluttered
+ *   \param CollisionObjectType Type of object to clutter (mesh or box) */
+bool clutterWorld(const planning_scene::PlanningScenePtr& planning_scene, const moveit_msgs::RobotState& robot_state,
+                  const size_t num_objects, CollisionCheckConfig::CollisionObjectType type, const std::string& resource,
+                  const std::vector<CollisionCheckConfig::Bound>& bound, const uint32_t rng);
+
+}  // namespace collision_check
 }  // namespace moveit_benchmark_suite

@@ -1,7 +1,7 @@
 /*********************************************************************
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2019, Jens Petit
+ *  Copyright (c) 2021, Captain Yoshi
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
- *   * Neither the name of the copyright holder nor the names of its
+ *   * Neither the name of Bielefeld University nor the names of its
  *     contributors may be used to endorse or promote products derived
  *     from this software without specific prior written permission.
  *
@@ -32,88 +32,108 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Jens Petit */
+/* Author: Captain Yoshi
+   Desc: Collision checking benchmark node
+*/
 
-#include <moveit_benchmark_suite/benchmarks/collision_check_benchmark.h>
-#include <moveit_benchmark_suite/io.h>
-#include <chrono>
+#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
+#include <moveit/collision_plugin_loader/collision_plugin_loader.h>
+#include <moveit/collision_detection_bullet/collision_detector_allocator_bullet.h>
+#include <moveit/collision_detection_fcl/collision_detector_allocator_fcl.h>
+#include <geometric_shapes/shape_operations.h>
+#include <random_numbers/random_numbers.h>
 
-#include <moveit/planning_scene_interface/planning_scene_interface.h>
-#include <moveit/move_group_interface/move_group_interface.h>
-#include <moveit/robot_state/conversions.h>
+#include <moveit/robot_model/robot_model.h>
+#include <moveit/utils/robot_model_test_utils.h>
+
+#include <moveit_benchmark_suite/benchmarks/collision_check_profiler.h>
+#include <moveit_benchmark_suite/scene.h>
+#include <moveit_benchmark_suite/benchmark.h>
+#include <moveit_benchmark_suite/aggregation.h>
+#include <moveit_benchmark_suite/io/gnuplot.h>
+
+#include <moveit_benchmark_suite/config/collision_check_config.h>
+#include <moveit_benchmark_suite/benchmarks/builder/collision_check_builder.h>
 
 using namespace moveit_benchmark_suite;
+using namespace moveit_benchmark_suite::collision_check;
 
-///
-/// CollisionCheckQuery
-///
-CollisionCheckQuery::CollisionCheckQuery(const std::string& name,                             //
-                                         const QueryGroupName& group_name_map,                //
-                                         const planning_scene::PlanningSceneConstPtr& scene,  //
-                                         const moveit::core::RobotStatePtr& robot_state,      //
-                                         const collision_detection::CollisionRequest& request)
-  : Query(name, group_name_map), scene(scene), robot_state(robot_state), request(request)
+// Parameter names
+constexpr char OUTPUT_PARAMETER[] = "output_file";
+constexpr char VISUALIZATION_PARAMETER[] = "visualization";
+
+int main(int argc, char** argv)
 {
-}
+  ros::init(argc, argv, "collision_check");
+  ros::AsyncSpinner spinner(1);
+  spinner.start();
 
-///
-/// CollisionCheckProfiler
-///
+  ros::NodeHandle pnh("~");
 
-CollisionCheckProfiler::CollisionCheckProfiler(const std::string& name)
-  : Profiler<CollisionCheckQuery, CollisionCheckResult>(name){};
+  // Parse output directory and filename
+  std::string file;
+  std::string filepath;
+  std::string filename;
+  if (!pnh.getParam(OUTPUT_PARAMETER, file))
+  {
+    ROS_FATAL_STREAM("Parameter '" << OUTPUT_PARAMETER << "' is not set.");
+    return 1;
+  }
 
-bool CollisionCheckProfiler::runQuery(const CollisionCheckQuery& query, Data& data) const
-{
-  CollisionCheckResult result;
+  filepath = IO::getFilePath(file);
+  filename = IO::getFileName(file);
 
-  // Profile time
-  data.start = std::chrono::high_resolution_clock::now();
+  // Parse visualization flag
+  bool visualization = false;
+  pnh.getParam(VISUALIZATION_PARAMETER, visualization);
 
-  query.scene->checkCollision(query.request, result.collision_result, *query.robot_state);
+  // Build queries
+  CollisionCheckBuilder builder;
+  builder.buildQueries();
 
-  data.finish = std::chrono::high_resolution_clock::now();
-  data.time = IO::getSeconds(data.start, data.finish);
+  const auto& queries = builder.getQueries();
+  const auto& config = builder.getConfig();
 
-  // Compute metrics
-  computeMetrics(options.metrics, query, result, data);
+  std::size_t trials = config.getNumRuns();
+  const auto& benchmark_name = config.getBenchmarkName();
+  const auto& query_setup = builder.getQuerySetup();
 
-  return true;
-}
+  // Setup profiler
+  using Metric = CollisionCheckProfiler::Metrics;
 
-void CollisionCheckProfiler::computeMetrics(uint32_t options, const CollisionCheckQuery& query,
-                                            const CollisionCheckResult& result, Data& data) const
-{
-  data.metrics["time"] = data.time;
-
-  if (options & Metrics::CONTACTS && query.request.contacts)
-    data.metrics["contact_count"] = result.collision_result.contact_count;
-  if (options & Metrics::DISTANCE && query.request.distance)
-    data.metrics["closest_distance"] = result.collision_result.distance;
-}
-
-void CollisionCheckProfiler::visualizeQueries(const std::vector<CollisionCheckQueryPtr>& queries) const
-{
-  ros::NodeHandle nh;
-  ros::Publisher pub = nh.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
-  ros::Duration(0.5).sleep();
+  CollisionCheckProfiler profiler(BenchmarkType::COLLISION_CHECK);
+  profiler.setQuerySetup(query_setup);
+  profiler.options.metrics = Metric::DISTANCE | Metric::CONTACTS;
 
   for (const auto& query : queries)
+    profiler.addQuery(query);
+
+  // Setup benchmark
+  Benchmark::Options options = { .verbose_status_query = false, .verbose_status_run = true, .trials = trials };
+
+  Benchmark benchmark(benchmark_name,  // Name of benchmark
+                      options);        // Options for benchmark
+
+  // Run benchmark
+  auto dataset = benchmark.run(profiler);
+
+  if (!dataset)
+    return 0;
+
+  // Dump metrics to logfile
+  BenchmarkSuiteDataSetOutputter output;
+  output.dump(*dataset, filepath, filename);
+
+  // Wait if GNUPlot was configured
+  if (benchmark.getPlotFlag())
   {
-    // Fill and publish planning scene
-    moveit_msgs::PlanningScene ps;
-    query->scene->getPlanningSceneMsg(ps);
-    moveit::core::robotStateToRobotStateMsg(*query->robot_state, ps.robot_state, true);
-
-    pub.publish(ps);
-
-    ROS_INFO("Query name: '%s'", query->name.c_str());
-    ROS_INFO("Press 'Enter' to view next query");
+    ROS_WARN("Press ENTER to continue");
     std::cin.ignore();
   }
-}
 
-void CollisionCheckProfiler::visualizeQueries() const
-{
-  visualizeQueries(getQueries());
+  // Visualize dataset results
+  if (visualization)
+    profiler.visualizeQueries();
+
+  return 0;
 }

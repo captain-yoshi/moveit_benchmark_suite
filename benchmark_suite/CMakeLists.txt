@@ -68,20 +68,20 @@ add_library(${PROJECT_NAME}
   src/config/gnuplot_config.cpp
   src/config/html_config.cpp
   src/config/motion_planning_config.cpp
-  src/benchmarks/builder/collision_check.cpp
-  src/benchmarks/builder/motion_planning.cpp
-  src/benchmarks/motion_planning_benchmark.cpp
-  src/benchmarks/collision_check_benchmark.cpp
+  src/benchmarks/builder/collision_check_builder.cpp
+  src/benchmarks/builder/motion_planning_builder.cpp
+  src/benchmarks/motion_planning_profiler.cpp
+  src/benchmarks/collision_check_profiler.cpp
 )
 
-add_executable(motion_planning_mgi src/benchmarks/node/motion_planning_mgi.cpp)
+add_executable(motion_planning_mgi src/benchmarks/motion_planning_mgi_benchmark.cpp)
 target_link_libraries(motion_planning_mgi ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
-add_executable(motion_planning_pp src/benchmarks/node/motion_planning_pp.cpp)
+add_executable(motion_planning_pp src/benchmarks/motion_planning_pp_benchmark.cpp)
 target_link_libraries(motion_planning_pp ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
 if("${catkin_LIBRARIES}" MATCHES "moveit_collision_detection_bullet")
-  add_executable(collision_check src/benchmarks/node/collision_check.cpp)
+  add_executable(collision_check src/benchmarks/collision_check_benchmark.cpp)
   target_link_libraries(collision_check fcl ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 endif()
 
