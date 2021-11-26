@@ -82,6 +82,7 @@ bool CollisionCheckProfiler::runQuery(const CollisionCheckQuery& query, Data& da
   // Compute metrics
   computeMetrics(options.metrics, query, result, data);
 
+  addResult(query.name, result);
   return true;
 }
 

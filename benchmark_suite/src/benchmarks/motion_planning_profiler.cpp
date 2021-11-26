@@ -153,5 +153,6 @@ bool MoveGroupInterfaceProfiler::runQuery(const MoveGroupInterfaceQuery& query, 
   // Compute metrics
   computeMetrics(options.metrics, query, result, data);
 
+  addResult(query.name, result);
   return result.success;
 }
