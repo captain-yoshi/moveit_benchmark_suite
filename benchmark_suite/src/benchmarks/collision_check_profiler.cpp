@@ -67,7 +67,7 @@ CollisionCheckProfiler::CollisionCheckProfiler(const std::string& name)
   pub_ = nh_.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
 };
 
-bool CollisionCheckProfiler::runQuery(const CollisionCheckQuery& query, Data& data) const
+bool CollisionCheckProfiler::runQuery(const CollisionCheckQuery& query, Data& data)
 {
   CollisionCheckResult result;
 

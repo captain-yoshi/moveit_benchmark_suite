@@ -131,7 +131,7 @@ public:
    *  \param[out] result The results of profiling.
    *  \return True if planning succeeded, false on failure.
    */
-  virtual bool runQuery(const DerivedQuery& query, Data& data) const override = 0;
+  virtual bool runQuery(const DerivedQuery& query, Data& data) override = 0;
 
 protected:
   /** \brief Compute the built-in metrics according to the provided bitmask \a options.
@@ -167,14 +167,14 @@ class PlanningPipelineProfiler : public PlanningProfiler<PlanningPipelineQuery, 
 {
 public:
   PlanningPipelineProfiler(const std::string& name);
-  bool runQuery(const PlanningPipelineQuery& query, Data& data) const override;
+  bool runQuery(const PlanningPipelineQuery& query, Data& data) override;
 };
 
 class MoveGroupInterfaceProfiler : public PlanningProfiler<MoveGroupInterfaceQuery, PlanningResult>
 {
 public:
   MoveGroupInterfaceProfiler(const std::string& name);
-  bool runQuery(const MoveGroupInterfaceQuery& query, Data& data) const override;
+  bool runQuery(const MoveGroupInterfaceQuery& query, Data& data) override;
 };
 
 }  // namespace moveit_benchmark_suite

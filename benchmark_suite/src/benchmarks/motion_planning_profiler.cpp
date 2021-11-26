@@ -53,7 +53,7 @@ MoveGroupInterfaceQuery::MoveGroupInterfaceQuery(const std::string& name,       
 PlanningPipelineProfiler::PlanningPipelineProfiler(const std::string& name)
   : PlanningProfiler<PlanningPipelineQuery, PlanningResult>(name){};
 
-bool PlanningPipelineProfiler::runQuery(const PlanningPipelineQuery& query, Data& data) const
+bool PlanningPipelineProfiler::runQuery(const PlanningPipelineQuery& query, Data& data)
 {
   PlanningResult result;
 
@@ -90,7 +90,7 @@ bool PlanningPipelineProfiler::runQuery(const PlanningPipelineQuery& query, Data
 MoveGroupInterfaceProfiler::MoveGroupInterfaceProfiler(const std::string& name)
   : PlanningProfiler<MoveGroupInterfaceQuery, PlanningResult>(name){};
 
-bool MoveGroupInterfaceProfiler::runQuery(const MoveGroupInterfaceQuery& query, Data& data) const
+bool MoveGroupInterfaceProfiler::runQuery(const MoveGroupInterfaceQuery& query, Data& data)
 {
   PlanningResult result;
   moveit::planning_interface::MoveGroupInterface::Plan plan;
