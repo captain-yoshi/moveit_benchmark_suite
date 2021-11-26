@@ -51,6 +51,11 @@ class Profiler
                 "Profiler template type 'DerivedResult' must be derived from moveit_benchmark_suite::Result");
 
 public:
+  using DerivedQueryPtr = std::shared_ptr<DerivedQuery>;
+  using DerivedResultPtr = std::shared_ptr<DerivedResult>;
+
+  using ResultMap = std::map<QueryName, std::vector<DerivedResultPtr>>;
+
   /** \brief Options for profiling.
    */
   struct Options
@@ -76,31 +81,41 @@ public:
     return name_;
   };
 
+  void addQuery(const DerivedQueryPtr& query)
+  {
+    queries_.push_back(query);
+  }
+
   void addQuery(const DerivedQuery& query)
   {
     addQuery(std::make_shared<DerivedQuery>(query));
   }
 
-  void addQuery(const std::shared_ptr<DerivedQuery>& query)
+  void addResult(const std::string& query_name, const DerivedResultPtr& result)
   {
-    queries_.emplace_back(query);
-  }
-
-  void addResult(const DerivedQuery& query, const DerivedResult& result)
-  {
-    auto it = result_map_.find(query.name);
+    auto it = result_map_.find(query_name);
     if (it != result_map_.end())
-      it->second.push_back(std::make_shared<DerivedResult>(result));
+      it->second.push_back(result);
     else
-      result_map_.insert({ query.name, { std::make_shared<DerivedResult>(result) } });
+      result_map_.insert({ query_name, { result } });
   }
 
-  const std::vector<std::shared_ptr<DerivedQuery>>& getQueries() const
+  void addResult(const std::string& query_name, const DerivedResult& result)
+  {
+    addResult(query_name, std::make_shared<DerivedResult>(result));
+  }
+
+  const std::vector<DerivedQueryPtr>& getQueries() const
   {
     return queries_;
   }
 
-  virtual void visualizeQueries(const std::vector<std::shared_ptr<DerivedQuery>>& query) const
+  const ResultMap& getResults() const
+  {
+    return result_map_;
+  }
+
+  virtual void visualizeQuery(const DerivedQuery& query) const
   {
   }
 
@@ -119,8 +134,8 @@ public:
 private:
   const std::string name_;
   QuerySetup query_setup_;
-  std::vector<std::shared_ptr<DerivedQuery>> queries_;
-  std::map<QueryName, std::vector<std::shared_ptr<DerivedResult>>> result_map_;
+  std::vector<DerivedQueryPtr> queries_;
+  ResultMap result_map_;
 };
 
 }  // namespace moveit_benchmark_suite
