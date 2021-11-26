@@ -61,7 +61,11 @@ CollisionCheckQuery::CollisionCheckQuery(const std::string& name,               
 ///
 
 CollisionCheckProfiler::CollisionCheckProfiler(const std::string& name)
-  : Profiler<CollisionCheckQuery, CollisionCheckResult>(name){};
+  : Profiler<CollisionCheckQuery, CollisionCheckResult>(name)
+{
+  // For visualisation
+  pub_ = nh_.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
+};
 
 bool CollisionCheckProfiler::runQuery(const CollisionCheckQuery& query, Data& data) const
 {
@@ -92,28 +96,16 @@ void CollisionCheckProfiler::computeMetrics(uint32_t options, const CollisionChe
     data.metrics["closest_distance"] = result.collision_result.distance;
 }
 
-void CollisionCheckProfiler::visualizeQueries(const std::vector<CollisionCheckQueryPtr>& queries) const
+void CollisionCheckProfiler::visualizeQuery(const CollisionCheckQuery& query) const
 {
-  ros::NodeHandle nh;
-  ros::Publisher pub = nh.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
-  ros::Duration(0.5).sleep();
+  // Fill and publish planning scene
+  moveit_msgs::PlanningScene ps;
+  query.scene->getPlanningSceneMsg(ps);
+  moveit::core::robotStateToRobotStateMsg(*query.robot_state, ps.robot_state, true);
 
-  for (const auto& query : queries)
-  {
-    // Fill and publish planning scene
-    moveit_msgs::PlanningScene ps;
-    query->scene->getPlanningSceneMsg(ps);
-    moveit::core::robotStateToRobotStateMsg(*query->robot_state, ps.robot_state, true);
+  pub_.publish(ps);
 
-    pub.publish(ps);
-
-    ROS_INFO("Query name: '%s'", query->name.c_str());
-    ROS_INFO("Press 'Enter' to view next query");
-    std::cin.ignore();
-  }
-}
-
-void CollisionCheckProfiler::visualizeQueries() const
-{
-  visualizeQueries(getQueries());
+  ROS_INFO("Query name: '%s'", query.name.c_str());
+  ROS_INFO("Press 'Enter' to view next query");
+  std::cin.ignore();
 }

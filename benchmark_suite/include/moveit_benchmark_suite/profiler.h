@@ -119,6 +119,23 @@ public:
   {
   }
 
+  virtual void visualizeQueries() const
+  {
+    for (const auto& query : queries_)
+      visualizeQuery(*query);
+  }
+
+  virtual void visualizeResult(const DerivedResult& result) const
+  {
+  }
+
+  virtual void visualizeResults() const
+  {
+    for (const auto& results : result_map_)
+      for (const auto& result : results.second)
+        visualizeResult(*result);
+  }
+
   const QuerySetup& getQuerySetup() const
   {
     return query_setup_;
