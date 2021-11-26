@@ -7,6 +7,9 @@
 #include <moveit/collision_detection_fcl/fcl_compat.h>
 #include <moveit/collision_detection_bullet/collision_env_bullet.h>
 
+#include <moveit_msgs/DisplayTrajectory.h>
+#include <moveit/robot_state/conversions.h>
+
 using namespace moveit_benchmark_suite;
 
 ///
@@ -51,7 +54,11 @@ MoveGroupInterfaceQuery::MoveGroupInterfaceQuery(const std::string& name,       
 ///
 
 PlanningPipelineProfiler::PlanningPipelineProfiler(const std::string& name)
-  : PlanningProfiler<PlanningPipelineQuery, PlanningResult>(name){};
+  : PlanningProfiler<PlanningPipelineQuery, PlanningResult>(name)
+{
+  pub_ = nh_.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
+  visual_tools_ = std::make_shared<moveit_visual_tools::MoveItVisualTools>("world");
+};
 
 bool PlanningPipelineProfiler::runQuery(const PlanningPipelineQuery& query, Data& data)
 {
@@ -80,7 +87,26 @@ bool PlanningPipelineProfiler::runQuery(const PlanningPipelineQuery& query, Data
   // Compute metrics
   computeMetrics(options.metrics, query, result, data);
 
+  addResult(query.name, result);
   return result.success;
+}
+
+void PlanningPipelineProfiler::visualizeResult(const PlanningResult& result) const
+{
+  moveit_msgs::DisplayTrajectory dt;
+  moveit::core::robotStateToRobotStateMsg(*result.trajectory->getTrajectory()->getFirstWayPointPtr(),
+                                          dt.trajectory_start);
+  dt.trajectory.emplace_back();
+  result.mp_response.trajectory_->getRobotTrajectoryMsg(dt.trajectory.back());
+
+  pub_.publish(dt);
+
+  visual_tools_->deleteAllMarkers();
+  visual_tools_->publishTrajectoryLine(dt.trajectory.back(), result.trajectory->getTrajectory()->getGroup());
+  visual_tools_->trigger();
+
+  ROS_INFO("Press 'Enter' to view next result");
+  std::cin.ignore();
 }
 
 ///

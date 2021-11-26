@@ -44,6 +44,7 @@
 #include <moveit_benchmark_suite/io.h>
 
 #include <moveit_benchmark_suite/trajectory.h>
+#include <moveit_visual_tools/moveit_visual_tools.h>
 
 namespace moveit_benchmark_suite
 {
@@ -168,6 +169,13 @@ class PlanningPipelineProfiler : public PlanningProfiler<PlanningPipelineQuery, 
 public:
   PlanningPipelineProfiler(const std::string& name);
   bool runQuery(const PlanningPipelineQuery& query, Data& data) override;
+
+  void visualizeResult(const PlanningResult& result) const override;
+
+private:
+  ros::NodeHandle nh_;
+  ros::Publisher pub_;
+  moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
 };
 
 class MoveGroupInterfaceProfiler : public PlanningProfiler<MoveGroupInterfaceQuery, PlanningResult>

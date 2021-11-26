@@ -3,7 +3,7 @@
 
   <arg name="name" default="" />
   <arg name="output_file" default="" />
-  <arg name="use_rviz" default="false" />
+  <arg name="visualize" default="false" doc="turns on and off visualization with rviz"/>
 
   <!-- By default, we are not in debug mode -->
   <arg name="debug" default="false" />
@@ -13,7 +13,7 @@
 
   <!-- Load robot -->
   <include file="$(find moveit_resources_panda_moveit_config)/launch/demo.launch">
-    <arg name="use_rviz" value="false"/>
+    <arg name="use_rviz" value="$(arg visualize)"/>
     <!--<arg name="debug" value="$(arg debug)"/>-->
   </include>
 
@@ -52,5 +52,6 @@
   <node name="benchmark" pkg="moveit_benchmark_suite" type="motion_planning_pp" output="screen" clear_params="true" required="true" launch-prefix="$(arg launch_prefix)">
     <param name="name" value="$(arg name)"/>
     <param name="output_file" value="$(arg output_file)"/>
+    <param name="visualize" value="$(arg visualize)" type="bool"/>
   </node>
 </launch>

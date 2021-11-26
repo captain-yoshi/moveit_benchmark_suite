@@ -53,6 +53,8 @@
 
 using namespace moveit_benchmark_suite;
 
+constexpr char VISUALIZE_PARAMETER[] = "visualize";
+
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "benchmark");
@@ -73,6 +75,10 @@ int main(int argc, char** argv)
 
   filepath = IO::getFilePath(file);
   filename = IO::getFileName(file);
+
+  // Parse visualize flag
+  bool visualize = false;
+  pnh.getParam(VISUALIZE_PARAMETER, visualize);
 
   // Build queries
   PlanningPipelineBuilder builder;
@@ -122,6 +128,10 @@ int main(int argc, char** argv)
     ROS_WARN("Press CTL-C when finished with GNUPlot");
     ros::waitForShutdown();
   }
+
+  // Visualize dataset results
+  if (visualize)
+    profiler.visualizeResults();
 
   return 0;
 }
