@@ -2,7 +2,7 @@
 <launch>
   <!-- Configuration parameters -->
   <arg name="output_file" default="" />
-  <arg name="visualization" default="false" doc="turns on and off visualization with rviz"/>
+  <arg name="visualize" default="false" doc="turns on and off visualization with rviz"/>
 
   <!-- By default, we are not in debug mode -->
   <arg name="debug" default="false" />
@@ -18,9 +18,9 @@
 
   <node name="collision_checks" pkg="moveit_benchmark_suite" type="collision_check" respawn="false" clear_params="true" output="screen" launch-prefix="$(arg launch_prefix)" required="true">
     <param name="output_file" value="$(arg output_file)"/>
-    <param name="visualization" value="$(arg visualization)" type="bool"/>
+    <param name="visualize" value="$(arg visualize)" type="bool"/>
   </node>
 
-  <include if="$(arg visualization)" file="$(find moveit_resources_panda_moveit_config)/launch/demo.launch"/>
+  <include if="$(arg visualize)" file="$(find moveit_resources_panda_moveit_config)/launch/demo.launch"/>
 
 </launch>

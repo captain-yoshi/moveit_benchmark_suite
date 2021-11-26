@@ -60,7 +60,7 @@ using namespace moveit_benchmark_suite::collision_check;
 
 // Parameter names
 constexpr char OUTPUT_PARAMETER[] = "output_file";
-constexpr char VISUALIZATION_PARAMETER[] = "visualization";
+constexpr char VISUALIZATION_PARAMETER[] = "visualize";
 
 int main(int argc, char** argv)
 {
