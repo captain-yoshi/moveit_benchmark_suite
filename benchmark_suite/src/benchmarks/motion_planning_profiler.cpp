@@ -60,7 +60,7 @@ PlanningPipelineProfiler::PlanningPipelineProfiler(const std::string& name)
   visual_tools_ = std::make_shared<moveit_visual_tools::MoveItVisualTools>("world");
 };
 
-bool PlanningPipelineProfiler::runQuery(const PlanningPipelineQuery& query, Data& data)
+PlanningResult PlanningPipelineProfiler::runQuery(const PlanningPipelineQuery& query, Data& data) const
 {
   PlanningResult result;
 
@@ -87,8 +87,7 @@ bool PlanningPipelineProfiler::runQuery(const PlanningPipelineQuery& query, Data
   // Compute metrics
   computeMetrics(options.metrics, query, result, data);
 
-  addResult(query.name, result);
-  return result.success;
+  return result;
 }
 
 void PlanningPipelineProfiler::visualizeResult(const PlanningResult& result) const
@@ -116,7 +115,7 @@ void PlanningPipelineProfiler::visualizeResult(const PlanningResult& result) con
 MoveGroupInterfaceProfiler::MoveGroupInterfaceProfiler(const std::string& name)
   : PlanningProfiler<MoveGroupInterfaceQuery, PlanningResult>(name){};
 
-bool MoveGroupInterfaceProfiler::runQuery(const MoveGroupInterfaceQuery& query, Data& data)
+PlanningResult MoveGroupInterfaceProfiler::runQuery(const MoveGroupInterfaceQuery& query, Data& data) const
 {
   PlanningResult result;
   moveit::planning_interface::MoveGroupInterface::Plan plan;
@@ -153,6 +152,5 @@ bool MoveGroupInterfaceProfiler::runQuery(const MoveGroupInterfaceQuery& query, 
   // Compute metrics
   computeMetrics(options.metrics, query, result, data);
 
-  addResult(query.name, result);
-  return result.success;
+  return result;
 }

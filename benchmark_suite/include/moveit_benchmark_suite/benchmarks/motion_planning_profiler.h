@@ -108,7 +108,7 @@ public:
 };
 
 template <typename DerivedQuery, typename DerivedResult>
-class PlanningProfiler : public Profiler<DerivedQuery, DerivedResult>
+class PlanningProfiler : public ProfilerTemplate<DerivedQuery, DerivedResult>
 {
 public:
   /** \brief Bitmask options to select what metrics to compute for each run.
@@ -122,7 +122,7 @@ public:
     SMOOTHNESS = 1 << 4,  ///< Smoothness of path.
   };
 
-  PlanningProfiler(const std::string& name) : Profiler<DerivedQuery, DerivedResult>(name){};
+  PlanningProfiler(const std::string& name) : ProfilerTemplate<DerivedQuery, DerivedResult>(name){};
 
   /** \brief Profiling a single plan using a \a planner.
    *  \param[in] planner Planner to profile.
@@ -132,7 +132,7 @@ public:
    *  \param[out] result The results of profiling.
    *  \return True if planning succeeded, false on failure.
    */
-  virtual bool runQuery(const DerivedQuery& query, Data& data) override = 0;
+  virtual DerivedResult runQuery(const DerivedQuery& query, Data& data) const override = 0;
 
 protected:
   /** \brief Compute the built-in metrics according to the provided bitmask \a options.
@@ -168,7 +168,7 @@ class PlanningPipelineProfiler : public PlanningProfiler<PlanningPipelineQuery, 
 {
 public:
   PlanningPipelineProfiler(const std::string& name);
-  bool runQuery(const PlanningPipelineQuery& query, Data& data) override;
+  PlanningResult runQuery(const PlanningPipelineQuery& query, Data& data) const override;
 
   void visualizeResult(const PlanningResult& result) const override;
 
@@ -182,7 +182,7 @@ class MoveGroupInterfaceProfiler : public PlanningProfiler<MoveGroupInterfaceQue
 {
 public:
   MoveGroupInterfaceProfiler(const std::string& name);
-  bool runQuery(const MoveGroupInterfaceQuery& query, Data& data) override;
+  PlanningResult runQuery(const MoveGroupInterfaceQuery& query, Data& data) const override;
 };
 
 }  // namespace moveit_benchmark_suite
