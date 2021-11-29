@@ -86,10 +86,8 @@ public:
   Benchmark(const std::string& name);
   Benchmark(const std::string& name, const Options& options);
 
-  using PostQueryCallback = std::function<void(DataSetPtr dataset, const Query& query)>;
-
-  using PostRunCallback = std::function<void(DataSetPtr dataset, const Query& query)>;
-
+  using PostQueryCallback = std::function<void(DataSetPtr dataset)>;
+  using PostRunCallback = std::function<void(DataSetPtr dataset)>;
   using PostBenchmarkCallback = std::function<void(DataSetPtr dataset)>;
 
   /** \brief Set the post-dataset callback function.

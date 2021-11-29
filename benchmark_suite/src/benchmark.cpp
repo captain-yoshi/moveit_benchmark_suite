@@ -164,12 +164,12 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
       dataset->addDataPoint(query->name, data);
 
       for (const auto& post_query_cb : post_query_callbacks_)
-        post_query_cb(dataset, *query);
+        post_query_cb(dataset);
     }
     query_index++;
 
     for (const auto& post_run_cb : post_run_callbacks_)
-      post_run_cb(dataset, *query);
+      post_run_cb(dataset);
   }
   for (const auto& post_benchmark_cb : post_benchmark_callbacks_)
     post_benchmark_cb(dataset);
