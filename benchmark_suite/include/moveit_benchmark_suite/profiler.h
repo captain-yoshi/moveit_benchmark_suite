@@ -42,13 +42,49 @@
 
 namespace moveit_benchmark_suite
 {
-template <typename DerivedQuery, typename DerivedResult>
+/// Interface for all profilers
 class Profiler
 {
+public:
+  // Options for profiling
+  struct Options
+  {
+    uint32_t metrics{ uint32_t(~0) };  ///< Bitmask of which metrics to compute after planning.
+  };
+
+  Profiler(const std::string& name);
+  virtual ~Profiler() = default;
+
+  /// Use internal queries of derived class
+  virtual void initialize(std::size_t query_index) = 0;
+  virtual bool runQuery(std::size_t query_index, Data& data) = 0;
+  virtual void preRunQuery(std::size_t query_index, Data& data) = 0;
+  virtual void postRunQuery(std::size_t query_index, Data& data) = 0;
+
+  const std::string& getName() const;
+  const std::vector<QueryPtr>& getBaseQueries();
+  const QuerySetup& getQuerySetup() const;
+  void setQuerySetup(const QuerySetup& query_setup);
+
+  Options options;
+
+protected:
+  void addBaseQuery(const QueryPtr& query);
+
+private:
+  const std::string profiler_name_;
+  QuerySetup query_setup_;
+  std::vector<QueryPtr> base_queries_;
+};
+
+/// Template to reduce boilerplate of derived Profiler classes
+template <typename DerivedQuery, typename DerivedResult>
+class ProfilerTemplate : public Profiler
+{
   static_assert(std::is_base_of<Query, DerivedQuery>::value,
-                "Profiler template type 'DerivedQuery' must be derived from moveit_benchmark_suite::Query");
+                "Template type 'DerivedQuery' must be derived from moveit_benchmark_suite::Query");
   static_assert(std::is_base_of<Result, DerivedResult>::value,
-                "Profiler template type 'DerivedResult' must be derived from moveit_benchmark_suite::Result");
+                "Template type 'DerivedResult' must be derived from moveit_benchmark_suite::Result");
 
 public:
   using DerivedQueryPtr = std::shared_ptr<DerivedQuery>;
@@ -56,34 +92,51 @@ public:
 
   using ResultMap = std::map<QueryName, std::vector<DerivedResultPtr>>;
 
-  /** \brief Options for profiling.
-   */
-  struct Options
+  ProfilerTemplate(const std::string& name) : Profiler(name){};
+  virtual ~ProfilerTemplate() = default;
+
+  /// Internal queries with automated steps
+  void initialize(std::size_t query_index) final
   {
-    uint32_t metrics{ uint32_t(~0) };  ///< Bitmask of which metrics to compute after planning.
+    if (query_index < queries_.size())
+      initialize(*queries_[query_index]);
   };
 
-  Profiler(const std::string& name) : name_(name){};
+  bool runQuery(std::size_t query_index, Data& data) final
+  {
+    if (query_index < queries_.size())
+    {
+      DerivedResult res = runQuery(*queries_[query_index], data);
+      addResult(queries_[query_index]->name, res);
+      return res.success;
+    }
+    else
+      return false;
+  };
+  void preRunQuery(std::size_t query_index, Data& data) final
+  {
+    if (query_index < queries_.size())
+      preRunQuery(*queries_[query_index], data);
+  };
+  void postRunQuery(std::size_t query_index, Data& data) final
+  {
+    if (query_index < queries_.size())
+      postRunQuery(*queries_[query_index], data);
+  };
 
-  virtual ~Profiler() = default;
-
-  virtual void initialize(DerivedQuery& query){};
-
-  virtual void preRunQuery(DerivedQuery& query, Data& data){};
-  virtual bool runQuery(const DerivedQuery& query, Data& data) = 0;
+  /// Internal/External queries
+  virtual void initialize(const DerivedQuery& query){};
+  virtual DerivedResult runQuery(const DerivedQuery& query, Data& data) const = 0;
+  virtual void preRunQuery(const DerivedQuery& query, Data& data){};
   virtual void postRunQuery(const DerivedQuery& query, Data& data){};
 
   virtual void computeMetrics(uint32_t options, const DerivedQuery& query, const DerivedResult& result,
                               Data& data) const {};
 
-  const std::string& getName()
-  {
-    return name_;
-  };
-
   void addQuery(const DerivedQueryPtr& query)
   {
     queries_.push_back(query);
+    addBaseQuery(query);
   }
 
   void addQuery(const DerivedQuery& query)
@@ -115,19 +168,15 @@ public:
     return result_map_;
   }
 
-  virtual void visualizeQuery(const DerivedQuery& query) const
-  {
-  }
+  virtual void visualizeQuery(const DerivedQuery& query) const {};
 
   virtual void visualizeQueries() const
   {
     for (const auto& query : queries_)
       visualizeQuery(*query);
-  }
+  };
 
-  virtual void visualizeResult(const DerivedResult& result) const
-  {
-  }
+  virtual void visualizeResult(const DerivedResult& result) const {};
 
   virtual void visualizeResults() const
   {
@@ -136,21 +185,6 @@ public:
         visualizeResult(*result);
   }
 
-  const QuerySetup& getQuerySetup() const
-  {
-    return query_setup_;
-  }
-
-  void setQuerySetup(const QuerySetup& query_setup)
-  {
-    query_setup_ = query_setup;
-  }
-
-  Options options;
-
-private:
-  const std::string name_;
-  QuerySetup query_setup_;
   std::vector<DerivedQueryPtr> queries_;
   ResultMap result_map_;
 };

@@ -61,13 +61,13 @@ CollisionCheckQuery::CollisionCheckQuery(const std::string& name,               
 ///
 
 CollisionCheckProfiler::CollisionCheckProfiler(const std::string& name)
-  : Profiler<CollisionCheckQuery, CollisionCheckResult>(name)
+  : ProfilerTemplate<CollisionCheckQuery, CollisionCheckResult>(name)
 {
   // For visualisation
   pub_ = nh_.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
 };
 
-bool CollisionCheckProfiler::runQuery(const CollisionCheckQuery& query, Data& data)
+CollisionCheckResult CollisionCheckProfiler::runQuery(const CollisionCheckQuery& query, Data& data) const
 {
   CollisionCheckResult result;
 
@@ -80,10 +80,10 @@ bool CollisionCheckProfiler::runQuery(const CollisionCheckQuery& query, Data& da
   data.time = IO::getSeconds(data.start, data.finish);
 
   // Compute metrics
+  result.success = true;
   computeMetrics(options.metrics, query, result, data);
 
-  addResult(query.name, result);
-  return true;
+  return result;
 }
 
 void CollisionCheckProfiler::computeMetrics(uint32_t options, const CollisionCheckQuery& query,

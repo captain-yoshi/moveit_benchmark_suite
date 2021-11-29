@@ -83,7 +83,7 @@ public:
   collision_detection::CollisionResult collision_result;  ///< Planner response.
 };
 
-class CollisionCheckProfiler : public Profiler<CollisionCheckQuery, CollisionCheckResult>
+class CollisionCheckProfiler : public ProfilerTemplate<CollisionCheckQuery, CollisionCheckResult>
 {
 public:
   CollisionCheckProfiler(const std::string& name);
@@ -95,7 +95,7 @@ public:
     CONTACTS = 1 << 1,  //
   };
 
-  bool runQuery(const CollisionCheckQuery& query, Data& result) override;
+  CollisionCheckResult runQuery(const CollisionCheckQuery& query, Data& result) const override;
   void computeMetrics(uint32_t options, const CollisionCheckQuery& query, const CollisionCheckResult& result,
                       Data& data) const override;
   void visualizeQuery(const CollisionCheckQuery& query) const override;

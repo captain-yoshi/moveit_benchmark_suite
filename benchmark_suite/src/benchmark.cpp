@@ -84,6 +84,102 @@ void Benchmark::addPostBenchmarkCallback(const PostBenchmarkCallback& callback)
   post_benchmark_callbacks_.push_back(callback);
 }
 
+DataSetPtr Benchmark::run(Profiler& profiler) const
+{
+  // Setup dataset to return
+  auto dataset = std::make_shared<DataSet>();
+  dataset->name = name_;
+  dataset->uuid = IO::generateUUID();
+  boost::posix_time::microsec_clock clock;
+  dataset->date = IO::getDate(clock);
+  dataset->date_utc = IO::getDateUTC(clock);
+  dataset->start = std::chrono::high_resolution_clock::now();
+  dataset->allowed_time = options_.query_timeout;
+  dataset->trials = options_.trials;
+  dataset->run_till_timeout = options_.run_timeout;
+  dataset->threads = 1.0;
+  dataset->hostname = IO::getHostname();
+
+  dataset->cpuinfo = IO::getHardwareCPU();
+  dataset->gpuinfo = IO::getHardwareGPU();
+  dataset->osinfo = IO::getOSInfo();
+  dataset->moveitinfo = IO::getMoveitInfo();
+  dataset->moveitbenchmarksuiteinfo = IO::getMoveitBenchmarkSuiteInfo();
+
+  dataset->type = profiler.getName();
+  dataset->query_setup = profiler.getQuerySetup();
+
+  // Metadata as a YAML node
+  fillMetaData(dataset);
+
+  const auto& queries = profiler.getBaseQueries();
+
+  if (queries.empty())
+  {
+    ROS_ERROR("Cannot run benchmark, no query available");
+    return nullptr;
+  }
+
+  std::size_t query_index = 0;
+  for (const auto& query : queries)
+  {
+    // Check if this name is unique, if so, add it to dataset list.
+    const auto& it = std::find(dataset->query_names.begin(), dataset->query_names.end(), query->name);
+    if (it == dataset->query_names.end())
+      dataset->query_names.emplace_back(query->name);
+
+    if (options_.verbose_status_run && options_.trials > 0)
+
+    {
+      ROS_INFO_STREAM("");
+      ROS_INFO_STREAM(log::format("Running Query [%1%/%2%] with %3% Trials '%4%'",  //
+                                  query_index + 1, queries.size(), options_.trials, query->name));
+    }
+
+    // Initialize profiler
+    profiler.initialize(query_index);
+
+    for (std::size_t j = 0; j < options_.trials; ++j)
+    {
+      if (options_.verbose_status_query)
+      {
+        ROS_INFO_STREAM("");
+        ROS_INFO_STREAM(log::format("Running Query [%1%/%2%] Trial [%3%/%4%] '%5%'",  //
+                                    query_index + 1, queries.size(), j + 1, options_.trials, query->name));
+      }
+
+      auto data = std::make_shared<Data>();
+
+      profiler.preRunQuery(query_index, *data);
+      data->success = profiler.runQuery(query_index, *data);
+      profiler.postRunQuery(query_index, *data);
+
+      data->query = query;
+      data->hostname = IO::getHostname();
+      data->process_id = IO::getProcessID();
+      data->thread_id = IO::getThreadID();
+      data->metrics["thread_id"] = data->thread_id;
+      data->metrics["process_id"] = data->process_id;
+
+      dataset->addDataPoint(query->name, data);
+
+      for (const auto& post_query_cb : post_query_callbacks_)
+        post_query_cb(dataset, *query);
+    }
+    query_index++;
+
+    for (const auto& post_run_cb : post_run_callbacks_)
+      post_run_cb(dataset, *query);
+  }
+  for (const auto& post_benchmark_cb : post_benchmark_callbacks_)
+    post_benchmark_cb(dataset);
+
+  dataset->finish = std::chrono::high_resolution_clock::now();
+  dataset->time = IO::getSeconds(dataset->start, dataset->finish);
+
+  return dataset;
+};
+
 /** \brief Run benchmarking on this experiment.
  *  Note that, for some planners, multiple threads cannot be used without polluting the dataset, due
  * to reuse of underlying datastructures between queries, e.g., the robowflex_ompl planner.
