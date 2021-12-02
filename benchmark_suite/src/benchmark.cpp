@@ -151,7 +151,11 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
       auto data = std::make_shared<Data>();
 
       profiler.preRunQuery(query_index, *data);
-      data->success = profiler.runQuery(query_index, *data);
+      if (!profiler.runQuery(query_index, *data))
+      {
+        ROS_ERROR("Error in Profiler, no work was done with query");
+        continue;
+      }
       profiler.postRunQuery(query_index, *data);
 
       data->query = query;

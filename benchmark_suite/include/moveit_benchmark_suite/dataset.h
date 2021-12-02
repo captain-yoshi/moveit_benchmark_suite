@@ -155,7 +155,7 @@ public:
   std::size_t process_id;  ///< Process ID of the process the profiler was run in.
   std::size_t thread_id;   ///< Thread ID of profiler execution.
 
-  bool success;
+  // bool success;
 
   // Store query and response base class
   QueryPtr query;    ///< Query evaluated to create this data.
