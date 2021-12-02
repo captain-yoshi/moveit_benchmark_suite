@@ -17,21 +17,6 @@
     <!--<arg name="debug" value="$(arg debug)"/>-->
   </include>
 
-  <!-- Load planning pipelines -->
-  <group ns="benchmark">
-    <include ns="ompl" file="$(find moveit_resources_panda_moveit_config)/launch/planning_pipeline.launch.xml">
-      <arg name="pipeline" value="ompl" />
-    </include>
-
-    <include ns="chomp" file="$(find moveit_resources_panda_moveit_config)/launch/planning_pipeline.launch.xml">
-      <arg name="pipeline" value="chomp" />
-    </include>
-
-    <include ns="stomp" file="$(find moveit_resources_panda_moveit_config)/launch/planning_pipeline.launch.xml">
-      <arg name="pipeline" value="stomp" />
-    </include>
-  </group>
-
   <!-- Scene -->
   <group ns="scenes" clear_params="true">
     <param name="empty-scene" command="$(find xacro)/xacro '$(find moveit_benchmark_suite_resources)/db/empty_scene.urdf.xacro'"/>
