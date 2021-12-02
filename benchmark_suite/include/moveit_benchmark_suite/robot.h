@@ -2,6 +2,7 @@
 #pragma once
 
 #include <moveit/robot_model/robot_model.h>
+#include <moveit/robot_model_loader/robot_model_loader.h>
 
 namespace moveit_benchmark_suite
 {
@@ -45,6 +46,7 @@ public:
 private:
   const std::string name_;
   const std::string robot_description_;
+  robot_model_loader::RobotModelLoaderPtr loader_;
   robot_model::RobotModelPtr model_;
 };
 }  // namespace moveit_benchmark_suite

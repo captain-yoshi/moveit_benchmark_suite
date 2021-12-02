@@ -1,7 +1,5 @@
 #include <moveit_benchmark_suite/robot.h>
 
-#include <moveit/robot_model_loader/robot_model_loader.h>
-
 using namespace moveit_benchmark_suite;
 
 Robot::Robot(const std::string& name, const std::string& robot_description)
@@ -11,8 +9,8 @@ Robot::Robot(const std::string& name, const std::string& robot_description)
 
 bool Robot::initialize()
 {
-  robot_model_loader::RobotModelLoader loader(robot_description_);
-  model_ = loader.getModel();
+  loader_ = std::make_shared<robot_model_loader::RobotModelLoader>("robot_description");
+  model_ = loader_->getModel();
 
   if (!model_)
   {
