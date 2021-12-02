@@ -145,22 +145,22 @@ protected:
 
   {
     data.metrics["time"] = data.time;
-    data.metrics["success"] = data.success;
+    data.metrics["success"] = result.success;
 
     if (options & Metrics::WAYPOINTS)
-      data.metrics["waypoints"] = data.success ? int(result.trajectory->getNumWaypoints()) : int(0);
+      data.metrics["waypoints"] = result.success ? int(result.trajectory->getNumWaypoints()) : int(0);
 
     if (options & Metrics::LENGTH)
-      data.metrics["length"] = data.success ? result.trajectory->getLength() : 0.0;
+      data.metrics["length"] = result.success ? result.trajectory->getLength() : 0.0;
 
     if (options & Metrics::CORRECT)
-      data.metrics["correct"] = data.success ? result.trajectory->isCollisionFree(query.scene) : false;
+      data.metrics["correct"] = result.success ? result.trajectory->isCollisionFree(query.scene) : false;
 
     if (options & Metrics::CLEARANCE)
-      data.metrics["clearance"] = data.success ? std::get<0>(result.trajectory->getClearance(query.scene)) : 0.0;
+      data.metrics["clearance"] = result.success ? std::get<0>(result.trajectory->getClearance(query.scene)) : 0.0;
 
     if (options & Metrics::SMOOTHNESS)
-      data.metrics["smoothness"] = data.success ? result.trajectory->getSmoothness() : 0.0;
+      data.metrics["smoothness"] = result.success ? result.trajectory->getSmoothness() : 0.0;
   }
 };
 
