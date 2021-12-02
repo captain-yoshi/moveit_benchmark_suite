@@ -189,8 +189,7 @@ void PlanningPipelineBuilder::buildPlanners()
 
     auto pipeline = std::make_shared<PipelinePlanner>(robot_, pipeline_name.first);
     pipeline->initialize();
-    pipelines_.emplace_back();
-    pipelines_.back() = pipeline;
+    pipelines_.emplace_back(pipeline);
   }
 }
 
