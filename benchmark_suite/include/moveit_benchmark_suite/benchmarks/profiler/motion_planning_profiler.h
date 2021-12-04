@@ -132,7 +132,7 @@ public:
    *  \param[out] result The results of profiling.
    *  \return True if planning succeeded, false on failure.
    */
-  virtual DerivedResult runQuery(const DerivedQuery& query, Data& data) const override = 0;
+  // virtual DerivedResult runQuery(const DerivedQuery& query, Data& data) const override = 0;
 
 protected:
   /** \brief Compute the built-in metrics according to the provided bitmask \a options.
@@ -140,26 +140,26 @@ protected:
    *  \param[in] scene Scene used for planning and metric computation.
    *  \param[out] run Metric results.
    */
-  virtual void computeMetrics(uint32_t options, const DerivedQuery& query, const DerivedResult& result,
-                              Data& data) const override
+  virtual void postRunQuery(const DerivedQuery& query, DerivedResult& result, Data& data) override
 
   {
+    // Compute metrics
     data.metrics["time"] = data.time;
     data.metrics["success"] = result.success;
 
-    if (options & Metrics::WAYPOINTS)
+    if (this->options.metrics & Metrics::WAYPOINTS)
       data.metrics["waypoints"] = result.success ? int(result.trajectory->getNumWaypoints()) : int(0);
 
-    if (options & Metrics::LENGTH)
+    if (this->options.metrics & Metrics::LENGTH)
       data.metrics["length"] = result.success ? result.trajectory->getLength() : 0.0;
 
-    if (options & Metrics::CORRECT)
+    if (this->options.metrics & Metrics::CORRECT)
       data.metrics["correct"] = result.success ? result.trajectory->isCollisionFree(query.scene) : false;
 
-    if (options & Metrics::CLEARANCE)
+    if (this->options.metrics & Metrics::CLEARANCE)
       data.metrics["clearance"] = result.success ? std::get<0>(result.trajectory->getClearance(query.scene)) : 0.0;
 
-    if (options & Metrics::SMOOTHNESS)
+    if (this->options.metrics & Metrics::SMOOTHNESS)
       data.metrics["smoothness"] = result.success ? result.trajectory->getSmoothness() : 0.0;
   }
 };
@@ -168,20 +168,16 @@ class PlanningPipelineProfiler : public PlanningProfiler<PlanningPipelineQuery, 
 {
 public:
   PlanningPipelineProfiler(const std::string& name);
+
   PlanningResult runQuery(const PlanningPipelineQuery& query, Data& data) const override;
-
-  void visualizeResult(const PlanningResult& result) const override;
-
-private:
-  ros::NodeHandle nh_;
-  ros::Publisher pub_;
-  moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
 };
 
 class MoveGroupInterfaceProfiler : public PlanningProfiler<MoveGroupInterfaceQuery, PlanningResult>
 {
 public:
   MoveGroupInterfaceProfiler(const std::string& name);
+
+  void preRunQuery(MoveGroupInterfaceQuery& query, Data& data) override;
   PlanningResult runQuery(const MoveGroupInterfaceQuery& query, Data& data) const override;
 };
 

@@ -70,14 +70,14 @@ Benchmark::Benchmark(const std::string& name, const Options& options) : name_(na
 /** \brief Set the post-dataset callback function.
  *  \param[in] callback Callback to use.
  */
+void Benchmark::addPostQueryTrialCallback(const PostQueryTrialCallback& callback)
+{
+  post_query_trial_callbacks_.push_back(callback);
+};
+
 void Benchmark::addPostQueryCallback(const PostQueryCallback& callback)
 {
   post_query_callbacks_.push_back(callback);
-};
-
-void Benchmark::addPostRunCallback(const PostRunCallback& callback)
-{
-  post_run_callbacks_.push_back(callback);
 }
 void Benchmark::addPostBenchmarkCallback(const PostBenchmarkCallback& callback)
 {
@@ -106,78 +106,74 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
   dataset->moveitinfo = IO::getMoveitInfo();
   dataset->moveitbenchmarksuiteinfo = IO::getMoveitBenchmarkSuiteInfo();
 
-  dataset->type = profiler.getName();
+  dataset->type = profiler.getProfilerName();
   dataset->query_setup = profiler.getQuerySetup();
 
   // Metadata as a YAML node
   fillMetaData(dataset);
 
-  const auto& queries = profiler.getBaseQueries();
+  const auto query_size = profiler.getQuerySize();
 
-  if (queries.empty())
+  if (query_size == 0)
   {
     ROS_ERROR("Cannot run benchmark, no query available");
     return nullptr;
   }
 
-  std::size_t query_index = 0;
-  for (const auto& query : queries)
+  for (std::size_t query_index = 0; query_index < query_size; ++query_index)
   {
+    const auto& query_name = profiler.getQueryName(query_index);
+
     // Check if this name is unique, if so, add it to dataset list.
-    const auto& it = std::find(dataset->query_names.begin(), dataset->query_names.end(), query->name);
+    const auto& it = std::find(dataset->query_names.begin(), dataset->query_names.end(), query_name);
     if (it == dataset->query_names.end())
-      dataset->query_names.emplace_back(query->name);
+      dataset->query_names.emplace_back(query_name);
 
     if (options_.verbose_status_run && options_.trials > 0)
 
     {
       ROS_INFO_STREAM("");
       ROS_INFO_STREAM(log::format("Running Query [%1%/%2%] with %3% Trials '%4%'",  //
-                                  query_index + 1, queries.size(), options_.trials, query->name));
+                                  query_index + 1, query_size, options_.trials, query_name));
     }
 
-    // Initialize profiler
-    profiler.initialize(query_index);
-
-    for (std::size_t j = 0; j < options_.trials; ++j)
+    for (std::size_t trial = 0; trial < options_.trials; ++trial)
     {
       if (options_.verbose_status_query)
       {
         ROS_INFO_STREAM("");
         ROS_INFO_STREAM(log::format("Running Query [%1%/%2%] Trial [%3%/%4%] '%5%'",  //
-                                    query_index + 1, queries.size(), j + 1, options_.trials, query->name));
+                                    query_index + 1, query_size, trial + 1, options_.trials, query_name));
       }
 
       auto data = std::make_shared<Data>();
 
-      profiler.preRunQuery(query_index, *data);
-      if (!profiler.runQuery(query_index, *data))
+      if (!profiler.profileQuery(query_index, *data))
       {
         ROS_ERROR("Error in Profiler, no work was done with query");
         continue;
       }
-      profiler.postRunQuery(query_index, *data);
 
-      data->query = query;
+      data->query = profiler.getBaseQuery(query_index);
       data->hostname = IO::getHostname();
       data->process_id = IO::getProcessID();
       data->thread_id = IO::getThreadID();
       data->metrics["thread_id"] = data->thread_id;
       data->metrics["process_id"] = data->process_id;
 
-      dataset->addDataPoint(query->name, data);
+      dataset->addDataPoint(query_name, data);
 
-      for (const auto& post_query_cb : post_query_callbacks_)
-        post_query_cb(dataset);
+      for (const auto& post_query_trial_cb : post_query_trial_callbacks_)
+        post_query_trial_cb(dataset);
     }
-    query_index++;
 
-    for (const auto& post_run_cb : post_run_callbacks_)
-      post_run_cb(dataset);
+    for (const auto& post_query_cb : post_query_callbacks_)
+      post_query_cb(dataset);
   }
   for (const auto& post_benchmark_cb : post_benchmark_callbacks_)
     post_benchmark_cb(dataset);
 
+  // Store benchmark time
   dataset->finish = std::chrono::high_resolution_clock::now();
   dataset->time = IO::getSeconds(dataset->start, dataset->finish);
 

@@ -35,6 +35,7 @@
 /* Author: Captain Yoshi
    Desc: Motion planning benchmark node
 */
+
 #include <ros/ros.h>
 
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
@@ -48,7 +49,7 @@
 #include <moveit_benchmark_suite/io/gnuplot.h>
 #include <moveit_benchmark_suite/scene.h>
 #include <moveit_benchmark_suite/benchmarks/builder/motion_planning_builder.h>
-#include <moveit_benchmark_suite/benchmarks/motion_planning_profiler.h>
+#include <moveit_benchmark_suite/benchmarks/profiler/motion_planning_profiler.h>
 #include <map>
 
 using namespace moveit_benchmark_suite;
@@ -115,6 +116,7 @@ int main(int argc, char** argv)
   // Run benchmark
   auto dataset = benchmark.run(profiler);
 
+  // dataset->eraseMetric();
   if (!dataset)
     return 0;
 
@@ -130,8 +132,8 @@ int main(int argc, char** argv)
   }
 
   // Visualize dataset results
-  if (visualize)
-    profiler.visualizeResults();
+  // if (visualize)
+  //   profiler.visualizeResults();
 
   return 0;
 }

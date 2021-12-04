@@ -86,19 +86,19 @@ public:
   Benchmark(const std::string& name);
   Benchmark(const std::string& name, const Options& options);
 
+  using PostQueryTrialCallback = std::function<void(DataSetPtr dataset)>;
   using PostQueryCallback = std::function<void(DataSetPtr dataset)>;
-  using PostRunCallback = std::function<void(DataSetPtr dataset)>;
   using PostBenchmarkCallback = std::function<void(DataSetPtr dataset)>;
 
   /** \brief Set the post-dataset callback function.
    *  \param[in] callback Callback to use.
    */
-  void addPostQueryCallback(const PostQueryCallback& callback);
+  void addPostQueryTrialCallback(const PostQueryTrialCallback& callback);
 
   /** \brief Set the post-query callback function.
    *  \param[in] callback Callback to use.
    */
-  void addPostRunCallback(const PostRunCallback& callback);
+  void addPostQueryCallback(const PostQueryCallback& callback);
 
   void addPostBenchmarkCallback(const PostBenchmarkCallback& callback);
 
@@ -120,9 +120,9 @@ private:
 
   Options options_;
 
-  std::vector<PostQueryCallback> post_query_callbacks_;          ///< Post-run callback with dataset.
-  std::vector<PostRunCallback> post_run_callbacks_;              ///< Post-run callback.
-  std::vector<PostBenchmarkCallback> post_benchmark_callbacks_;  ///< Post-run callback.
+  std::vector<PostQueryTrialCallback> post_query_trial_callbacks_;  ///< Post-run callback with dataset.
+  std::vector<PostQueryCallback> post_query_callbacks_;             ///< Post-run callback.
+  std::vector<PostBenchmarkCallback> post_benchmark_callbacks_;     ///< Post-run callback.
 
   IO::GNUPlotDataSet plot;
   bool plot_flag = false;

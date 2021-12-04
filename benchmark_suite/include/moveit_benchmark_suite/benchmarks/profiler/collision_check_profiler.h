@@ -96,12 +96,6 @@ public:
   };
 
   CollisionCheckResult runQuery(const CollisionCheckQuery& query, Data& result) const override;
-  void computeMetrics(uint32_t options, const CollisionCheckQuery& query, const CollisionCheckResult& result,
-                      Data& data) const override;
-  void visualizeQuery(const CollisionCheckQuery& query) const override;
-
-private:
-  ros::NodeHandle nh_;
-  ros::Publisher pub_;
+  void postRunQuery(const CollisionCheckQuery& query, CollisionCheckResult& result, Data& data) override;
 };
 }  // namespace moveit_benchmark_suite

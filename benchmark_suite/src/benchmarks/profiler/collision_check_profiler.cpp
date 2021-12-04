@@ -34,7 +34,7 @@
 
 /* Author: Jens Petit */
 
-#include <moveit_benchmark_suite/benchmarks/collision_check_profiler.h>
+#include <moveit_benchmark_suite/benchmarks/profiler/collision_check_profiler.h>
 #include <moveit_benchmark_suite/io.h>
 #include <chrono>
 
@@ -61,11 +61,7 @@ CollisionCheckQuery::CollisionCheckQuery(const std::string& name,               
 ///
 
 CollisionCheckProfiler::CollisionCheckProfiler(const std::string& name)
-  : ProfilerTemplate<CollisionCheckQuery, CollisionCheckResult>(name)
-{
-  // For visualisation
-  pub_ = nh_.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
-};
+  : ProfilerTemplate<CollisionCheckQuery, CollisionCheckResult>(name){};
 
 CollisionCheckResult CollisionCheckProfiler::runQuery(const CollisionCheckQuery& query, Data& data) const
 {
@@ -79,34 +75,17 @@ CollisionCheckResult CollisionCheckProfiler::runQuery(const CollisionCheckQuery&
   data.finish = std::chrono::high_resolution_clock::now();
   data.time = IO::getSeconds(data.start, data.finish);
 
-  // Compute metrics
   result.success = true;
-  computeMetrics(options.metrics, query, result, data);
 
   return result;
 }
 
-void CollisionCheckProfiler::computeMetrics(uint32_t options, const CollisionCheckQuery& query,
-                                            const CollisionCheckResult& result, Data& data) const
+void CollisionCheckProfiler::postRunQuery(const CollisionCheckQuery& query, CollisionCheckResult& result, Data& data)
 {
   data.metrics["time"] = data.time;
 
-  if (options & Metrics::CONTACTS && query.request.contacts)
+  if (this->options.metrics & Metrics::CONTACTS && query.request.contacts)
     data.metrics["contact_count"] = result.collision_result.contact_count;
-  if (options & Metrics::DISTANCE && query.request.distance)
+  if (this->options.metrics & Metrics::DISTANCE && query.request.distance)
     data.metrics["closest_distance"] = result.collision_result.distance;
-}
-
-void CollisionCheckProfiler::visualizeQuery(const CollisionCheckQuery& query) const
-{
-  // Fill and publish planning scene
-  moveit_msgs::PlanningScene ps;
-  query.scene->getPlanningSceneMsg(ps);
-  moveit::core::robotStateToRobotStateMsg(*query.robot_state, ps.robot_state, true);
-
-  pub_.publish(ps);
-
-  ROS_INFO("Query name: '%s'", query.name.c_str());
-  ROS_INFO("Press 'Enter' to view next query");
-  std::cin.ignore();
 }

@@ -33,14 +33,14 @@
  *********************************************************************/
 
 /* Author: Captain Yoshi
-   Desc: Build pair wise query combination for collision check benchmarks
+   Desc: Build pair wise query combination for profiling collision check
 */
 
 #pragma once
 
 #include <moveit_benchmark_suite/dataset.h>
 #include <moveit_benchmark_suite/robot.h>
-#include <moveit_benchmark_suite/benchmarks/collision_check_profiler.h>
+#include <moveit_benchmark_suite/benchmarks/profiler/collision_check_profiler.h>
 #include <moveit_benchmark_suite/config/collision_check_config.h>
 
 namespace moveit_benchmark_suite

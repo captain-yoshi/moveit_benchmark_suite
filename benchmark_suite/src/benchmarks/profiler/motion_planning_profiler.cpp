@@ -1,4 +1,4 @@
-#include <moveit_benchmark_suite/benchmarks/motion_planning_profiler.h>
+#include <moveit_benchmark_suite/benchmarks/profiler/motion_planning_profiler.h>
 #include <moveit_benchmark_suite/log.h>
 
 #include <queue>
@@ -54,11 +54,7 @@ MoveGroupInterfaceQuery::MoveGroupInterfaceQuery(const std::string& name,       
 ///
 
 PlanningPipelineProfiler::PlanningPipelineProfiler(const std::string& name)
-  : PlanningProfiler<PlanningPipelineQuery, PlanningResult>(name)
-{
-  pub_ = nh_.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
-  visual_tools_ = std::make_shared<moveit_visual_tools::MoveItVisualTools>("world");
-};
+  : PlanningProfiler<PlanningPipelineQuery, PlanningResult>(name){};
 
 PlanningResult PlanningPipelineProfiler::runQuery(const PlanningPipelineQuery& query, Data& data) const
 {
@@ -84,28 +80,7 @@ PlanningResult PlanningPipelineProfiler::runQuery(const PlanningPipelineQuery& q
     result.trajectory->useMessage(result.mp_response.trajectory_->getFirstWayPoint(), trajectory_msg);
   }
 
-  // Compute metrics
-  computeMetrics(options.metrics, query, result, data);
-
   return result;
-}
-
-void PlanningPipelineProfiler::visualizeResult(const PlanningResult& result) const
-{
-  moveit_msgs::DisplayTrajectory dt;
-  moveit::core::robotStateToRobotStateMsg(*result.trajectory->getTrajectory()->getFirstWayPointPtr(),
-                                          dt.trajectory_start);
-  dt.trajectory.emplace_back();
-  result.mp_response.trajectory_->getRobotTrajectoryMsg(dt.trajectory.back());
-
-  pub_.publish(dt);
-
-  visual_tools_->deleteAllMarkers();
-  visual_tools_->publishTrajectoryLine(dt.trajectory.back(), result.trajectory->getTrajectory()->getGroup());
-  visual_tools_->trigger();
-
-  ROS_INFO("Press 'Enter' to view next result");
-  std::cin.ignore();
 }
 
 ///
@@ -115,13 +90,15 @@ void PlanningPipelineProfiler::visualizeResult(const PlanningResult& result) con
 MoveGroupInterfaceProfiler::MoveGroupInterfaceProfiler(const std::string& name)
   : PlanningProfiler<MoveGroupInterfaceQuery, PlanningResult>(name){};
 
+void MoveGroupInterfaceProfiler::preRunQuery(MoveGroupInterfaceQuery& query, Data& data)
+{
+  query.planner->preRun(query.scene, query.request);
+}
+
 PlanningResult MoveGroupInterfaceProfiler::runQuery(const MoveGroupInterfaceQuery& query, Data& data) const
 {
   PlanningResult result;
   moveit::planning_interface::MoveGroupInterface::Plan plan;
-
-  // Pre-run callback
-  query.planner->preRun(query.scene, query.request);
 
   // Profile time
   data.start = std::chrono::high_resolution_clock::now();
@@ -148,9 +125,6 @@ PlanningResult MoveGroupInterfaceProfiler::runQuery(const MoveGroupInterfaceQuer
     result.mp_response.trajectory_->getRobotTrajectoryMsg(trajectory_msg);
     result.trajectory->useMessage(result.mp_response.trajectory_->getFirstWayPoint(), trajectory_msg);
   }
-
-  // Compute metrics
-  computeMetrics(options.metrics, query, result, data);
 
   return result;
 }
