@@ -20,7 +20,7 @@ public:
   /** \brief Constructor.
    *  \param[in] name Name for namespace.
    */
-  Handler(const std::string& name, const std::string& ns);
+  Handler(const std::string& name);
 
   // non-copyable
   Handler(Handler const&) = delete;

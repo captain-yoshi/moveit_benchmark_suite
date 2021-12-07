@@ -64,7 +64,6 @@ add_library(${PROJECT_NAME}
   src/log.cpp
   src/planning.cpp
   src/trajectory.cpp
-  src/io/handler.cpp
   src/io/htmlplot.cpp
   src/io/gnuplot.cpp
   src/config/aggregate_config.cpp
