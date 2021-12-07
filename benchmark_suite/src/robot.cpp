@@ -17,6 +17,8 @@ bool Robot::initialize()
     ROS_WARN_STREAM("No robot model for robot description: `" + robot_description_ + "`");
     return false;
   }
+
+  state_ = std::make_shared<robot_state::RobotState>(model_);
   return true;
 }
 
@@ -38,4 +40,46 @@ const robot_model::RobotModelPtr& Robot::getModelConst() const
 robot_model::RobotModelPtr& Robot::getModel()
 {
   return model_;
+}
+
+std::vector<std::string> Robot::getJointNames() const
+{
+  return state_->getVariableNames();
+}
+
+bool Robot::hasJoint(const std::string& joint) const
+{
+  const auto& joint_names = getJointNames();
+  return (std::find(joint_names.begin(), joint_names.end(), joint) != joint_names.end());
+}
+
+const robot_model::RobotStatePtr& Robot::getStateConst() const
+{
+  return state_;
+}
+
+robot_model::RobotStatePtr& Robot::getState()
+{
+  return state_;
+}
+
+robot_model::RobotStatePtr Robot::cloneState() const
+{
+  auto state = allocState();
+  *state = *state_;
+
+  return state;
+}
+
+robot_model::RobotStatePtr Robot::allocState() const
+{
+  robot_state::RobotStatePtr state;
+  state = std::make_shared<robot_state::RobotState>(getModelConst());
+  state->setToDefaultValues();
+
+  return state;
+}
+const Eigen::Isometry3d& Robot::getLinkTF(const std::string& name) const
+{
+  return state_->getGlobalLinkTransform(name);
 }
