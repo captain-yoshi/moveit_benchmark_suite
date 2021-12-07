@@ -49,6 +49,7 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 add_library(${PROJECT_NAME}
   src/colormap.cpp
   src/random.cpp
+  src/tf.cpp
   src/yaml.cpp
   src/io.cpp
   src/geometry.cpp
