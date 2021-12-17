@@ -9,43 +9,20 @@
 
 #include <moveit_msgs/DisplayTrajectory.h>
 #include <moveit/robot_state/conversions.h>
+#include <moveit/planning_scene_interface/planning_scene_interface.h>  // MoveGroupPlan
 
 using namespace moveit_benchmark_suite;
 
 ///
-/// PlanningQuery
+/// MotionPlanningQuery
 ///
-
-PlanningQuery::PlanningQuery(const std::string& name,               //
-                             const QueryGroupName& group_name_map,  //
-                             const planning_scene::PlanningSceneConstPtr& scene)
-  : Query(name, group_name_map), scene(scene)
-{
-}
-
-///
-/// PlanningPipelineQuery
-///
-
-PlanningPipelineQuery::PlanningPipelineQuery(const std::string& name,                             //
-                                             const QueryGroupName& group_name_map,                //
-                                             const planning_scene::PlanningSceneConstPtr& scene,  //
-                                             const PipelinePlannerPtr& planner,                   //
-                                             const planning_interface::MotionPlanRequest& request)
-  : PlanningQuery(name, group_name_map, scene), planner(planner), request(request)
-{
-}
-
-///
-/// MoveGroupInterfaceQuery
-///
-
-MoveGroupInterfaceQuery::MoveGroupInterfaceQuery(const std::string& name,                             //
-                                                 const QueryGroupName& group_name_map,                //
-                                                 const planning_scene::PlanningSceneConstPtr& scene,  //
-                                                 const MoveGroupInterfacePlannerPtr& planner,         //
-                                                 const planning_interface::MotionPlanRequest& request)
-  : PlanningQuery(name, group_name_map, scene), planner(planner), request(request)
+MotionPlanningQuery::MotionPlanningQuery(const std::string& name,
+                                         const QueryGroupName& group_name_map,  //
+                                         const RobotPtr& robot,                 //
+                                         const ScenePtr& scene,                 //
+                                         const PlanningPipelinePtr& pipeline,   //
+                                         const planning_interface::MotionPlanRequest& request)
+  : Query(name, group_name_map), robot(robot), scene(scene), pipeline(pipeline), request(request)
 {
 }
 
@@ -54,16 +31,49 @@ MoveGroupInterfaceQuery::MoveGroupInterfaceQuery(const std::string& name,       
 ///
 
 PlanningPipelineProfiler::PlanningPipelineProfiler(const std::string& name)
-  : PlanningProfiler<PlanningPipelineQuery, PlanningResult>(name){};
+  : PlanningProfiler<MotionPlanningQuery, MotionPlanningResult>(name){};
 
-PlanningResult PlanningPipelineProfiler::runQuery(const PlanningPipelineQuery& query, Data& data) const
+void PlanningPipelineProfiler::preRunQuery(MotionPlanningQuery& query, Data& data)
 {
-  PlanningResult result;
+  pipeline_ = std::make_shared<planning_pipeline::PlanningPipeline>(query.robot->getModelConst(),
+                                                                    query.pipeline->getHandler().getHandle());
+
+  // Verify the pipeline has successfully initialized a planner
+  if (!pipeline_->getPlannerManager())
+  {
+    ROS_ERROR("Failed to initialize planning pipeline ''");
+    return;
+  }
+
+  // Validate that robot JMG is available in the planning pipeline ROS PARAM
+  // if (pipeline_name.compare("ompl") == 0)
+  // {
+  //   const auto& jmg_names = getRobot()->getModel()->getJointModelGroupNames();
+  //   for (const auto& jmg_name : jmg_names)
+  //   {
+  //     if (!handler_.hasParam(jmg_name))
+  //     {
+  //       ROS_WARN("JointModelGroup '%s' missing from '%s' pipeline under namespace '%s'.", jmg_name.c_str(),
+  //                pipeline_name.c_str(), handler_.getNamespace().c_str());
+  //       return;
+  //     }
+  //   }
+  //   // TODO forlder CHOMP and STOMP
+  // }
+
+  // Disable visualizations SolutionPaths
+  pipeline_->displayComputedMotionPlans(false);
+  pipeline_->checkSolutionPaths(false);
+}
+
+MotionPlanningResult PlanningPipelineProfiler::runQuery(const MotionPlanningQuery& query, Data& data) const
+{
+  MotionPlanningResult result;
 
   // Profile time
   data.start = std::chrono::high_resolution_clock::now();
 
-  query.planner->plan(query.scene, query.request, result.mp_response);
+  pipeline_->generatePlan(query.scene->getScene(), query.request, result.mp_response);
 
   data.finish = std::chrono::high_resolution_clock::now();
   data.time = IO::getSeconds(data.start, data.finish);
@@ -88,22 +98,96 @@ PlanningResult PlanningPipelineProfiler::runQuery(const PlanningPipelineQuery& q
 ///
 
 MoveGroupInterfaceProfiler::MoveGroupInterfaceProfiler(const std::string& name)
-  : PlanningProfiler<MoveGroupInterfaceQuery, PlanningResult>(name){};
+  : PlanningProfiler<MotionPlanningQuery, MotionPlanningResult>(name){};
 
-void MoveGroupInterfaceProfiler::preRunQuery(MoveGroupInterfaceQuery& query, Data& data)
+void MoveGroupInterfaceProfiler::preRunQuery(MotionPlanningQuery& query, Data& data)
 {
-  query.planner->preRun(query.scene, query.request);
+  auto& request = query.request;
+  // Convert request to MoveGroupInterface
+  move_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(request.group_name);
+
+  move_group_->clearPoseTargets();
+  move_group_->clearPathConstraints();
+  move_group_->clearTrajectoryConstraints();
+
+  move_group_->setPlanningTime(request.allowed_planning_time);
+  move_group_->setPlanningPipelineId(request.pipeline_id);
+  move_group_->setPlannerId(request.planner_id);
+
+  move_group_->setStartState(request.start_state);
+  move_group_->setPathConstraints(request.path_constraints);
+  move_group_->setTrajectoryConstraints(request.trajectory_constraints);
+  move_group_->setMaxVelocityScalingFactor(request.max_velocity_scaling_factor);
+  move_group_->setMaxAccelerationScalingFactor(request.max_acceleration_scaling_factor);
+  move_group_->setWorkspace(request.workspace_parameters.min_corner.x, request.workspace_parameters.min_corner.y,
+                            request.workspace_parameters.min_corner.z, request.workspace_parameters.max_corner.x,
+                            request.workspace_parameters.max_corner.y, request.workspace_parameters.max_corner.z);
+
+  // Goal constraints
+  auto gc = request.goal_constraints;
+  if (gc.empty())
+  {
+    ROS_ERROR("No goal constraints specified");
+    return;
+  }
+
+  if (gc.size() > 1)
+  {
+    ROS_WARN("Only the first goal constraint is computed");
+  }
+
+  if (!gc.front().joint_constraints.empty())
+  {
+    // Joint
+    auto joint_constraints = gc.front().joint_constraints;
+
+    for (const auto& jc : joint_constraints)
+    {
+      move_group_->setJointValueTarget(jc.joint_name, jc.position);
+      // TODO add tolerance
+    }
+  }
+  else
+  {
+    // Pose
+    auto pcs = gc.front().position_constraints;
+    auto ocs = gc.front().orientation_constraints;
+
+    for (const auto& pc : pcs)
+    {
+      move_group_->setPositionTarget(pc.target_point_offset.x, pc.target_point_offset.y, pc.target_point_offset.z,
+                                     pc.link_name);
+      // TODO add tolerance
+    }
+
+    for (const auto& oc : ocs)
+    {
+      move_group_->setOrientationTarget(oc.orientation.x, oc.orientation.y, oc.orientation.z, oc.orientation.w,
+                                        oc.link_name);
+      // TODO add tolerance
+    }
+  }
+
+  // Path constraints
+  move_group_->setPathConstraints(request.path_constraints);
+
+  // Planning scene
+  moveit::planning_interface::PlanningSceneInterface psi;
+  moveit_msgs::PlanningScene ps;
+  query.scene->getScene()->getPlanningSceneMsg(ps);
+  ps.robot_state = request.start_state;
+  psi.applyPlanningScene(ps);
 }
 
-PlanningResult MoveGroupInterfaceProfiler::runQuery(const MoveGroupInterfaceQuery& query, Data& data) const
+MotionPlanningResult MoveGroupInterfaceProfiler::runQuery(const MotionPlanningQuery& query, Data& data) const
 {
-  PlanningResult result;
+  MotionPlanningResult result;
   moveit::planning_interface::MoveGroupInterface::Plan plan;
 
   // Profile time
   data.start = std::chrono::high_resolution_clock::now();
 
-  result.mp_response.error_code_ = query.planner->plan(plan);
+  result.mp_response.error_code_ = move_group_->plan(plan);
 
   data.finish = std::chrono::high_resolution_clock::now();
   data.time = IO::getSeconds(data.start, data.finish);
@@ -113,8 +197,8 @@ PlanningResult MoveGroupInterfaceProfiler::runQuery(const MoveGroupInterfaceQuer
 
   if (result.success)
   {
-    robot_trajectory::RobotTrajectoryPtr robot_trajectory = std::make_shared<robot_trajectory::RobotTrajectory>(
-        query.planner->getRobot()->getModelConst(), query.request.group_name);
+    robot_trajectory::RobotTrajectoryPtr robot_trajectory =
+        std::make_shared<robot_trajectory::RobotTrajectory>(query.robot->getModelConst(), query.request.group_name);
     robot_trajectory->setRobotTrajectoryMsg(query.scene->getCurrentState(), plan.trajectory_);
 
     result.mp_response.trajectory_ = robot_trajectory;

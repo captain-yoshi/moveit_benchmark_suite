@@ -41,6 +41,7 @@
 #include <moveit_benchmark_suite/dataset.h>
 #include <moveit_benchmark_suite/profiler.h>
 #include <moveit_benchmark_suite/planning.h>
+#include <moveit_benchmark_suite/scene.h>
 #include <moveit_benchmark_suite/io.h>
 
 #include <moveit_benchmark_suite/trajectory.h>
@@ -48,16 +49,14 @@
 
 namespace moveit_benchmark_suite
 {
-MOVEIT_CLASS_FORWARD(PlanningQuery);
-MOVEIT_CLASS_FORWARD(PlanningResult);
-MOVEIT_CLASS_FORWARD(PlanningPipelineQuery);
-MOVEIT_CLASS_FORWARD(MoveGroupInterfaceQuery);
+MOVEIT_CLASS_FORWARD(MotionPlanningQuery);
+MOVEIT_CLASS_FORWARD(MotionPlanningResult);
 
-struct PlanningQuery : public Query
+struct MotionPlanningQuery : public Query
 {
   /** \brief Empty constructor.
    */
-  PlanningQuery() = default;
+  MotionPlanningQuery() = default;
 
   /** \brief Constructor. Fills in fields.
    *  \param[in] name Name of this query.
@@ -65,38 +64,21 @@ struct PlanningQuery : public Query
    *  \param[in] planner Planner to use to evaluate query.
    *  \param[in] request Request to give planner.
    */
-  PlanningQuery(const std::string& name,
-                const QueryGroupName& group_name_map,  //
-                const planning_scene::PlanningSceneConstPtr& scene);
 
-  planning_scene::PlanningSceneConstPtr scene;  ///< Scene used for the query.
-};
+  MotionPlanningQuery(const std::string& name,
+                      const QueryGroupName& group_name_map,  //
+                      const RobotPtr& robot,                 //
+                      const ScenePtr& scene,                 //
+                      const PlanningPipelinePtr& pipeline,   //
+                      const planning_interface::MotionPlanRequest& request);
 
-struct PlanningPipelineQuery : public PlanningQuery
-{
-  PlanningPipelineQuery(const std::string& name,
-                        const QueryGroupName& group_name_map,                //
-                        const planning_scene::PlanningSceneConstPtr& scene,  //
-                        const PipelinePlannerPtr& planner,                   //
-                        const planning_interface::MotionPlanRequest& request);
-
-  PipelinePlannerPtr planner;                     ///< Planner used for the query.
+  RobotPtr robot;                                 ///< Robot used for the query.
+  ScenePtr scene;                                 ///< Scene used for the query.
+  PlanningPipelinePtr pipeline;                   ///< Planner used for the query.
   planning_interface::MotionPlanRequest request;  ///< Request used for the query.
 };
 
-struct MoveGroupInterfaceQuery : public PlanningQuery
-{
-  MoveGroupInterfaceQuery(const std::string& name,
-                          const QueryGroupName& group_name_map,                //
-                          const planning_scene::PlanningSceneConstPtr& scene,  //
-                          const MoveGroupInterfacePlannerPtr& planner,         //
-                          const planning_interface::MotionPlanRequest& request);
-
-  MoveGroupInterfacePlannerPtr planner;           ///< Planner used for the query.
-  planning_interface::MotionPlanRequest request;  ///< Request used for the query.
-};
-
-class PlanningResult : public Result
+class MotionPlanningResult : public Result
 {
 public:
   /** \name Planning Query and Response
@@ -154,31 +136,39 @@ protected:
       data.metrics["length"] = result.success ? result.trajectory->getLength() : 0.0;
 
     if (this->options.metrics & Metrics::CORRECT)
-      data.metrics["correct"] = result.success ? result.trajectory->isCollisionFree(query.scene) : false;
+      data.metrics["correct"] = result.success ? result.trajectory->isCollisionFree(query.scene->getScene()) : false;
 
     if (this->options.metrics & Metrics::CLEARANCE)
-      data.metrics["clearance"] = result.success ? std::get<0>(result.trajectory->getClearance(query.scene)) : 0.0;
+      data.metrics["clearance"] =
+          result.success ? std::get<0>(result.trajectory->getClearance(query.scene->getScene())) : 0.0;
 
     if (this->options.metrics & Metrics::SMOOTHNESS)
       data.metrics["smoothness"] = result.success ? result.trajectory->getSmoothness() : 0.0;
   }
 };
 
-class PlanningPipelineProfiler : public PlanningProfiler<PlanningPipelineQuery, PlanningResult>
+class PlanningPipelineProfiler : public PlanningProfiler<MotionPlanningQuery, MotionPlanningResult>
 {
 public:
   PlanningPipelineProfiler(const std::string& name);
 
-  PlanningResult runQuery(const PlanningPipelineQuery& query, Data& data) const override;
+  void preRunQuery(MotionPlanningQuery& query, Data& data) override;
+  MotionPlanningResult runQuery(const MotionPlanningQuery& query, Data& data) const override;
+
+private:
+  planning_pipeline::PlanningPipelinePtr pipeline_;  ///< Loaded planning pipeline plugin.
 };
 
-class MoveGroupInterfaceProfiler : public PlanningProfiler<MoveGroupInterfaceQuery, PlanningResult>
+class MoveGroupInterfaceProfiler : public PlanningProfiler<MotionPlanningQuery, MotionPlanningResult>
 {
 public:
   MoveGroupInterfaceProfiler(const std::string& name);
 
-  void preRunQuery(MoveGroupInterfaceQuery& query, Data& data) override;
-  PlanningResult runQuery(const MoveGroupInterfaceQuery& query, Data& data) const override;
+  void preRunQuery(MotionPlanningQuery& query, Data& data) override;
+  MotionPlanningResult runQuery(const MotionPlanningQuery& query, Data& data) const override;
+
+private:
+  moveit::planning_interface::MoveGroupInterfacePtr move_group_;
 };
 
 }  // namespace moveit_benchmark_suite
