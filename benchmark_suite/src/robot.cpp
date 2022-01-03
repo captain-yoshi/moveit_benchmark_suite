@@ -85,6 +85,53 @@ bool Robot::initialize(const std::string& urdf_file, const std::string& srdf_fil
   initializeInternal();
   return true;
 }
+bool Robot::initializeFromYAML(const YAML::Node& node)
+{
+  if (loader_)
+  {
+    ROS_ERROR("Already initialized!");
+    return false;
+  }
+
+  if (not node["urdf"])
+  {
+    ROS_ERROR("Failed to load URDF!");
+    return false;
+  }
+  urdf_ = node["urdf"].as<std::string>();
+
+  if (not node["srdf"])
+  {
+    ROS_ERROR("Failed to load SRDF!");
+    return false;
+  }
+  srdf_ = node["srdf"].as<std::string>();
+
+  if (node["joint_limits"])
+
+    if (not loadYAMLNode(ROBOT_PLANNING, node["joint_limits"], limits_function_))
+    {
+      ROS_ERROR("Failed to load joint limits!");
+      return false;
+    }
+
+  if (not node["kinematics"])
+
+    if (kinematics_)
+    {
+      ROS_ERROR("Already loaded kinematics!");
+      return false;
+    }
+
+  if (!loadYAMLNode(ROBOT_KINEMATICS, node["kinematics"], kinematics_function_))
+  {
+    ROS_ERROR("Failed to load kinematics!");
+    return false;
+  }
+
+  initializeInternal();
+  return true;
+}
 
 bool Robot::initializeFromYAML(const std::string& config_file)
 {
@@ -268,6 +315,30 @@ bool Robot::loadYAMLFile(const std::string& name, const std::string& file, const
   }
   else
     handler_.loadYAMLtoROS(yaml.second, name);
+
+  return true;
+}
+bool Robot::loadYAMLNode(const std::string& name, const YAML::Node& node)
+{
+  PostProcessYAMLFunction function;
+  return loadYAMLNode(name, node, function);
+}
+
+bool Robot::loadYAMLNode(const std::string& name, const YAML::Node& node, const PostProcessYAMLFunction& function)
+{
+  if (function)
+  {
+    YAML::Node copy = node;
+    if (!function(copy))
+    {
+      ROS_ERROR("Failed to process YAML node.");
+      return false;
+    }
+
+    handler_.loadYAMLtoROS(copy, name);
+  }
+  else
+    handler_.loadYAMLtoROS(node, name);
 
   return true;
 }
