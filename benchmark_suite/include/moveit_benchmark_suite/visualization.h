@@ -9,12 +9,18 @@
 #include <moveit_benchmark_suite/geometry.h>
 #include <moveit_benchmark_suite/robot.h>
 
+#include <rviz/SendFilePath.h>
+
 namespace moveit_benchmark_suite
 {
+MOVEIT_CLASS_FORWARD(RVIZHelper);
+
 class RVIZHelper
 {
 public:
-  RVIZHelper(const RobotConstPtr& robot, const std::string& name = "move_group");
+  RVIZHelper(const std::string& name = "move_group");
+
+  void initializeRobot(const RobotConstPtr& robot);
 
   /** \name Trajectories
    *  \{ */
@@ -197,6 +203,9 @@ private:
   ros::Publisher trajectory_pub_;  ///< Trajectory publisher.
   ros::Publisher scene_pub_;       ///< Scene publisher.
   ros::Publisher state_pub_;       ///< State publisher.
+
+  ros::ServiceClient rviz_srv_;
+  rviz::SendFilePath srv_msg_;
 
   std::multimap<std::string, visualization_msgs::Marker> markers_;  ///< Markers to publish.
 };
