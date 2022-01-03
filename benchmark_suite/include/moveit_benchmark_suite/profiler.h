@@ -39,9 +39,12 @@
 #pragma once
 
 #include <moveit_benchmark_suite/dataset.h>
+#include <ros/node_handle.h>
 
 namespace moveit_benchmark_suite
 {
+constexpr char CONFIG_PARAMETER[] = "config_file";
+
 using QueryId = std::size_t;
 using ResultId = std::size_t;
 
@@ -134,6 +137,19 @@ public:
   virtual DerivedResult runQuery(const DerivedQuery& query, Data& data) const = 0;
   virtual void preRunQuery(DerivedQuery& query, Data& data){};
   virtual void postRunQuery(const DerivedQuery& query, DerivedResult& result, Data& data){};
+
+  virtual void buildQueriesFromYAML(const std::string& filename){};
+
+  // Reduce boilerplate
+  void buildQueriesFromYAML(const ros::NodeHandle& nh)
+  {
+    std::string filename;
+
+    if (!nh.getParam(CONFIG_PARAMETER, filename))
+      ROS_WARN("Parameter `%s` not set", std::string(nh.getNamespace() + CONFIG_PARAMETER).c_str());
+
+    buildQueriesFromYAML(filename);
+  };
 
   virtual const std::string& getQueryName(const QueryId query_id) override
   {
