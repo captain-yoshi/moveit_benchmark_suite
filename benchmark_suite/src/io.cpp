@@ -92,7 +92,7 @@ std::string IO::generateUUID()
 
   std::string s = boost::lexical_cast<std::string>(u);
 
-  // std::replace(s.begin(), s.end(), '-', '_');
+  std::replace(s.begin(), s.end(), '-', '_');
 
   return s;
 }
