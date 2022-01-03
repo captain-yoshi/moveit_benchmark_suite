@@ -595,6 +595,59 @@ XmlRpc::XmlRpcValue YAMLToXmlRpc(const YAML::Node& node)
 
   throw std::runtime_error("Unknown node value in YAML");
 }
+
+YAML::Node XmlRpcToYAML(const XmlRpc::XmlRpcValue& node)
+{
+  switch (node.getType())
+  {
+    case XmlRpc::XmlRpcValue::TypeStruct:
+    {
+      YAML::Node n;
+      for (XmlRpc::XmlRpcValue::const_iterator it = node.begin(); it != node.end(); ++it)
+        n[it->first] = XmlRpcToYAML(it->second);
+
+      return n;
+    }
+    case XmlRpc::XmlRpcValue::TypeArray:
+    {
+      YAML::Node n;
+      for (std::size_t i = 0; i < node.size(); ++i)
+        n.push_back(XmlRpcToYAML(node[i]));
+
+      return n;
+    }
+    case XmlRpc::XmlRpcValue::TypeInt:
+    {
+      YAML::Node n;
+      n = static_cast<int>(node);
+      return n;
+    }
+    case XmlRpc::XmlRpcValue::TypeBoolean:
+    {
+      YAML::Node n;
+      n = static_cast<bool>(node);
+      return n;
+    }
+    case XmlRpc::XmlRpcValue::TypeDouble:
+    {
+      YAML::Node n;
+      n = static_cast<double>(node);
+      return n;
+    }
+    case XmlRpc::XmlRpcValue::TypeString:
+    {
+      YAML::Node n;
+      n = static_cast<std::string>(node);
+      return n;
+    }
+
+    default:
+      throw std::runtime_error("Unknown node type in XmlRpcValue");
+  }
+
+  throw std::runtime_error("Unknown node value in XmlRpcValue");
+}
+
 }  // namespace
 
 IO::Handler::Handler(const std::string& name)
@@ -635,6 +688,15 @@ void IO::Handler::loadYAMLtoROS(const YAML::Node& node, const std::string& prefi
     default:
       throw std::runtime_error("Unknown node type in YAML");
   }
+}
+
+void IO::Handler::loadROStoYAML(const std::string& ns, YAML::Node& node)
+{
+  XmlRpc::XmlRpcValue rpc;
+  if (!nh_.getParam(ns, rpc))
+    return;
+
+  node = XmlRpcToYAML(rpc);
 }
 
 bool IO::Handler::hasParam(const std::string& key) const
