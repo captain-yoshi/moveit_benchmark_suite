@@ -146,13 +146,14 @@ std::set<std::string> IO::findPackageURIs(const std::string& string)
   return packages;
 }
 
-const std::string IO::resolvePath(const std::string& path)
+const std::string IO::resolvePath(const std::string& path, bool verbose)
 {
   boost::filesystem::path file = resolvePackage(path);
 
   if (!boost::filesystem::exists(file))
   {
-    ROS_WARN("File `%s` does not exist.", path.c_str());
+    if (verbose)
+      ROS_WARN("File `%s` does not exist.", path.c_str());
     return "";
   }
 
@@ -447,6 +448,37 @@ const std::pair<bool, YAML::Node> IO::loadFileToYAML(const std::string& path)
   {
     return std::make_pair(false, file);
   }
+}
+
+const bool IO::loadFileToYAML(const std::string& path, YAML::Node& node, bool verbose)
+{
+  YAML::Node file;
+  const std::string full_path = resolvePath(path);
+  if (full_path.empty())
+  {
+    if (verbose)
+      ROS_ERROR("Failed to resolve file path `%s`.", path.c_str());
+    return false;
+  }
+
+  if (!isExtension(full_path, "yml") && !isExtension(full_path, "yaml"))
+  {
+    if (verbose)
+      ROS_ERROR("YAML wrong extension for path `%s`.", full_path.c_str());
+    return false;
+  }
+
+  try
+  {
+    node = YAML::LoadFile(full_path);
+  }
+  catch (std::exception& e)
+  {
+    if (verbose)
+      ROS_ERROR("Failed to load YAML file `%s`.", full_path.c_str());
+    return false;
+  }
+  return true;
 }
 
 bool IO::YAMLToFile(const YAML::Node& node, const std::string& file)
