@@ -12,10 +12,21 @@
 
 using namespace moveit_benchmark_suite;
 
-Benchmark::Benchmark(const std::string& name) : Benchmark(name, Options()){};
+Benchmark::Benchmark(){};
 
-Benchmark::Benchmark(const std::string& name, const Options& options) : name_(name), options_(options)
+bool Benchmark::initialize(const std::string& name, const Options& options)
 {
+  name_ = name;
+  options_ = options;
+
+  // Output dataset to logfile
+  {
+    auto filepath = IO::getFilePath(options_.output_file);
+    auto filename = IO::getFileName(options_.output_file);
+
+    addPostBenchmarkCallback([=](DataSetPtr dataset) { outputter_.dump(*dataset, filepath, filename); });
+  }
+
   // Aggregate if config is found
   AggregateConfig agg_config;
   if (agg_config.isConfigAvailable(""))
@@ -65,7 +76,47 @@ Benchmark::Benchmark(const std::string& name, const Options& options) : name_(na
     addPostBenchmarkCallback(
         [=](DataSetPtr dataset) { plot.dump(dataset, terminal, mpo, xtick_filters, legend_filters); });
   }
+  return true;
 };
+
+bool Benchmark::initializeFromHandle(const ros::NodeHandle& nh)
+{
+  std::string name;
+  Options opt;
+
+  // TODO use rosparam_shortcuts or robowflex Handler
+
+  // Create global and local node handles
+  // global overrides local if the param exists and is a non-empty string
+  ros::NodeHandle gnh(nh, "");
+  ros::NodeHandle lnh(nh, "benchmark_config/parameters/");
+
+  // Benchmark name
+  if (!gnh.getParam("name", name) || name.empty())
+    if (!lnh.getParam("name", name))
+      ROS_WARN_STREAM("Missing parameter '" << nh.getNamespace() << "/"
+                                            << "name"
+                                            << "' or '" << lnh.getNamespace() << "/"
+                                            << "name"
+                                            << "'.'");
+  // Output file
+  if (!gnh.getParam("output_file", opt.output_file) || opt.output_file.empty())
+    lnh.getParam("output_file", opt.output_file);
+
+  // Visualize
+  if (!gnh.getParam("visualize", opt.visualize))
+    lnh.getParam("visualize", opt.visualize);
+
+  // Trials (not configurable globally)
+  int nonsigned_value = opt.trials;
+  lnh.getParam("runs", nonsigned_value);
+  opt.trials = nonsigned_value;
+
+  // Parameters that can only be loaded from YAML
+  initialize(name, opt);
+
+  return true;
+}
 
 /** \brief Set the post-dataset callback function.
  *  \param[in] callback Callback to use.
@@ -84,6 +135,11 @@ void Benchmark::addPostBenchmarkCallback(const PostBenchmarkCallback& callback)
   post_benchmark_callbacks_.push_back(callback);
 }
 
+const Benchmark::Options& Benchmark::getOptions() const
+{
+  return options_;
+}
+
 DataSetPtr Benchmark::run(Profiler& profiler) const
 {
   // Setup dataset to return
@@ -94,9 +150,9 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
   dataset->date = IO::getDate(clock);
   dataset->date_utc = IO::getDateUTC(clock);
   dataset->start = std::chrono::high_resolution_clock::now();
-  dataset->allowed_time = options_.query_timeout;
+  // dataset->allowed_time = options_.query_timeout;
   dataset->trials = options_.trials;
-  dataset->run_till_timeout = options_.run_timeout;
+  // dataset->run_till_timeout = options_.run_timeout;
   dataset->threads = 1.0;
   dataset->hostname = IO::getHostname();
 
@@ -129,7 +185,7 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
     if (it == dataset->query_names.end())
       dataset->query_names.emplace_back(query_name);
 
-    if (options_.verbose_status_run && options_.trials > 0)
+    if (options_.verbose_status_query && options_.trials > 0)
 
     {
       ROS_INFO_STREAM("");
@@ -139,7 +195,7 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
 
     for (std::size_t trial = 0; trial < options_.trials; ++trial)
     {
-      if (options_.verbose_status_query)
+      if (options_.verbose_status_trial)
       {
         ROS_INFO_STREAM("");
         ROS_INFO_STREAM(log::format("Running Query [%1%/%2%] Trial [%3%/%4%] '%5%'",  //
