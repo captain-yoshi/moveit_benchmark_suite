@@ -86,7 +86,7 @@ public:
 class CollisionCheckProfiler : public ProfilerTemplate<CollisionCheckQuery, CollisionCheckResult>
 {
 public:
-  CollisionCheckProfiler(const std::string& name);
+  CollisionCheckProfiler();
   /** \brief Bitmask options to select what metrics to compute for each run.
    */
   enum Metrics
