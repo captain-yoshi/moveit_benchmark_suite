@@ -76,13 +76,14 @@ bool isSuffix(const std::string& lhs, const std::string& rhs)
   return std::equal(lhs.rbegin(), lhs.rbegin() + std::min(lhs.size(), rhs.size()), rhs.rbegin());
 }
 
-bool isExtension(const std::string& path_string, const std::string& extension)
+}  // namespace
+
+bool IO::isExtension(const std::string& path_string, const std::string& extension)
 {
   boost::filesystem::path path(path_string);
   const std::string last = boost::filesystem::extension(path);
   return isSuffix(extension, last);
 }
-}  // namespace
 
 std::string IO::generateUUID()
 {

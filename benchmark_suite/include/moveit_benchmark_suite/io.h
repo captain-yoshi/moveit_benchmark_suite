@@ -54,6 +54,8 @@ namespace IO
  */
 std::string generateUUID();
 
+bool isExtension(const std::string& path_string, const std::string& extension);
+
 /** \brief Resolves `package://` URLs to their canonical form.
  *  The path does not need to exist, but the package does. Can be used to write new files in packages.
  *  \param[in] path Path to resolve.
