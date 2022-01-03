@@ -310,6 +310,13 @@ public:
   bool fromYAMLFile(const std::string& file);
   bool fromOpenRAVEXMLFile(const std::string& file, std::string models_dir = "");
 
+  /** \brief Load a planning scene from a URDF or XACRO file using the urdf_to_scene pkg.
+   *  \param[in] file File to load planning scene from.
+   *  \return True on success, false on failure.
+   */
+  bool fromURDFFile(const std::string& file);
+  bool fromURDFString(const std::string& str);
+
   /** \} */
 
 private:

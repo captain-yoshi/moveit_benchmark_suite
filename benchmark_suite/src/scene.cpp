@@ -11,6 +11,8 @@
 #include <moveit_benchmark_suite/io.h>
 #include <moveit_benchmark_suite/io/yaml.h>
 
+#include <urdf_to_scene/scene_parser.h>
+
 namespace moveit_benchmark_suite
 {
 /** \brief The actual plugin loader for collision plugins.
@@ -300,7 +302,7 @@ bool Scene::setCollisionDetector(const std::string& detector_name) const
     ROS_WARN("Was not able to load collision detector plugin '%s'", detector_name.c_str());
   }
 
-  ROS_INFO("Using collision detector: %s", scene_->getActiveCollisionDetectorName().c_str());
+  ROS_INFO("Using collision detector '%s'", scene_->getActiveCollisionDetectorName().c_str());
   return success;
 }
 
@@ -530,6 +532,41 @@ bool Scene::toYAMLFile(const std::string& file) const
 
   YAML::Node node = IO::toNode(msg);
   return IO::YAMLToFile(node, file);
+}
+
+bool Scene::fromURDFString(const std::string& str)
+{
+  moveit_msgs::PlanningScene msg;
+
+  SceneParser parser;
+  if (!parser.loadURDF(str))
+    return false;
+
+  parser.getCollisionObjects(msg.world.collision_objects);
+
+  fixCollisionObjectFrame(msg);
+
+  // Add robot_state if loaded scene does not contain one.
+  if (msg.robot_state.joint_state.position.empty())
+    moveit::core::robotStateToRobotStateMsg(scene_->getCurrentState(), msg.robot_state);
+
+  auto acm(getACM());
+  useMessage(msg);
+
+  // Update ACM only if anything specified.
+  if (msg.allowed_collision_matrix.entry_names.empty())
+    getACM() = acm;
+
+  return true;
+}
+
+bool Scene::fromURDFFile(const std::string& file)
+{
+  auto xml_str = IO::loadXMLToString(file);
+  if (xml_str.empty())
+    return false;
+
+  return fromURDFString(xml_str);
 }
 
 bool Scene::fromYAMLFile(const std::string& file)
