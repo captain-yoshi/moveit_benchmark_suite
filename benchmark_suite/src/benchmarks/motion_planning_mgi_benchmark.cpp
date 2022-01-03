@@ -33,23 +33,14 @@
  *********************************************************************/
 
 /* Author: Captain Yoshi
-   Desc: Motion planning benchmark node
+   Desc: Motion planning benchmark node using the MoveGroupInterface
 */
+
 #include <ros/ros.h>
 
-#include <moveit/planning_scene_interface/planning_scene_interface.h>
-#include <urdf_to_scene/scene_parser.h>
-
-#include <moveit_benchmark_suite/io/yaml.h>
-#include <moveit_benchmark_suite/yaml.h>
-#include <moveit_benchmark_suite/planning.h>
 #include <moveit_benchmark_suite/benchmark.h>
-#include <moveit_benchmark_suite/aggregation.h>
-#include <moveit_benchmark_suite/io/gnuplot.h>
-#include <moveit_benchmark_suite/scene.h>
-#include <moveit_benchmark_suite/benchmarks/builder/motion_planning_builder.h>
 #include <moveit_benchmark_suite/benchmarks/profiler/motion_planning_profiler.h>
-#include <map>
+#include <moveit_benchmark_suite/benchmarks/visualizer/motion_planning_visualizer.h>
 
 using namespace moveit_benchmark_suite;
 
@@ -61,67 +52,32 @@ int main(int argc, char** argv)
 
   ros::NodeHandle pnh("~");
 
-  // Parse benchmark name
-  std::string benchmark_name;
-  pnh.getParam("name", benchmark_name);
-
-  // Parse output directory and filename
-  std::string file;
-  std::string filepath;
+  // Get config
   std::string filename;
-  pnh.getParam("output_file", file);
-
-  filepath = IO::getFilePath(file);
-  filename = IO::getFileName(file);
-
-  // Build queries
-  MoveGroupInterfaceBuilder builder;
-  builder.buildQueries();
-
-  const auto& queries = builder.getQueries();
-  const auto& query_setup = builder.getQuerySetup();
-  const auto& config = builder.getConfig();
-
-  std::size_t trials = config.getNumRuns();
-  double timeout = config.getTimeout();
-
-  // Param server overrides benchmark config
-  if (benchmark_name.empty())
-    benchmark_name = config.getBenchmarkName();
+  pnh.getParam(CONFIG_PARAMETER, filename);
 
   // Setup profiler
-  using Metric = MoveGroupInterfaceProfiler::Metrics;
+  MoveGroupInterfaceProfiler profiler;
+  profiler.buildQueriesFromYAML(filename);
 
-  MoveGroupInterfaceProfiler profiler(BenchmarkType::MOTION_PLANNING_MGI);
-  profiler.setQuerySetup(query_setup);
-  profiler.options.metrics =
-      Metric::WAYPOINTS | Metric::CORRECT | Metric::LENGTH | Metric::SMOOTHNESS | Metric::CLEARANCE;
-
-  for (const auto& query : queries)
-    profiler.addQuery(query);
+  profiler.options.metrics = MoveGroupInterfaceProfiler::LENGTH |     //
+                             MoveGroupInterfaceProfiler::CORRECT |    //
+                             MoveGroupInterfaceProfiler::CLEARANCE |  //
+                             MoveGroupInterfaceProfiler::WAYPOINTS |  //
+                             MoveGroupInterfaceProfiler::SMOOTHNESS;  //
 
   // Setup benchmark
-  Benchmark::Options options = { .trials = trials, .query_timeout = timeout };
+  Benchmark benchmark;
+  benchmark.initializeFromHandle(pnh);
 
-  Benchmark benchmark(benchmark_name,  // Name of benchmark
-                      options);        // Options for benchmark
+  // Setup visualizer
+  MotionPlanningVisualizer visualizer;
+
+  if (benchmark.getOptions().visualize)
+    visualizer.addCallback(profiler);
 
   // Run benchmark
   auto dataset = benchmark.run(profiler);
-
-  if (!dataset)
-    return 0;
-
-  // Dump metrics to logfile
-  BenchmarkSuiteDataSetOutputter output;
-  output.dump(*dataset, filepath, filename);
-
-  // Add wait if GNUPlot was configured
-  if (benchmark.getPlotFlag())
-  {
-    ROS_WARN("Press CTL-C when finished with GNUPlot");
-    ros::waitForShutdown();
-  }
 
   return 0;
 }
