@@ -47,6 +47,8 @@
 #include <moveit_benchmark_suite/trajectory.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 
+#include <moveit_benchmark_suite/benchmarks/builder/motion_planning_builder.h>
+
 namespace moveit_benchmark_suite
 {
 MOVEIT_CLASS_FORWARD(MotionPlanningQuery);
@@ -66,15 +68,15 @@ struct MotionPlanningQuery : public Query
    */
 
   MotionPlanningQuery(const std::string& name,
-                      const QueryGroupName& group_name_map,  //
-                      const RobotPtr& robot,                 //
-                      const ScenePtr& scene,                 //
-                      const PlanningPipelinePtr& pipeline,   //
+                      const QueryGroupName& group_name_map,        //
+                      const RobotPtr& robot,                       //
+                      const ScenePtr& scene,                       //
+                      const PlanningPipelineEmitterPtr& pipeline,  //
                       const planning_interface::MotionPlanRequest& request);
 
   RobotPtr robot;                                 ///< Robot used for the query.
   ScenePtr scene;                                 ///< Scene used for the query.
-  PlanningPipelinePtr pipeline;                   ///< Planner used for the query.
+  PlanningPipelineEmitterPtr pipeline;            ///< Planner used for the query.
   planning_interface::MotionPlanRequest request;  ///< Request used for the query.
 };
 
@@ -106,24 +108,12 @@ public:
 
   PlanningProfiler(const std::string& name) : ProfilerTemplate<DerivedQuery, DerivedResult>(name){};
 
-  /** \brief Profiling a single plan using a \a planner.
-   *  \param[in] planner Planner to profile.
-   *  \param[in] scene Scene to plan in.
-   *  \param[in] request Planning request to profile.
-   *  \param[in] options The options for profiling.
-   *  \param[out] result The results of profiling.
-   *  \return True if planning succeeded, false on failure.
-   */
-  // virtual DerivedResult runQuery(const DerivedQuery& query, Data& data) const override = 0;
-
-protected:
   /** \brief Compute the built-in metrics according to the provided bitmask \a options.
    *  \param[in] options Bitmask of which built-in metrics to compute.
    *  \param[in] scene Scene used for planning and metric computation.
    *  \param[out] run Metric results.
    */
   virtual void postRunQuery(const DerivedQuery& query, DerivedResult& result, Data& data) override
-
   {
     // Compute metrics
     data.metrics["time"] = data.time;
@@ -150,8 +140,9 @@ protected:
 class PlanningPipelineProfiler : public PlanningProfiler<MotionPlanningQuery, MotionPlanningResult>
 {
 public:
-  PlanningPipelineProfiler(const std::string& name);
+  PlanningPipelineProfiler();
 
+  void buildQueriesFromYAML(const std::string& filename) override;
   void preRunQuery(MotionPlanningQuery& query, Data& data) override;
   MotionPlanningResult runQuery(const MotionPlanningQuery& query, Data& data) const override;
 
@@ -162,8 +153,9 @@ private:
 class MoveGroupInterfaceProfiler : public PlanningProfiler<MotionPlanningQuery, MotionPlanningResult>
 {
 public:
-  MoveGroupInterfaceProfiler(const std::string& name);
+  MoveGroupInterfaceProfiler();
 
+  void buildQueriesFromYAML(const std::string& filename) override;
   void preRunQuery(MotionPlanningQuery& query, Data& data) override;
   MotionPlanningResult runQuery(const MotionPlanningQuery& query, Data& data) const override;
 

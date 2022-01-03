@@ -16,11 +16,12 @@ using namespace moveit_benchmark_suite;
 ///
 /// MotionPlanningQuery
 ///
+
 MotionPlanningQuery::MotionPlanningQuery(const std::string& name,
-                                         const QueryGroupName& group_name_map,  //
-                                         const RobotPtr& robot,                 //
-                                         const ScenePtr& scene,                 //
-                                         const PlanningPipelinePtr& pipeline,   //
+                                         const QueryGroupName& group_name_map,        //
+                                         const RobotPtr& robot,                       //
+                                         const ScenePtr& scene,                       //
+                                         const PlanningPipelineEmitterPtr& pipeline,  //
                                          const planning_interface::MotionPlanRequest& request)
   : Query(name, group_name_map), robot(robot), scene(scene), pipeline(pipeline), request(request)
 {
@@ -30,22 +31,43 @@ MotionPlanningQuery::MotionPlanningQuery(const std::string& name,
 /// PlanningPipelineProfiler
 ///
 
-PlanningPipelineProfiler::PlanningPipelineProfiler(const std::string& name)
-  : PlanningProfiler<MotionPlanningQuery, MotionPlanningResult>(name){};
+PlanningPipelineProfiler::PlanningPipelineProfiler()
+  : PlanningProfiler<MotionPlanningQuery, MotionPlanningResult>(ProfilerType::MOTION_PLANNING_PP){};
+
+void PlanningPipelineProfiler::buildQueriesFromYAML(const std::string& filename)
+{
+  MotionPlanningBuilder builder;
+  builder.buildPlanningPipelineQueries(filename);
+
+  const auto& queries = builder.getQueries();
+  const auto& setup = builder.getQuerySetup();
+
+  this->setQuerySetup(setup);
+  for (const auto& query : queries)
+    this->addQuery(query);
+}
 
 void PlanningPipelineProfiler::preRunQuery(MotionPlanningQuery& query, Data& data)
 {
+  pipeline_.reset();
   pipeline_ = std::make_shared<planning_pipeline::PlanningPipeline>(query.robot->getModelConst(),
                                                                     query.pipeline->getHandler().getHandle());
 
   // Verify the pipeline has successfully initialized a planner
   if (!pipeline_->getPlannerManager())
   {
-    ROS_ERROR("Failed to initialize planning pipeline ''");
+    ROS_ERROR("Failed to initialize planning pipeline '%s'", query.pipeline->getPipelineId().c_str());
     return;
   }
 
-  // Validate that robot JMG is available in the planning pipeline ROS PARAM
+  if (!pipeline_->getPlannerManager()->canServiceRequest(query.request))
+  {
+    ROS_ERROR("Interface '%s' in pipeline '%s' cannot service the benchmark request '%s'",
+              pipeline_->getPlannerPluginName().c_str(), query.pipeline->getName().c_str(), "test");
+    return;
+  }
+
+  // TODO Validate that robot JMG is available in the planning pipeline ROS PARAM
   // if (pipeline_name.compare("ompl") == 0)
   // {
   //   const auto& jmg_names = getRobot()->getModel()->getJointModelGroupNames();
@@ -58,7 +80,6 @@ void PlanningPipelineProfiler::preRunQuery(MotionPlanningQuery& query, Data& dat
   //       return;
   //     }
   //   }
-  //   // TODO forlder CHOMP and STOMP
   // }
 
   // Disable visualizations SolutionPaths
@@ -73,7 +94,7 @@ MotionPlanningResult PlanningPipelineProfiler::runQuery(const MotionPlanningQuer
   // Profile time
   data.start = std::chrono::high_resolution_clock::now();
 
-  pipeline_->generatePlan(query.scene->getScene(), query.request, result.mp_response);
+  pipeline_->generatePlan(query.scene->getSceneConst(), query.request, result.mp_response);
 
   data.finish = std::chrono::high_resolution_clock::now();
   data.time = IO::getSeconds(data.start, data.finish);
@@ -97,13 +118,27 @@ MotionPlanningResult PlanningPipelineProfiler::runQuery(const MotionPlanningQuer
 /// MoveGroupInterfaceProfiler
 ///
 
-MoveGroupInterfaceProfiler::MoveGroupInterfaceProfiler(const std::string& name)
-  : PlanningProfiler<MotionPlanningQuery, MotionPlanningResult>(name){};
+MoveGroupInterfaceProfiler::MoveGroupInterfaceProfiler()
+  : PlanningProfiler<MotionPlanningQuery, MotionPlanningResult>(ProfilerType::MOTION_PLANNING_MGI){};
+
+void MoveGroupInterfaceProfiler::buildQueriesFromYAML(const std::string& filename)
+{
+  MotionPlanningBuilder builder;
+  builder.buildMoveGroupInterfaceQueries(filename);
+
+  const auto& queries = builder.getQueries();
+  const auto& setup = builder.getQuerySetup();
+
+  this->setQuerySetup(setup);
+  for (const auto& query : queries)
+    this->addQuery(query);
+}
 
 void MoveGroupInterfaceProfiler::preRunQuery(MotionPlanningQuery& query, Data& data)
 {
   auto& request = query.request;
-  // Convert request to MoveGroupInterface
+
+  move_group_.reset();
   move_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(request.group_name);
 
   move_group_->clearPoseTargets();
@@ -167,9 +202,6 @@ void MoveGroupInterfaceProfiler::preRunQuery(MotionPlanningQuery& query, Data& d
       // TODO add tolerance
     }
   }
-
-  // Path constraints
-  move_group_->setPathConstraints(request.path_constraints);
 
   // Planning scene
   moveit::planning_interface::PlanningSceneInterface psi;
