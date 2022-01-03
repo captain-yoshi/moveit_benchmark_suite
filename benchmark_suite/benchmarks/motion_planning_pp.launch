@@ -1,42 +1,34 @@
 <?xml version="1.0" ?>
 <launch>
 
-  <arg name="name" default="" />
-  <arg name="output_file" default="" />
-  <arg name="visualize" default="false" doc="turns on and off visualization with rviz"/>
+  <arg name="name" default=""/>
+  <arg name="output_file" default=""/>
+  <!-- Overwrite this param as a bool type -->
+  <arg name="visualize" default="" doc="turns on and off visualization with rviz (bool type)"/>
+
+
+  <include file="$(find moveit_benchmark_suite_resources)/launch/moveit_rviz.launch" if="$(eval bool(visualize) == 1)">
+    <!--<arg name="debug" value="$(arg debug)"/>-->
+  </include>
 
   <!-- By default, we are not in debug mode -->
   <arg name="debug" default="false" />
   <arg unless="$(arg debug)" name="launch_prefix" value="" />
   <arg     if="$(arg debug)" name="launch_prefix" value="gdb --args" />
 
-
-  <!-- Load robot -->
-  <include file="$(find moveit_resources_panda_moveit_config)/launch/demo.launch">
-    <arg name="use_rviz" value="$(arg visualize)"/>
-    <!--<arg name="debug" value="$(arg debug)"/>-->
-  </include>
-
-  <!-- Scene -->
-  <group ns="scenes" clear_params="true">
-    <param name="empty-scene" command="$(find xacro)/xacro '$(find moveit_benchmark_suite_resources)/db/empty_scene.urdf.xacro'"/>
-    <param name="bbt-primitive" command="$(find xacro)/xacro '$(find moveit_benchmark_suite_resources)/db/bbt/panda/scene_primitive.urdf.xacro'"/>
-    <param name="bbt-mesh"     command="$(find xacro)/xacro '$(find moveit_benchmark_suite_resources)/db/bbt/panda/scene_mesh_hq.urdf.xacro'"/>
-  </group>
-
-  <!-- Request -->
-  <group ns="requests" clear_params="true">
-    <param name="jc" value="$(find moveit_benchmark_suite_resources)/db/bbt/panda/request_goal_jc.yaml"/>
-  </group>
-
-  <!-- Benchmark options file -->
-  <arg name="options_file" default="$(find moveit_benchmark_suite)/config/motion_planning_pp.yaml"/>
-  <rosparam command="load" file="$(arg options_file)"/>
+  <!-- Benchmark configuration file -->
+  <arg name="config_file" default="$(find moveit_benchmark_suite)/config/motion_planning_pp.yaml"/>
 
   <!-- Launch benchmark node -->
   <node name="benchmark" pkg="moveit_benchmark_suite" type="motion_planning_pp" output="screen" clear_params="true" required="true" launch-prefix="$(arg launch_prefix)">
+
+    <rosparam command="load" file="$(arg config_file)"/>
+
+    <!-- Override config file if not emprty -->
     <param name="name" value="$(arg name)"/>
+    <param name="config_file" value="$(arg config_file)"/>
     <param name="output_file" value="$(arg output_file)"/>
-    <param name="visualize" value="$(arg visualize)" type="bool"/>
+    <param name="visualize" value="$(arg visualize)"/>
+
   </node>
 </launch>
