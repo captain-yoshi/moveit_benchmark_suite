@@ -557,11 +557,14 @@ bool convert<geometry_msgs::Transform>::decode(const Node& node, geometry_msgs::
 Node convert<geometry_msgs::Point>::encode(const geometry_msgs::Point& rhs)
 {
   Node node;
-  ROBOWFLEX_YAML_FLOW(node);
+  // ROBOWFLEX_YAML_FLOW(node);
 
-  node.push_back(rhs.x);
-  node.push_back(rhs.y);
-  node.push_back(rhs.z);
+  node["x"] = rhs.x;
+  node["y"] = rhs.y;
+  node["z"] = rhs.z;
+  // node.push_back(rhs.x);
+  // node.push_back(rhs.y);
+  // node.push_back(rhs.z);
   return node;
 }
 
@@ -587,11 +590,14 @@ bool convert<geometry_msgs::Point>::decode(const Node& node, geometry_msgs::Poin
 Node convert<geometry_msgs::Vector3>::encode(const geometry_msgs::Vector3& rhs)
 {
   Node node;
-  ROBOWFLEX_YAML_FLOW(node);
+  // ROBOWFLEX_YAML_FLOW(node);
+  node["x"] = rhs.x;
+  node["y"] = rhs.y;
+  node["z"] = rhs.z;
 
-  node.push_back(rhs.x);
-  node.push_back(rhs.y);
-  node.push_back(rhs.z);
+  // node.push_back(rhs.x);
+  // node.push_back(rhs.y);
+  // node.push_back(rhs.z);
   return node;
 }
 
@@ -618,12 +624,16 @@ bool convert<geometry_msgs::Vector3>::decode(const Node& node, geometry_msgs::Ve
 Node convert<geometry_msgs::Quaternion>::encode(const geometry_msgs::Quaternion& rhs)
 {
   Node node;
-  ROBOWFLEX_YAML_FLOW(node);
+  // ROBOWFLEX_YAML_FLOW(node);
+  node["x"] = rhs.x;
+  node["y"] = rhs.y;
+  node["z"] = rhs.z;
+  node["w"] = rhs.w;
 
-  node.push_back(rhs.x);
-  node.push_back(rhs.y);
-  node.push_back(rhs.z);
-  node.push_back(rhs.w);
+  // node.push_back(rhs.x);
+  // node.push_back(rhs.y);
+  // node.push_back(rhs.z);
+  // node.push_back(rhs.w);
   return node;
 }
 
@@ -1483,8 +1493,8 @@ Node convert<moveit_msgs::JointConstraint>::encode(const moveit_msgs::JointConst
   if (rhs.tolerance_below > std::numeric_limits<double>::epsilon())
     node["tolerance_below"] = rhs.tolerance_below;
 
-  if (rhs.weight < 1)
-    node["weight"] = rhs.weight;
+  // if (rhs.weight < 1)
+  node["weight"] = rhs.weight;
 
   return node;
 }
@@ -1520,13 +1530,13 @@ Node convert<moveit_msgs::PositionConstraint>::encode(const moveit_msgs::Positio
 
   node["link_name"] = rhs.link_name;
 
-  if (!isVector3Zero(rhs.target_point_offset))
-    node["target_point_offset"] = rhs.target_point_offset;
+  // if (!isVector3Zero(rhs.target_point_offset))
+  node["target_point_offset"] = rhs.target_point_offset;
 
   node["constraint_region"] = rhs.constraint_region;
 
-  if (rhs.weight < 1)
-    node["weight"] = rhs.weight;
+  // if (rhs.weight < 1)
+  node["weight"] = rhs.weight;
 
   return node;
 }
@@ -1570,8 +1580,8 @@ Node convert<moveit_msgs::OrientationConstraint>::encode(const moveit_msgs::Orie
 
   encodeToUINT8(node, "parameterization", rhs.parameterization);
 
-  if (rhs.weight < 1)
-    node["weight"] = rhs.weight;
+  // if (rhs.weight < 1)
+  node["weight"] = rhs.weight;
 
   return node;
 }
