@@ -472,7 +472,8 @@ void RVIZHelper::removeScene()
   updateScene(nullptr);
 }
 
-void RVIZHelper::updateScene(const planning_scene::PlanningSceneConstPtr& scene)
+void RVIZHelper::updateScene(const planning_scene::PlanningSceneConstPtr& scene,
+                             const moveit_msgs::RobotState& robot_state)
 {
   if (scene_pub_.getNumSubscribers() < 1)
   {
@@ -488,6 +489,19 @@ void RVIZHelper::updateScene(const planning_scene::PlanningSceneConstPtr& scene)
   {
     scene->getPlanningSceneMsg(to_pub);
     to_pub.is_diff = true;
+
+    if (!moveit::core::isEmpty(robot_state))
+      to_pub.robot_state = robot_state;
+  }
+  else
+  {
+    // Remove all scene objects
+    to_pub.is_diff = true;
+    to_pub.robot_state.is_diff = true;
+    to_pub.robot_state.attached_collision_objects.resize(1);
+    to_pub.robot_state.attached_collision_objects[0].object.operation = moveit_msgs::CollisionObject::REMOVE;
+    to_pub.world.collision_objects.resize(1);
+    to_pub.world.collision_objects[0].operation = moveit_msgs::CollisionObject::REMOVE;
   }
 
   scene_pub_.publish(to_pub);

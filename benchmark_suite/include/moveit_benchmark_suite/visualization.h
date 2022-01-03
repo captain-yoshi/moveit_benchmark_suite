@@ -82,7 +82,8 @@ public:
   /** \brief Updates the scene being visualized.
    *  \param[in] scene Scene to visualize. If null, removes scene by publishing empty message.
    */
-  void updateScene(const planning_scene::PlanningSceneConstPtr& scene);
+  void updateScene(const planning_scene::PlanningSceneConstPtr& scene,
+                   const moveit_msgs::RobotState& robot_state = moveit_msgs::RobotState());
 
   /** \} */
 
