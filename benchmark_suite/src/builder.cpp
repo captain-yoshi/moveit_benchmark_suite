@@ -182,88 +182,85 @@ void Builder::mergeResource(const std::string& name, const YAML::Node& node)
 
 void Builder::extendResources(const YAML::Node& node)
 {
-  if (!node.IsSequence())
-    return;
+  std::vector<std::string> resource_names;
 
-  // Load
-  std::size_t ctr = 0;
-  std::vector<std::string> to_del;
-  std::map<std::string, YAML::Node> to_add;
-
-  for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
-  {
-    const auto& child = *it;
-
-    if (!child["name"] || !child["resources"] || !child["resources"].IsSequence())
-    {
-      ROS_ERROR("Invalid extend config. Needs `name` and `resources` keys and the later MUST be a YAML sequence.");
-      return;
-    }
-
-    const auto& name = child["name"].as<std::string>();
-
-    // name must be in the map
-    auto it1 = node_map_.find(name);
-    if (it1 == node_map_.end())
-    {
-      ROS_ERROR("Cannot extend missing resource name `%s`", name.c_str());
-      return;
-    }
-
-    to_del.push_back(name);
-
-    for (YAML::const_iterator it2 = child["resources"].begin(); it2 != child["resources"].end(); ++it2)
-    {
-      YAML::Node source;
-      YAML::Node target = YAML::Clone(it1->second);
-
-      ctr++;
-
-      decodeResourceTag(*it2, source);
-
-      // merge
-      if (target["resource"])
-        yaml::merge_node(target["resource"], source);
-      else if (target["resources"])
-        yaml::merge_node(target["resources"], source);
-      else
-      {
-        ROS_WARN("Resource has no resource/s key");
-        continue;
-      }
-
-      if (source.IsNull())
-        return;
-
-      if (!source.IsNull())
-      {
-        if (!validateResource(target))
-        {
-          ROS_ERROR("Failed to extend resource name `%s` (sequence number %zu). Check config file.", name.c_str(), ctr);
-          return;
-        }
-
-        // insert with new name
-        std::string extended_name = name + "_" + std::to_string(ctr);
-
-        if (node_map_.find(extended_name) != node_map_.end())
-        {
-          ROS_ERROR("Cannot extend resource name `%s`. Name already.", extended_name.c_str());
-          return;
-        }
-
-        to_add.insert({ extended_name, target });
-      }
-    }
-  }
+  if (node.IsMap())
+    extendResource(node, resource_names);
+  else if (node.IsSequence())
+    for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
+      extendResource(*it, resource_names);
+  else if (node.IsDefined())
+    ROS_WARN("Resource extension failed, YAML node MUST be a sequence or a map");
 
   // Remove original resource used for extension
-  for (const auto& del : to_del)
-    node_map_.erase(del);
+  for (const auto& name : resource_names)
+    node_map_.erase(name);
+}
 
-  // Insert new resources
-  for (const auto& add : to_add)
-    insertResource(add.first, add.second);
+void Builder::extendResource(const YAML::Node& node, std::vector<std::string>& resource_names)
+{
+  if (!node["name"] || !node["resources"] || !node["resources"].IsSequence())
+  {
+    ROS_ERROR("Invalid extend config. Needs `name` and `resources` keys and the later MUST be a YAML sequence.");
+    return;
+  }
+
+  std::size_t seq_idx = 0;
+  const auto& name = node["name"].as<std::string>();
+
+  // name must be in the map
+  auto it1 = node_map_.find(name);
+  if (it1 == node_map_.end())
+  {
+    ROS_ERROR("Cannot extend missing resource name `%s`", name.c_str());
+    return;
+  }
+
+  resource_names.push_back(name);
+
+  for (YAML::const_iterator it2 = node["resources"].begin(); it2 != node["resources"].end(); ++it2)
+  {
+    YAML::Node source;
+    YAML::Node target = YAML::Clone(it1->second);
+    ++seq_idx;
+
+    decodeResourceTag(*it2, source);
+
+    // merge
+    if (target["resource"])
+      yaml::merge_node(target["resource"], source);
+    else if (target["resources"])
+      yaml::merge_node(target["resources"], source);
+    else
+    {
+      ROS_WARN("Resource has no resource/s key");
+      continue;
+    }
+
+    if (source.IsNull())
+      return;
+
+    if (!source.IsNull())
+    {
+      if (!validateResource(target))
+      {
+        ROS_ERROR("Failed to extend resource name `%s` (sequence number %zu). Check config file.", name.c_str(),
+                  seq_idx);
+        return;
+      }
+
+      // insert with new name
+      std::string extended_name = name + "_" + std::to_string(seq_idx);
+
+      if (node_map_.find(extended_name) != node_map_.end())
+      {
+        ROS_ERROR("Cannot extend resource name `%s`. Name already.", extended_name.c_str());
+        return;
+      }
+
+      insertResource(extended_name, target);
+    }
+  }
 }
 
 //

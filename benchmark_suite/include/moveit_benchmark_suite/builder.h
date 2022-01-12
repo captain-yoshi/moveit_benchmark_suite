@@ -82,6 +82,8 @@ public:
 
 protected:
   void loadResource(const YAML::Node& node);
+  void extendResource(const YAML::Node& node, std::vector<std::string>& resource_names);
+
   const std::map<std::string, YAML::Node>& getResources() const;
   void insertResource(const std::string, const YAML::Node& node);
 
