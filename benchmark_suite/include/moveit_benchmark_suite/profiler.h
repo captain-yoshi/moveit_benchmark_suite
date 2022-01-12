@@ -148,17 +148,6 @@ public:
 
   virtual void buildQueriesFromYAML(const std::string& filename){};
 
-  // Reduce boilerplate
-  void buildQueriesFromYAML(const ros::NodeHandle& nh)
-  {
-    std::string filename;
-
-    if (!nh.getParam(CONFIG_PARAMETER, filename))
-      ROS_WARN("Parameter `%s` not set", std::string(nh.getNamespace() + CONFIG_PARAMETER).c_str());
-
-    buildQueriesFromYAML(filename);
-  };
-
   virtual const std::string& getQueryName(const QueryId query_id) override
   {
     auto query = getQuery(query_id);
