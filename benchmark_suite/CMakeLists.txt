@@ -71,7 +71,6 @@ add_library(${PROJECT_NAME}
   src/config/collision_check_config.cpp
   src/config/gnuplot_config.cpp
   src/config/html_config.cpp
-  src/config/motion_planning_config.cpp
   # src/benchmarks/builder/collision_check_builder.cpp
   src/benchmarks/builder/motion_planning_builder.cpp
   src/benchmarks/profiler/motion_planning_profiler.cpp
