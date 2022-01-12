@@ -49,31 +49,30 @@
 
 namespace moveit_benchmark_suite
 {
-MOVEIT_CLASS_FORWARD(PlanningPipeline);
+MOVEIT_CLASS_FORWARD(PlanningPipelineEmitter);
 
 /** Helper for loading planning pipeline on ros params */
-class PlanningPipeline
+class PlanningPipelineEmitter
 {
 public:
-  PlanningPipeline(const std::string& name, const std::string& pipeline_name, const std::string& ns)
-    : name_(name), pipeline_name_(pipeline_name), handler_(ns){};
-  ~PlanningPipeline();
+  PlanningPipelineEmitter(const std::string& name, const std::string& ns);
+  ~PlanningPipelineEmitter();
 
   // non-copyable
-  PlanningPipeline(PlanningPipeline const&) = delete;
-  void operator=(PlanningPipeline const&) = delete;
+  PlanningPipelineEmitter(PlanningPipelineEmitter const&) = delete;
+  void operator=(PlanningPipelineEmitter const&) = delete;
 
   bool initializeFromYAML(const YAML::Node& node, const std::vector<std::string>& planners);
 
   const std::string& getName() const;
-  const std::string& getPipelineName() const;
+  const std::string& getPipelineId() const;
   const IO::Handler& getHandler() const;
 
   const std::vector<std::string>& getPlanners() const;
 
 protected:
   const std::string name_;
-  const std::string pipeline_name_;
+  std::string pipeline_id_;
   IO::Handler handler_;                ///< IO handler (namespaced with \a name_)
   std::vector<std::string> planners_;  ///
 };
