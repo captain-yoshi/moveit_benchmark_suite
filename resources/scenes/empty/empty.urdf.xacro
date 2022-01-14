@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<robot name="scene" xmlns:xacro="http://www.ros.org/wiki/xacro">
+	
+  <!-- Empty moveit_msgs/PlanningScene -->
+  <link name="dummy" />
+
+</robot>

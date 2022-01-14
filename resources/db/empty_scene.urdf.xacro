@@ -1,5 +1,0 @@
-<?xml version="1.0" ?>
-<robot name="scene" xmlns:xacro="http://www.ros.org/wiki/xacro">
-<!-- Empty Scene -->
-<link name="dummy" />
-</robot>
