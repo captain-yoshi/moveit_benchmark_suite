@@ -1,0 +1,46 @@
+# above box1 to above box16 with joint constraint goal and orientation path constraint
+group_name: panda_arm_hand
+
+start_state:
+  joint_state:
+    header:
+      frame_id: panda_link0
+    name: [panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7, panda_finger_joint1, panda_finger_joint2]
+    position: [-0.366519, 0.401426, -0.0872665, -2.3911, 0.10472, 2.79253, -1.3439, 0.015, 0.015]
+
+goal_constraints:
+  - joint_constraints:
+    - joint_name: panda_joint1
+      position: 0.354647
+    - joint_name: panda_joint2
+      position: 0.29075
+    - joint_name: panda_joint3
+      position: 0.104866
+    - joint_name: panda_joint4
+      position: -2.38177
+    - joint_name: panda_joint5
+      position: -0.0661164
+    - joint_name: panda_joint6
+      position: 2.67012
+    - joint_name: panda_joint7
+      position: 2.86986
+    - joint_name: panda_finger_joint1
+      position: 0.012708
+    - joint_name: panda_finger_joint2
+      position: 0.012708
+
+path_constraints:
+  orientation_constraints:
+    - header:
+        frame_id: panda_link0
+      link_name: panda_link8
+      absolute_x_axis_tolerance: 0.1
+      absolute_y_axis_tolerance: 0.1
+      absolute_z_axis_tolerance: 6.2831853
+      orientation:
+        w: 0.0000463
+        x: 0
+        y: 1
+        z: 0
+      parameterization: 0
+      weight: 1

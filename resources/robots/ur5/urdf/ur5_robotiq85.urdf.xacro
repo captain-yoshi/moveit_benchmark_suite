@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro"
+       name="ur5_robotiq85" >
+
+  <!-- common stuff -->
+  <xacro:include filename="$(find robowflex_resources)/ur/robots/common.gazebo.xacro" />
+
+  <!-- ur5 -->
+  <xacro:include filename="$(find robowflex_resources)/ur/robots/ur5.urdf.xacro" />
+
+  <!-- arm -->
+  <xacro:ur5_robot prefix=""/>
+
+  <link name="world" />
+
+ <!-- attach the robot to the world -->
+ <joint name="world_joint" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin xyz="0.5 0.0 0.9184" rpy="0 0 1.57" />
+ </joint>
+
+ <!-- Force Torque Sensor -->
+ <xacro:include filename="$(find robowflex_resources)/robotiq/force_torque_sensor/urdf/robotiq_fts300.urdf.xacro" />
+
+ <xacro:robotiq_fts300 prefix="" parent="ee_link" >
+   <origin xyz="0.035 0 0.0" rpy="0.0 0 -1.57"/>
+ </xacro:robotiq_fts300>
+
+ <!-- GRIPPER -->
+ <!-- Import robotiq gazebo and gripper description -->
+ <xacro:include filename="$(find robowflex_resources)/robotiq/85_gripper/urdf/robotiq_85_gripper.urdf.xacro" />
+
+ <xacro:robotiq_85_gripper prefix="" parent="fts_toolside" >
+   <origin xyz="0.0 0.0 -0.037" rpy="0.0 0.0 1.57"/>
+ </xacro:robotiq_85_gripper>
+
+
+</robot>
