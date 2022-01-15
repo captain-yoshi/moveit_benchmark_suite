@@ -86,7 +86,7 @@
     <link name="${prefix}base_link" >
       <visual>
         <geometry>
-          <mesh filename="package://robowflex_resources/ur/meshes/ur5/visual/base.dae" />
+          <mesh filename="package://moveit_benchmark_suite_resources/robots/ur5/meshes/ur5/visual/base.dae" />
         </geometry>
         <material name="LightGrey">
           <color rgba="0.7 0.7 0.7 1.0"/>
@@ -94,7 +94,7 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://robowflex_resources/ur/meshes/ur5/collision/base.stl" />
+          <mesh filename="package://moveit_benchmark_suite_resources/robots/ur5/meshes/ur5/collision/base.stl" />
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="0.06" length="0.05" mass="${base_mass}">
@@ -119,7 +119,7 @@
     <link name="${prefix}shoulder_link">
       <visual>
         <geometry>
-          <mesh filename="package://robowflex_resources/ur/meshes/ur5/visual/shoulder.dae" />
+          <mesh filename="package://moveit_benchmark_suite_resources/robots/ur5/meshes/ur5/visual/shoulder.dae" />
         </geometry>
         <material name="LightGrey">
           <color rgba="0.7 0.7 0.7 1.0"/>
@@ -127,7 +127,7 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://robowflex_resources/ur/meshes/ur5/collision/shoulder.stl" />
+          <mesh filename="package://moveit_benchmark_suite_resources/robots/ur5/meshes/ur5/collision/shoulder.stl" />
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="0.06" length="0.15" mass="${shoulder_mass}">
@@ -153,7 +153,7 @@
     <link name="${prefix}upper_arm_link">
       <visual>
         <geometry>
-          <mesh filename="package://robowflex_resources/ur/meshes/ur5/visual/upperarm.dae" />
+          <mesh filename="package://moveit_benchmark_suite_resources/robots/ur5/meshes/ur5/visual/upperarm.dae" />
         </geometry>
         <material name="LightGrey">
           <color rgba="0.7 0.7 0.7 1.0"/>
@@ -161,7 +161,7 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://robowflex_resources/ur/meshes/ur5/collision/upperarm.stl" />
+          <mesh filename="package://moveit_benchmark_suite_resources/robots/ur5/meshes/ur5/collision/upperarm.stl" />
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="0.06" length="0.56" mass="${upper_arm_mass}">
@@ -186,7 +186,7 @@
     <link name="${prefix}forearm_link">
       <visual>
         <geometry>
-          <mesh filename="package://robowflex_resources/ur/meshes/ur5/visual/forearm.dae" />
+          <mesh filename="package://moveit_benchmark_suite_resources/robots/ur5/meshes/ur5/visual/forearm.dae" />
         </geometry>
         <material name="LightGrey">
           <color rgba="0.7 0.7 0.7 1.0"/>
@@ -194,7 +194,7 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://robowflex_resources/ur/meshes/ur5/collision/forearm.stl" />
+          <mesh filename="package://moveit_benchmark_suite_resources/robots/ur5/meshes/ur5/collision/forearm.stl" />
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="0.06" length="0.5" mass="${forearm_mass}">
@@ -219,7 +219,7 @@
     <link name="${prefix}wrist_1_link">
       <visual>
         <geometry>
-          <mesh filename="package://robowflex_resources/ur/meshes/ur5/visual/wrist1.dae" />
+          <mesh filename="package://moveit_benchmark_suite_resources/robots/ur5/meshes/ur5/visual/wrist1.dae" />
         </geometry>
         <material name="LightGrey">
           <color rgba="0.7 0.7 0.7 1.0"/>
@@ -227,7 +227,7 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://robowflex_resources/ur/meshes/ur5/collision/wrist1.stl" />
+          <mesh filename="package://moveit_benchmark_suite_resources/robots/ur5/meshes/ur5/collision/wrist1.stl" />
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="0.6" length="0.12" mass="${wrist_1_mass}">
@@ -252,7 +252,7 @@
     <link name="${prefix}wrist_2_link">
       <visual>
         <geometry>
-          <mesh filename="package://robowflex_resources/ur/meshes/ur5/visual/wrist2.dae" />
+          <mesh filename="package://moveit_benchmark_suite_resources/robots/ur5/meshes/ur5/visual/wrist2.dae" />
         </geometry>
         <material name="LightGrey">
           <color rgba="0.7 0.7 0.7 1.0"/>
@@ -260,7 +260,7 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://robowflex_resources/ur/meshes/ur5/collision/wrist2.stl" />
+          <mesh filename="package://moveit_benchmark_suite_resources/robots/ur5/meshes/ur5/collision/wrist2.stl" />
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="0.6" length="0.12" mass="${wrist_2_mass}">
@@ -285,7 +285,7 @@
     <link name="${prefix}wrist_3_link">
       <visual>
         <geometry>
-          <mesh filename="package://robowflex_resources/ur/meshes/ur5/visual/wrist3.dae" />
+          <mesh filename="package://moveit_benchmark_suite_resources/robots/ur5/meshes/ur5/visual/wrist3.dae" />
         </geometry>
         <material name="LightGrey">
           <color rgba="0.7 0.7 0.7 1.0"/>
@@ -293,7 +293,7 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://robowflex_resources/ur/meshes/ur5/collision/wrist3.stl" />
+          <mesh filename="package://moveit_benchmark_suite_resources/robots/ur5/meshes/ur5/collision/wrist3.stl" />
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="0.6" length="0.12" mass="${wrist_3_mass}">

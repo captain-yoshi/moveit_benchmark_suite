@@ -2,7 +2,7 @@
 
 <robot
   name="robotiq_85_gripper"  xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:include filename="$(find robowflex_resources)/robotiq/85_gripper/urdf/robotiq_85_gripper.transmission.xacro" />
+  <xacro:include filename="$(find moveit_benchmark_suite_resources/robots)/robotiq/85_gripper/urdf/robotiq_85_gripper.transmission.xacro" />
 	<xacro:property name="pi" value="3.14159"/>
   
   <xacro:macro name="robotiq_85_gripper" params="prefix parent *origin">
@@ -35,7 +35,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robowflex_resources/robotiq/85_gripper/meshes/arg/robotiq_85_base_link_fine.STL" />
+          filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/arg/robotiq_85_base_link_fine.STL" />
       </geometry>
       <material
         name="">
@@ -49,7 +49,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robowflex_resources/robotiq/85_gripper/meshes/arg/robotiq_85_base_link_coarse.STL" />
+          filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/arg/robotiq_85_base_link_coarse.STL" />
       </geometry>
     </collision>
   </link>
@@ -95,7 +95,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robowflex_resources/robotiq/85_gripper/meshes/arg/outer_knuckle_fine.STL" />
+          filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/arg/outer_knuckle_fine.STL" />
       </geometry>
       <material
         name="">
@@ -109,7 +109,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robowflex_resources/robotiq/85_gripper/meshes/arg/outer_knuckle_coarse.STL" />
+          filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/arg/outer_knuckle_coarse.STL" />
       </geometry>
     </collision>
   </link>
@@ -159,7 +159,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robowflex_resources/robotiq/85_gripper/meshes/arg/outer_finger_fine.STL" />
+          filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/arg/outer_finger_fine.STL" />
       </geometry>
       <material
         name="">
@@ -173,7 +173,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robowflex_resources/robotiq/85_gripper/meshes/arg/outer_finger_coarse.STL" />
+          filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/arg/outer_finger_coarse.STL" />
       </geometry>
     </collision>
   </link>
@@ -223,7 +223,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robowflex_resources/robotiq/85_gripper/meshes/arg/inner_knuckle_fine.STL" />
+          filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/arg/inner_knuckle_fine.STL" />
       </geometry>
       <material
         name="">
@@ -237,7 +237,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robowflex_resources/robotiq/85_gripper/meshes/arg/inner_knuckle_coarse.STL" />
+          filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/arg/inner_knuckle_coarse.STL" />
       </geometry>
     </collision>
   </link>
@@ -287,7 +287,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robowflex_resources/robotiq/85_gripper/meshes/arg/inner_finger_fine.STL" />
+          filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/arg/inner_finger_fine.STL" />
       </geometry>
       <material
         name="">
@@ -301,7 +301,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robowflex_resources/robotiq/85_gripper/meshes/arg/inner_finger_coarse.STL" />
+          filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/arg/inner_finger_coarse.STL" />
       </geometry>
     </collision>
   </link>
@@ -350,7 +350,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robowflex_resources/robotiq/85_gripper/meshes/arg/inner_knuckle_fine.STL" />
+          filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/arg/inner_knuckle_fine.STL" />
       </geometry>
       <material
         name="">
@@ -364,7 +364,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robowflex_resources/robotiq/85_gripper/meshes/arg/inner_knuckle_coarse.STL" />
+          filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/arg/inner_knuckle_coarse.STL" />
       </geometry>
     </collision>
   </link>
@@ -414,7 +414,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robowflex_resources/robotiq/85_gripper/meshes/arg/inner_finger_fine.STL" />
+          filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/arg/inner_finger_fine.STL" />
       </geometry>
       <material
         name="">
@@ -428,7 +428,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robowflex_resources/robotiq/85_gripper/meshes/arg/inner_finger_coarse.STL" />
+          filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/arg/inner_finger_coarse.STL" />
       </geometry>
     </collision>
   </link>
@@ -478,7 +478,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robowflex_resources/robotiq/85_gripper/meshes/arg/outer_knuckle_fine.STL" />
+          filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/arg/outer_knuckle_fine.STL" />
       </geometry>
       <material
         name="">
@@ -492,7 +492,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robowflex_resources/robotiq/85_gripper/meshes/arg/outer_knuckle_coarse.STL" />
+          filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/arg/outer_knuckle_coarse.STL" />
       </geometry>
     </collision>
   </link>
@@ -533,7 +533,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robowflex_resources/robotiq/85_gripper/meshes/arg/outer_finger_fine.STL" />
+          filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/arg/outer_finger_fine.STL" />
       </geometry>
       <material
         name="">
@@ -547,7 +547,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robowflex_resources/robotiq/85_gripper/meshes/arg/outer_finger_coarse.STL" />
+          filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/arg/outer_finger_coarse.STL" />
       </geometry>
     </collision>
   </link>

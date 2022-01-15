@@ -2,7 +2,7 @@
 
 
 <robot name="robotiq_85_gripper" xmlns:xacro="http://ros.org/wiki/xacro">
-	<xacro:include filename="$(find robowflex_resources)/robotiq/85_gripper/urdf/robotiq_85_gripper.transmission.xacro" />
+	<xacro:include filename="$(find moveit_benchmark_suite_resources/robots)/robotiq/85_gripper/urdf/robotiq_85_gripper.transmission.xacro" />
 	<xacro:property name="pi" value="3.14159"/>
 
 	<xacro:macro name="mimic_joint_plugin_gazebo" params="name_prefix parent_joint mimic_joint has_pid:=false multiplier:=1.0 offset:=0 sensitiveness:=0.0 max_effort:=1.0 robot_namespace:=''">
@@ -35,12 +35,12 @@
 		<link name="${prefix}robotiq_85_base_link">
 			<visual>
 				<geometry>
-					<mesh filename="package://robowflex_resources/robotiq/85_gripper/meshes/visual/robotiq_85_base_link.dae"/>
+					<mesh filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/visual/robotiq_85_base_link.dae"/>
 				</geometry>
 			</visual>
 			<collision>
 				<geometry>
-					<mesh filename="package://robowflex_resources/robotiq/85_gripper/meshes/collision/robotiq_85_base_link.stl"/>
+					<mesh filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/collision/robotiq_85_base_link.stl"/>
 				</geometry>
 			</collision>
 			<inertial>
@@ -99,12 +99,12 @@
 		<link name="${prefix}robotiq_85_left_knuckle_link">
 			<visual>
 				<geometry>
-					<mesh filename="package://robowflex_resources/robotiq/85_gripper/meshes/visual/robotiq_85_knuckle_link.dae"/>
+					<mesh filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/visual/robotiq_85_knuckle_link.dae"/>
 				</geometry>
 			</visual>
 			<collision>
 				<geometry>
-					<mesh filename="package://robowflex_resources/robotiq/85_gripper/meshes/collision/robotiq_85_knuckle_link.stl"/>
+					<mesh filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/collision/robotiq_85_knuckle_link.stl"/>
 				</geometry>
 			</collision>
 			<inertial>
@@ -119,12 +119,12 @@
 		<link name="${prefix}robotiq_85_right_knuckle_link">
 			<visual>
 				<geometry>
-					<mesh filename="package://robowflex_resources/robotiq/85_gripper/meshes/visual/robotiq_85_knuckle_link.dae"/>
+					<mesh filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/visual/robotiq_85_knuckle_link.dae"/>
 				</geometry>
 			</visual>
 			<collision>
 				<geometry>
-					<mesh filename="package://robowflex_resources/robotiq/85_gripper/meshes/collision/robotiq_85_knuckle_link.stl"/>
+					<mesh filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/collision/robotiq_85_knuckle_link.stl"/>
 				</geometry>
 			</collision>
 			<inertial>
@@ -153,12 +153,12 @@
 		<link name="${prefix}robotiq_85_left_finger_link">
 			<visual>
 				<geometry>
-					<mesh filename="package://robowflex_resources/robotiq/85_gripper/meshes/visual/robotiq_85_finger_link.dae"/>
+					<mesh filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/visual/robotiq_85_finger_link.dae"/>
 				</geometry>
 			</visual>
 			<collision>
 				<geometry>
-					<mesh filename="package://robowflex_resources/robotiq/85_gripper/meshes/collision/robotiq_85_finger_link.stl"/>
+					<mesh filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/collision/robotiq_85_finger_link.stl"/>
 				</geometry>
 			</collision>
 			<inertial>
@@ -174,12 +174,12 @@
 		<link name="${prefix}robotiq_85_right_finger_link">
 			<visual>
 				<geometry>
-					<mesh filename="package://robowflex_resources/robotiq/85_gripper/meshes/visual/robotiq_85_finger_link.dae"/>
+					<mesh filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/visual/robotiq_85_finger_link.dae"/>
 				</geometry>
 			</visual>
 			<collision>
 				<geometry>
-					<mesh filename="package://robowflex_resources/robotiq/85_gripper/meshes/collision/robotiq_85_finger_link.stl"/>
+					<mesh filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/collision/robotiq_85_finger_link.stl"/>
 				</geometry>
 			</collision>
 			<inertial>
@@ -221,12 +221,12 @@
 		<link name="${prefix}robotiq_85_left_inner_knuckle_link">
 			<visual>
 				<geometry>
-					<mesh filename="package://robowflex_resources/robotiq/85_gripper/meshes/visual/robotiq_85_inner_knuckle_link.dae"/>
+					<mesh filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/visual/robotiq_85_inner_knuckle_link.dae"/>
 				</geometry>
 			</visual>
 			<collision>
 				<geometry>
-					<mesh filename="package://robowflex_resources/robotiq/85_gripper/meshes/collision/robotiq_85_inner_knuckle_link.stl"/>
+					<mesh filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/collision/robotiq_85_inner_knuckle_link.stl"/>
 				</geometry>
 			</collision>
 			<inertial>
@@ -240,12 +240,12 @@
 		<link name="${prefix}robotiq_85_right_inner_knuckle_link">
 			<visual>
 				<geometry>
-					<mesh filename="package://robowflex_resources/robotiq/85_gripper/meshes/visual/robotiq_85_inner_knuckle_link.dae"/>
+					<mesh filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/visual/robotiq_85_inner_knuckle_link.dae"/>
 				</geometry>
 			</visual>
 			<collision>
 				<geometry>
-					<mesh filename="package://robowflex_resources/robotiq/85_gripper/meshes/collision/robotiq_85_inner_knuckle_link.stl"/>
+					<mesh filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/collision/robotiq_85_inner_knuckle_link.stl"/>
 				</geometry>
 			</collision>
 			<inertial>
@@ -286,12 +286,12 @@
 		<link name="${prefix}robotiq_85_left_finger_tip_link">
 			<visual>
 				<geometry>
-					<mesh filename="package://robowflex_resources/robotiq/85_gripper/meshes/visual/robotiq_85_finger_tip_link.dae"/>
+					<mesh filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/visual/robotiq_85_finger_tip_link.dae"/>
 				</geometry>
 			</visual>
 			<collision>
 				<geometry>
-					<mesh filename="package://robowflex_resources/robotiq/85_gripper/meshes/collision/robotiq_85_finger_tip_link.stl"/>
+					<mesh filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/collision/robotiq_85_finger_tip_link.stl"/>
 				</geometry>
 			</collision>
 			<inertial>
@@ -315,12 +315,12 @@
 		<link name="${prefix}robotiq_85_right_finger_tip_link">
 			<visual>
 				<geometry>
-					<mesh filename="package://robowflex_resources/robotiq/85_gripper/meshes/visual/robotiq_85_finger_tip_link.dae"/>
+					<mesh filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/visual/robotiq_85_finger_tip_link.dae"/>
 				</geometry>
 			</visual>
 			<collision>
 				<geometry>
-					<mesh filename="package://robowflex_resources/robotiq/85_gripper/meshes/collision/robotiq_85_finger_tip_link.stl"/>
+					<mesh filename="package://moveit_benchmark_suite_resources/robots/robotiq/85_gripper/meshes/collision/robotiq_85_finger_tip_link.stl"/>
 				</geometry>
 			</collision>
 			<inertial>
