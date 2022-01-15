@@ -47,7 +47,7 @@ RVIZHelper::RVIZHelper(const std::string& name) : nh_("/" + name)
   scene_pub_ = nh_.advertise<moveit_msgs::PlanningScene>("monitored_planning_scene", 1);
   marker_pub_ = nh_.advertise<visualization_msgs::MarkerArray>("/visualization_marker_array", 100);
 
-  std::string full_path = IO::resolvePath("package://moveit_benchmark_suite_resources/launch/moveit.rviz");
+  std::string full_path = IO::resolvePath("package://moveit_benchmark_suite/config/rviz/moveit.rviz");
   srv_msg_.request.path.data = full_path;
 }
 

@@ -7,7 +7,7 @@
   <arg name="visualize" default="" doc="turns on and off visualization with rviz (bool type)"/>
 
 
-  <include file="$(find moveit_benchmark_suite_resources)/launch/moveit_rviz.launch" if="$(eval bool(visualize) == 1)">
+  <include file="$(find moveit_benchmark_suite)/launch/moveit_rviz.launch" if="$(eval bool(visualize) == 1)">
     <!--<arg name="debug" value="$(arg debug)"/>-->
   </include>
 
