@@ -21,6 +21,34 @@ using namespace moveit_benchmark_suite;
 
 namespace
 {
+// WARNING do not convert to/from u/int8_t (Explanation below)
+//
+// Many ROS msgs uses the primitive type uint8 which translate to uint8_t in c++. The
+// yaml-cpp library converts them to un/signed char which.
+//
+// Solution: Encode/Decode as u/int16_t.
+// See https://github.com/jbeder/yaml-cpp/issues/1081
+// See https://www.boost.org/doc/libs/1_40_0/libs/conversion/lexical_cast.htm#faq
+static void encodeToUINT8(YAML::Node& node, const std::string& key, const uint8_t& data)
+{
+  node[key] = static_cast<uint16_t>(data);
+}
+
+static void encodeToINT8_T(YAML::Node& node, const std::string& key, const int8_t& data)
+{
+  node[key] = static_cast<int16_t>(data);
+}
+
+static void decodeToUINT8(const YAML::Node& node, const std::string& key, uint8_t& data)
+{
+  data = node[key].as<uint16_t>();
+}
+
+static void decodeToINT8(const YAML::Node& node, const std::string& key, int8_t& data)
+{
+  data = node[key].as<int16_t>();
+}
+
 static std::string boolToString(bool b)
 {
   return b ? "true" : "false";
@@ -79,45 +107,6 @@ static unsigned int nodeToCollisionObject(const YAML::Node& n)
         return moveit_msgs::CollisionObject::ADD;
     }
   }
-}
-
-static std::string primitiveTypeToString(const shape_msgs::SolidPrimitive& shape)
-{
-  switch (shape.type)
-  {
-    case shape_msgs::SolidPrimitive::BOX:
-      return "box";
-      break;
-    case shape_msgs::SolidPrimitive::SPHERE:
-      return "sphere";
-      break;
-    case shape_msgs::SolidPrimitive::CYLINDER:
-      return "cylinder";
-      break;
-    case shape_msgs::SolidPrimitive::CONE:
-      return "cone";
-      break;
-    default:
-      return "invalid";
-      break;
-  }
-}
-
-static void nodeToPrimitiveType(const YAML::Node& n, shape_msgs::SolidPrimitive& shape)
-{
-  std::string s = n.as<std::string>();
-  std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-
-  if (s == "sphere")
-    shape.type = shape_msgs::SolidPrimitive::SPHERE;
-  else if (s == "cylinder")
-    shape.type = shape_msgs::SolidPrimitive::CYLINDER;
-  else if (s == "cone")
-    shape.type = shape_msgs::SolidPrimitive::CONE;
-  else if (s == "box")
-    shape.type = shape_msgs::SolidPrimitive::BOX;
-  else
-    shape.type = n.as<int>();
 }
 
 static bool isVector3Zero(const geometry_msgs::Vector3& v)
@@ -1173,7 +1162,7 @@ bool convert<ros::Duration>::decode(const Node& node, ros::Duration& rhs)
 Node convert<shape_msgs::SolidPrimitive>::encode(const shape_msgs::SolidPrimitive& rhs)
 {
   Node node;
-  node["type"] = primitiveTypeToString(rhs);
+  encodeToUINT8(node, "type", rhs.type);
   node["dimensions"] = rhs.dimensions;
   ROBOWFLEX_YAML_FLOW(node["dimensions"]);
   return node;
@@ -1183,7 +1172,7 @@ bool convert<shape_msgs::SolidPrimitive>::decode(const Node& node, shape_msgs::S
 {
   rhs = shape_msgs::SolidPrimitive();
   if (IO::isNode(node["type"]))
-    nodeToPrimitiveType(node["type"], rhs);
+    decodeToUINT8(node, "type", rhs.type);
 
   if (IO::isNode(node["dimensions"]))
     rhs.dimensions = node["dimensions"].as<std::vector<double>>();
@@ -1431,6 +1420,8 @@ Node convert<moveit_msgs::OrientationConstraint>::encode(const moveit_msgs::Orie
   node["absolute_y_axis_tolerance"] = rhs.absolute_y_axis_tolerance;
   node["absolute_z_axis_tolerance"] = rhs.absolute_z_axis_tolerance;
 
+  encodeToUINT8(node, "parameterization", rhs.parameterization);
+
   if (rhs.weight < 1)
     node["weight"] = rhs.weight;
 
@@ -1450,6 +1441,11 @@ bool convert<moveit_msgs::OrientationConstraint>::decode(const Node& node, movei
   rhs.absolute_x_axis_tolerance = node["absolute_x_axis_tolerance"].as<double>();
   rhs.absolute_y_axis_tolerance = node["absolute_y_axis_tolerance"].as<double>();
   rhs.absolute_z_axis_tolerance = node["absolute_z_axis_tolerance"].as<double>();
+
+  if (IO::isNode(node["parameterization"]))
+    decodeToUINT8(node, "parameterization", rhs.parameterization);
+  else
+    rhs.parameterization = rhs.XYZ_EULER_ANGLES;
 
   if (IO::isNode(node["weight"]))
     rhs.weight = node["weight"].as<double>();
