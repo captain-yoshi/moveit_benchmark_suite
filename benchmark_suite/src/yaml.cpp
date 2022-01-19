@@ -19,6 +19,154 @@
 
 using namespace moveit_benchmark_suite;
 
+void yaml::merge_node(YAML::Node target, YAML::Node const& source)
+{
+  switch (source.Type())
+  {
+    case YAML::NodeType::Scalar:
+      target = source.Scalar();
+      break;
+    case YAML::NodeType::Map:
+      merge_map(target, source);
+      break;
+    case YAML::NodeType::Sequence:
+      merge_sequences(target, source);
+      break;
+    case YAML::NodeType::Null:
+      throw std::runtime_error("merge_node: Null source nodes not supported");
+    case YAML::NodeType::Undefined:
+      throw std::runtime_error("merge_node: Undefined source nodes not supported");
+  }
+}
+
+void yaml::merge_map(YAML::Node target, YAML::Node const& source)
+{
+  for (auto const& j : source)
+  {
+    merge_node(target[j.first.Scalar()], j.second);
+  }
+}
+
+void yaml::merge_sequences(YAML::Node target, YAML::Node const& source)
+{
+  for (std::size_t i = 0; i != source.size(); ++i)
+  {
+    if (i < target.size())
+    {
+      merge_node(target[i], source[i]);
+    }
+    else
+    {
+      target.push_back(YAML::Clone(source[i]));
+    }
+  }
+}
+
+void yaml::merge(class_overrides& by_class, YAML::Node node)
+{
+  // Only Map nodes can override by-class values ...
+  if (not node.IsMap())
+  {
+    return;
+  }
+  // ... iterate over the node, searching for nodes with a key starting
+  // with ':' ...
+  for (auto i : node)
+  {
+    // ... the node is a map, there should be keys for all sub nodes ...
+    // std::runtime_error(i.first.as<std::string>("error on key"));
+    // ... found a key, check the format ...
+    std::string key = i.first.as<std::string>();
+    if (key[0] != ':')
+    {
+      continue;
+    }
+    // ... try to insert into the map ...
+    auto ins = by_class.emplace(key, i.second);
+    if (ins.second == true)
+    {
+      // ... good insert, nothing left to do ...
+      continue;
+    }
+    // ... okay there was a node for the class in the map already,
+    // need to merge the values ...
+    merge_node(ins.first->second, i.second);
+  }
+}
+
+class_overrides yaml::clone(class_overrides const& by_class)
+{
+  class_overrides tmp;
+  for (auto const& i : by_class)
+  {
+    tmp.emplace(i.first, YAML::Clone(i.second));
+  }
+  return tmp;
+}
+
+template <class... Args>
+bool yaml::scalar_compare(const YAML::Node& source, const YAML::Node& target)
+{
+  return helper_compare<Args...>(source, target);
+}
+template <>
+bool yaml::scalar_compare<>(const YAML::Node&, const YAML::Node&)
+{
+  return true;
+}
+
+bool yaml::isSubset(const YAML::Node& source, const YAML::Node& target)
+{
+  // Validation
+  // TODO validate Tag ? Not supported in yaml-cpp ...
+  if (source.Type() != target.Type())
+    return false;
+
+  switch (source.Type())
+  {
+    case YAML::NodeType::Scalar:
+      return scalar_compare<bool, int, double, std::string>(source, target);
+    case YAML::NodeType::Null:
+      return true;
+    case YAML::NodeType::Undefined:
+      return false;
+    case YAML::NodeType::Map:
+    case YAML::NodeType::Sequence:
+      if (source.size() > target.size())
+        return false;
+  }
+
+  // Loop through map
+  if (source.IsMap())
+  {
+    bool result = true;
+    for (YAML::const_iterator it1 = source.begin(), it2; it1 != source.end() && result == true; ++it1)
+    {
+      const auto& key = it1->first.as<std::string>();
+
+      if (target[key])
+        result = isSubset(it1->second, target[key]);
+      else
+        return false;
+    }
+    return result;
+  }
+
+  // Loop through sequence
+  if (source.IsSequence())
+  {
+    bool result = true;
+    for (YAML::const_iterator it1 = source.begin(), it2 = target.begin(); it1 != source.end() && result == true;
+         ++it1, ++it2)
+    {
+      result = isSubset(*it1, *it2);
+    }
+    return result;
+  }
+
+  return true;
+}
+
 namespace
 {
 // WARNING do not convert to/from u/int8_t (Explanation below)
@@ -409,11 +557,14 @@ bool convert<geometry_msgs::Transform>::decode(const Node& node, geometry_msgs::
 Node convert<geometry_msgs::Point>::encode(const geometry_msgs::Point& rhs)
 {
   Node node;
-  ROBOWFLEX_YAML_FLOW(node);
+  // ROBOWFLEX_YAML_FLOW(node);
 
-  node.push_back(rhs.x);
-  node.push_back(rhs.y);
-  node.push_back(rhs.z);
+  node["x"] = rhs.x;
+  node["y"] = rhs.y;
+  node["z"] = rhs.z;
+  // node.push_back(rhs.x);
+  // node.push_back(rhs.y);
+  // node.push_back(rhs.z);
   return node;
 }
 
@@ -439,11 +590,14 @@ bool convert<geometry_msgs::Point>::decode(const Node& node, geometry_msgs::Poin
 Node convert<geometry_msgs::Vector3>::encode(const geometry_msgs::Vector3& rhs)
 {
   Node node;
-  ROBOWFLEX_YAML_FLOW(node);
+  // ROBOWFLEX_YAML_FLOW(node);
+  node["x"] = rhs.x;
+  node["y"] = rhs.y;
+  node["z"] = rhs.z;
 
-  node.push_back(rhs.x);
-  node.push_back(rhs.y);
-  node.push_back(rhs.z);
+  // node.push_back(rhs.x);
+  // node.push_back(rhs.y);
+  // node.push_back(rhs.z);
   return node;
 }
 
@@ -470,12 +624,16 @@ bool convert<geometry_msgs::Vector3>::decode(const Node& node, geometry_msgs::Ve
 Node convert<geometry_msgs::Quaternion>::encode(const geometry_msgs::Quaternion& rhs)
 {
   Node node;
-  ROBOWFLEX_YAML_FLOW(node);
+  // ROBOWFLEX_YAML_FLOW(node);
+  node["x"] = rhs.x;
+  node["y"] = rhs.y;
+  node["z"] = rhs.z;
+  node["w"] = rhs.w;
 
-  node.push_back(rhs.x);
-  node.push_back(rhs.y);
-  node.push_back(rhs.z);
-  node.push_back(rhs.w);
+  // node.push_back(rhs.x);
+  // node.push_back(rhs.y);
+  // node.push_back(rhs.z);
+  // node.push_back(rhs.w);
   return node;
 }
 
@@ -773,6 +931,8 @@ Node convert<moveit_msgs::CollisionObject>::encode(const moveit_msgs::CollisionO
   if (!rhs.type.key.empty())
     node["type"] = rhs.type;
 
+  node["pose"] = rhs.pose;
+
   if (!rhs.primitives.empty())
   {
     node["primitives"] = rhs.primitives;
@@ -825,6 +985,9 @@ bool convert<moveit_msgs::CollisionObject>::decode(const Node& node, moveit_msgs
 
   if (IO::isNode(node["type"]))
     rhs.type = node["type"].as<object_recognition_msgs::ObjectType>();
+
+  if (IO::isNode(node["pose"]))
+    rhs.pose = node["pose"].as<geometry_msgs::Pose>();
 
   if (IO::isNode(node["primitives"]))
   {
@@ -1335,8 +1498,8 @@ Node convert<moveit_msgs::JointConstraint>::encode(const moveit_msgs::JointConst
   if (rhs.tolerance_below > std::numeric_limits<double>::epsilon())
     node["tolerance_below"] = rhs.tolerance_below;
 
-  if (rhs.weight < 1)
-    node["weight"] = rhs.weight;
+  // if (rhs.weight < 1)
+  node["weight"] = rhs.weight;
 
   return node;
 }
@@ -1372,13 +1535,13 @@ Node convert<moveit_msgs::PositionConstraint>::encode(const moveit_msgs::Positio
 
   node["link_name"] = rhs.link_name;
 
-  if (!isVector3Zero(rhs.target_point_offset))
-    node["target_point_offset"] = rhs.target_point_offset;
+  // if (!isVector3Zero(rhs.target_point_offset))
+  node["target_point_offset"] = rhs.target_point_offset;
 
   node["constraint_region"] = rhs.constraint_region;
 
-  if (rhs.weight < 1)
-    node["weight"] = rhs.weight;
+  // if (rhs.weight < 1)
+  node["weight"] = rhs.weight;
 
   return node;
 }
@@ -1422,8 +1585,8 @@ Node convert<moveit_msgs::OrientationConstraint>::encode(const moveit_msgs::Orie
 
   encodeToUINT8(node, "parameterization", rhs.parameterization);
 
-  if (rhs.weight < 1)
-    node["weight"] = rhs.weight;
+  // if (rhs.weight < 1)
+  node["weight"] = rhs.weight;
 
   return node;
 }

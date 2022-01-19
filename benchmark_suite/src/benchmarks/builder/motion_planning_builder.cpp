@@ -40,8 +40,10 @@
 #include <moveit_benchmark_suite/scene.h>
 #include <moveit_benchmark_suite/yaml.h>
 #include <moveit_benchmark_suite/benchmarks/builder/motion_planning_builder.h>
-
-#include <urdf_to_scene/scene_parser.h>
+#include <moveit_benchmark_suite/builder.h>
+#include <moveit_benchmark_suite/benchmarks/profiler/motion_planning_profiler.h>
+#include <moveit_benchmark_suite/builder.h>
+#include <moveit/robot_state/conversions.h>
 
 using namespace moveit_benchmark_suite;
 
@@ -49,197 +51,130 @@ using namespace moveit_benchmark_suite;
 /// MotionPlanningBuilder
 ///
 
-void MotionPlanningBuilder::buildQueries()
+void MotionPlanningBuilder::buildPlanningPipelineQueries(const std::string& filename)
 {
-  // Read config
-  mp_config_.setNamespace(ros::this_node::getName());
-
-  // Build each components of a query
-  buildRobot();
-  buildScenes();
-  buildRequests();
-  buildPlanners();
-
-  // Build queries
-  const auto& planning_pipelines = mp_config_.getPlanningPipelineConfigurations();
-
-  for (const auto& scene : scenes_)
-  {
-    for (auto& request : requests_)
-    {
-      for (const auto& pipeline : pipelines_)
-      {
-        request.second.pipeline_id = pipeline->getName();
-        request.second.allowed_planning_time = mp_config_.getTimeout();
-
-        const auto& it = planning_pipelines.find(request.second.pipeline_id);
-        if (it != planning_pipelines.end())
-        {
-          for (const auto& planner : it->second)
-          {
-            query_setup_.addQuery("planner", planner, "");
-
-            request.second.planner_id = planner;
-            std::string query_name = planner + "\\n" + scene->getName() + "\\n" +
-                                     scene->getActiveCollisionDetectorName() + "\\n" + pipeline->getName() + "\\n" +
-                                     request.first;
-
-            QueryGroupName query_gn = { { "scene", scene->getName() },
-                                        { "pipeline", pipeline->getName() },
-                                        { "planner", planner },
-                                        { "collision_detector", scene->getActiveCollisionDetectorName() },
-                                        { "request", request.first } };
-
-            appendQuery(query_name, query_gn, scene, pipeline, request.second);
-          }
-        }
-        else
-          ROS_ERROR("Cannot find pipeline id in configuration: %s", request.second.pipeline_id.c_str());
-      }
-    }
-  }
+  buildQueries(filename, "robot");
 }
 
-const MotionPlanningConfig& MotionPlanningBuilder::getConfig() const
+void MotionPlanningBuilder::buildMoveGroupInterfaceQueries(const std::string& filename)
 {
-  return mp_config_;
+  buildQueries(filename, "robot");
+}
+
+void MotionPlanningBuilder::buildQueries(const std::string& filename, const std::string& robot_key)
+
+{
+  YAML::Node node;
+  if (!IO::loadFileToYAML(filename, node, true))
+    return;
+
+  std::map<std::string, RobotPtr> robot_map;
+  std::map<std::string, ScenePtr> scene_map;
+  SceneBuilder scene_builder;
+
+  std::map<std::string, moveit_msgs::MotionPlanRequest> request_map;
+  std::map<std::string, PlanningPipelineEmitterPtr> pipeline_map;
+  std::vector<std::string> collision_detectors;
+
+  {
+    // Build robots
+    RobotBuilder builder;
+    builder.loadResources(node["profiler_config"][robot_key]);
+    builder.extendResources(node["extend_resource_config"][robot_key]);
+    robot_map = builder.generateResults();
+  }
+  {  // Build scenes
+    scene_builder.loadResources(node["profiler_config"]["scenes"]);
+    scene_builder.extendResources(node["extend_resource_config"]["scenes"]);
+    // Don't generate results yet because depends on Robot and Collision detector
+  }
+  {
+    // Build MotionPlanRequest
+    YAMLDeserializerBuilder<moveit_msgs::MotionPlanRequest> builder;
+    builder.loadResources(node["profiler_config"]["requests"]);
+    // Merge global request
+    builder.mergeResources(node["profiler_config"]["requests_override"]);
+    builder.extendResources(node["extend_resource_config"]["requests"]);
+    request_map = builder.generateResults();
+  }
+  {
+    // Build pipelines
+    PlanningPipelineEmitterBuilder builder;
+
+    builder.loadResources(node["profiler_config"]["planning_pipelines"]);
+    builder.extendResources(node["extend_resource_config"]["planning_pipelines"]);
+    pipeline_map = builder.generateResults();
+  }
+
+  {
+    // Build collision detectors
+    collision_detectors = node["profiler_config"]["collision_detectors"].as<std::vector<std::string>>();
+  }
+
+  // Loop through pair wise parameters
+  for (const auto& robot : robot_map)
+    for (const auto& detector : collision_detectors)
+    {
+      // Get scenes wrt. robot and collision detector
+      scene_map = scene_builder.generateResults(robot.second, detector);
+
+      for (auto& scene : scene_map)
+        for (const auto& request : request_map)
+          for (const auto& pipeline : pipeline_map)
+          {
+            // Check if a planner id was set
+            const auto& planners = pipeline.second->getPlanners();
+            if (planners.empty() && request.second.planner_id.empty())
+            {
+              ROS_WARN("Dropping query, empty 'planner_id'");
+              continue;
+            }
+
+            for (const auto& planner :
+                 (planners.empty() ? std::vector<std::string>({ request.second.planner_id }) : planners))
+            {
+              // Override request field 'planner_id'
+              auto req = request.second;
+              req.pipeline_id = pipeline.second->getPipelineId();
+              req.planner_id = planner;
+
+              // Load robot kinemativs wrt. JMG
+              if (!robot.second->getModelConst()->hasJointModelGroup(req.group_name))
+                continue;
+
+              // Dont care if failed because request does not necessalrely use kinematics
+              robot.second->loadKinematics(req.group_name, false);
+
+              // Fille query_setup
+              query_setup_.addQuery("robot", robot.first);
+              query_setup_.addQuery("collision_detector", detector);
+              query_setup_.addQuery("scene", scene.first);
+              query_setup_.addQuery("request", request.first);
+              query_setup_.addQuery("pipeline", pipeline.first);
+              query_setup_.addQuery("planner", planner);
+
+              // Fill QueryGroup
+              const std::string TAG = " + ";
+              std::string query_name = robot.first + TAG + detector + TAG + scene.first + TAG + request.first + TAG +
+                                       pipeline.first + TAG + planner;
+
+              QueryGroupName query_group = { { "robot", robot.first },       { "collision_detector", detector },
+                                             { "scene", scene.first },       { "request", request.first },
+                                             { "pipeline", pipeline.first }, { "planner", planner } };
+
+              auto query = std::make_shared<MotionPlanningQuery>(query_name, query_group, robot.second, scene.second,
+                                                                 pipeline.second, req);
+              queries_.emplace_back(query);
+            }
+          }
+    }
 }
 
 const QuerySetup& MotionPlanningBuilder::getQuerySetup() const
 {
   return query_setup_;
 }
-
-void MotionPlanningBuilder::buildRobot()
-{
-  robot_ = std::make_shared<Robot>("robot", "robot_description");
-  robot_->initialize();
-}
-
-void MotionPlanningBuilder::buildScenes()
-{
-  SceneParser parser;
-  std::vector<moveit_msgs::PlanningScene> scene_msgs;
-
-  const auto& scene_map = mp_config_.getScenes();
-
-  // Prepare scenes
-  for (const auto& scene : scene_map)
-  {
-    query_setup_.addQuery("scene", scene.first, "");
-
-    parser.loadURDF(scene.second);
-    scene_msgs.emplace_back();
-    scene_msgs.back().name = scene.first;
-    scene_msgs.back().is_diff = true;
-    parser.getCollisionObjects(scene_msgs.back().world.collision_objects);
-
-    // Get transforms from tf listener
-    std::vector<geometry_msgs::TransformStamped> transforms;
-    getTransformsFromTf(transforms, robot_->getModelConst());
-    addTransformsToSceneMsg(transforms, scene_msgs.back());
-  }
-
-  // Create scenes for each collision detector pair wise
-  CollisionPluginLoader plugin;
-  const auto& collision_detectors = mp_config_.getCollisionDetectors();
-
-  for (const auto& cd : collision_detectors)
-  {
-    query_setup_.addQuery("collision_detector", cd, "");
-
-    plugin.load(cd);
-    for (const auto& scene_msg : scene_msgs)
-    {
-      scenes_.emplace_back();
-      scenes_.back() = std::make_shared<planning_scene::PlanningScene>(robot_->getModelConst());
-      scenes_.back()->usePlanningSceneMsg(scene_msg);
-      if (!plugin.activate(cd, scenes_.back(), true))
-        scenes_.pop_back();
-    }
-  }
-}
-
-void MotionPlanningBuilder::buildRequests()
-{
-  const auto& request_map = mp_config_.getMotionPlanRequests();
-
-  for (const auto& request : request_map)
-  {
-    requests_.emplace_back();
-    auto node = YAML::LoadFile(request.second);
-
-    requests_.back().first = request.first;
-    requests_.back().second = node.as<moveit_msgs::MotionPlanRequest>();
-    query_setup_.addQuery("request", request.first, request.second);
-  }
-}
-
-///
-/// PlanningPipelineBuilder
-///
-
-void PlanningPipelineBuilder::buildPlanners()
-{
-  const auto& planning_pipelines = mp_config_.getPlanningPipelineConfigurations();
-
-  for (const auto& pipeline_name : planning_pipelines)
-  {
-    query_setup_.addQuery("pipeline", pipeline_name.first, "");
-
-    auto pipeline = std::make_shared<PipelinePlanner>(robot_, pipeline_name.first);
-    pipeline->initialize();
-    pipelines_.emplace_back(pipeline);
-  }
-}
-
-void PlanningPipelineBuilder::appendQuery(const std::string& name, const QueryGroupName& setup,
-                                          const planning_scene::PlanningScenePtr& scene, const PlannerPtr& planner,
-                                          const moveit_msgs::MotionPlanRequest& request)
-{
-  auto derived_planner = std::dynamic_pointer_cast<PipelinePlanner>(planner);
-
-  PlanningPipelineQueryPtr query =
-      std::make_shared<PlanningPipelineQuery>(name, setup, scene, derived_planner, request);
-
-  queries_.push_back(query);
-}
-
-const std::vector<PlanningPipelineQueryPtr>& PlanningPipelineBuilder::getQueries() const
-{
-  return queries_;
-}
-
-///
-/// MoveGroupInterfaceBuilder
-///
-
-void MoveGroupInterfaceBuilder::buildPlanners()
-{
-  const auto& planning_pipelines = mp_config_.getPlanningPipelineConfigurations();
-  for (const auto& pipeline_name : planning_pipelines)
-  {
-    query_setup_.addQuery("pipeline", pipeline_name.first, "");
-
-    auto pipeline = std::make_shared<MoveGroupInterfacePlanner>(robot_, pipeline_name.first);
-    pipelines_.emplace_back();
-    pipelines_.back() = pipeline;
-  }
-}
-
-void MoveGroupInterfaceBuilder::appendQuery(const std::string& name, const QueryGroupName& setup,
-                                            const planning_scene::PlanningScenePtr& scene, const PlannerPtr& planner,
-                                            const moveit_msgs::MotionPlanRequest& request)
-{
-  auto derived_planner = std::dynamic_pointer_cast<MoveGroupInterfacePlanner>(planner);
-
-  MoveGroupInterfaceQueryPtr query =
-      std::make_shared<MoveGroupInterfaceQuery>(name, setup, scene, derived_planner, request);
-
-  queries_.push_back(query);
-}
-
-const std::vector<MoveGroupInterfaceQueryPtr>& MoveGroupInterfaceBuilder::getQueries() const
+const std::vector<MotionPlanningQueryPtr>& MotionPlanningBuilder::getQueries() const
 {
   return queries_;
 }

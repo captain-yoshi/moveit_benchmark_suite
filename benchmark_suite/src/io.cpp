@@ -17,6 +17,7 @@
 #include <ros/console.h>
 
 #include <moveit_benchmark_suite/io.h>
+#include <moveit_benchmark_suite/io/handler.h>
 #include <moveit_benchmark_suite/log.h>
 #include <moveit/version.h>
 
@@ -75,13 +76,14 @@ bool isSuffix(const std::string& lhs, const std::string& rhs)
   return std::equal(lhs.rbegin(), lhs.rbegin() + std::min(lhs.size(), rhs.size()), rhs.rbegin());
 }
 
-bool isExtension(const std::string& path_string, const std::string& extension)
+}  // namespace
+
+bool IO::isExtension(const std::string& path_string, const std::string& extension)
 {
   boost::filesystem::path path(path_string);
   const std::string last = boost::filesystem::extension(path);
   return isSuffix(extension, last);
 }
-}  // namespace
 
 std::string IO::generateUUID()
 {
@@ -90,7 +92,7 @@ std::string IO::generateUUID()
 
   std::string s = boost::lexical_cast<std::string>(u);
 
-  // std::replace(s.begin(), s.end(), '-', '_');
+  std::replace(s.begin(), s.end(), '-', '_');
 
   return s;
 }
@@ -144,13 +146,14 @@ std::set<std::string> IO::findPackageURIs(const std::string& string)
   return packages;
 }
 
-const std::string IO::resolvePath(const std::string& path)
+const std::string IO::resolvePath(const std::string& path, bool verbose)
 {
   boost::filesystem::path file = resolvePackage(path);
 
   if (!boost::filesystem::exists(file))
   {
-    ROS_WARN("File `%s` does not exist.", path.c_str());
+    if (verbose)
+      ROS_WARN("File `%s` does not exist.", path.c_str());
     return "";
   }
 
@@ -161,6 +164,35 @@ const std::string IO::resolveParent(const std::string& path)
 {
   boost::filesystem::path file = resolvePackage(path);
   return file.parent_path().string();
+}
+
+const std::string IO::loadXacroToString(const std::string& path)
+{
+  const std::string full_path = resolvePath(path);
+  if (full_path.empty())
+    return "";
+
+  std::string cmd = "rosrun xacro xacro ";
+
+  // #if ROBOWFLEX_AT_LEAST_MELODIC
+  // #else
+  //   cmd += "--inorder ";
+  // #endif
+
+  cmd += full_path;
+  return runCommand(cmd);
+}
+
+const std::string IO::loadXMLToString(const std::string& path)
+{
+  const std::string full_path = resolvePath(path);
+  if (full_path.empty())
+    return "";
+
+  if (isExtension(full_path, "xacro"))
+    return loadXacroToString(full_path);
+
+  return loadFileToString(full_path);
 }
 
 const std::string IO::loadFileToString(const std::string& path)
@@ -418,6 +450,37 @@ const std::pair<bool, YAML::Node> IO::loadFileToYAML(const std::string& path)
   }
 }
 
+const bool IO::loadFileToYAML(const std::string& path, YAML::Node& node, bool verbose)
+{
+  YAML::Node file;
+  const std::string full_path = resolvePath(path);
+  if (full_path.empty())
+  {
+    if (verbose)
+      ROS_ERROR("Failed to resolve file path `%s`.", path.c_str());
+    return false;
+  }
+
+  if (!isExtension(full_path, "yml") && !isExtension(full_path, "yaml"))
+  {
+    if (verbose)
+      ROS_ERROR("YAML wrong extension for path `%s`.", full_path.c_str());
+    return false;
+  }
+
+  try
+  {
+    node = YAML::LoadFile(full_path);
+  }
+  catch (std::exception& e)
+  {
+    if (verbose)
+      ROS_ERROR("Failed to load YAML file `%s`.", full_path.c_str());
+    return false;
+  }
+  return true;
+}
+
 bool IO::YAMLToFile(const YAML::Node& node, const std::string& file)
 {
   YAML::Emitter out;
@@ -430,4 +493,228 @@ bool IO::YAMLToFile(const YAML::Node& node, const std::string& file)
   fout.close();
 
   return true;
+}
+
+///
+/// IO::Handler
+///
+
+// Static ID for all handlers
+const std::string IO::Handler::UUID(generateUUID());
+
+namespace
+{
+class XmlRpcValueCreator : public XmlRpc::XmlRpcValue
+{
+public:
+  static XmlRpcValueCreator createArray(const std::vector<XmlRpcValue>& values)
+  {
+    XmlRpcValueCreator ret;
+    ret._type = TypeArray;
+    ret._value.asArray = new ValueArray(values);
+
+    return ret;
+  }
+
+  static XmlRpcValueCreator createStruct(const std::map<std::string, XmlRpcValue>& members)
+  {
+    XmlRpcValueCreator ret;
+    ret._type = TypeStruct;
+    ret._value.asStruct = new std::map<std::string, XmlRpcValue>(members);
+    return ret;
+  }
+};
+
+XmlRpc::XmlRpcValue YAMLToXmlRpc(const YAML::Node& node)
+{
+  if (node.Type() != YAML::NodeType::Scalar)
+  {
+    switch (node.Type())
+    {
+      case YAML::NodeType::Map:
+      {
+        std::map<std::string, XmlRpc::XmlRpcValue> members;
+        for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
+          members[it->first.as<std::string>()] = YAMLToXmlRpc(it->second);
+
+        return XmlRpcValueCreator::createStruct(members);
+      }
+      case YAML::NodeType::Sequence:
+      {
+        std::vector<XmlRpc::XmlRpcValue> values;
+        for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
+          values.push_back(YAMLToXmlRpc(*it));
+
+        return XmlRpcValueCreator::createArray(values);
+      }
+      default:
+        throw std::runtime_error("Unknown non-scalar node type in YAML");
+    }
+  }
+
+  if (node.Tag() == "!!int")
+    return XmlRpc::XmlRpcValue(node.as<int>());
+
+  if (node.Tag() == "!!float")
+    return XmlRpc::XmlRpcValue(node.as<double>());
+
+  if (node.Tag() == "!!bool")
+    return XmlRpc::XmlRpcValue(node.as<bool>());
+
+  try
+  {
+    return XmlRpc::XmlRpcValue(node.as<bool>());
+  }
+  catch (YAML::Exception&)
+  {
+  }
+
+  try
+  {
+    return XmlRpc::XmlRpcValue(node.as<int>());
+  }
+  catch (YAML::Exception&)
+  {
+  }
+
+  try
+  {
+    return XmlRpc::XmlRpcValue(node.as<double>());
+  }
+  catch (YAML::Exception&)
+  {
+  }
+
+  try
+  {
+    return XmlRpc::XmlRpcValue(node.as<std::string>());
+  }
+  catch (YAML::Exception&)
+  {
+  }
+
+  throw std::runtime_error("Unknown node value in YAML");
+}
+
+YAML::Node XmlRpcToYAML(const XmlRpc::XmlRpcValue& node)
+{
+  switch (node.getType())
+  {
+    case XmlRpc::XmlRpcValue::TypeStruct:
+    {
+      YAML::Node n;
+      for (XmlRpc::XmlRpcValue::const_iterator it = node.begin(); it != node.end(); ++it)
+        n[it->first] = XmlRpcToYAML(it->second);
+
+      return n;
+    }
+    case XmlRpc::XmlRpcValue::TypeArray:
+    {
+      YAML::Node n;
+      for (std::size_t i = 0; i < node.size(); ++i)
+        n.push_back(XmlRpcToYAML(node[i]));
+
+      return n;
+    }
+    case XmlRpc::XmlRpcValue::TypeInt:
+    {
+      YAML::Node n;
+      n = static_cast<int>(node);
+      return n;
+    }
+    case XmlRpc::XmlRpcValue::TypeBoolean:
+    {
+      YAML::Node n;
+      n = static_cast<bool>(node);
+      return n;
+    }
+    case XmlRpc::XmlRpcValue::TypeDouble:
+    {
+      YAML::Node n;
+      n = static_cast<double>(node);
+      return n;
+    }
+    case XmlRpc::XmlRpcValue::TypeString:
+    {
+      YAML::Node n;
+      n = static_cast<std::string>(node);
+      return n;
+    }
+
+    default:
+      throw std::runtime_error("Unknown node type in XmlRpcValue");
+  }
+
+  throw std::runtime_error("Unknown node value in XmlRpcValue");
+}
+
+}  // namespace
+
+IO::Handler::Handler(const std::string& name)
+  // : name_(name), namespace_("robowflex_" + UUID + "/" + name_), nh_(namespace_)
+  : name_(name), namespace_(name_), nh_(namespace_)
+{
+}
+
+IO::Handler::Handler(const IO::Handler& handler, const std::string& name)
+  : name_(handler.getName()), namespace_(handler.getNamespace()), nh_(handler.getHandle(), name)
+{
+}
+
+IO::Handler::~Handler()
+{
+  for (const auto& key : params_)
+    nh_.deleteParam(key);
+}
+
+void IO::Handler::loadYAMLtoROS(const YAML::Node& node, const std::string& prefix)
+{
+  switch (node.Type())
+  {
+    case YAML::NodeType::Map:
+    {
+      const std::string fixed_prefix = (prefix.empty()) ? "" : (prefix + "/");
+      for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
+        loadYAMLtoROS(it->second, fixed_prefix + it->first.as<std::string>());
+
+      break;
+    }
+    case YAML::NodeType::Sequence:
+    case YAML::NodeType::Scalar:
+    {
+      setParam(prefix, YAMLToXmlRpc(node));
+      break;
+    }
+    default:
+      throw std::runtime_error("Unknown node type in YAML");
+  }
+}
+
+void IO::Handler::loadROStoYAML(const std::string& ns, YAML::Node& node)
+{
+  XmlRpc::XmlRpcValue rpc;
+  if (!nh_.getParam(ns, rpc))
+    return;
+
+  node = XmlRpcToYAML(rpc);
+}
+
+bool IO::Handler::hasParam(const std::string& key) const
+{
+  return nh_.hasParam(key);
+}
+
+const ros::NodeHandle& IO::Handler::getHandle() const
+{
+  return nh_;
+}
+
+const std::string& IO::Handler::getName() const
+{
+  return name_;
+}
+
+const std::string& IO::Handler::getNamespace() const
+{
+  return namespace_;
 }

@@ -50,84 +50,6 @@
 
 namespace moveit_benchmark_suite
 {
-namespace BenchmarkType
-{
-const std::string MOTION_PLANNING_PP = "MOTION PLANNING PP";
-const std::string MOTION_PLANNING_MGI = "MOTION PLANNING MGI";
-const std::string COLLISION_CHECK = "COLLISION CHECK";
-
-}  // namespace BenchmarkType
-
-class Benchmark
-{
-public:
-  struct Options
-  {
-    // Verbose
-    bool verbose_status_query = true;  // Verbose status before each query
-    bool verbose_status_run = false;   // Verbose status before each run
-
-    // Benchmark parameter
-    std::size_t trials = 10;   // Number of trials
-    double query_timeout = 0;  // Timeout for each query
-    double run_timeout = 0;    // Timeout for each run TODO
-  };
-  /** \name Building Experiment
-      \{ */
-
-  /** \brief Constructor.
-   *  \param[in] name Name of this experiment.
-   *  \param[in] options Options for the internal profiler.
-   *  \param[in] allowed_time Time allotted to all queries for benchmarking.
-   *  \param[in] trials Number of trials to run each query for.
-   *  \param[in] timeout If true, will re-run each query until the total time taken has exceeded the
-   * allotted time.
-   */
-  Benchmark(const std::string& name);
-  Benchmark(const std::string& name, const Options& options);
-
-  using PostQueryTrialCallback = std::function<void(DataSetPtr dataset)>;
-  using PostQueryCallback = std::function<void(DataSetPtr dataset)>;
-  using PostBenchmarkCallback = std::function<void(DataSetPtr dataset)>;
-
-  /** \brief Set the post-dataset callback function.
-   *  \param[in] callback Callback to use.
-   */
-  void addPostQueryTrialCallback(const PostQueryTrialCallback& callback);
-
-  /** \brief Set the post-query callback function.
-   *  \param[in] callback Callback to use.
-   */
-  void addPostQueryCallback(const PostQueryCallback& callback);
-
-  void addPostBenchmarkCallback(const PostBenchmarkCallback& callback);
-
-  /** \brief Run benchmarking on this experiment.
-   *  Note that, for some planners, multiple threads cannot be used without polluting the dataset, due
-   * to reuse of underlying datastructures between queries, e.g., the robowflex_ompl planner.
-   *  \param[in] n_threads Number of threads to use for benchmarking.
-   *  \return The computed dataset.
-   */
-
-  DataSetPtr run(Profiler& profiler) const;
-
-  bool getPlotFlag();
-
-private:
-  void fillMetaData(DataSetPtr& dataset) const;
-
-  const std::string name_;  ///< Name of this experiment.
-
-  Options options_;
-
-  std::vector<PostQueryTrialCallback> post_query_trial_callbacks_;  ///< Post-run callback with dataset.
-  std::vector<PostQueryCallback> post_query_callbacks_;             ///< Post-run callback.
-  std::vector<PostBenchmarkCallback> post_benchmark_callbacks_;     ///< Post-run callback.
-
-  IO::GNUPlotDataSet plot;
-  bool plot_flag = false;
-};
-
 /** \brief An abstract class for outputting benchmark results.
  */
 class DataSetOutputter
@@ -162,6 +84,82 @@ public:
    *  \param[in] results Results to dump to file.
    */
   void dump(const DataSet& dataset, const std::string& filepath, const std::string& filename) override;
+};
+
+class Benchmark
+{
+public:
+  struct Options
+  {
+    // Verbose
+    bool verbose_status_trial = true;   // Verbose status before each query trial
+    bool verbose_status_query = false;  // Verbose status before each query
+
+    // Benchmark parameter
+    std::size_t trials = 10;  // Number of trials
+    std::string output_file;
+    bool visualize = false;
+  };
+  /** \name Building Experiment
+      \{ */
+
+  /** \brief Constructor.
+   *  \param[in] name Name of this experiment.
+   *  \param[in] options Options for the internal profiler.
+   *  \param[in] allowed_time Time allotted to all queries for benchmarking.
+   *  \param[in] trials Number of trials to run each query for.
+   *  \param[in] timeout If true, will re-run each query until the total time taken has exceeded the
+   * allotted time.
+   */
+
+  Benchmark();
+
+  bool initialize(const std::string& name, const Options& options);
+  bool initializeFromHandle(const ros::NodeHandle& nh);
+
+  using PostQueryTrialCallback = std::function<void(DataSetPtr dataset)>;
+  using PostQueryCallback = std::function<void(DataSetPtr dataset)>;
+  using PostBenchmarkCallback = std::function<void(DataSetPtr dataset)>;
+
+  /** \brief Set the post-dataset callback function.
+   *  \param[in] callback Callback to use.
+   */
+  void addPostQueryTrialCallback(const PostQueryTrialCallback& callback);
+
+  /** \brief Set the post-query callback function.
+   *  \param[in] callback Callback to use.
+   */
+  void addPostQueryCallback(const PostQueryCallback& callback);
+
+  void addPostBenchmarkCallback(const PostBenchmarkCallback& callback);
+
+  /** \brief Run benchmarking on this experiment.
+   *  Note that, for some planners, multiple threads cannot be used without polluting the dataset, due
+   * to reuse of underlying datastructures between queries, e.g., the robowflex_ompl planner.
+   *  \param[in] n_threads Number of threads to use for benchmarking.
+   *  \return The computed dataset.
+   */
+
+  DataSetPtr run(Profiler& profiler) const;
+
+  const Options& getOptions() const;
+
+  bool getPlotFlag();
+
+private:
+  void fillMetaData(DataSetPtr& dataset) const;
+
+  std::string name_;  ///< Name of this experiment.
+
+  Options options_;
+
+  std::vector<PostQueryTrialCallback> post_query_trial_callbacks_;  ///< Post-run callback with dataset.
+  std::vector<PostQueryCallback> post_query_callbacks_;             ///< Post-run callback.
+  std::vector<PostBenchmarkCallback> post_benchmark_callbacks_;     ///< Post-run callback.
+
+  BenchmarkSuiteDataSetOutputter outputter_;
+  IO::GNUPlotDataSet plot;
+  bool plot_flag = false;
 };
 
 }  // namespace moveit_benchmark_suite

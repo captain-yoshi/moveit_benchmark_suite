@@ -47,6 +47,7 @@ set(CMAKE_CXX_STANDARD 14)
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME}
+  src/builder.cpp
   src/colormap.cpp
   src/random.cpp
   src/tf.cpp
@@ -64,18 +65,17 @@ add_library(${PROJECT_NAME}
   src/log.cpp
   src/planning.cpp
   src/trajectory.cpp
-  src/io/handler.cpp
   src/io/htmlplot.cpp
   src/io/gnuplot.cpp
   src/config/aggregate_config.cpp
   src/config/collision_check_config.cpp
   src/config/gnuplot_config.cpp
   src/config/html_config.cpp
-  src/config/motion_planning_config.cpp
-  src/benchmarks/builder/collision_check_builder.cpp
+  # src/benchmarks/builder/collision_check_builder.cpp
   src/benchmarks/builder/motion_planning_builder.cpp
   src/benchmarks/profiler/motion_planning_profiler.cpp
-  src/benchmarks/profiler/collision_check_profiler.cpp
+  # src/benchmarks/profiler/collision_check_profiler.cpp
+  src/benchmarks/visualizer/motion_planning_visualizer.cpp
 )
 
 add_executable(motion_planning_mgi src/benchmarks/motion_planning_mgi_benchmark.cpp)
@@ -84,10 +84,10 @@ target_link_libraries(motion_planning_mgi ${PROJECT_NAME} ${catkin_LIBRARIES} ya
 add_executable(motion_planning_pp src/benchmarks/motion_planning_pp_benchmark.cpp)
 target_link_libraries(motion_planning_pp ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 
-if("${catkin_LIBRARIES}" MATCHES "moveit_collision_detection_bullet")
-  add_executable(collision_check src/benchmarks/collision_check_benchmark.cpp)
-  target_link_libraries(collision_check fcl ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
-endif()
+# if("${catkin_LIBRARIES}" MATCHES "moveit_collision_detection_bullet")
+#   add_executable(collision_check src/benchmarks/collision_check_benchmark.cpp)
+#   target_link_libraries(collision_check fcl ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
+# endif()
 
 add_executable(plot_dataset src/plot_dataset.cpp)
 target_link_libraries(plot_dataset ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
@@ -105,7 +105,7 @@ install(TARGETS
   ${PROJECT_NAME}
   motion_planning_mgi
   motion_planning_pp
-  collision_check
+  # collision_check
   plot_dataset
   generate_plots
   aggregate

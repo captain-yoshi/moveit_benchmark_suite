@@ -9,7 +9,7 @@
  *  are met:
  *
  *   * Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
+ *     notice, this listnditions and the following disclaimer.
  *   * Redistributions in binary form must reproduce the above
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
@@ -23,7 +23,7 @@
  *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
  *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
  *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ *  IProfilerTemplate::SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
  *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
  *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
@@ -32,52 +32,30 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Captain Yoshi
-   Desc: Motion planning benchmark node using the MoveGroupInterface
+/* Author: Modified version of Zachary Kingston robowflex
+   Desc:
 */
 
-#include <ros/ros.h>
+#pragma once
 
-#include <moveit_benchmark_suite/benchmark.h>
+#include <moveit_benchmark_suite/visualization.h>
+
 #include <moveit_benchmark_suite/benchmarks/profiler/motion_planning_profiler.h>
-#include <moveit_benchmark_suite/benchmarks/visualizer/motion_planning_visualizer.h>
 
-using namespace moveit_benchmark_suite;
-
-int main(int argc, char** argv)
+namespace moveit_benchmark_suite
 {
-  ros::init(argc, argv, "benchmark");
-  ros::AsyncSpinner spinner(1);
-  spinner.start();
+MOVEIT_CLASS_FORWARD(MotionPlanningQuery);
 
-  ros::NodeHandle pnh("~");
+struct MotionPlanningVisualizer
+{
+  /** \brief Empty constructor.
+   */
+  MotionPlanningVisualizer() = default;
 
-  // Get config
-  std::string filename;
-  pnh.getParam(CONFIG_PARAMETER, filename);
+  void addCallback(PlanningPipelineProfiler& profiler);
+  void addCallback(MoveGroupInterfaceProfiler& profiler);
 
-  // Setup profiler
-  MoveGroupInterfaceProfiler profiler;
-  profiler.buildQueriesFromYAML(filename);
+  RVIZHelper rviz_;  ///< Robot used for the query.
+};
 
-  profiler.options.metrics = MoveGroupInterfaceProfiler::LENGTH |     //
-                             MoveGroupInterfaceProfiler::CORRECT |    //
-                             MoveGroupInterfaceProfiler::CLEARANCE |  //
-                             MoveGroupInterfaceProfiler::WAYPOINTS |  //
-                             MoveGroupInterfaceProfiler::SMOOTHNESS;  //
-
-  // Setup benchmark
-  Benchmark benchmark;
-  benchmark.initializeFromHandle(pnh);
-
-  // Setup visualizer
-  MotionPlanningVisualizer visualizer;
-
-  if (benchmark.getOptions().visualize)
-    visualizer.addCallback(profiler);
-
-  // Run benchmark
-  auto dataset = benchmark.run(profiler);
-
-  return 0;
-}
+}  // namespace moveit_benchmark_suite

@@ -32,52 +32,83 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Captain Yoshi
-   Desc: Motion planning benchmark node using the MoveGroupInterface
+/* Author: Modified version of Zachary Kingston robowflex
+   Desc:
 */
 
-#include <ros/ros.h>
+#pragma once
 
-#include <moveit_benchmark_suite/benchmark.h>
-#include <moveit_benchmark_suite/benchmarks/profiler/motion_planning_profiler.h>
-#include <moveit_benchmark_suite/benchmarks/visualizer/motion_planning_visualizer.h>
+#include <cstdint>
+#include <string>
+#include <vector>
+#include <tuple>
+#include <map>
+#include <fstream>
+#include <chrono>
 
-using namespace moveit_benchmark_suite;
+#include <boost/variant.hpp>
 
-int main(int argc, char** argv)
+#include <moveit/macros/class_forward.h>
+
+#include <ros/console.h>
+
+#include <moveit_benchmark_suite/io.h>
+
+namespace moveit_benchmark_suite
 {
-  ros::init(argc, argv, "benchmark");
-  ros::AsyncSpinner spinner(1);
-  spinner.start();
+MOVEIT_CLASS_FORWARD(Query);
+MOVEIT_CLASS_FORWARD(Result);
 
-  ros::NodeHandle pnh("~");
+using QueryGroup = std::string;
+using QueryName = std::string;
+using QueryResource = std::string;
 
-  // Get config
-  std::string filename;
-  pnh.getParam(CONFIG_PARAMETER, filename);
+using QueryGroupName = std::map<QueryGroup, QueryName>;
 
-  // Setup profiler
-  MoveGroupInterfaceProfiler profiler;
-  profiler.buildQueriesFromYAML(filename);
+class Query
+{
+public:
+  /** \brief Empty constructor.
+   */
+  Query() = default;
 
-  profiler.options.metrics = MoveGroupInterfaceProfiler::LENGTH |     //
-                             MoveGroupInterfaceProfiler::CORRECT |    //
-                             MoveGroupInterfaceProfiler::CLEARANCE |  //
-                             MoveGroupInterfaceProfiler::WAYPOINTS |  //
-                             MoveGroupInterfaceProfiler::SMOOTHNESS;  //
+  virtual ~Query(){};
 
-  // Setup benchmark
-  Benchmark benchmark;
-  benchmark.initializeFromHandle(pnh);
+  Query(const std::string& name, const QueryGroupName& group_name_map) : name(name), group_name_map(group_name_map){};
 
-  // Setup visualizer
-  MotionPlanningVisualizer visualizer;
+  std::string name;  ///< Name of this query.
+  QueryGroupName group_name_map;
+};
 
-  if (benchmark.getOptions().visualize)
-    visualizer.addCallback(profiler);
+// pair - wise combinations of a query
+struct QuerySetup
+{
+  /** \brief Empty constructor.
+   */
+  QuerySetup() = default;
 
-  // Run benchmark
-  auto dataset = benchmark.run(profiler);
+  void addQuery(const QueryGroup& group, const QueryName& name, const QueryResource& resource = "")
+  {
+    auto it = query_setup.find(group);
+    if (it == query_setup.end())
+      query_setup.insert(std::pair<QueryGroup, std::map<QueryName, QueryResource>>(group, { { name, resource } }));
+    else
+      it->second.insert(std::pair<QueryName, QueryResource>(name, resource));
+  }
 
-  return 0;
-}
+  std::map<QueryGroup, std::map<QueryName, QueryResource>> query_setup;
+};
+
+class Result
+{
+public:
+  Result() = default;
+
+  virtual ~Result(){};
+  /** \name Planning Query and Response
+      \{ */
+
+  bool success = false;  ///< Was the plan successful?
+};
+
+}  // namespace moveit_benchmark_suite

@@ -1,43 +1,36 @@
 <?xml version="1.0" ?>
 <launch>
 
-  <arg name="name" default="" />
-  <arg name="output_file" default="" />
-  <arg name="use_rviz" default="false" />
+  <arg name="name" default=""/>
+  <arg name="output_file" default=""/>
+  <!-- Overwrite this param as a bool type -->
+  <arg name="visualize" default="" doc="turns on and off visualization with rviz (bool type)"/>
 
   <!-- By default, we are not in debug mode -->
   <arg name="debug" default="false" />
   <arg unless="$(arg debug)" name="launch_prefix" value="" />
   <arg     if="$(arg debug)" name="launch_prefix" value="gdb --args" />
 
-
-  <!-- Benchmark options file -->
-  <arg name="options_file" default="$(find moveit_benchmark_suite)/config/motion_planning_mgi.yaml"/>
-  <rosparam command="load" file="$(arg options_file)"/>
-
-  <!-- Load robot -->
-  <!-- the following should say `from="move_group/collision_detector"` but that does not work. See https://github.com/ros/ros_comm/issues/2188 for more information -->
-  <remap from="~collision_detector" to="/benchmark_config/collision_detector"/>
+    <!-- Load robot -->
   <include file="$(find moveit_resources_panda_moveit_config)/launch/demo.launch">
-    <arg name="use_rviz" value="false"/>
-    <!--<arg name="debug" value="$(arg debug)"/>-->
+    <arg name="use_rviz" value="false" if="$(eval bool(visualize) == 0)"/>
+    <arg name="debug" value="$(arg debug)"/>
   </include>
 
-  <!-- Scene -->
-  <group ns="scenes" clear_params="true">
-    <param name="empty-scene" command="$(find xacro)/xacro '$(find moveit_benchmark_suite_resources)/db/empty_scene.urdf.xacro'"/>
-    <param name="bbt-primitive" command="$(find xacro)/xacro '$(find moveit_benchmark_suite_resources)/db/bbt/panda/scene_primitive.urdf.xacro'"/>
-    <param name="bbt-mesh"     command="$(find xacro)/xacro '$(find moveit_benchmark_suite_resources)/db/bbt/panda/scene_mesh_hq.urdf.xacro'"/>
-  </group>
-
-  <!-- Request -->
-  <group ns="requests" clear_params="true">
-    <param name="jc" value="$(find moveit_benchmark_suite_resources)/db/bbt/panda/request_goal_jc.yaml"/>
-  </group>
+  <!-- Benchmark configuration file -->
+  <arg name="config_file" default="$(find moveit_benchmark_suite)/config/motion_planning_mgi.yaml"/>
 
   <!-- Launch benchmark node -->
   <node name="benchmark" pkg="moveit_benchmark_suite" type="motion_planning_mgi" output="screen" clear_params="true" required="true" launch-prefix="$(arg launch_prefix)">
+
+    <rosparam command="load" file="$(arg config_file)"/>
+
+    <!-- Override config file if not emprty -->
     <param name="name" value="$(arg name)"/>
+    <param name="config_file" value="$(arg config_file)"/>
     <param name="output_file" value="$(arg output_file)"/>
+    <param name="visualize" value="$(arg visualize)"/>
+
   </node>
+
 </launch>

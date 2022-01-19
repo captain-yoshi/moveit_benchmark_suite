@@ -38,60 +38,26 @@
 
 #pragma once
 
-#include <moveit_benchmark_suite/dataset.h>
-#include <moveit_benchmark_suite/benchmarks/profiler/motion_planning_profiler.h>
-#include <moveit_benchmark_suite/config/motion_planning_config.h>
+#include <moveit/macros/class_forward.h>
 
 namespace moveit_benchmark_suite
 {
+MOVEIT_CLASS_FORWARD(MotionPlanningQuery);
+
 class MotionPlanningBuilder
 {
 public:
-  void buildQueries();
-
-  const MotionPlanningConfig& getConfig() const;
+  void buildPlanningPipelineQueries(const std::string& filename);
+  void buildMoveGroupInterfaceQueries(const std::string& filename);
   const QuerySetup& getQuerySetup() const;
+  const std::vector<MotionPlanningQueryPtr>& getQueries() const;
 
 protected:
-  void buildRobot();
-  void buildScenes();
-  void buildRequests();
-  virtual void buildPlanners() = 0;
-  virtual void appendQuery(const std::string& name, const QueryGroupName& setup,
-                           const planning_scene::PlanningScenePtr& scene, const PlannerPtr& planner,
-                           const moveit_msgs::MotionPlanRequest& request) = 0;
+  void buildQueries(const std::string& filename, const std::string& robot_key);
 
+private:
   QuerySetup query_setup_;
-  MotionPlanningConfig mp_config_;
-
-  RobotPtr robot_;
-  std::vector<planning_scene::PlanningScenePtr> scenes_;
-  std::vector<std::pair<std::string, moveit_msgs::MotionPlanRequest>> requests_;
-  std::vector<PlannerPtr> pipelines_;
-};
-
-class PlanningPipelineBuilder : public MotionPlanningBuilder
-{
-public:
-  void buildPlanners() override;
-  const std::vector<PlanningPipelineQueryPtr>& getQueries() const;
-
-protected:
-  void appendQuery(const std::string& name, const QueryGroupName& setup, const planning_scene::PlanningScenePtr& scene,
-                   const PlannerPtr& planner, const moveit_msgs::MotionPlanRequest& request) override;
-  std::vector<PlanningPipelineQueryPtr> queries_;
-};
-
-class MoveGroupInterfaceBuilder : public MotionPlanningBuilder
-{
-public:
-  void buildPlanners() override;
-  const std::vector<MoveGroupInterfaceQueryPtr>& getQueries() const;
-
-protected:
-  void appendQuery(const std::string& name, const QueryGroupName& setup, const planning_scene::PlanningScenePtr& scene,
-                   const PlannerPtr& planner, const moveit_msgs::MotionPlanRequest& request) override;
-  std::vector<MoveGroupInterfaceQueryPtr> queries_;
+  std::vector<MotionPlanningQueryPtr> queries_;
 };
 
 }  // namespace moveit_benchmark_suite

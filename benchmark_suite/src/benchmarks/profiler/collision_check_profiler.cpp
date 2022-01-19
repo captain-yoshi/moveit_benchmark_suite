@@ -60,8 +60,8 @@ CollisionCheckQuery::CollisionCheckQuery(const std::string& name,               
 /// CollisionCheckProfiler
 ///
 
-CollisionCheckProfiler::CollisionCheckProfiler(const std::string& name)
-  : ProfilerTemplate<CollisionCheckQuery, CollisionCheckResult>(name){};
+CollisionCheckProfiler::CollisionCheckProfiler()
+  : ProfilerTemplate<CollisionCheckQuery, CollisionCheckResult>(ProfilerType::COLLISION_CHECK){};
 
 CollisionCheckResult CollisionCheckProfiler::runQuery(const CollisionCheckQuery& query, Data& data) const
 {

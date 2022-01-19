@@ -8,6 +8,7 @@
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 
+#include <moveit/utils/message_checks.h>
 #include <moveit/robot_state/conversions.h>
 
 //#include <moveit_benchmark_suite/util.h>
@@ -23,6 +24,7 @@
 #include <moveit_benchmark_suite/scene.h>
 #include <moveit_benchmark_suite/tf.h>
 #include <moveit_benchmark_suite/trajectory.h>
+#include <moveit_benchmark_suite/io.h>
 
 using namespace moveit_benchmark_suite;
 
@@ -36,20 +38,40 @@ Eigen::Vector4d getRandomColor()
 }
 };  // namespace
 
-RVIZHelper::RVIZHelper(const RobotConstPtr& robot, const std::string& name) : robot_(robot), nh_("/" + name)
+RVIZHelper::RVIZHelper(const std::string& name) : nh_("/" + name)
 {
-  // std::string description;
-  // robot_->getHandlerConst().getParam(Robot::ROBOT_DESCRIPTION, description);
-  // std::string semantic;
-  // robot_->getHandlerConst().getParam(Robot::ROBOT_DESCRIPTION + Robot::ROBOT_SEMANTIC, semantic);
-
-  // nh_.setParam(Robot::ROBOT_DESCRIPTION, description);
-  // nh_.setParam(Robot::ROBOT_DESCRIPTION + Robot::ROBOT_SEMANTIC, semantic);
+  rviz_srv_ = nh_.serviceClient<rviz::SendFilePath>("/rviz/load_config");
 
   trajectory_pub_ = nh_.advertise<moveit_msgs::DisplayTrajectory>("display_planned_path", 1);
   state_pub_ = nh_.advertise<moveit_msgs::DisplayRobotState>("state", 1);
   scene_pub_ = nh_.advertise<moveit_msgs::PlanningScene>("monitored_planning_scene", 1);
   marker_pub_ = nh_.advertise<visualization_msgs::MarkerArray>("/visualization_marker_array", 100);
+
+  std::string full_path = IO::resolvePath("package://moveit_benchmark_suite/config/rviz/moveit.rviz");
+  srv_msg_.request.path.data = full_path;
+}
+
+void RVIZHelper::initializeRobot(const RobotConstPtr& robot)
+{
+  if (robot && robot == robot_)
+    return;
+
+  robot_ = robot;
+
+  // nh_.deleteParam(Robot::ROBOT_DESCRIPTION);
+  // nh_.deleteParam(Robot::ROBOT_SEMANTIC);
+
+  std::string description;
+  robot_->getHandlerConst().getParam(Robot::ROBOT_DESCRIPTION, description);
+  std::string semantic;
+  robot_->getHandlerConst().getParam(Robot::ROBOT_SEMANTIC, semantic);
+
+  nh_.setParam("/" + Robot::ROBOT_DESCRIPTION, description);
+  nh_.setParam("/" + Robot::ROBOT_SEMANTIC, semantic);
+
+  // HACK for visualizing different robots in RVIZ
+  if (!rviz_srv_.call(srv_msg_))
+    ROS_WARN("Failed to call service '/rviz/load_config'");
 }
 
 void RVIZHelper::updateTrajectory(const planning_interface::MotionPlanResponse& response)
@@ -450,7 +472,8 @@ void RVIZHelper::removeScene()
   updateScene(nullptr);
 }
 
-void RVIZHelper::updateScene(const planning_scene::PlanningSceneConstPtr& scene)
+void RVIZHelper::updateScene(const planning_scene::PlanningSceneConstPtr& scene,
+                             const moveit_msgs::RobotState& robot_state)
 {
   if (scene_pub_.getNumSubscribers() < 1)
   {
@@ -466,6 +489,19 @@ void RVIZHelper::updateScene(const planning_scene::PlanningSceneConstPtr& scene)
   {
     scene->getPlanningSceneMsg(to_pub);
     to_pub.is_diff = true;
+
+    if (!moveit::core::isEmpty(robot_state))
+      to_pub.robot_state = robot_state;
+  }
+  else
+  {
+    // Remove all scene objects
+    to_pub.is_diff = true;
+    to_pub.robot_state.is_diff = true;
+    to_pub.robot_state.attached_collision_objects.resize(1);
+    to_pub.robot_state.attached_collision_objects[0].object.operation = moveit_msgs::CollisionObject::REMOVE;
+    to_pub.world.collision_objects.resize(1);
+    to_pub.world.collision_objects[0].operation = moveit_msgs::CollisionObject::REMOVE;
   }
 
   scene_pub_.publish(to_pub);

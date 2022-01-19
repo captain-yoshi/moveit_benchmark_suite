@@ -20,7 +20,7 @@ public:
   /** \brief Constructor.
    *  \param[in] name Name for namespace.
    */
-  Handler(const std::string& name, const std::string& ns);
+  Handler(const std::string& name);
 
   // non-copyable
   Handler(Handler const&) = delete;
@@ -42,6 +42,7 @@ public:
    *  \param[in] prefix Prefix to put YAML node under.
    */
   void loadYAMLtoROS(const YAML::Node& node, const std::string& prefix = "");
+  void loadROStoYAML(const std::string& ns, YAML::Node& node);
 
   /** \brief Sets a parameter on the parameter server.
    *  \param[in] key Key to store parameter under.

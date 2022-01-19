@@ -39,9 +39,20 @@
 #pragma once
 
 #include <moveit_benchmark_suite/dataset.h>
+#include <ros/node_handle.h>
 
 namespace moveit_benchmark_suite
 {
+constexpr char CONFIG_PARAMETER[] = "config_file";
+
+namespace ProfilerType
+{
+const std::string MOTION_PLANNING_PP = "Motion planning PlanningPipeline";
+const std::string MOTION_PLANNING_MGI = "Motion planning MoveGroupInterface";
+const std::string COLLISION_CHECK = "COLLISION CHECK";
+
+}  // namespace ProfilerType
+
 using QueryId = std::size_t;
 using ResultId = std::size_t;
 
@@ -134,6 +145,8 @@ public:
   virtual DerivedResult runQuery(const DerivedQuery& query, Data& data) const = 0;
   virtual void preRunQuery(DerivedQuery& query, Data& data){};
   virtual void postRunQuery(const DerivedQuery& query, DerivedResult& result, Data& data){};
+
+  virtual void buildQueriesFromYAML(const std::string& filename){};
 
   virtual const std::string& getQueryName(const QueryId query_id) override
   {

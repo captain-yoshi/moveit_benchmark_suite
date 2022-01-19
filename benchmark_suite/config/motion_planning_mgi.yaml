@@ -1,56 +1,57 @@
+########################################
+# Motion Planning (MoveGroupInterface) #
+########################################
+
+# Describes benchmark parameters (independant of profilers)
 benchmark_config:
   parameters:
-    name: "MP MoveGroupInterface"
-    runs: 5                             # Number of runs per scene, interface, collision detector and each planning algorithm
-    timeout: 5                          # Default 10.0
+    runs: 5                         # Number of trials for each query
+    name: "MotionPlanning MGI"      # Default ""    | Overridden by ROS Param /benchmark/name
+    visualize: false                # Default false | Overridden by ROS Param /benchmark/visualize
+    output_file: ""                 # Default ""    | Overridden by ROS Param /benchmark/output_file
 
-  collision_detector: FCL               # REQUIRED
+# Describes config for building motion planning pair-wise queries
+profiler_config:
 
+  # OPTIONAL Override 'requests' with moveit_msgs/MotionPlanRequest respective field/s
+  requests_override:
+    allowed_planning_time: 5.0
+    num_planning_attempts: 1
+
+  # Resource moveit_msgs/MotionPlanRequest
+  requests:
+    - name: jc
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/jc.yaml
+    - name: jc_pcp
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/jc_pcp.yaml
+
+  # Resource moveit_config (robot)
+  robot:
+    name: panda
+    resources:
+      urdf: /robot_description
+      srdf: /robot_description_semantic
+      kinematics: /robot_description_kinematics
+      joint_limits: /robot_description_planning/joint_limits
+
+  # Resource moveit_msgs/PlanningScene
+  scenes:
+    - name: empty_scene
+      resource: package://moveit_benchmark_suite_resources/scenes/empty/empty.urdf.xacro
+    - name: primitive_scene
+      resource: package://moveit_benchmark_suite_resources/scenes/bbt/panda/primitive.urdf.xacro
+    # - name: mesh_scene
+    #   resource: package://moveit_benchmark_suite_resources/scenes/bbt/panda/mesh_16k.urdf.xacro
+
+  collision_detectors:
+    - FCL
+
+  # Resource moveit_config (planning pipeline)
   planning_pipelines:
-    - name: ompl                        # REQUIRED
-      planners:                         # REQUIRED
-        - RRTConnectkConfigDefault
-        #- RRTkConfigDefault
-    #- name: stomp
-    #  planners:
-    #    - STOMP
-
-
-##############################################################################
-#
-# OPTIONAL: Use to Aggregate and/or Plot after the benchmark is completed
-#
-##############################################################################
-
-#aggregate_config:
-#  #filters:                            # Optionnal
-#  #  - type/COLLISION CHECK
-#  aggregate:                           # Required
-#    - raw_metric: time
-#      new_metric: avg_time
-#      type: average
-#    - raw_metric: waypoints
-#      new_metric: avg_waypoints
-#      type: average
-#    - raw_metric: length
-#      new_metric: avg_length
-#      type: average
-#    - raw_metric: success
-#      new_metric: avg_success
-#      type: average
-#    - raw_metric: correct
-#      new_metric: avg_correct
-#      type: average
-
-
-#gnuplot_config:
-#  xtick_filters:                       # REQUIRED
-#    - config/scene/
-#  legend_filters:                      # Optionnal
-#    - config/collision_detector/
-#  metrics:                             # REQUIRED
-#    - time: boxplot
-#    - avg_correct: bargraph
-#  options:                             # Optionnal
-#      n_row: 2
-#      n_col: 1
+    - name: ompl
+      # Override/Extend moveit_msgs/MotionPlanRequest pipeline_id field
+      resource: /move_group/planning_pipelines/ompl
+      # OPTIONAL Override/Extend moveit_msgs/MotionPlanRequest planner_id field
+      parameters:
+        planners:
+          - RRTConnect

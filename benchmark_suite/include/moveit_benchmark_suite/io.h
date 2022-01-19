@@ -54,6 +54,8 @@ namespace IO
  */
 std::string generateUUID();
 
+bool isExtension(const std::string& path_string, const std::string& extension);
+
 /** \brief Resolves `package://` URLs to their canonical form.
  *  The path does not need to exist, but the package does. Can be used to write new files in packages.
  *  \param[in] path Path to resolve.
@@ -71,7 +73,7 @@ std::set<std::string> findPackageURIs(const std::string& string);
  *  \param[in] path Path to resolve.
  *  \return The canonical path, or "" on failure.
  */
-const std::string resolvePath(const std::string& path);
+const std::string resolvePath(const std::string& path, bool verbose = true);
 
 /** \brief Resolves `package://` URLs to get the directory this path is in.
  *  \param[in] path Path to get the parent of.
@@ -108,6 +110,7 @@ const std::string runCommand(const std::string& cmd);
  *  \return A pair, where the first is true on success false on failure, and second is the YAML node.
  */
 const std::pair<bool, YAML::Node> loadFileToYAML(const std::string& path);
+const bool loadFileToYAML(const std::string& path, YAML::Node& node, bool verbose = false);
 
 std::string getFilePath(const std::string& file);
 std::string getFileName(const std::string& file);
