@@ -931,6 +931,8 @@ Node convert<moveit_msgs::CollisionObject>::encode(const moveit_msgs::CollisionO
   if (!rhs.type.key.empty())
     node["type"] = rhs.type;
 
+  node["pose"] = rhs.pose;
+
   if (!rhs.primitives.empty())
   {
     node["primitives"] = rhs.primitives;
@@ -983,6 +985,9 @@ bool convert<moveit_msgs::CollisionObject>::decode(const Node& node, moveit_msgs
 
   if (IO::isNode(node["type"]))
     rhs.type = node["type"].as<object_recognition_msgs::ObjectType>();
+
+  if (IO::isNode(node["pose"]))
+    rhs.pose = node["pose"].as<geometry_msgs::Pose>();
 
   if (IO::isNode(node["primitives"]))
   {
