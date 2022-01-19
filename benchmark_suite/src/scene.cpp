@@ -10,6 +10,7 @@
 #include <moveit_benchmark_suite/log.h>
 #include <moveit_benchmark_suite/io.h>
 #include <moveit_benchmark_suite/io/yaml.h>
+#include <moveit_benchmark_suite/yaml.h>
 
 #include <urdf_to_scene/scene_parser.h>
 
@@ -531,6 +532,34 @@ bool Scene::toYAMLFile(const std::string& file) const
   scene_->getPlanningSceneMsg(msg);
 
   YAML::Node node = IO::toNode(msg);
+
+  // Replace mesh soup with filename resource if it exists
+  if (node["world"] && node["world"]["collision_objects"])
+  {
+    auto n = node["world"]["collision_objects"];
+
+    for (const auto& resource : mesh_resources_)
+    {
+      if (n[resource.first])
+        continue;
+
+      auto object = n[resource.first];
+      if (object["meshes"] && object["meshes"].size() > 0)
+      {
+        auto mesh = object["meshes"][0];
+
+        mesh["resource"] = resource.second;
+
+        if (mesh["triangles"])
+          mesh.remove("triangles");
+        if (mesh["vertices"])
+          mesh.remove("vertices");
+
+        if (object["meshes"].size() > 1)
+          ROS_WARN("Encoding resources of multiple meshes per collision object is not supported");
+      }
+    }
+  }
   return IO::YAMLToFile(node, file);
 }
 
@@ -542,9 +571,15 @@ bool Scene::fromURDFString(const std::string& str)
   if (!parser.loadURDF(str))
     return false;
 
-  parser.getCollisionObjects(msg.world.collision_objects);
+  parser.parseURDF();
 
-  fixCollisionObjectFrame(msg);
+  const auto& ps = parser.getPlanningScene();
+  msg.world.collision_objects = ps.world.collision_objects;
+  msg.fixed_frame_transforms = ps.fixed_frame_transforms;
+
+  // Store mesh resources for possible conversion
+  const auto& resource_map = parser.getMeshResourceMap();
+  mesh_resources_ = resource_map;
 
   // Add robot_state if loaded scene does not contain one.
   if (msg.robot_state.joint_state.position.empty())
@@ -575,7 +610,25 @@ bool Scene::fromYAMLFile(const std::string& file)
   if (!IO::fromYAMLFile(msg, file))
     return false;
 
-  fixCollisionObjectFrame(msg);
+  // Add robot_state if loaded scene does not contain one.
+  if (msg.robot_state.joint_state.position.empty())
+    moveit::core::robotStateToRobotStateMsg(scene_->getCurrentState(), msg.robot_state);
+
+  auto acm(getACM());
+  useMessage(msg);
+
+  // Update ACM only if anything specified.
+  if (msg.allowed_collision_matrix.entry_names.empty())
+    getACM() = acm;
+
+  return true;
+}
+
+bool Scene::fromYAMLNode(const YAML::Node& node)
+{
+  moveit_msgs::PlanningScene msg;
+
+  msg = node.as<moveit_msgs::PlanningScene>();
 
   // Add robot_state if loaded scene does not contain one.
   if (msg.robot_state.joint_state.position.empty())

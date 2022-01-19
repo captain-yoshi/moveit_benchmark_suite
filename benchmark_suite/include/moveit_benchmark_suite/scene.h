@@ -308,6 +308,7 @@ public:
    *  \return True on success, false on failure.
    */
   bool fromYAMLFile(const std::string& file);
+  bool fromYAMLNode(const YAML::Node& node);
   bool fromOpenRAVEXMLFile(const std::string& file, std::string models_dir = "");
 
   /** \brief Load a planning scene from a URDF or XACRO file using the urdf_to_scene pkg.
@@ -331,6 +332,8 @@ private:
 
   CollisionPluginLoaderPtr loader_;         ///< Plugin loader that sets collision detectors for the scene.
   planning_scene::PlanningScenePtr scene_;  ///< Underlying planning scene.
+
+  std::map<std::string, std::string> mesh_resources_ = {};  ///<
 };
 
 void getTransformsFromTf(std::vector<geometry_msgs::TransformStamped>& transforms,
