@@ -60,7 +60,15 @@ int main(int argc, char** argv)
   PickPlaceProfiler profiler;
   profiler.buildQueriesFromYAML(filename);
 
-  profiler.options.metrics = PickPlaceProfiler::Metrics::SUBTASKS;
+  profiler.options.metrics = PickPlaceProfiler::Metrics::TASK_FAILURE_COUNT |   //
+                             PickPlaceProfiler::Metrics::TASK_SUCCESS_COUNT |   //
+                             PickPlaceProfiler::Metrics::TASK_FAILURES_COST |   //
+                             PickPlaceProfiler::Metrics::TASK_SOLUTIONS_COST |  //
+                             PickPlaceProfiler::Metrics::STAGE_TOTAL_TIME |     //
+                             PickPlaceProfiler::Metrics::STAGE_FAILURE_COUNT |  //
+                             PickPlaceProfiler::Metrics::STAGE_SUCCESS_COUNT |  //
+                             PickPlaceProfiler::Metrics::STAGE_FAILURES_COST |  //
+                             PickPlaceProfiler::Metrics::STAGE_SOLUTIONS_COST;  //
 
   // Setup benchmark
   Benchmark benchmark;

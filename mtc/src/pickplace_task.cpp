@@ -442,13 +442,6 @@ void PickPlaceTask::place()
   */
 }
 
-bool cb(const moveit::task_constructor::Stage& stage, unsigned int test)
-{
-  std::cout << stage.name() << " " << std::to_string(test) << " " << stage.getTotalComputeTime() << std::endl;
-
-  return true;
-};
-
 bool PickPlaceTask::plan()
 {
   ROS_INFO_NAMED(LOGNAME, "Start searching for task solutions");
@@ -467,20 +460,6 @@ bool PickPlaceTask::plan()
     ROS_ERROR_NAMED(LOGNAME, "Planning failed");
     return false;
   }
-
-  // parse stages
-  //
-  //
-  const ContainerBase* stages = task_->stages();
-  // moveit::task_constructor StageCallback test = std::function<bool(const Stage&, unsigned int)>;
-  // std::cout << stages;
-  stages->traverseRecursively(cb);
-  // std::ostream& operator<<(std::ostream& os, const ContainerBase& stage);
-
-  // parse solutions
-  // for (const auto& solution : task_->solutions()) {
-  //	ROS_INFO_STREAM(std::to_string(solution->cost()));
-  //}
 
   return true;
 }

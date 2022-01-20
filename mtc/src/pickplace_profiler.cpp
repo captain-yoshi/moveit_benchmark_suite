@@ -134,6 +134,62 @@ void PickPlaceProfiler::postRunQuery(const PickPlaceQuery& query, PickPlaceResul
   // Compute metrics
   data.metrics["time"] = data.time;
   data.metrics["success"] = result.success;
+
+  // Compute task metrics
+  const auto& task = pick_place_task->getTask();
+  std::string task_success_key = "task/success/" + task->name();
+  std::string task_failure_key = "task/failure/" + task->name();
+  std::string task_solutions_cost_key = "task/solutions/cost/" + task->name();
+  std::string task_failures_cost_key = "task/failures/cost/" + task->name();
+
+  std::vector<double> task_solutions_cost;
+  for (const auto& solution : task->solutions())
+    task_solutions_cost.push_back(solution->cost());
+
+  std::vector<double> task_failures_cost;
+  for (const auto& failure : task->failures())
+    task_failures_cost.push_back(failure->cost());
+
+  if (options.metrics & Metrics::TASK_SUCCESS_COUNT)
+    data.metrics[task_success_key] = task->solutions().size();
+  if (options.metrics & Metrics::TASK_FAILURE_COUNT)
+    data.metrics[task_failure_key] = task->failures().size();
+  if (options.metrics & Metrics::TASK_SOLUTIONS_COST)
+    data.metrics[task_solutions_cost_key] = task_solutions_cost;
+  if (options.metrics & Metrics::TASK_FAILURES_COST)
+    data.metrics[task_failures_cost_key] = task_failures_cost;
+
+  // Compute stage metrics
+  const ContainerBase* stages = task->stages();
+  auto stage_cb = [&](const moveit::task_constructor::Stage& stage, unsigned int depth) -> bool {
+    std::string stage_time_key = "stage/time/" + stage.name();
+    std::string stage_success_key = "stage/success/" + stage.name();
+    std::string stage_failure_key = "stage/failure/" + stage.name();
+    std::string stage_solutions_cost_key = "stage/solutions/cost/" + stage.name();
+    std::string stage_failures_cost_key = "stage/failures/cost/" + stage.name();
+
+    std::vector<double> stage_solutions_cost;
+    for (const auto& solution : stage.solutions())
+      stage_solutions_cost.push_back(solution->cost());
+
+    std::vector<double> stage_failures_cost;
+    for (const auto& failure : stage.failures())
+      stage_failures_cost.push_back(failure->cost());
+
+    if (options.metrics & Metrics::STAGE_TOTAL_TIME)
+      data.metrics[stage_time_key] = stage.getTotalComputeTime();
+    if (options.metrics & Metrics::STAGE_SUCCESS_COUNT)
+      data.metrics[stage_success_key] = stage.solutions().size();
+    if (options.metrics & Metrics::STAGE_FAILURE_COUNT)
+      data.metrics[stage_failure_key] = stage.failures().size();
+    if (options.metrics & Metrics::STAGE_SOLUTIONS_COST)
+      data.metrics[stage_solutions_cost_key] = stage_solutions_cost;
+    if (options.metrics & Metrics::STAGE_FAILURES_COST)
+      data.metrics[stage_failures_cost_key] = stage_failures_cost;
+
+    return true;
+  };
+  stages->traverseRecursively(stage_cb);
 }
 
 }  // namespace moveit_benchmark_suite_mtc

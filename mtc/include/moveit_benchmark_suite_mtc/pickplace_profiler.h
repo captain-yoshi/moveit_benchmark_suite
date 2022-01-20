@@ -90,7 +90,16 @@ class PickPlaceProfiler : public ProfilerTemplate<PickPlaceQuery, PickPlaceResul
 public:
   enum Metrics
   {
-    SUBTASKS = 1 << 0,  //
+    TASK_SUCCESS_COUNT = 1 << 0,   //
+    TASK_FAILURE_COUNT = 1 << 1,   //
+    TASK_SOLUTIONS_COST = 1 << 2,  //
+    TASK_FAILURES_COST = 1 << 3,   //
+
+    STAGE_TOTAL_TIME = 1 << 4,      //
+    STAGE_SUCCESS_COUNT = 1 << 5,   //
+    STAGE_FAILURE_COUNT = 1 << 6,   //
+    STAGE_SOLUTIONS_COST = 1 << 7,  //
+    STAGE_FAILURES_COST = 1 << 8,   //
   };
 
   PickPlaceProfiler();
