@@ -34,19 +34,12 @@
    Desc:   A demo to show MoveIt Task Constructor in action
 */
 
-// ROS
 #include <ros/ros.h>
 
-#include <urdf_to_scene/scene_parser.h>
-
-#include <moveit_benchmark_suite/io.h>
 #include <moveit_benchmark_suite/benchmark.h>
 
-// MTC pick/place demo implementation
 #include <moveit_benchmark_suite_mtc/pickplace_profiler.h>
 #include <moveit_benchmark_suite_mtc/pickplace_builder.h>
-
-constexpr char LOGNAME[] = "moveit_benchmark_suite_mtc_pickplace_benchmark";
 
 using namespace moveit_benchmark_suite;
 using namespace moveit_benchmark_suite_mtc;
@@ -59,57 +52,29 @@ int main(int argc, char** argv)
 
   ros::NodeHandle pnh("~");
 
-  // Parse output directory and filename
-  std::string file;
-  std::string filepath;
+  // Get config
   std::string filename;
-  pnh.getParam("output_file", file);
-
-  filepath = IO::getFilePath(file);
-  filename = IO::getFileName(file);
-
-  // Build queries
-  PickPlaceBuilder builder;
-  builder.buildQueries();
-
-  const auto& queries = builder.getQueries();
-  const auto& query_setup = builder.getQuerySetup();
-  const auto& config = builder.getConfig();
-
-  const auto& params = config.getParameters();
-  std::size_t trials = params.runs;
-  const auto& benchmark_name = params.benchmark_name;
+  pnh.getParam(CONFIG_PARAMETER, filename);
 
   // Setup profiler
+  PickPlaceProfiler profiler;
+  profiler.buildQueriesFromYAML(filename);
 
-  PickPlaceProfiler profiler(BenchmarkType::MTC_PICK_PLACE);
-  profiler.setQuerySetup(query_setup);
-
-  for (const auto& query : queries)
-    profiler.addQuery(query);
+  profiler.options.metrics = PickPlaceProfiler::Metrics::SUBTASKS;
 
   // Setup benchmark
-  Benchmark::Options options = { .trials = trials };
+  Benchmark benchmark;
+  benchmark.initializeFromHandle(pnh);
 
-  Benchmark benchmark(benchmark_name,  // Name of benchmark
-                      options);        // Options for benchmark
+  // Setup visualizer
+  if (benchmark.getOptions().visualize)
+    profiler.addPostRunQueryCallback([&](const PickPlaceQuery& query, PickPlaceResult& result, Data& data) {
+      ROS_INFO("Press `enter` to view next query");
+      std::cin.ignore();
+    });
 
   // Run benchmark
   auto dataset = benchmark.run(profiler);
-
-  if (!dataset)
-    return 0;
-
-  // Dump metrics to logfile
-  BenchmarkSuiteDataSetOutputter output;
-  output.dump(*dataset, filepath, filename);
-
-  // Wait if GNUPlot was configured
-  if (benchmark.getPlotFlag())
-  {
-    ROS_WARN("Press ENTER to continue");
-    std::cin.ignore();
-  }
 
   return 0;
 }
