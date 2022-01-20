@@ -168,6 +168,12 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
                                   query_index + 1, query_size, options_.trials, query_name));
     }
 
+    if (!profiler.initializeQuery(query_index))
+    {
+      ROS_ERROR("Error in Profiler initialization, no work was done with query");
+      continue;
+    }
+
     for (std::size_t trial = 0; trial < options_.trials; ++trial)
     {
       if (options_.verbose_status_trial)
