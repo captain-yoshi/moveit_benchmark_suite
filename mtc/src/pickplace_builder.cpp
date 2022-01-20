@@ -4,6 +4,7 @@
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
 
 #include <urdf_to_scene/scene_parser.h>
+#include <moveit_benchmark_suite_mtc/pickplace_profiler.h>
 
 using namespace moveit_benchmark_suite_mtc;
 
@@ -67,8 +68,8 @@ void PickPlaceConfig::readBenchmarkConfig(const std::string& ros_namespace)
 {
   ros::NodeHandle nh(ros_namespace);
 
-  XmlRpc::XmlRpcValue benchmark_config;
-  if (nh.getParam("/benchmark_config", benchmark_config))
+  XmlRpc::XmlRpcValue profiler_config;
+  if (nh.getParam("profiler_config", profiler_config))
   {
     readParameters(nh);
     readSolvers(nh);
@@ -78,7 +79,7 @@ void PickPlaceConfig::readBenchmarkConfig(const std::string& ros_namespace)
   }
   else
   {
-    ROS_WARN("No '/benchmark_config' found on param server");
+    ROS_WARN("No 'profiler_config' found on param server");
   }
 }
 
@@ -87,10 +88,8 @@ void PickPlaceConfig::readParameters(ros::NodeHandle& nh)
   auto& p = parameters_;
   size_t errors = 0;
 
-  ros::NodeHandle pnh(nh, "/benchmark_config/parameters");
+  ros::NodeHandle pnh(nh, "profiler_config/parameters");
 
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "name", p.benchmark_name);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "runs", p.runs);
   errors += !rosparam_shortcuts::get(LOGNAME, pnh, "timeout", p.timeout);
   errors += !rosparam_shortcuts::get(LOGNAME, pnh, "max_solutions", p.max_solutions);
 
@@ -125,7 +124,7 @@ void PickPlaceConfig::readSolvers(ros::NodeHandle& nh)
 {
   XmlRpc::XmlRpcValue node;
 
-  if (nh.getParam("/benchmark_config/solvers", node))
+  if (nh.getParam("profiler_config/solvers", node))
   {
     if (node.getType() != XmlRpc::XmlRpcValue::TypeArray)
     {
@@ -253,13 +252,13 @@ void PickPlaceConfig::readSolvers(ros::NodeHandle& nh)
 void PickPlaceConfig::readConstraints(ros::NodeHandle& nh)
 {
   std::string file;
-  if (!nh.hasParam("/benchmark_config_file"))
+  if (!nh.hasParam("/benchmark/config_file"))
   {
-    ROS_ERROR("ROSPARAM '/benchmark_config_file' does not exist.");
+    ROS_ERROR("ROSPARAM '/benchmark/config_file' does not exist.");
     return;
   }
 
-  nh.getParam("/benchmark_config_file", file);
+  nh.getParam("/benchmark/config_file", file);
 
   YAML::Node node;
 
@@ -273,9 +272,9 @@ void PickPlaceConfig::readConstraints(ros::NodeHandle& nh)
     return;
   }
 
-  if (node["benchmark_config"]["path_constraints"])
+  if (node["profiler_config"]["path_constraints"])
   {
-    const auto& path_constraints = node["benchmark_config"]["path_constraints"];
+    const auto& path_constraints = node["profiler_config"]["path_constraints"];
 
     for (YAML::const_iterator it = path_constraints.begin(); it != path_constraints.end(); ++it)
     {
@@ -313,7 +312,7 @@ void PickPlaceConfig::readTasks(ros::NodeHandle& nh)
 {
   XmlRpc::XmlRpcValue node;
 
-  if (nh.getParam("/benchmark_config/tasks", node))
+  if (nh.getParam("profiler_config/tasks", node))
   {
     if (node.getType() != XmlRpc::XmlRpcValue::TypeArray)
     {
@@ -410,10 +409,14 @@ void PickPlaceBuilder::buildScenes()
     query_setup_.addQuery("scene", scene.first, "");
 
     parser.loadURDF(scene.second);
+    parser.parseURDF();
+
     scenes_.emplace_back();
     scenes_.back().name = scene.first;
     scenes_.back().is_diff = true;
-    parser.getCollisionObjects(scenes_.back().world.collision_objects);
+
+    const auto& ps = parser.getPlanningScene();
+    scenes_.back().world.collision_objects = ps.world.collision_objects;
   }
 }
 

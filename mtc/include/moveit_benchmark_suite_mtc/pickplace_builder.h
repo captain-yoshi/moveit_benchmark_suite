@@ -64,10 +64,20 @@
 #include <moveit_task_constructor_msgs/ExecuteTaskSolutionAction.h>
 
 #include <moveit_benchmark_suite/dataset.h>
-#include <moveit_benchmark_suite_mtc/pickplace_profiler.h>
+#include <moveit_benchmark_suite_mtc/pickplace_task.h>
 
 namespace moveit_benchmark_suite_mtc
 {
+MOVEIT_CLASS_FORWARD(PickPlaceQuery);
+
+enum class SolverType
+{
+  INVALID,
+  SAMPLING_BASED,
+  CARTESIAN_PATH,
+  JOINT_INTERPOLATION,
+};
+
 struct Stage
 {
   std::string solver;
