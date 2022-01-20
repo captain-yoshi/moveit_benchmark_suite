@@ -51,6 +51,9 @@ const std::string MOTION_PLANNING_PP = "Motion planning PlanningPipeline";
 const std::string MOTION_PLANNING_MGI = "Motion planning MoveGroupInterface";
 const std::string COLLISION_CHECK = "COLLISION CHECK";
 
+// MTC
+const std::string MTC_PICK_N_PLACE = "MTC_PICK_N_PLACE";
+
 }  // namespace ProfilerType
 
 using QueryId = std::size_t;
