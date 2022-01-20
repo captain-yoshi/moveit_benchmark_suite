@@ -12,7 +12,7 @@
 
   <!-- Scenes -->
   <group ns="scenes" clear_params="true">
-    <param name="openshelf-hq" command="$(find xacro)/xacro '$(find moveit_benchmark_suite_resources)/scenes/shelf/crowded_shelf.xacro'"/>
+    <param name="openshelf-hq" command="$(find xacro)/xacro '$(find moveit_benchmark_suite_resources)/scenes/shelf/simple.urdf.xacro'"/>
   </group>
 
   <!-- Benchmark/Profiler config file -->

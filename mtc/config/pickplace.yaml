@@ -5,7 +5,7 @@
 # Describes benchmark parameters (independant of profilers)
 benchmark_config:
   parameters:
-    runs: 2                         # Number of trials for each query
+    runs: 5                         # Number of trials for each query
     name: "PickPlace MTC"           # Default ""    | Overridden by ROS Param /benchmark/name
     visualize: false                # Default false | Overridden by ROS Param /benchmark/visualize
     output_file: ""                 # Default ""    | Overridden by ROS Param /benchmark/output_file
@@ -31,7 +31,7 @@ profiler_config:
     world_frame: "world"
     table_reference_frame: "world"
     object_reference_frame: "world"
-    surface_link: "shelf_board13"
+    surface_link: "shelf_board4"
 
     # Collision object for picking
     # CUBE object specifications
@@ -43,7 +43,7 @@ profiler_config:
     grasp_frame_transform: [0.0441, -0.0441, 0.1, 1.5707, -2.356, 1.5707]
 
     # Place pose [x,y,z,r,p,y]
-    place_pose: [0.7, -0.18, 0.468, 0, 0, 3.1415]
+    place_pose: [0.8, -0.18, 0.468, 0, 0, 3.1415]
     place_surface_offset: 0.0001 # place offset from table
 
     # Valid distance range when approaching an object for picking
