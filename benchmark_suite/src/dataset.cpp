@@ -6,7 +6,7 @@
 using namespace moveit_benchmark_suite;
 
 ///
-/// PlannerMetric
+/// MetricVisitors
 ///
 
 namespace
@@ -14,62 +14,76 @@ namespace
 class toMetricStringVisitor : public boost::static_visitor<std::string>
 {
 public:
-  std::string operator()(int value) const
+  std::string operator()(int metric) const
   {
-    return std::to_string(value);
+    return std::to_string(metric);
   }
 
-  std::string operator()(double value) const
+  std::string operator()(double metric) const
   {
-    // double v = boost::get<double>(value);
+    // double v = boost::get<double>(metric);
 
     // [Bad Pun] No NaNs, Infs, or buts about it.
     return boost::lexical_cast<std::string>(  //
-        (std::isfinite(value)) ? value : std::numeric_limits<double>::max());
+        (std::isfinite(metric)) ? metric : std::numeric_limits<double>::max());
   }
 
-  std::string operator()(std::size_t value) const
+  std::string operator()(std::size_t metric) const
   {
-    return std::to_string(value);
+    return std::to_string(metric);
   }
 
-  std::string operator()(bool value) const
+  std::string operator()(bool metric) const
   {
-    return boost::lexical_cast<std::string>(value);
+    return boost::lexical_cast<std::string>(metric);
   }
 
-  std::string operator()(const std::string& value) const
+  std::string operator()(const std::string& metric) const
   {
-    return value;
+    return metric;
+  }
+
+  template <typename T>
+  std::string operator()(const T& metric) const
+  {
+    std::runtime_error("Cannot convert vector to string");
+    return "";
   }
 };
 
 class toMetricDoubleVisitor : public boost::static_visitor<double>
 {
 public:
-  double operator()(int value) const
+  double operator()(int metric) const
   {
-    return static_cast<double>(value);
+    return static_cast<double>(metric);
   }
 
-  double operator()(double value) const
+  double operator()(double metric) const
   {
-    return value;
+    return metric;
   }
 
-  double operator()(std::size_t value) const
+  double operator()(std::size_t metric) const
   {
-    return static_cast<double>(value);
+    return static_cast<double>(metric);
   }
 
-  double operator()(bool value) const
+  double operator()(bool metric) const
   {
-    return static_cast<double>(value);
+    return static_cast<double>(metric);
   }
 
-  double operator()(const std::string& value) const
+  double operator()(const std::string& metric) const
   {
-    return boost::lexical_cast<double>(value);
+    return boost::lexical_cast<double>(metric);
+  }
+
+  template <typename T>
+  double operator()(const T& metric) const
+  {
+    std::runtime_error("Cannot convert vector to double");
+    return std::numeric_limits<double>::quiet_NaN();
   }
 };
 }  // namespace
