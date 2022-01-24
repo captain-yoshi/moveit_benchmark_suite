@@ -84,7 +84,7 @@ static const std::string DATA_METRIC_KEY = "metrics";
 // WARNING
 // Adding/Removing variant types will affect:
 //   - yaml.cpp convert<moveit_benchmark_suite::Metric>::decode
-using Metric = boost::variant<bool, double, int, std::size_t, std::string, std::vector<bool>, std::vector<int>,
+using Metric = boost::variant<bool, int, double, std::size_t, std::string, std::vector<bool>, std::vector<int>,
                               std::vector<double>, std::vector<std::size_t>, std::vector<std::string>>;
 
 using MetricPtr = std::shared_ptr<Metric>;
