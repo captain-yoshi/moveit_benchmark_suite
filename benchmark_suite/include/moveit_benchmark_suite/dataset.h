@@ -81,7 +81,13 @@ static const std::string DATASET_DATA_KEY = "data";
 static const std::string DATA_CONFIG_KEY = DATASET_CONFIG_KEY;
 static const std::string DATA_METRIC_KEY = "metrics";
 
-using Metric = boost::variant<bool, double, int, std::size_t, std::string>;
+// WARNING
+// Adding/Removing variant types will affect:
+//   - yaml.cpp convert<moveit_benchmark_suite::Metric>::decode
+using Metric = boost::variant<bool, double, int, std::size_t, std::string, std::vector<bool>, std::vector<int>,
+                              std::vector<double>, std::vector<std::size_t>, std::vector<std::string>>;
+
+using MetricPtr = std::shared_ptr<Metric>;
 
 /** \brief Convert a planner metric into a string.
  *  \param[in] metric The metric to convert.
