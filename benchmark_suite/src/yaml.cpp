@@ -19,6 +19,18 @@
 
 using namespace moveit_benchmark_suite;
 
+template <class... Args>
+MetricPtr yaml::decodeMetricVariant(const YAML::Node& node)
+{
+  return decodeMetricVariantHelper<Args...>(node);
+}
+
+template <>
+MetricPtr yaml::decodeMetricVariant(const YAML::Node& node)
+{
+  return nullptr;
+}
+
 void yaml::merge_node(YAML::Node target, YAML::Node const& source)
 {
   switch (source.Type())
@@ -2142,8 +2154,10 @@ bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& n, moveit_benc
         }
         ctr++;
         if (it_metric->second.begin() != it_metric->second.end())
-          data->metrics.insert({ it_metric->first.as<std::string>(), it_metric->second.begin()->as<double>() });
-
+        {
+          YAML::Node metric_node = *it_metric->second.begin();
+          data->metrics.insert({ it_metric->first.as<std::string>(), metric_node.as<Metric>() });
+        }
         iterators.emplace_back();
         iterators.back().name = it_metric->first.as<std::string>();
         iterators.back().size = metric_size;
@@ -2152,7 +2166,7 @@ bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& n, moveit_benc
         // iterators.push_back({ it_metric->first.as<std::string>(), ++(it_metric->second.begin()) });
       }
       else
-        data->metrics.insert({ it_metric->first.as<std::string>(), it_metric->second.as<double>() });
+        data->metrics.insert({ it_metric->first.as<std::string>(), it_metric->second.as<Metric>() });
     }
     rhs.addDataPoint(query_name, data);
 
@@ -2167,12 +2181,13 @@ bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& n, moveit_benc
       for (auto& it_seq : iterators)
       {
         if (i < it_seq.size)
-          data->metrics.insert({ it_seq.name, it_seq.it->as<double>() });
+          data->metrics.insert({ it_seq.name, it_seq.it->as<Metric>() });
         ++it_seq.it;
       }
       rhs.addDataPoint(query_name, data);
     }
   }
+
   // Fill metadata
   rhs.metadata[DATASET_HW_KEY]["cpu"] = rhs.cpuinfo;
   rhs.metadata[DATASET_HW_KEY]["gpu"] = rhs.gpuinfo;
@@ -2188,6 +2203,27 @@ bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& n, moveit_benc
 
   return true;
 }
+Node convert<moveit_benchmark_suite::Metric>::encode(const moveit_benchmark_suite::Metric& rhs)
+{
+  Node node;
+
+  node = rhs;
+
+  return node;
+}
+
+bool convert<moveit_benchmark_suite::Metric>::decode(const Node& n, moveit_benchmark_suite::Metric& rhs)
+{
+  auto metric = yaml::decodeMetricVariant<bool, double, int, std::string, std::vector<bool>, std::vector<double>,
+                                          std::vector<int>, std::vector<std::string>>(n);
+  if (!metric)
+    return false;
+
+  rhs = *metric;
+
+  return true;
+}
+
 }  // namespace YAML
 
 namespace moveit_benchmark_suite

@@ -155,6 +155,25 @@ void merge(class_overrides& by_class, YAML::Node source);
  */
 class_overrides clone(class_overrides const& by_class);
 
+template <class... Args>
+MetricPtr decodeMetricVariant(const YAML::Node&);
+
+template <class T, class... Args>
+MetricPtr decodeMetricVariantHelper(const YAML::Node& node)
+{
+  try
+  {
+    MetricPtr metric = std::make_shared<Metric>();
+    auto val = node.as<T>();
+    *metric = val;
+    return metric;
+  }
+  catch (YAML::BadConversion& e)
+  {
+    return decodeMetricVariant<Args...>(node);
+  }
+}
+
 // Modified version from https://gist.github.com/kunaltyagi/ebe13098cc22a717f793684659644f4e
 // TODO liscence appropriatly
 
@@ -550,6 +569,13 @@ struct convert<moveit_benchmark_suite::DataSet>
 {
   static Node encode(const moveit_benchmark_suite::DataSet& rhs);
   static bool decode(const Node& node, moveit_benchmark_suite::DataSet& rhs);
+};
+
+template <>
+struct convert<moveit_benchmark_suite::Metric>
+{
+  static Node encode(const moveit_benchmark_suite::Metric& rhs);
+  static bool decode(const Node& node, moveit_benchmark_suite::Metric& rhs);
 };
 
 }  // namespace YAML

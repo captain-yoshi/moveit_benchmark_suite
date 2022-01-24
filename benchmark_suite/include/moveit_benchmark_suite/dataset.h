@@ -83,6 +83,8 @@ static const std::string DATA_METRIC_KEY = "metrics";
 
 using Metric = boost::variant<bool, double, int, std::size_t, std::string>;
 
+using MetricPtr = std::shared_ptr<Metric>;
+
 /** \brief Convert a planner metric into a string.
  *  \param[in] metric The metric to convert.
  *  \return The metric as a string.
