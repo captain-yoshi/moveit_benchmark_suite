@@ -127,18 +127,6 @@ public:
    */
   void configurePlot(const PlottingOptions& options);
 
-  /** \brief Time series plotting options.
-   */
-  struct TimeSeriesOptions : PlottingOptions
-  {
-    std::map<std::string, Series> points;  ///< Map of names to time series data.
-  };
-
-  /** \brief Plot timeseries data.
-   *  \param[in] options Plotting options.
-   */
-  void timeseries(const TimeSeriesOptions& options);
-
   /** \brief Box plotting options.
    */
   struct BoxPlotOptions : PlottingOptions

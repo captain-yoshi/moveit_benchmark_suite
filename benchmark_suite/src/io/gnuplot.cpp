@@ -186,38 +186,6 @@ void GNUPlotHelper::configurePlot(const PlottingOptions& options)
     in->writeline(log::format("set yrange [%1%:]", options.y.min));
 }
 
-void GNUPlotHelper::timeseries(const TimeSeriesOptions& options)
-{
-  configurePlot(options);
-  auto in = getInstance(options.instance);
-
-  in->writeline("set datafile separator \",\"");
-  in->write("plot ");
-
-  auto n = options.points.size();
-
-  auto it1 = options.points.begin();
-  for (std::size_t i = 0; i < n; ++i, ++it1)
-  {
-    in->write(log::format("'%1%' using 1:2 with lines lw 2 title \"%2%\"",  //
-                          (i == 0) ? "-" : "",                              //
-                          it1->first));
-    if (i != n - 1)
-      in->write(", ");
-  }
-
-  in->flush();
-
-  auto it2 = options.points.begin();
-  for (std::size_t i = 0; i < n; ++i, ++it2)
-  {
-    for (const auto& point : it2->second)
-      in->writeline(log::format("%1%,%2%", point.first, point.second));
-
-    in->writeline("e");
-  }
-}
-
 void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
 {
   configurePlot(options);
