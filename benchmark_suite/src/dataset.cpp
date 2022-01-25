@@ -82,8 +82,8 @@ public:
   template <typename T>
   double operator()(const T& metric) const
   {
-    std::runtime_error("Cannot convert vector to double");
-    return std::numeric_limits<double>::quiet_NaN();
+    throw std::runtime_error("Cannot convert vector to double");
+    // return std::numeric_limits<double>::quiet_NaN();
   }
 };
 }  // namespace
