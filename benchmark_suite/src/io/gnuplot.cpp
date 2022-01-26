@@ -9,6 +9,7 @@
 
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/stream_buffer.hpp>
+#include <boost/variant/apply_visitor.hpp>
 
 using namespace moveit_benchmark_suite::IO;
 
@@ -62,6 +63,177 @@ SvgTerminal::~SvgTerminal()
 std::string SvgTerminal::getCmd() const
 {
   return log::format("set term %1% size %2%,%3%", mode, size.x, size.y);
+}
+
+///
+/// GNUPlotData
+///
+
+namespace
+{
+class addGNUPlotDataMetricVisitor : public boost::static_visitor<void>
+{
+public:
+  addGNUPlotDataMetricVisitor(std::vector<double>& c1, std::vector<std::vector<double>>& c2) : c1(c1), c2(c2){};
+
+  void operator()(bool metric) const
+  {
+    double val = static_cast<double>(metric);
+    c1.push_back(val);
+  }
+
+  void operator()(int metric) const
+  {
+    double val = static_cast<double>(metric);
+    c1.push_back(val);
+  }
+
+  void operator()(double metric) const
+  {
+    c1.push_back(metric);
+  }
+
+  void operator()(std::vector<bool> metric) const
+  {
+    auto values = std::vector<double>(metric.begin(), metric.end());
+
+    c2.push_back(values);
+  }
+
+  void operator()(std::vector<int> metric) const
+  {
+    auto values = std::vector<double>(metric.begin(), metric.end());
+
+    c2.push_back(values);
+  }
+
+  void operator()(std::vector<double> metric) const
+  {
+    c2.push_back(metric);
+  }
+
+  template <typename T>
+  void operator()(const T& metric) const
+  {
+    throw std::runtime_error("Type not supported in visitor");
+  }
+
+  std::vector<double>& c1;
+  std::vector<std::vector<double>>& c2;
+};
+}  // namespace
+
+void GNUPlotData::add(Value value, Label label, Legend legend)
+{
+  add(std::vector<Value>{ value }, label, legend);
+}
+
+void GNUPlotData::add(Values values, Label label, Legend legend)
+{
+  // Keep count of legend max char
+  if (legend.size() > legend_max_char_size_)
+    legend_max_char_size_ = legend.size();
+
+  // keep count of unique labels
+  unique_labels_.insert(label);
+
+  // keep count of max size of data
+  if (values.size() > data_max_size_)
+    data_max_size_ = values.size();
+
+  auto it = container_.find(legend);
+  if (it != container_.end())
+    it->second.insert({ label, values });
+  else
+    container_[legend].insert({ label, values });
+}
+
+bool GNUPlotData::isEmpty() const
+{
+  if (container_.empty())
+    return true;
+  return false;
+}
+
+bool GNUPlotData::hasLegend() const
+{
+  if (container_.empty())
+    return false;
+
+  if (container_.size() == 1)
+    if (container_.find("") != container_.end())
+      return false;
+
+  return true;
+}
+bool GNUPlotData::hasSingleValues() const
+{
+  if (data_max_size_ > 1)
+    return false;
+  return true;
+}
+
+std::size_t GNUPlotData::getLegendCount() const
+{
+  return container_.size();
+}
+
+std::size_t GNUPlotData::getLegendMaxCharSize() const
+{
+  return legend_max_char_size_;
+}
+
+const std::size_t GNUPlotData::getDataMaxSize() const
+{
+  return data_max_size_;
+}
+
+std::size_t GNUPlotData::getLabelCount(const Label& label) const
+{
+  std::size_t total = 0;
+  for (const auto& legend_map : container_)
+  {
+    auto it = legend_map.second.equal_range(label);
+    for (auto itr = it.first; itr != it.second; ++itr)
+    {
+      total += 1;
+    }
+  }
+
+  return total;
+}
+
+std::size_t GNUPlotData::getLabelCount(const Legend& legend, const Label& label) const
+{
+  std::size_t total = 0;
+  auto itc = container_.find(legend);
+  if (itc == container_.end())
+    return total;
+
+  auto it = itc->second.equal_range(label);
+  for (auto itr = it.first; itr != it.second; ++itr)
+  {
+    total += 1;
+  }
+
+  return total;
+}
+std::size_t GNUPlotData::getLabelTotalCount() const
+{
+  std::size_t total = 0;
+  for (const auto& legend_map : container_)
+    total += legend_map.second.size();
+  return total;
+}
+
+const std::set<std::string>& GNUPlotData::getUniqueLabels() const
+{
+  return unique_labels_;
+}
+
+const GNUPlotData::Container& GNUPlotData::getContainer() const
+{
+  return container_;
 }
 
 ///
@@ -186,47 +358,84 @@ void GNUPlotHelper::configurePlot(const PlottingOptions& options)
     in->writeline(log::format("set yrange [%1%:]", options.y.min));
 }
 
-void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
+void GNUPlotHelper::writeDataBlocks(GNUPlotHelper::Instance& in, const GNUPlotData& datablock)
 {
-  configurePlot(options);
-  auto in = getInstance(options.instance);
-
-  std::vector<std::string> xtick_titles;
-  std::vector<std::string> legend_titles;
-  double boxwidth = 0.5;
-  double boxwidth_gap = 0.15;
-
-  bool is_legend = (options.values.size() == 1 && options.values.begin()->first.empty()) ? false : true;
-
-  auto it1 = options.values.begin();
-  int n_legend = options.values.size();
-  int n_xtick = it1->second.size();
-
-  // data blocks
   int ctr = 0;
-  for (std::size_t i = 0; i < n_legend; ++i, ++it1)
+  const auto& labels = datablock.getUniqueLabels();
+
+  for (const auto& label : labels)
   {
-    legend_titles.push_back(replaceStr(it1->first, "_", "\\\\_"));
-
-    auto it2 = it1->second.begin();
-    for (std::size_t j = 0; j < n_xtick; ++j, ++it2)
+    for (const auto& legend_map : datablock.getContainer())
     {
-      in->writeline(log::format("$data%1% <<EOD", ctr + 1));
-
-      if (it2 != it1->second.end())
+      auto it = legend_map.second.equal_range(label);
+      for (auto itr = it.first; itr != it.second; ++itr)
       {
-        for (const auto& val : it2->second)
-        {
-          in->writeline(log::format("%1%", val));
-        }
+        in.writeline(log::format("$data%1% <<EOD", ctr));
+
+        for (const auto& value : itr->second)
+          in.writeline(log::format("%1%", value));
+
+        in.writeline("EOD");
+        ctr++;
       }
-      in->writeline("EOD");
-      ctr++;
     }
   }
+}
+
+void GNUPlotHelper::writeLegend(GNUPlotHelper::Instance& in, const GNUPlotData& datablock)
+{
+  if (datablock.hasLegend())
+  {
+    in.writeline(log::format("set rmargin %1%", datablock.getLegendMaxCharSize() + 6));
+    in.writeline("set key at screen 1, graph 1");
+  }
+  else
+    in.writeline("unset key");  // Disable legend
+}
+
+void GNUPlotHelper::writeXticks(GNUPlotHelper::Instance& in, const GNUPlotData& datablock,
+                                const GNUPlotHelper::ShapeOptions& shape)
+{
+  const auto& labels = datablock.getUniqueLabels();
+
+  std::size_t ctr = 0;
+  double label_offset = 0;
+
+  in.write("set xtics (");
+
+  for (const auto& label : labels)
+  {
+    std::size_t n_label = datablock.getLabelCount(label);
+    double label_length = static_cast<double>(n_label) * shape.width + 2 * shape.label_gap;
+    double label_pos = label_length / 2.0 + label_offset;
+
+    in.write(log::format("\"%1%\" %2%", replaceStr(label, "_", "\\\\_"), std::to_string(label_pos)));
+
+    ctr++;
+    label_offset += label_length;
+
+    if (ctr < labels.size())
+      in.write(", ");
+  }
+
+  in.writeline(") scale 0.0 center");
+}
+
+void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
+{
+  auto in = getInstance(options.instance);
+  const auto& datablock = options.datablock;
+
+  // Title and axis
+  configurePlot(options);
+
+  // Datablocks (embedding data)
+  writeDataBlocks(*in, datablock);
   in->writeline("set datafile separator \",\"");
-  // in->writeline("set border 10 front lt black linewidth 1.000 dashtype solid");
+
+  // Border, margin and style
   in->writeline("set border back");
+  in->writeline("set bmargin 6");
   in->writeline("set style data boxplot");
   in->writeline("set style fill solid 0.5 border -1");
 
@@ -238,233 +447,149 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
   else
     in->writeline("set style boxplot nooutliers");
 
-  if (is_legend)
-  {
-    int legend_title_n = 0;
-    for (const auto& legend_title : legend_titles)
-    {
-      if (legend_title.size() > legend_title_n)
-        legend_title_n = legend_title.size();
-    }
+  // Legend
+  writeLegend(*in, datablock);
 
-    in->writeline(log::format("set rmargin %1%", legend_title_n + 6));  // Disable legend
-    in->writeline("set key at screen 1, graph 1");                      // Disable legend
-  }
-  else
-    in->writeline("unset key");  // Disable legend
+  // Xticks
+  writeXticks(*in, datablock, options.box);
 
-  // xticks
-  for (const auto& xtick : options.values.begin()->second)
-    xtick_titles.push_back(replaceStr(xtick.first, "_", "\\\\_"));
-
-  in->writeline("set bmargin 6");
-
-  in->write("set xtics (");
-  // auto it2 = options.xticks.begin();
-  double xtick_center_start = (double)n_legend * boxwidth / 2.0 + boxwidth_gap;
-  std::vector<double> x_offsets;
-
-  if (is_legend)
-  {
-    for (std::size_t i = 0; i < xtick_titles.size(); ++i)
-    {
-      double xtick_center = xtick_center_start + (double(i) * boxwidth_gap + double(i) * double(n_legend) / 2.0);
-
-      in->write(log::format("\"%1%\" %2%", xtick_titles[i], std::to_string(xtick_center)));
-
-      double xtick_start = xtick_center - double(n_legend) * boxwidth / 2.0 + boxwidth / 2.0;
-
-      x_offsets.push_back(xtick_start);
-      if (i != xtick_titles.size() - 1)
-        in->write(", ");
-    }
-  }
-  else
-  {
-    for (std::size_t i = 0; i < xtick_titles.size(); ++i)
-    {
-      in->write(log::format("\"%1%\" %2%", xtick_titles[i], i + 1));
-
-      if (i != xtick_titles.size() - 1)
-        in->write(", ");
-    }
-  }
-  in->writeline(") scale 0.0 center");
-
-  // Set Data block in order
-  std::vector<int> index;
-
-  if (is_legend)
-  {
-    int idx = 0;
-    for (int i = 0; i < n_xtick; ++i)
-    {
-      idx = i;
-      for (int j = 0; j < n_legend; ++j)
-      {
-        index.push_back(idx + 1);
-        idx += n_xtick;
-      }
-    }
-  }
-
-  // plot
-  ctr = 0;
+  // Plot
+  std::size_t data_ctr = 0;
+  double offset = options.box.label_gap;
+  double data_pos_prev = 0;
+  std::vector<bool> legend_added = { false, false, false };
+  const auto& labels = datablock.getUniqueLabels();
   in->write("plot ");
-  for (std::size_t i = 0; i < n_xtick; ++i)
+
+  // Loop through unique labels
+  // Same order as the GNUPlot datablock written earlier
+  for (const auto& label : labels)
   {
-    for (std::size_t j = 0; j < n_legend; ++j)
+    data_pos_prev += offset;
+    std::size_t label_ctr = 0;
+    std::size_t legend_ctr = 0;  // Used for changing boxplot color
+
+    // Loop legend to assign different colors
+    for (const auto& legend_map : datablock.getContainer())
     {
-      if (is_legend)
-        in->writeline(log::format("'$data%1%' using (%2%):1 title \"%3%\" lt %4%%5%", index[ctr],
-                                  x_offsets[i] + j * boxwidth, (i == 0) ? legend_titles[j] : "", j + 1,
-                                  (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
-      else
-        in->writeline(log::format("'$data%1%' using (%2%):1%3%", ctr + 1, ctr + 1,
-                                  (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
-      ctr++;
+      auto label_size = datablock.getLabelCount(legend_map.first, label);
+
+      // Loop through each label in specified legend
+      for (std::size_t dummy_ctr = 0; dummy_ctr < label_size; ++dummy_ctr)
+      {
+        double data_pos = data_pos_prev + options.box.width / 2.0;
+        std::string title = (legend_added[legend_ctr]) ? "" : replaceStr(legend_map.first, "_", "\\\\_");
+
+        in->write(log::format("'$data%1%' using (%2%):1 ", data_ctr, data_pos));
+        in->write(log::format("title \"%1%\" ", title));
+        in->write(log::format("lt %1%", legend_ctr + 1));  // color index starts at 1
+
+        bool isLastData = data_ctr >= datablock.getLabelTotalCount() - 1;
+        in->writeline((isLastData) ? "" : ", \\");
+
+        // Legend must be added only once per datablock, or else
+        // multiple legends of the same name will be printed
+        if (!legend_added[legend_ctr])
+          legend_added[legend_ctr] = true;
+
+        data_ctr++;
+        data_pos_prev = data_pos + options.box.width / 2.0;
+        label_ctr++;
+      }
+      legend_ctr++;
     }
+
+    data_pos_prev += offset;
   }
 }
 
 void GNUPlotHelper::bargraph(const BarGraphOptions& options)
 {
-  configurePlot(options);
   auto in = getInstance(options.instance);
+  const auto& datablock = options.datablock;
 
-  std::vector<std::string> xtick_titles;
-  std::vector<std::string> legend_titles;
-  double boxwidth = 0.5;
-  double boxwidth_gap = 0.15;
-
-  bool is_legend = (options.values.size() == 1 && options.values.begin()->first.empty()) ? false : true;
-
-  auto it1 = options.values.begin();
-  int n_legend = options.values.size();
-  int n_xtick = it1->second.size();
-
-  // data blocks
-  int ctr = 0;
-  for (std::size_t i = 0; i < n_legend; ++i, ++it1)
+  // Values vector MUST be <= 1 (Single)
+  if (!datablock.hasSingleValues())
   {
-    legend_titles.push_back(replaceStr(it1->first, "_", "\\\\_"));
-
-    auto it2 = it1->second.begin();
-    for (std::size_t j = 0; j < n_xtick; ++j, ++it2)
-    {
-      in->writeline(log::format("$data%1% <<EOD", ctr + 1));
-
-      if (it2 != it1->second.end())
-      {
-        for (const auto& val : it2->second)
-        {
-          in->writeline(log::format("%1%", val));
-        }
-      }
-      in->writeline("EOD");
-      ctr++;
-    }
+    ROS_ERROR("Bargraph: Cannot plot multiple values in one bar");
+    return;
   }
 
-  // plot configuration
-  if (options.percent)
-    in->writeline("set title offset 0,1");
+  // Title and axis
+  configurePlot(options);
 
+  // Datablocks (embedding data)
+  writeDataBlocks(*in, datablock);
   in->writeline("set datafile separator \",\"");
 
-  in->writeline(log::format("set boxwidth %1%", boxwidth));
+  // Border, margin and style
+  in->writeline("set border back");
+  in->writeline("set bmargin 6");
   in->writeline("set style fill solid 0.5 border -1");
-  in->writeline(log::format("set offsets %1%, %1%, 0, 0", boxwidth));
-
-  if (is_legend)
-  {
-    int legend_title_n = 0;
-    for (const auto& legend_title : legend_titles)
-    {
-      if (legend_title.size() > legend_title_n)
-        legend_title_n = legend_title.size();
-    }
-
-    in->writeline(log::format("set rmargin %1%", legend_title_n + 6));  // Disable legend
-    in->writeline("set key at screen 1, graph 1");                      // Disable legend
-  }
-  else
-    in->writeline("unset key");  // Disable legend
+  // HACK Adjust offet to align with boxplots
+  in->writeline(log::format("set offsets %1%, %1%, 0, 0", options.box.width / 2.0));
+  in->writeline(log::format("set boxwidth %1%", options.box.width));
 
   if (options.percent)
+  {
+    in->writeline("set title offset 0,1");
     in->writeline("set format y \"%g%%\"");  // Percent format
-
-  in->writeline("set bmargin 6");
-
-  // xticks
-  for (const auto& xtick : options.values.begin()->second)
-  {
-    xtick_titles.push_back(replaceStr(xtick.first, "_", "\\\\_"));
   }
 
-  in->write("set xtics (");
-  // auto it2 = options.xticks.begin();
-  double xtick_center_start = (double)n_legend * boxwidth / 2.0 + boxwidth_gap;
-  std::vector<double> x_offsets;
+  // Legend
+  writeLegend(*in, datablock);
 
-  if (is_legend)
-  {
-    for (std::size_t i = 0; i < xtick_titles.size(); ++i)
-    {
-      double xtick_center = xtick_center_start + (double(i) * boxwidth_gap + double(i) * double(n_legend) / 2.0);
+  // Xticks
+  writeXticks(*in, datablock, options.box);
 
-      in->write(log::format("\"%1%\" %2%", xtick_titles[i], std::to_string(xtick_center)));
-
-      double xtick_start = xtick_center - double(n_legend) * boxwidth / 2.0 + boxwidth / 2.0;
-
-      x_offsets.push_back(xtick_start);
-      if (i != xtick_titles.size() - 1)
-        in->write(", ");
-    }
-  }
-  else
-  {
-    for (std::size_t i = 0; i < xtick_titles.size(); ++i)
-    {
-      in->write(log::format("\"%1%\" %2%", xtick_titles[i], i + 1));
-
-      if (i != xtick_titles.size() - 1)
-        in->write(", ");
-    }
-  }
-
-  in->writeline(") scale 0.0 center");
-
-  std::vector<int> index;
-  if (is_legend)
-  {
-    int idx = 0;
-    for (int i = 0; i < n_xtick; ++i)
-    {
-      idx = i;
-      for (int j = 0; j < n_legend; ++j)
-      {
-        index.push_back(idx + 1);
-        idx += n_xtick;
-      }
-    }
-  }
-
-  ctr = 0;
+  // Plot
+  std::size_t data_ctr = 0;
+  double offset = options.box.label_gap;
+  double data_pos_prev = 0;
+  std::vector<bool> legend_added = { false, false, false };
+  const auto& labels = datablock.getUniqueLabels();
   in->write("plot ");
-  for (std::size_t i = 0; i < n_xtick; ++i)
+
+  // Loop through unique labels
+  // Same order as the GNUPlot datablock written earlier
+  for (const auto& label : labels)
   {
-    for (std::size_t j = 0; j < n_legend; ++j)
+    data_pos_prev += offset;
+    std::size_t label_ctr = 0;
+    std::size_t legend_ctr = 0;  // Used for changing boxplot color
+
+    // Loop legend to assign different colors
+    for (const auto& legend_map : datablock.getContainer())
     {
-      if (is_legend)
-        in->writeline(log::format("'$data%1%' using (%2%):1 title \"%3%\" with boxes lt %4%%5%", index[ctr],
-                                  x_offsets[i] + j * boxwidth, (i == 0) ? legend_titles[j] : "", j + 1,
-                                  (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
-      else
-        in->writeline(log::format("'$data%1%' using (%2%):1 with boxes %3%", ctr + 1, ctr + 1,
-                                  (i + j == n_xtick + n_legend - 2) ? "" : ", \\"));
-      ctr++;
+      auto label_size = datablock.getLabelCount(legend_map.first, label);
+
+      // Loop through each label in specified legend
+      for (std::size_t dummy_ctr = 0; dummy_ctr < label_size; ++dummy_ctr)
+      {
+        double data_pos = data_pos_prev + options.box.width / 2.0;
+        std::string title = (legend_added[legend_ctr]) ? "" : replaceStr(legend_map.first, "_", "\\\\_");
+
+        in->write(log::format("'$data%1%' using (%2%):1 ", data_ctr, data_pos));
+        in->write(log::format("title \"%1%\" ", title));
+        in->write(log::format("with boxes "));
+        in->write(log::format("lt %1%", legend_ctr + 1));  // color index starts at 1
+
+        bool isLastData = data_ctr >= datablock.getLabelTotalCount() - 1;
+        in->writeline((isLastData) ? "" : ", \\");
+
+        // Legend must be added only once per datablock, or else
+        // multiple legends of the same name will be printed
+        if (!legend_added[legend_ctr])
+          legend_added[legend_ctr] = true;
+
+        data_ctr++;
+        data_pos_prev = data_pos + options.box.width / 2.0;
+        label_ctr++;
+      }
+      legend_ctr++;
     }
+
+    data_pos_prev += offset;
   }
 
   // reset variables in case where using multiplot
@@ -585,9 +710,9 @@ void GNUPlotDataSet::dumpBoxPlot(const std::string& metric, const std::vector<Da
   bpo.y.label = metric;
   bpo.y.min = 0.;
 
-  fillDataSet(metric, datasets, xtick_set, legend_set, bpo.values);
+  fillDataSet(metric, datasets, xtick_set, legend_set, bpo.datablock);
 
-  if (bpo.values.empty())
+  if (bpo.datablock.isEmpty())
   {
     ROS_WARN("No values to plot...");
     return;
@@ -609,9 +734,9 @@ void GNUPlotDataSet::dumpBarGraph(const std::string& metric, const std::vector<D
   bgo.y.label = metric;
   bgo.y.min = 0.;
 
-  fillDataSet(metric, datasets, xtick_set, legend_set, bgo.values);
+  fillDataSet(metric, datasets, xtick_set, legend_set, bgo.datablock);
 
-  if (bgo.values.empty())
+  if (bgo.datablock.isEmpty())
   {
     ROS_WARN("No values to plot...");
     return;
@@ -650,8 +775,7 @@ bool GNUPlotDataSet::validOverlap(const TokenSet& xtick_set, const TokenSet& leg
 }
 
 bool GNUPlotDataSet::fillDataSet(const std::string& metric_name, const std::vector<DataSetPtr>& datasets,
-                                 const TokenSet& xtick_set, const TokenSet& legend_set,
-                                 GNUPlotHelper::PlotValues& plt_values)
+                                 const TokenSet& xtick_set, const TokenSet& legend_set, GNUPlotData& datablock)
 {
   std::string xlabel_del = "\\n";
   std::string legend_del = " + ";
@@ -686,33 +810,29 @@ bool GNUPlotDataSet::fillDataSet(const std::string& metric_name, const std::vect
       if (it == metric_map.end())
         continue;
 
-      std::vector<double> metrics;
+      std::vector<double> c1;
+      std::vector<std::vector<double>> c2;
       for (const auto& data : data_vec)
       {
         const auto& it = data->metrics.find(metric_name);
         if (it != data->metrics.end())
         {
-          double metric = toMetricDouble(it->second);
-          metrics.push_back(metric);
+          boost::apply_visitor(addGNUPlotDataMetricVisitor(c1, c2), it->second);
         }
       }
 
-      auto it2 = plt_values.find(legend_name);
-      if (it2 == plt_values.end())
-        plt_values.insert({ { legend_name, { { xtick_name, metrics } } } });
-      else
-      {
-        if (it2->second.find(xtick_name) != it2->second.end())
-          ROS_WARN_STREAM(log::format("Xtick label '%1%' for metric '%2%' was overwritten", xtick_name, metric_name));
-        it2->second.insert({ { xtick_name, metrics } });
-      }
+      if (!c1.empty())
+        datablock.add(c1, xtick_name, legend_name);
+      for (const auto& c : c2)
+        datablock.add(c, xtick_name, legend_name);
     }
   }
 
   // Filter out redundant xlabels
+  const auto& data_container = datablock.getContainer();
   int n_labels = 0;
   std::map<std::string, int> labels_map;
-  for (const auto& legend_map : plt_values)
+  for (const auto& legend_map : data_container)
   {
     for (const auto& labels : legend_map.second)
     {
@@ -733,81 +853,81 @@ bool GNUPlotDataSet::fillDataSet(const std::string& metric_name, const std::vect
   // Erase
   for (auto it = labels_map.cbegin(); it != labels_map.cend() /* not hoisted */; /* no increment */)
   {
-    if (plt_values.size() == it->second || it->second != n_labels)
+    if (data_container.size() == it->second || it->second != n_labels)
       labels_map.erase(it++);  // or "it = m.erase(it)" since C++11
     else
       ++it;
   }
 
   // Create new container with new xlabels keys
-  GNUPlotHelper::PlotValues temp;
-  for (const auto& legend_map : plt_values)
-  {
-    temp.insert({ legend_map.first, {} });
-    auto it = temp.find(legend_map.first);
+  // GNUPlotData temp;
+  // for (const auto& legend_map : data_container)
+  // {
+  //   // temp.insert({ legend_map.first, {} });
+  //   // auto it = temp.find(legend_map.first);
 
-    for (const auto& labels : legend_map.second)
-    {
-      std::string new_key = labels.first;
-      for (const auto& rm : labels_map)
-      {
-        if (!rm.first.empty())
-        {
-          new_key = replaceStr(new_key, rm.first + xlabel_del, "");
-          new_key = replaceStr(new_key, rm.first, "");
-        }
-      }
-      it->second.insert({ new_key, std::move(labels.second) });
-    }
-  }
+  //   for (const auto& labels : legend_map.second)
+  //   {
+  //     std::string new_key = labels.first;
+  //     for (const auto& rm : labels_map)
+  //     {
+  //       if (!rm.first.empty())
+  //       {
+  //         new_key = replaceStr(new_key, rm.first + xlabel_del, "");
+  //         new_key = replaceStr(new_key, rm.first, "");
+  //       }
+  //     }
+  //     it->second.insert({ new_key, std::move(labels.second) });
+  //   }
+  // }
 
-  plt_values.clear();
-  plt_values = temp;
-  temp.clear();
+  // plt_values.clear();
+  // plt_values = temp;
+  // temp.clear();
 
   // Filter out redundant legend
-  std::set<std::string> remove_set;
-  for (const auto& legend_map : plt_values)
-  {
-    auto keys = splitStr(legend_map.first, legend_del);
+  // std::set<std::string> remove_set;
+  // for (const auto& legend_map : plt_values)
+  // {
+  //   auto keys = splitStr(legend_map.first, legend_del);
 
-    for (const auto& key : keys)
-    {
-      int ctr = 0;
-      for (const auto& legend_map_ : plt_values)
-      {
-        if (legend_map_.first.find(key) != std::string::npos)
-          ctr++;
-      }
-      if (ctr == plt_values.size())
-        remove_set.insert(key);
-    }
-  }
+  //   for (const auto& key : keys)
+  //   {
+  //     int ctr = 0;
+  //     for (const auto& legend_map_ : plt_values)
+  //     {
+  //       if (legend_map_.first.find(key) != std::string::npos)
+  //         ctr++;
+  //     }
+  //     if (ctr == plt_values.size())
+  //       remove_set.insert(key);
+  //   }
+  // }
 
-  for (auto& legend_map : plt_values)
-  {
-    bool found = false;
-    std::string new_key = legend_map.first;
-    for (const auto& rm : remove_set)
-    {
-      if (!rm.empty())
-      {
-        new_key = replaceStr(legend_map.first, legend_del + rm, "");
-        new_key = replaceStr(legend_map.first, rm, "");
-      }
-    }
+  // for (auto& legend_map : plt_values)
+  // {
+  //   bool found = false;
+  //   std::string new_key = legend_map.first;
+  //   for (const auto& rm : remove_set)
+  //   {
+  //     if (!rm.empty())
+  //     {
+  //       new_key = replaceStr(legend_map.first, legend_del + rm, "");
+  //       new_key = replaceStr(legend_map.first, rm, "");
+  //     }
+  //   }
 
-    if (new_key.size() >= legend_del.size())
-    {
-      if (legend_del.compare(&new_key[new_key.size() - legend_del.size()]) == 0)
-        for (int i = 0; i < legend_del.size(); ++i)
-          new_key.pop_back();  // Remove trailing delimiter
-    }
-    temp.insert({ new_key, std::move(legend_map.second) });
-  }
+  //   if (new_key.size() >= legend_del.size())
+  //   {
+  //     if (legend_del.compare(&new_key[new_key.size() - legend_del.size()]) == 0)
+  //       for (int i = 0; i < legend_del.size(); ++i)
+  //         new_key.pop_back();  // Remove trailing delimiter
+  //   }
+  //   temp.insert({ new_key, std::move(legend_map.second) });
+  // }
 
-  plt_values.clear();
-  plt_values = temp;
+  // plt_values.clear();
+  // plt_values = temp;
 
   // Add missing labels with empty data
   // TODO: works but MUST change logic in GNUPlot script
@@ -837,15 +957,15 @@ bool GNUPlotDataSet::fillDataSet(const std::string& metric_name, const std::vect
   // }
 
   // Warn if legend labels are not of same size
-  int label_size = plt_values.begin()->second.size();
-  for (const auto& legend_map : plt_values)
-  {
-    if (legend_map.second.size() != label_size)
-    {
-      ROS_WARN("Missing labels in some legend, some labels will not plot.");
-      break;
-    }
-  }
+  // int label_size = plt_values.begin()->second.size();
+  // for (const auto& legend_map : plt_values)
+  // {
+  //   if (legend_map.second.size() != label_size)
+  //   {
+  //     ROS_WARN("Missing labels in some legend, some labels will not plot.");
+  //     break;
+  //   }
+  // }
 
   return true;
 }
