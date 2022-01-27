@@ -31,6 +31,23 @@ MetricPtr yaml::decodeMetricVariant(const YAML::Node& node)
   return nullptr;
 }
 
+namespace
+{
+class encodeMetricVariantVisitor : public boost::static_visitor<void>
+{
+public:
+  encodeMetricVariantVisitor(YAML::Node& node) : node(node){};
+
+  template <typename T>
+  void operator()(const T& metric) const
+  {
+    node = metric;
+  }
+
+  YAML::Node& node;
+};
+}  // namespace
+
 void yaml::merge_node(YAML::Node target, YAML::Node const& source)
 {
   switch (source.Type())
@@ -2063,7 +2080,7 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
 
       for (const auto& metric : data->metrics)
       {
-        d_node[DATA_METRIC_KEY][metric.first].push_back(toMetricString(metric.second));
+        d_node[DATA_METRIC_KEY][metric.first].push_back(metric.second);
         ROBOWFLEX_YAML_FLOW(d_node[DATA_METRIC_KEY][metric.first]);
       }
     }
@@ -2074,7 +2091,12 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
       if (value.Type() == YAML::NodeType::Sequence)
       {
         if (value.size() == 1)
+        {
           value = value[0];
+
+          if (value.Type() == YAML::NodeType::Sequence)
+            ROBOWFLEX_YAML_FLOW(value);
+        }
       }
     }
 
@@ -2207,7 +2229,7 @@ Node convert<moveit_benchmark_suite::Metric>::encode(const moveit_benchmark_suit
 {
   Node node;
 
-  node = rhs;
+  boost::apply_visitor(encodeMetricVariantVisitor(node), rhs);
 
   return node;
 }
