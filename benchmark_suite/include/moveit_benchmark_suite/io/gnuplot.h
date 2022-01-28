@@ -76,20 +76,54 @@ public:
   TerminalSize size = { .x = 640, .y = 480 };
 };
 
+/** \brief Storage accounting for multiple plot types, legend
+ */
+class GNUPlotData
+{
+public:
+  using Label = std::string;
+  using Legend = std::string;
+
+  using Value = double;
+  using Values = std::vector<Value>;
+
+  using Container = std::map<Legend, std::multimap<Label, Values>>;
+
+  void add(Value value, Label label, Legend = "");
+  void add(Values values, Label label, Legend = "");
+
+  bool isEmpty() const;
+  bool hasLegend() const;
+
+  bool hasSingleValues() const;  // Single if all Values is of size <= 1 in Container
+
+  std::size_t getLegendCount() const;
+  std::size_t getLegendMaxCharSize() const;
+
+  std::size_t getLabelCount(const Label& label) const;
+  std::size_t getLabelCount(const Legend& legend, const Label& label) const;
+  std::size_t getLabelTotalCount() const;
+  const std::set<std::string>& getUniqueLabels() const;
+
+  const std::size_t getDataMaxSize() const;
+
+  const Container& getContainer() const;
+
+private:
+  Container container_;  // Data Block
+
+  std::size_t legend_max_char_size_ = 0;
+  std::size_t data_max_size_ = 0;
+  std::set<std::string> unique_labels_;
+
+  bool ordered_ = false;
+};
+
 /** \brief Helper class to open a pipe to a GNUPlot instance for live visualization of data.
  */
 class GNUPlotHelper
 {
 public:
-  using Point = std::pair<double, double>;
-  using Series = std::vector<Point>;
-  using Value = double;
-  using Values = std::vector<Value>;
-
-  using Legend = std::string;
-  using Xthick = std::string;
-  using PlotValues = std::map<Legend, std::map<Xthick, Values>>;
-
   GNUPlotHelper() = default;
 
   // non-copyable
@@ -123,21 +157,19 @@ public:
     Axis y;             ///< Y-axis parameters.
   };
 
+  // Refers to bar, boxplot, candlestick, etc
+  struct ShapeOptions
+  {
+    double width = 0.5;
+    double group_gap = 0.0;
+    double label_gap = 0.15;
+    double start_gap = 0.0;
+    double end_gap = 0.0;
+  };
+
   /** \brief Configure a plot using common options.
    */
   void configurePlot(const PlottingOptions& options);
-
-  /** \brief Time series plotting options.
-   */
-  struct TimeSeriesOptions : PlottingOptions
-  {
-    std::map<std::string, Series> points;  ///< Map of names to time series data.
-  };
-
-  /** \brief Plot timeseries data.
-   *  \param[in] options Plotting options.
-   */
-  void timeseries(const TimeSeriesOptions& options);
 
   /** \brief Box plotting options.
    */
@@ -145,8 +177,10 @@ public:
   {
     bool outliers{ true };
     bool sorted{ true };
-    // std::map<std::string, Values> values;  ///< Map of names to data.
-    PlotValues values;
+
+    ShapeOptions box;
+
+    GNUPlotData datablock;
   };
 
   /** \brief Plot box data.
@@ -157,10 +191,9 @@ public:
   struct BarGraphOptions : PlottingOptions
   {
     bool percent{ false };  // Defaults to count
-    // std::vector<Values> value;  ///< Map of names to data.
+    ShapeOptions box;
 
-    // std::map<std::string, Values> value_map;
-    PlotValues values;
+    GNUPlotData datablock;
   };
 
   /** \brief Plot box data.
@@ -225,6 +258,9 @@ private:
     boost::process::child gnuplot_;
 #endif
   };
+  void writeDataBlocks(GNUPlotHelper::Instance& in, const GNUPlotData& datablock);
+  void writeLegend(GNUPlotHelper::Instance& in, const GNUPlotData& datablock);
+  void writeXticks(GNUPlotHelper::Instance& in, const GNUPlotData& datablock, const ShapeOptions& shape);
 
   /** \brief Get the named GNUPlot instance.
    *  \param[in] name Name of instance.
@@ -278,7 +314,7 @@ private:
                     const TokenSet& legend_set, const GNUPlotHelper::MultiPlotOptions& mpo);
 
   bool fillDataSet(const std::string& metric, const std::vector<DataSetPtr>& datasets, const TokenSet& xtick_set,
-                   const TokenSet& legend_set, GNUPlotHelper::PlotValues& plt_values);
+                   const TokenSet& legend_set, GNUPlotData& datablock);
 
   bool validOverlap(const TokenSet& xtick_set, const TokenSet& legend_set);
   bool filterDataSet(const TokenSet& xtick_set, const TokenSet& legend_set, const std::vector<DataSetPtr>& datasets,
