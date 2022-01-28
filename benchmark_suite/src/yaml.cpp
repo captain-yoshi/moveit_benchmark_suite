@@ -38,6 +38,22 @@ class encodeMetricVariantVisitor : public boost::static_visitor<void>
 public:
   encodeMetricVariantVisitor(YAML::Node& node) : node(node){};
 
+  // encode true/false as 1/0
+  void operator()(const bool& metric) const
+  {
+    node = static_cast<int>(metric);
+  }
+
+  // encode true/false as 1/0
+  void operator()(const std::vector<bool>& metrics) const
+  {
+    std::vector<int> int_vector;
+    for (const auto& metric : metrics)
+      int_vector.push_back(static_cast<int>(metric));
+
+    node = int_vector;
+  }
+
   template <typename T>
   void operator()(const T& metric) const
   {
