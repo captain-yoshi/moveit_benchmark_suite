@@ -52,8 +52,6 @@
 
 #include <ros/console.h>
 
-#include <moveit_benchmark_suite/io.h>
-
 namespace moveit_benchmark_suite
 {
 MOVEIT_CLASS_FORWARD(Query);

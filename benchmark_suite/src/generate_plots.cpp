@@ -2,7 +2,7 @@
 #include <ros/ros.h>
 #include <moveit_benchmark_suite/io/gnuplot.h>
 #include <moveit_benchmark_suite/io/htmlplot.h>
-#include <moveit_benchmark_suite/yaml.h>
+#include <moveit_serialization/yaml-cpp/yaml.h>
 #include <moveit_benchmark_suite/benchmark.h>
 #include <moveit_benchmark_suite/config/html_config.h>
 #include <moveit_benchmark_suite/aggregation.h>

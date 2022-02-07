@@ -35,15 +35,16 @@
 /* Author: Captain Yoshi
    Desc: Build pair wise query combination for motion planning benchmarks
 */
+#include <moveit/robot_state/conversions.h>
+
+#include <moveit_serialization/yaml-cpp/yaml.h>
 
 #include <moveit_benchmark_suite/dataset.h>
 #include <moveit_benchmark_suite/scene.h>
-#include <moveit_benchmark_suite/yaml.h>
 #include <moveit_benchmark_suite/benchmarks/builder/motion_planning_builder.h>
 #include <moveit_benchmark_suite/builder.h>
 #include <moveit_benchmark_suite/benchmarks/profiler/motion_planning_profiler.h>
 #include <moveit_benchmark_suite/builder.h>
-#include <moveit/robot_state/conversions.h>
 
 using namespace moveit_benchmark_suite;
 

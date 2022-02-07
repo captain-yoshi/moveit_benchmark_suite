@@ -2,24 +2,22 @@ cmake_minimum_required(VERSION 3.1.3)
 project(moveit_benchmark_suite)
 
 find_package(Boost REQUIRED)
-find_library(YAML yaml-cpp REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(fcl REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
-  tf2_ros
   eigen_conversions
-  geometric_shapes
-  geometry_msgs
+  moveit_benchmark_suite_resources
   moveit_core
   moveit_ros_planning
   moveit_ros_planning_interface
+  moveit_serialization
   moveit_visual_tools
   roscpp
-  visualization_msgs
-  urdf_to_scene
-  moveit_benchmark_suite_resources
   rosparam_shortcuts
+  tf2_ros
+  urdf_to_scene
+  visualization_msgs
 )
 
 catkin_package(
@@ -28,18 +26,18 @@ catkin_package(
   INCLUDE_DIRS
     include
   CATKIN_DEPENDS
-    tf2_ros
-    geometric_shapes
-    geometry_msgs
+    eigen_conversions
+    moveit_benchmark_suite_resources
     moveit_core
     moveit_ros_planning
     moveit_ros_planning_interface
-    roscpp
+    moveit_serialization
     moveit_visual_tools
-    visualization_msgs
-    urdf_to_scene
-    moveit_benchmark_suite_resources
+    roscpp
     rosparam_shortcuts
+    tf2_ros
+    urdf_to_scene
+    visualization_msgs
 )
 
 set(CMAKE_CXX_STANDARD 14)
@@ -52,13 +50,13 @@ add_library(${PROJECT_NAME}
   src/random.cpp
   src/tf.cpp
   src/visualization.cpp
-  src/yaml.cpp
   src/io.cpp
   src/geometry.cpp
   src/token.cpp
   src/dataset.cpp
   src/benchmark.cpp
   src/profiler.cpp
+  src/serialization.cpp
   src/aggregation.cpp
   src/robot.cpp
   src/scene.cpp
@@ -79,24 +77,24 @@ add_library(${PROJECT_NAME}
 )
 
 add_executable(motion_planning_mgi src/benchmarks/motion_planning_mgi_benchmark.cpp)
-target_link_libraries(motion_planning_mgi ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
+target_link_libraries(motion_planning_mgi ${PROJECT_NAME} ${catkin_LIBRARIES})
 
 add_executable(motion_planning_pp src/benchmarks/motion_planning_pp_benchmark.cpp)
-target_link_libraries(motion_planning_pp ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
+target_link_libraries(motion_planning_pp ${PROJECT_NAME} ${catkin_LIBRARIES})
 
 # if("${catkin_LIBRARIES}" MATCHES "moveit_collision_detection_bullet")
 #   add_executable(collision_check src/benchmarks/collision_check_benchmark.cpp)
-#   target_link_libraries(collision_check fcl ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
+#   target_link_libraries(collision_check fcl ${PROJECT_NAME} ${catkin_LIBRARIES})
 # endif()
 
 add_executable(plot_dataset src/plot_dataset.cpp)
-target_link_libraries(plot_dataset ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
+target_link_libraries(plot_dataset ${PROJECT_NAME} ${catkin_LIBRARIES})
 
 add_executable(aggregate src/aggregate.cpp)
-target_link_libraries(aggregate ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
+target_link_libraries(aggregate ${PROJECT_NAME} ${catkin_LIBRARIES})
 
 add_executable(generate_plots src/generate_plots.cpp)
-target_link_libraries(generate_plots ${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
+target_link_libraries(generate_plots ${PROJECT_NAME} ${catkin_LIBRARIES})
 
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
