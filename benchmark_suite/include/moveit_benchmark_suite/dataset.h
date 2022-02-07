@@ -47,14 +47,14 @@
 #include <chrono>
 
 #include <boost/variant.hpp>
+#include <boost/date_time.hpp>  // for date operations
 
 #include <moveit/macros/class_forward.h>
 
 #include <ros/console.h>
 
-#include <moveit_benchmark_suite/io.h>
-
 #include <moveit_benchmark_suite/query.h>
+#include <moveit_serialization/yaml-cpp/yaml.h>
 
 namespace moveit_benchmark_suite
 {
@@ -80,6 +80,38 @@ static const std::string DATASET_DATA_KEY = "data";
 // Data
 static const std::string DATA_CONFIG_KEY = DATASET_CONFIG_KEY;
 static const std::string DATA_METRIC_KEY = "metrics";
+
+struct CPUInfo
+{
+  std::string model;
+  std::string model_name;
+  std::string family;
+  std::string vendor_id;
+  std::string architecture;
+  std::string sockets;
+  std::string core_per_socket;
+  std::string thread_per_core;
+};
+
+struct GPUInfo
+{
+  std::vector<std::string> model_names;
+};
+
+struct OSInfo
+{
+  std::string kernel_name;
+  std::string kernel_release;
+  std::string distribution;
+  std::string version;
+};
+
+struct RosPkgInfo
+{
+  std::string version;
+  std::string git_branch;
+  std::string git_commit;
+};
 
 // WARNING
 // Adding/Removing variant types will affect:

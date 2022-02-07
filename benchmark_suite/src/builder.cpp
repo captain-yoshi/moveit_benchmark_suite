@@ -172,9 +172,9 @@ void Builder::mergeResource(const std::string& name, const YAML::Node& node)
   }
 
   if (it->second["resource"])
-    yaml::merge_node(it->second["resource"], node);
+    YAML::merge_node(it->second["resource"], node);
   else if (it->second["resources"])
-    yaml::merge_node(it->second["resources"], node);
+    YAML::merge_node(it->second["resources"], node);
 
   if (!validateResource(it->second))
     ROS_ERROR("Merge failed for resource name `%s`.", name.c_str());
@@ -228,9 +228,9 @@ void Builder::extendResource(const YAML::Node& node, std::vector<std::string>& r
 
     // merge
     if (target["resource"])
-      yaml::merge_node(target["resource"], source);
+      YAML::merge_node(target["resource"], source);
     else if (target["resources"])
-      yaml::merge_node(target["resources"], source);
+      YAML::merge_node(target["resources"], source);
     else
     {
       ROS_WARN("Resource has no resource/s key");

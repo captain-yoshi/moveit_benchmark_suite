@@ -8,13 +8,13 @@
 
 #include <moveit_benchmark_suite/geometry.h>
 #include <moveit_benchmark_suite/io.h>
-#include <moveit_benchmark_suite/io/yaml.h>
 #include <moveit_benchmark_suite/log.h>
 #include <moveit_benchmark_suite/macros.h>
 #include <moveit_benchmark_suite/robot.h>
 #include <moveit_benchmark_suite/scene.h>
 #include <moveit_benchmark_suite/tf.h>
-//#include <moveit_benchmark_suite/util.h>
+
+#include <moveit_serialization/yaml-cpp/yaml.h>
 
 using namespace moveit_benchmark_suite;
 
@@ -152,7 +152,7 @@ bool Robot::initializeFromYAML(const std::string& config_file)
 
   // URDF
   std::string urdf_file;
-  if (IO::isNode(node["urdf"]))
+  if (node["urdf"])
     urdf_file = node["urdf"].as<std::string>();
   else
   {
@@ -162,14 +162,14 @@ bool Robot::initializeFromYAML(const std::string& config_file)
 
   // SRDF
   std::string srdf_file;
-  if (IO::isNode(node["srdf"]))
+  if (node["srdf"])
     srdf_file = node["srdf"].as<std::string>();
   else
     ROS_WARN("No SRDF entry in YAML!");
 
   // Joint limits
   std::string limits_file;
-  if (IO::isNode(node["limits"]))
+  if (node["limits"])
   {
     if (srdf_file.empty())
     {
@@ -184,7 +184,7 @@ bool Robot::initializeFromYAML(const std::string& config_file)
 
   // Kinematics plugins
   std::string kinematics_file;
-  if (IO::isNode(node["kinematics"]))
+  if (node["kinematics"])
   {
     if (srdf_file.empty())
     {
@@ -207,9 +207,9 @@ bool Robot::initializeFromYAML(const std::string& config_file)
   // Set default state if provided in file.
   if (r)
   {
-    if (IO::isNode(node["robot_state"]))
+    if (node["robot_state"])
     {
-      const auto& robot_state = IO::robotStateFromNode(node["robot_state"]);
+      const auto& robot_state = node["robot_state"].as<moveit_msgs::RobotState>();
       setState(robot_state);
     }
     else
@@ -619,7 +619,7 @@ void Robot::setState(const moveit_msgs::RobotState& state)
 void Robot::setStateFromYAMLFile(const std::string& file)
 {
   moveit_msgs::RobotState state;
-  IO::fromYAMLFile(state, file);
+  IO::YAMLFileToMessage(state, file);
 
   setState(state);
 }
@@ -666,7 +666,7 @@ bool Robot::toYAMLFile(const std::string& file) const
   moveit_msgs::RobotState msg;
   moveit::core::robotStateToRobotStateMsg(*state_, msg);
 
-  const auto& yaml = IO::toNode(msg);
+  const auto& yaml = YAML::toNode(msg);
   return IO::YAMLToFile(yaml, file);
 }
 
@@ -923,7 +923,7 @@ bool Robot::dumpPathTransforms(const robot_trajectory::RobotTrajectory& path, co
       {
         const auto& link = model_->getLinkModel(link_name);
         Eigen::Isometry3d tf = state->getGlobalLinkTransform(link);  // * urdfPoseToEigen(urdf_link->visual->origin);
-        point[link->getName()] = IO::toNode(TF::poseEigenToMsg(tf));
+        point[link->getName()] = YAML::toNode(TF::poseEigenToMsg(tf));
       }
     }
 
@@ -980,20 +980,20 @@ bool Robot::dumpToScene(const std::string& filename) const
       for (const auto& visual : visuals)
       {
         Eigen::Isometry3d pose = tf;
-        if (IO::isNode(visual["origin"]))
+        if (visual["origin"])
         {
-          Eigen::Isometry3d offset = TF::poseMsgToEigen(IO::poseFromNode(visual["origin"]));
+          Eigen::Isometry3d offset = TF::poseMsgToEigen(visual["origin"].as<geometry_msgs::Pose>());
           pose = pose * offset;
         }
 
-        const auto& posey = IO::toNode(TF::poseEigenToMsg(pose));
+        const auto& posey = YAML::toNode(TF::poseEigenToMsg(pose));
 
         const auto& type = visual["type"].as<std::string>();
         if (type == "mesh")
         {
           YAML::Node mesh;
           mesh["resource"] = visual["resource"];
-          if (IO::isNode(visual["dimensions"]))
+          if (visual["dimensions"])
             mesh["dimensions"] = visual["dimensions"];
           else
           {

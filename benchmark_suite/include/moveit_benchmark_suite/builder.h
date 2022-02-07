@@ -43,9 +43,9 @@
 #include <moveit_benchmark_suite/planning.h>
 #include <moveit_benchmark_suite/robot.h>
 #include <moveit_benchmark_suite/scene.h>
-#include <moveit_benchmark_suite/io/yaml.h>
+#include <moveit_serialization/yaml-cpp/node_manipulation.h>
+#include <moveit_serialization/yaml-cpp/conversion/conversion.h>
 #include <moveit_benchmark_suite/io.h>
-#include <moveit_benchmark_suite/yaml.h>
 
 namespace moveit_benchmark_suite
 {
@@ -101,7 +101,7 @@ protected:
       target = t;
 
       // Compare nodes to find if everything has been converted correctly
-      if (yaml::isSubset(source, target))
+      if (YAML::isSubset(source, target))
         return true;
     }
     catch (const YAML::Exception& e)

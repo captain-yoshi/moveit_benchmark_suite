@@ -1,6 +1,6 @@
 
 #include <moveit_benchmark_suite/config/collision_check_config.h>
-#include <moveit_benchmark_suite/yaml.h>
+#include <moveit_serialization/yaml-cpp/conversion/moveit_msgs.h>
 using namespace moveit_benchmark_suite;
 
 CollisionCheckConfig::CollisionCheckConfig()

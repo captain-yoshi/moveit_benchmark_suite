@@ -9,42 +9,12 @@
 
 #include <boost/date_time.hpp>  // for date operations
 
-#include <yaml-cpp/yaml.h>  // for YAML parsing
+#include <moveit_benchmark_suite/dataset.h>
+#include <moveit_serialization/yaml-cpp/conversion/conversion.h>
+#include <moveit_benchmark_suite/serialization.h>
 
 namespace moveit_benchmark_suite
 {
-struct CPUInfo
-{
-  std::string model;
-  std::string model_name;
-  std::string family;
-  std::string vendor_id;
-  std::string architecture;
-  std::string sockets;
-  std::string core_per_socket;
-  std::string thread_per_core;
-};
-
-struct GPUInfo
-{
-  std::vector<std::string> model_names;
-};
-
-struct OSInfo
-{
-  std::string kernel_name;
-  std::string kernel_release;
-  std::string distribution;
-  std::string version;
-};
-
-struct RosPkgInfo
-{
-  std::string version;
-  std::string git_branch;
-  std::string git_commit;
-};
-
 /** \brief File and ROS Input / Output operations.
  */
 namespace IO
@@ -229,5 +199,6 @@ bool YAMLFileToMessage(T& msg, const std::string& file)
 
   return result.first;
 }
+
 }  // namespace IO
 }  // namespace moveit_benchmark_suite

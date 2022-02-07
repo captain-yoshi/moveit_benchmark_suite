@@ -1,7 +1,7 @@
 
 #include <ros/ros.h>
 #include <moveit_benchmark_suite/io/gnuplot.h>
-#include <moveit_benchmark_suite/yaml.h>
+#include <moveit_serialization/yaml-cpp/yaml.h>
 #include <moveit_benchmark_suite/benchmark.h>
 #include <moveit_benchmark_suite/aggregation.h>
 

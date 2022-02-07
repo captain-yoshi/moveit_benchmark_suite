@@ -5,12 +5,11 @@
 
 #include <moveit_benchmark_suite/constants.h>
 #include <moveit_benchmark_suite/io.h>
-#include <moveit_benchmark_suite/io/yaml.h>
 #include <moveit_benchmark_suite/log.h>
 #include <moveit_benchmark_suite/robot.h>
 #include <moveit_benchmark_suite/scene.h>
 //#include <moveit_benchmark_suite/util.h>
-#include <moveit_benchmark_suite/yaml.h>
+#include <moveit_serialization/yaml-cpp/conversion/trajectory_msgs.h>
 
 using namespace moveit_benchmark_suite;
 
@@ -44,7 +43,7 @@ bool Trajectory::toYAMLFile(const std::string& filename) const
   moveit_msgs::RobotTrajectory msg;
   trajectory_->getRobotTrajectoryMsg(msg);
 
-  YAML::Node node = IO::toNode(msg);
+  YAML::Node node = YAML::toNode(msg);
   return IO::YAMLToFile(node, filename);
 }
 

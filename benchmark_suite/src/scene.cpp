@@ -9,8 +9,7 @@
 
 #include <moveit_benchmark_suite/log.h>
 #include <moveit_benchmark_suite/io.h>
-#include <moveit_benchmark_suite/io/yaml.h>
-#include <moveit_benchmark_suite/yaml.h>
+#include <moveit_serialization/yaml-cpp/yaml.h>
 
 #include <urdf_to_scene/scene_parser.h>
 
@@ -531,7 +530,7 @@ bool Scene::toYAMLFile(const std::string& file) const
   moveit_msgs::PlanningScene msg;
   scene_->getPlanningSceneMsg(msg);
 
-  YAML::Node node = IO::toNode(msg);
+  YAML::Node node = YAML::toNode(msg);
 
   // Replace mesh soup with filename resource if it exists
   if (node["world"] && node["world"]["collision_objects"])
@@ -607,7 +606,7 @@ bool Scene::fromURDFFile(const std::string& file)
 bool Scene::fromYAMLFile(const std::string& file)
 {
   moveit_msgs::PlanningScene msg;
-  if (!IO::fromYAMLFile(msg, file))
+  if (!IO::YAMLFileToMessage(msg, file))
     return false;
 
   // Add robot_state if loaded scene does not contain one.

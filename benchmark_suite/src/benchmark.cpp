@@ -7,7 +7,7 @@
 
 #include <moveit/collision_detection_fcl/fcl_compat.h>
 #include <moveit/collision_detection_bullet/collision_env_bullet.h>
-#include <moveit_benchmark_suite/yaml.h>
+#include <moveit_serialization/yaml-cpp/yaml.h>
 #include <moveit_benchmark_suite/constants.h>
 
 using namespace moveit_benchmark_suite;
