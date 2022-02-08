@@ -32,8 +32,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Modified version of Zachary Kingston robowflex
-   Desc:
+/* Author: Captain Yoshi
+   Desc: Token for handling namespace
 */
 
 #pragma once
@@ -42,7 +42,7 @@
 #include <vector>
 #include <map>
 
-#include <yaml-cpp/yaml.h>
+#include <moveit_serialization/yaml-cpp/yaml.h>
 
 namespace moveit_benchmark_suite
 {
@@ -50,64 +50,35 @@ std::vector<std::string> splitStr(std::string s, std::string delimiter);
 
 std::string replaceStr(std::string subject, const std::string& search, const std::string& replace);
 
-// Token with empty keys will revert to an empty Token
-struct Token
+///
+class Token
 {
+public:
   Token() = default;
 
-  Token(const std::string& token, const std::string& del = "/");
+  Token(const std::string& ns, const std::string& value = "", const std::string& del = "/");
 
-  void createTokenNode(int i, YAML::Node& n);
   void reset();
 
-  std::string token;
-  std::string group;
-  std::string value;
-  std::string del;
+  const std::string& getValue() const;
+  const std::string& getDelimiter() const;
+  const std::string& getNamespace() const;
 
-  std::vector<std::string> keys;  // Splited token
-  int n_key;
-  std::string key_root;
-  YAML::Node node;
-};  // namespace moveit_benchmark_suite
+  const YAML::Node& getNode() const;
 
-using TokenSet = std::set<Token>;
+  bool hasValue() const;
+  bool isRelative() const;
+  bool isAbsolute() const;
 
-bool operator>(const Token& t1, const Token& t2);
-bool operator>=(const Token& t1, const Token& t2);
-bool operator<(const Token& t1, const Token& t2);
-bool operator<=(const Token& t1, const Token& t2);
+private:
+  void createNode(std::size_t ctr, const std::vector<std::string>& keys, YAML::Node& n);
 
-namespace token
-{
-bool hasValue(const Token& t1);
+  std::string ns_;
+  std::string value_;
+  std::string del_;
 
-// Check tokens overlap ex. overlaps -> "test/alpha" "test/alpha"
-bool overlap(const Token& t1, const Token& t2);
-bool compareToNode(const Token& t, const YAML::Node& node, YAML::Node& res);
-bool compareToNode(const Token& t, const YAML::Node& node);
-
-bool compareToNode(const TokenSet& tokens, const YAML::Node& node);
-
-std::set<std::string> getChildNodeKeys(const YAML::Node& node);
-std::set<std::string> getChildNodeValues(const YAML::Node& node);
-std::map<std::string, std::string> getChildNodeKeyValues(const YAML::Node& node);
-std::string getNodeValue(const YAML::Node& node);
-
-}  // namespace token
-}  // namespace moveit_benchmark_suite
-
-namespace std
-{
-template <>
-struct less<moveit_benchmark_suite::Token>
-
-{
-  bool operator()(const moveit_benchmark_suite::Token lhs, const moveit_benchmark_suite::Token rhs)
-
-  {
-    return lhs.token + lhs.value < rhs.token + rhs.value;
-  }
+  bool ns_rel_ = true;  // namespace is relative or absolute
+  YAML::Node node_;
 };
 
-}  // namespace std
+}  // namespace moveit_benchmark_suite

@@ -54,6 +54,8 @@
 #include <ros/console.h>
 
 #include <moveit_benchmark_suite/query.h>
+
+#include <moveit_benchmark_suite/token.h>  // DatasetFilter
 #include <moveit_serialization/yaml-cpp/yaml.h>
 
 namespace moveit_benchmark_suite
