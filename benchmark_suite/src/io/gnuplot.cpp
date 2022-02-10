@@ -69,60 +69,6 @@ std::string SvgTerminal::getCmd() const
 /// GNUPlotData
 ///
 
-namespace
-{
-class addGNUPlotDataMetricVisitor : public boost::static_visitor<void>
-{
-public:
-  addGNUPlotDataMetricVisitor(std::vector<double>& c1, std::vector<std::vector<double>>& c2) : c1(c1), c2(c2){};
-
-  void operator()(bool metric) const
-  {
-    double val = static_cast<double>(metric);
-    c1.push_back(val);
-  }
-
-  void operator()(int metric) const
-  {
-    double val = static_cast<double>(metric);
-    c1.push_back(val);
-  }
-
-  void operator()(double metric) const
-  {
-    c1.push_back(metric);
-  }
-
-  void operator()(std::vector<bool> metric) const
-  {
-    auto values = std::vector<double>(metric.begin(), metric.end());
-
-    c2.push_back(values);
-  }
-
-  void operator()(std::vector<int> metric) const
-  {
-    auto values = std::vector<double>(metric.begin(), metric.end());
-
-    c2.push_back(values);
-  }
-
-  void operator()(std::vector<double> metric) const
-  {
-    c2.push_back(metric);
-  }
-
-  template <typename T>
-  void operator()(const T& metric) const
-  {
-    throw std::runtime_error("Type not supported in visitor");
-  }
-
-  std::vector<double>& c1;
-  std::vector<std::vector<double>>& c2;
-};
-}  // namespace
-
 void GNUPlotData::add(Value value, Label label, Legend legend)
 {
   add(std::vector<Value>{ value }, label, legend);
@@ -421,16 +367,15 @@ void GNUPlotHelper::writeXticks(GNUPlotHelper::Instance& in, const GNUPlotData& 
   in.writeline(") scale 0.0 center");
 }
 
-void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
+void GNUPlotHelper::plot(const BoxPlotOptions& options, const GNUPlotData& data)
 {
   auto in = getInstance(options.instance);
-  const auto& datablock = options.datablock;
 
   // Title and axis
   configurePlot(options);
 
   // Datablocks (embedding data)
-  writeDataBlocks(*in, datablock);
+  writeDataBlocks(*in, data);
   in->writeline("set datafile separator \",\"");
 
   // Border, margin and style
@@ -448,17 +393,17 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
     in->writeline("set style boxplot nooutliers");
 
   // Legend
-  writeLegend(*in, datablock);
+  writeLegend(*in, data);
 
   // Xticks
-  writeXticks(*in, datablock, options.box);
+  writeXticks(*in, data, options.box);
 
   // Plot
   std::size_t data_ctr = 0;
   double offset = options.box.label_gap;
   double data_pos_prev = 0;
   std::vector<bool> legend_added = { false, false, false };
-  const auto& labels = datablock.getUniqueLabels();
+  const auto& labels = data.getUniqueLabels();
   in->write("plot ");
 
   // Loop through unique labels
@@ -470,9 +415,9 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
     std::size_t legend_ctr = 0;  // Used for changing boxplot color
 
     // Loop legend to assign different colors
-    for (const auto& legend_map : datablock.getContainer())
+    for (const auto& legend_map : data.getContainer())
     {
-      auto label_size = datablock.getLabelCount(legend_map.first, label);
+      auto label_size = data.getLabelCount(legend_map.first, label);
 
       // Loop through each label in specified legend
       for (std::size_t dummy_ctr = 0; dummy_ctr < label_size; ++dummy_ctr)
@@ -484,7 +429,7 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
         in->write(log::format("title \"%1%\" ", title));
         in->write(log::format("lt %1%", legend_ctr + 1));  // color index starts at 1
 
-        bool isLastData = data_ctr >= datablock.getLabelTotalCount() - 1;
+        bool isLastData = data_ctr >= data.getLabelTotalCount() - 1;
         in->writeline((isLastData) ? "" : ", \\");
 
         // Legend must be added only once per datablock, or else
@@ -503,13 +448,12 @@ void GNUPlotHelper::boxplot(const BoxPlotOptions& options)
   }
 }
 
-void GNUPlotHelper::bargraph(const BarGraphOptions& options)
+void GNUPlotHelper::plot(const BarGraphOptions& options, const GNUPlotData& data)
 {
   auto in = getInstance(options.instance);
-  const auto& datablock = options.datablock;
 
   // Values vector MUST be <= 1 (Single)
-  if (!datablock.hasSingleValues())
+  if (!data.hasSingleValues())
   {
     ROS_ERROR("Bargraph: Cannot plot multiple values in one bar");
     return;
@@ -519,7 +463,7 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
   configurePlot(options);
 
   // Datablocks (embedding data)
-  writeDataBlocks(*in, datablock);
+  writeDataBlocks(*in, data);
   in->writeline("set datafile separator \",\"");
 
   // Border, margin and style
@@ -537,17 +481,17 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
   }
 
   // Legend
-  writeLegend(*in, datablock);
+  writeLegend(*in, data);
 
   // Xticks
-  writeXticks(*in, datablock, options.box);
+  writeXticks(*in, data, options.box);
 
   // Plot
   std::size_t data_ctr = 0;
   double offset = options.box.label_gap;
   double data_pos_prev = 0;
   std::vector<bool> legend_added = { false, false, false };
-  const auto& labels = datablock.getUniqueLabels();
+  const auto& labels = data.getUniqueLabels();
   in->write("plot ");
 
   // Loop through unique labels
@@ -559,9 +503,9 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
     std::size_t legend_ctr = 0;  // Used for changing boxplot color
 
     // Loop legend to assign different colors
-    for (const auto& legend_map : datablock.getContainer())
+    for (const auto& legend_map : data.getContainer())
     {
-      auto label_size = datablock.getLabelCount(legend_map.first, label);
+      auto label_size = data.getLabelCount(legend_map.first, label);
 
       // Loop through each label in specified legend
       for (std::size_t dummy_ctr = 0; dummy_ctr < label_size; ++dummy_ctr)
@@ -574,7 +518,7 @@ void GNUPlotHelper::bargraph(const BarGraphOptions& options)
         in->write(log::format("with boxes "));
         in->write(log::format("lt %1%", legend_ctr + 1));  // color index starts at 1
 
-        bool isLastData = data_ctr >= datablock.getLabelTotalCount() - 1;
+        bool isLastData = data_ctr >= data.getLabelTotalCount() - 1;
         in->writeline((isLastData) ? "" : ", \\");
 
         // Legend must be added only once per datablock, or else

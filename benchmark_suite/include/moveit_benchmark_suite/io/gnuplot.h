@@ -179,27 +179,23 @@ public:
     bool sorted{ true };
 
     ShapeOptions box;
-
-    GNUPlotData datablock;
   };
 
   /** \brief Plot box data.
    *  \param[in] options Plotting options.
    */
-  void boxplot(const BoxPlotOptions& options);
+  void plot(const BoxPlotOptions& options, const GNUPlotData& data);
 
   struct BarGraphOptions : PlottingOptions
   {
     bool percent{ false };  // Defaults to count
     ShapeOptions box;
-
-    GNUPlotData datablock;
   };
 
   /** \brief Plot box data.
    *  \param[in] options Plotting options.
    */
-  void bargraph(const BarGraphOptions& options);
+  void plot(const BarGraphOptions& options, const GNUPlotData& data);
 
   struct MultiPlotOptions : InstanceOptions
   {
