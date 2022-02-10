@@ -1,8 +1,11 @@
 /* Author: Zachary Kingston */
 
+#include <memory>
+
 #include <moveit_benchmark_suite/io.h>
 #include <moveit_benchmark_suite/io/gnuplot.h>
 #include <moveit_serialization/yaml-cpp/yaml.h>
+#include <moveit_serialization/yaml-cpp/node_manipulation.h>
 #include <moveit_benchmark_suite/token.h>
 
 #include <cmath>
@@ -367,7 +370,7 @@ void GNUPlotHelper::writeXticks(GNUPlotHelper::Instance& in, const GNUPlotData& 
   in.writeline(") scale 0.0 center");
 }
 
-void GNUPlotHelper::plot(const BoxPlotOptions& options, const GNUPlotData& data)
+void GNUPlotHelper::plot(const GNUPlotData& data, const BoxPlotOptions& options)
 {
   auto in = getInstance(options.instance);
 
@@ -448,7 +451,7 @@ void GNUPlotHelper::plot(const BoxPlotOptions& options, const GNUPlotData& data)
   }
 }
 
-void GNUPlotHelper::plot(const BarGraphOptions& options, const GNUPlotData& data)
+void GNUPlotHelper::plot(const GNUPlotData& data, const BarGraphOptions& options)
 {
   auto in = getInstance(options.instance);
 
@@ -555,591 +558,356 @@ std::shared_ptr<GNUPlotHelper::Instance> GNUPlotHelper::getInstance(const std::s
   return instances_.find(name)->second;
 }
 
-///
-/// GNUPlotDataSet
-///
+//
+// GNUPlotDataset
+//
 
-GNUPlotDataSet::GNUPlotDataSet(){};
-
-/** \brief Destructor.
- */
-GNUPlotDataSet::~GNUPlotDataSet(){};
-
-/** \brief Visualize results.
- *  \param[in] results Results to visualize.
- */
-void GNUPlotDataSet::addMetric(const std::string& metric, const PlotType& plottype)
+GNUPlotDataset::GNUPlotDataset()
 {
-  plot_types_.push_back(std::make_pair(metric, plottype));
-};
+}
 
-void GNUPlotDataSet::addMetric(const std::string& metric, const std::string& plottype)
+GNUPlotDataset::~GNUPlotDataset()
 {
-  auto it = plottype_map.find(plottype);
-  if (it == plottype_map.end())
-    ROS_WARN("Cannot find plot type");
+}
+bool GNUPlotDataset::initialize(const GNUPlotLayout& layout)
+{
+  layout_ = layout;
+  init_ = true;
+
+  if (layout.mpo.layout.col == 1 && layout.mpo.layout.row == 1)
+    single_instance_ = false;
   else
-    addMetric(metric, it->second);
-};
+    single_instance_ = true;
 
-void GNUPlotDataSet::dump(const DataSetPtr& dataset, const GNUPlotTerminal& terminal,
-                          const GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set,
-                          const TokenSet& legend_set)
+  return true;
+}
+
+bool GNUPlotDataset::initializeFromYAML(const std::string& file)
 {
-  std::vector<DataSetPtr> datasets;
-  datasets.push_back(dataset);
+  std::string abs_file = IO::getAbsDataSetFile(file);
 
-  dump(datasets, terminal, mpo, xtick_set, legend_set);
-};
-
-void GNUPlotDataSet::dump(const std::vector<DataSetPtr>& datasets, const GNUPlotTerminal& terminal,
-                          const GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set,
-                          const TokenSet& legend_set)
-{
-  if (plot_types_.empty())
+  const auto& yaml = IO::loadFileToYAML(abs_file);
+  if (not yaml.first)
   {
-    ROS_WARN("No plot type specified");
+    ROS_ERROR("Failed to load YAML file `%s`.", abs_file.c_str());
+    return false;
+  }
+
+  const auto& node = yaml.second;
+
+  // Check global options
+  GNUPlotLayout layout;
+
+  if (node["gnuplot_config"]["options"])
+  {
+    layout.mpo = GNUPlotHelper::MultiPlotOptions();
+    layout.mpo.layout.row = node["gnuplot_config"]["options"]["n_row"].as<int>(1);
+    layout.mpo.layout.col = node["gnuplot_config"]["options"]["n_col"].as<int>(1);
+
+    auto terminal_type = node["gnuplot_config"]["options"]["terminal"].as<std::string>();
+
+    if (terminal_type.compare("QT") == 0)
+      layout.terminal = std::make_shared<QtTerminal>();
+    else if (terminal_type.compare("SVG") == 0)
+      layout.terminal = std::make_shared<SvgTerminal>();
+    else
+      layout.terminal = std::make_shared<QtTerminal>();
+  }
+  else
+  {
+    layout.terminal = std::make_shared<QtTerminal>();
+    layout.mpo = GNUPlotHelper::MultiPlotOptions();
+  }
+
+  if (layout.mpo.layout.col == 1 && layout.mpo.layout.row == 1)
+    single_instance_ = false;
+  else
+    single_instance_ = true;
+
+  std::size_t ctr = 0;  // counter for multiple instances
+
+  const auto& plots = node["gnuplot_config"]["plots"];
+
+  for (std::size_t i = 0; i < plots.size(); ++i)
+  {
+    const auto& plot = plots[i];
+
+    MultiPlotLayout mplots;
+
+    // Get filters
+    for (YAML::const_iterator it = plot["filters"].begin(); it != plot["filters"].end(); ++it)
+    {
+      const auto& filter = *it;
+
+      std::string ns = filter["ns"].as<std::string>();
+      std::string val = filter["val"].as<std::string>("");  // Optional
+      std::string predicate = filter["predicate"].as<std::string>();
+
+      Filter f = { .token = Token(ns, val), .predicate = stringToPredicate(predicate) };
+
+      mplots.filters.push_back(f);
+    }
+
+    // Get legends (OPTIONAL)
+    auto legends = plot["legends"].as<std::vector<std::string>>(std::vector<std::string>());
+    for (const auto& legend : legends)
+      mplots.legends.push_back(Token(legend));
+
+    // Get labels
+    auto labels = plot["labels"].as<std::vector<std::string>>();
+    for (const auto& label : labels)
+      mplots.labels.push_back(Token(label));
+
+    // Get metrics
+    for (YAML::const_iterator it = plot["metrics"].begin(); it != plot["metrics"].end(); ++it)
+    {
+      const auto& filter = *it;
+
+      std::string type = filter["type"].as<std::string>();
+      std::string name = filter["name"].as<std::string>("");
+      PlotLayout plot;
+
+      if (type.compare("boxplot") == 0)
+      {
+        plot.type = PlotType::BoxPlot;
+        plot.options = std::make_shared<GNUPlotHelper::BoxPlotOptions>();
+      }
+      else if (type.compare("bargraph") == 0)
+      {
+        plot.type = PlotType::BarGraph;
+        plot.options = std::make_shared<GNUPlotHelper::BarGraphOptions>();
+      }
+
+      if (!single_instance_)
+      {
+        plot.options->instance = std::to_string(ctr);
+        ctr++;
+      }
+
+      plot.metric_names = filter["names"].as<std::vector<std::string>>();
+
+      mplots.plots.push_back(plot);
+    }
+    layout.mplots.push_back(mplots);
+  }
+
+  return initialize(layout);
+}
+
+std::string GNUPlotDataset::combineTokenNodeValue(const Token& token, const YAML::Node& node, const std::string& tag)
+{
+  YAML::Node scalar;
+  bool rc = YAML::getSubsetScalar(token.getNode(), node, scalar);
+
+  if (scalar.IsMap())
+    return token.getNamespace() + tag + scalar.begin()->first.as<std::string>();
+  else if (scalar.IsScalar())
+    return token.getNamespace() + tag + scalar.as<std::string>();
+
+  ROS_WARN("Node type not handeled");
+  return "";
+}
+
+void GNUPlotDataset::plot(const std::vector<std::string>& dataset_files)
+{
+  dataset_.loadDatasets(dataset_files);
+  plot(layout_);
+}
+
+void GNUPlotDataset::plot(const std::vector<DataSet>& datasets)
+{
+  dataset_.loadDatasets(datasets);
+  plot(layout_);
+}
+
+void GNUPlotDataset::plot(const DataSet& dataset)
+{
+  dataset_.loadDataset(dataset);
+  plot(layout_);
+}
+
+void GNUPlotDataset::plot(const GNUPlotLayout& layout)
+{
+  if (single_instance_)
+  {
+    helper_.configureTerminal("", *layout.terminal);
+    helper_.multiplot(layout.mpo);
+  }
+
+  // Plot filtered datasets
+  std::size_t i = 0;
+  for (const auto& mp_layout : layout.mplots)
+  {
+    std::string id = std::to_string(i);
+
+    dataset_.filter(id, mp_layout.filters);
+    const auto& dataset_map = dataset_.getFilteredDataset(id);
+
+    for (const auto& dataset : dataset_map)
+      plot(mp_layout, dataset.second);
+
+    ++i;
+  }
+}
+
+void GNUPlotDataset::plot(const MultiPlotLayout& layout, const YAML::Node& dataset)
+{
+  const std::string TAG_SPLIT = " : ";
+  const std::string TAG_END = "\\n";
+
+  // Prepare container for plotting
+  std::vector<std::pair<PlotLayout, GNUPlotData>> container;
+  for (const auto& plot_layout : layout.plots)
+  {
+    PlotLayout plot = { .type = plot_layout.type, .options = plot_layout.options };
+    container.emplace_back(std::make_pair(plot, GNUPlotData()));
+  }
+
+  if (!dataset["data"])
+  {
+    ROS_WARN("Malformed dataset, root 'data' node not found");
     return;
   }
 
-  int layout_size = mpo.layout.row * mpo.layout.col;
+  // Build legend and label names from dataset -> absolute
+  std::string abs_label;
+  std::string abs_legend;
+  bool addMetricToLabel = false;
+  bool addMetricToLegend = false;
 
-  if (layout_size < plot_types_.size())
-    ROS_WARN("Metrics cannot fit in plot layout");
-
-  helper_.configureTerminal(mpo.instance, terminal);
-  if (layout_size > 1)
-    helper_.multiplot(mpo);
-
-  if (!validOverlap(xtick_set, legend_set))
+  for (const auto& token : layout.legends)
   {
-    ROS_WARN("Tokens overlap");
-    return;
+    if (token.isRelative())
+    {
+      if (token.getNode()["metrics"])
+        addMetricToLegend = true;
+      continue;
+    }
+
+    auto legend = combineTokenNodeValue(token, dataset, TAG_SPLIT);
+    abs_legend += (legend.empty()) ? "" : legend + TAG_END;
   }
 
-  for (const auto& pair : plot_types_)
+  for (const auto& token : layout.labels)
   {
-    switch (pair.second)
+    if (token.isRelative())
+    {
+      if (token.getNode()["metrics"])
+        addMetricToLabel = true;
+      continue;
+    }
+
+    auto label = combineTokenNodeValue(token, dataset, TAG_SPLIT);
+    abs_label += label + TAG_END;
+  }
+
+  // Loop through each queries
+  auto queries = dataset["data"];
+  for (std::size_t i = 0; i < queries.size(); ++i)
+  {
+    std::string rel_legend;
+    std::string rel_label;
+
+    auto query = queries[i];
+
+    // Build legend and label names from queries -> realtive
+    for (const auto& token : layout.legends)
+    {
+      if (token.isAbsolute() || token.getNode()["metrics"])
+        continue;
+
+      auto legend = combineTokenNodeValue(token, query, TAG_SPLIT);
+      rel_legend += (legend.empty()) ? "" : legend + TAG_END;
+    }
+
+    for (const auto& token : layout.labels)
+    {
+      if (token.isAbsolute() || token.getNode()["metrics"])
+        continue;
+
+      auto label = combineTokenNodeValue(token, query, TAG_SPLIT);
+      rel_label += (label.empty()) ? "" : label + TAG_END;
+    }
+
+    if (!query["metrics"])
+      continue;
+
+    auto metric_node = query["metrics"];
+
+    // Lopp through each plot
+    for (std::size_t j = 0; j < layout.plots.size(); ++j)
+    {
+      const auto& plot = layout.plots[j];
+
+      // Loop through each metric in plot
+      for (const auto& metric : plot.metric_names)
+      {
+        if (!metric_node[metric])
+          continue;
+
+        std::string legend = abs_legend + rel_legend;
+        std::string label = abs_label + rel_label;
+
+        if (addMetricToLegend)
+          legend += "metrics/" + TAG_SPLIT + metric + TAG_END;
+        if (addMetricToLabel)
+          label += "metrics/" + TAG_SPLIT + metric + TAG_END;
+
+        // Remove trailing delimiter
+        if (legend.size() >= TAG_END.size())
+          for (int k = 0; k < TAG_END.size(); ++k)
+            legend.pop_back();
+        if (label.size() >= TAG_END.size())
+          for (int k = 0; k < TAG_END.size(); ++k)
+            label.pop_back();
+
+        // Decode metric and add to Datablock
+        try
+        {
+          auto values = metric_node[metric].as<std::vector<double>>();
+          container[j].second.add(values, label, legend);
+        }
+        catch (YAML::BadConversion& e)
+        {
+          auto values = metric_node[metric].as<std::vector<std::vector<double>>>();
+
+          for (const auto& value : values)
+            container[j].second.add(value, label, legend);
+        }
+      }
+    }
+  }
+
+  for (const auto& c : container)
+  {
+    switch (c.first.type)
     {
       case PlotType::BarGraph:
-        dumpBarGraph(pair.first, datasets, xtick_set, legend_set, mpo);
-        break;
-
+      {
+        auto options = std::static_pointer_cast<GNUPlotHelper::BarGraphOptions>(c.first.options);
+        if (!single_instance_)
+          helper_.configureTerminal(options->instance, *layout_.terminal);
+        helper_.plot(c.second, *options);
+      }
+      break;
       case PlotType::BoxPlot:
-        dumpBoxPlot(pair.first, datasets, xtick_set, legend_set, mpo);
-        break;
-
-      default:
-        ROS_WARN("Plot Type not implemented");
-        break;
+      {
+        auto options = std::static_pointer_cast<GNUPlotHelper::BoxPlotOptions>(c.first.options);
+        if (!single_instance_)
+          helper_.configureTerminal(options->instance, *layout_.terminal);
+        helper_.plot(c.second, *options);
+      }
+      break;
     }
   }
-};
-
-GNUPlotHelper& GNUPlotDataSet::getGNUPlotHelper()
-{
-  return helper_;
 }
 
-void GNUPlotDataSet::dumpBoxPlot(const std::string& metric, const std::vector<DataSetPtr>& datasets,
-                                 const TokenSet& xtick_set, const TokenSet& legend_set,
-                                 const GNUPlotHelper::MultiPlotOptions& mpo)
-
+std::set<std::string> GNUPlotDataset::getInstanceNames() const
 {
-  GNUPlotHelper::BoxPlotOptions bpo;
-  if (mpo.title.empty())
-    bpo.title = log::format("\\\"%1%\\\" for Experiment \\\"%2%\\\"", metric, datasets[0]->name);
-  else
-    bpo.title = mpo.title;
-  bpo.y.label = metric;
-  bpo.y.min = 0.;
-
-  fillDataSet(metric, datasets, xtick_set, legend_set, bpo.datablock);
-
-  if (bpo.datablock.isEmpty())
-  {
-    ROS_WARN("No values to plot...");
-    return;
-  }
-
-  helper_.boxplot(bpo);
-};
-
-void GNUPlotDataSet::dumpBarGraph(const std::string& metric, const std::vector<DataSetPtr>& datasets,
-                                  const TokenSet& xtick_set, const TokenSet& legend_set,
-                                  const GNUPlotHelper::MultiPlotOptions& mpo)
-{
-  GNUPlotHelper::BarGraphOptions bgo;
-  bgo.percent = false;
-  if (mpo.title.empty())
-    bgo.title = log::format("\\\"%1%\\\" for Experiment \\\"%2%\\\"", metric, datasets[0]->name);
-  else
-    bgo.title = mpo.title;
-  bgo.y.label = metric;
-  bgo.y.min = 0.;
-
-  fillDataSet(metric, datasets, xtick_set, legend_set, bgo.datablock);
-
-  if (bgo.datablock.isEmpty())
-  {
-    ROS_WARN("No values to plot...");
-    return;
-  }
-
-  helper_.bargraph(bgo);
-};
-
-bool GNUPlotDataSet::validOverlap(const TokenSet& xtick_set, const TokenSet& legend_set)
-{
-  int overlap_ctr = 0;
-  for (const auto& t1 : legend_set)
-  {
-    for (const auto& t2 : legend_set)
-    {
-      if (token::overlap(t1, t2))
-        overlap_ctr++;
-    }
-  }
-  if (overlap_ctr > legend_set.size())
-    return false;
-
-  overlap_ctr = 0;
-  for (const auto& t1 : xtick_set)
-  {
-    for (const auto& t2 : xtick_set)
-    {
-      if (token::overlap(t1, t2))
-        overlap_ctr++;
-    }
-  }
-  if (overlap_ctr > xtick_set.size())
-    return false;
-
-  return true;
+  return helper_.getInstanceNames();
 }
 
-bool GNUPlotDataSet::fillDataSet(const std::string& metric_name, const std::vector<DataSetPtr>& datasets,
-                                 const TokenSet& xtick_set, const TokenSet& legend_set, GNUPlotData& datablock)
+void GNUPlotDataset::getInstanceOutput(const std::string& instance_name, std::string& output)
 {
-  std::string xlabel_del = "\\n";
-  std::string legend_del = " + ";
-  std::vector<DataSetPtr> filtered_datasets;
-
-  filterDataSet(legend_set, xtick_set, datasets, filtered_datasets);
-
-  bool multiple_datasets = (filtered_datasets.size() > 1) ? true : false;
-
-  for (const auto& dataset : filtered_datasets)
-  {
-    for (const auto& data_map : dataset->data)
-    {
-      const auto& data_vec = data_map.second;
-
-      if (data_vec.empty())
-        continue;
-
-      std::string legend_name;
-      std::string xtick_name;
-      if (!filterDataLegend(data_vec[0], dataset->metadata, legend_set, legend_name, legend_del) ||
-          !filterDataXtick(data_vec[0], dataset->metadata, xtick_set, legend_set, xtick_name, xlabel_del,
-                           multiple_datasets))
-        continue;
-
-      if (data_vec.empty())
-        continue;
-
-      const auto& metric_map = data_vec[0]->metrics;
-
-      const auto& it = metric_map.find(metric_name);
-      if (it == metric_map.end())
-        continue;
-
-      std::vector<double> c1;
-      std::vector<std::vector<double>> c2;
-      for (const auto& data : data_vec)
-      {
-        const auto& it = data->metrics.find(metric_name);
-        if (it != data->metrics.end())
-        {
-          boost::apply_visitor(addGNUPlotDataMetricVisitor(c1, c2), it->second);
-        }
-      }
-
-      if (!c1.empty())
-        datablock.add(c1, xtick_name, legend_name);
-      for (const auto& c : c2)
-        datablock.add(c, xtick_name, legend_name);
-    }
-  }
-
-  // Filter out redundant xlabels
-  const auto& data_container = datablock.getContainer();
-  int n_labels = 0;
-  std::map<std::string, int> labels_map;
-  for (const auto& legend_map : data_container)
-  {
-    for (const auto& labels : legend_map.second)
-    {
-      auto label_keys = splitStr(labels.first, xlabel_del);
-
-      for (const auto& key : label_keys)
-      {
-        auto it = labels_map.find(key);
-        if (it == labels_map.end())
-          labels_map.insert({ key, 1 });
-        else
-          it->second++;
-      }
-    }
-    n_labels += legend_map.second.size();
-  }
-
-  // Erase
-  for (auto it = labels_map.cbegin(); it != labels_map.cend() /* not hoisted */; /* no increment */)
-  {
-    if (data_container.size() == it->second || it->second != n_labels)
-      labels_map.erase(it++);  // or "it = m.erase(it)" since C++11
-    else
-      ++it;
-  }
-
-  // Create new container with new xlabels keys
-  // GNUPlotData temp;
-  // for (const auto& legend_map : data_container)
-  // {
-  //   // temp.insert({ legend_map.first, {} });
-  //   // auto it = temp.find(legend_map.first);
-
-  //   for (const auto& labels : legend_map.second)
-  //   {
-  //     std::string new_key = labels.first;
-  //     for (const auto& rm : labels_map)
-  //     {
-  //       if (!rm.first.empty())
-  //       {
-  //         new_key = replaceStr(new_key, rm.first + xlabel_del, "");
-  //         new_key = replaceStr(new_key, rm.first, "");
-  //       }
-  //     }
-  //     it->second.insert({ new_key, std::move(labels.second) });
-  //   }
-  // }
-
-  // plt_values.clear();
-  // plt_values = temp;
-  // temp.clear();
-
-  // Filter out redundant legend
-  // std::set<std::string> remove_set;
-  // for (const auto& legend_map : plt_values)
-  // {
-  //   auto keys = splitStr(legend_map.first, legend_del);
-
-  //   for (const auto& key : keys)
-  //   {
-  //     int ctr = 0;
-  //     for (const auto& legend_map_ : plt_values)
-  //     {
-  //       if (legend_map_.first.find(key) != std::string::npos)
-  //         ctr++;
-  //     }
-  //     if (ctr == plt_values.size())
-  //       remove_set.insert(key);
-  //   }
-  // }
-
-  // for (auto& legend_map : plt_values)
-  // {
-  //   bool found = false;
-  //   std::string new_key = legend_map.first;
-  //   for (const auto& rm : remove_set)
-  //   {
-  //     if (!rm.empty())
-  //     {
-  //       new_key = replaceStr(legend_map.first, legend_del + rm, "");
-  //       new_key = replaceStr(legend_map.first, rm, "");
-  //     }
-  //   }
-
-  //   if (new_key.size() >= legend_del.size())
-  //   {
-  //     if (legend_del.compare(&new_key[new_key.size() - legend_del.size()]) == 0)
-  //       for (int i = 0; i < legend_del.size(); ++i)
-  //         new_key.pop_back();  // Remove trailing delimiter
-  //   }
-  //   temp.insert({ new_key, std::move(legend_map.second) });
-  // }
-
-  // plt_values.clear();
-  // plt_values = temp;
-
-  // Add missing labels with empty data
-  // TODO: works but MUST change logic in GNUPlot script
-  // if (plt_values.size() > 1)
-  // {
-  //   for (const auto& legend_map : temp)
-  //   {
-  //     for (const auto& label_map : legend_map.second)
-  //     {
-  //       for (const auto& legend_map2 : temp)
-  //       {
-  //         auto it = temp.find(legend_map2.first);
-  //         if (it == temp.end())
-  //           continue;
-  //         else
-  //         {
-  //           auto it1 = it->second.find(label_map.first);
-  //           if (it1 == it->second.end())
-  //           {
-  //             auto it2 = plt_values.find(legend_map2.first);
-  //             it2->second.insert({ label_map.first, {} });
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
-
-  // Warn if legend labels are not of same size
-  // int label_size = plt_values.begin()->second.size();
-  // for (const auto& legend_map : plt_values)
-  // {
-  //   if (legend_map.second.size() != label_size)
-  //   {
-  //     ROS_WARN("Missing labels in some legend, some labels will not plot.");
-  //     break;
-  //   }
-  // }
-
-  return true;
-}
-
-bool GNUPlotDataSet::filterDataSet(const TokenSet& legend_set, const TokenSet& filter_set,
-                                   const std::vector<DataSetPtr>& datasets, std::vector<DataSetPtr>& filtered_datasets)
-{
-  if (legend_set.empty() && filter_set.empty())
-  {
-    for (const auto& dataset : datasets)
-      filtered_datasets.push_back(dataset);
-    return true;
-  }
-
-  TokenSet all_set;
-  std::set_union(legend_set.begin(), legend_set.end(), filter_set.begin(), filter_set.end(),
-                 std::inserter(all_set, all_set.begin()));
-
-  for (const auto& dataset : datasets)
-  {
-    bool add = true;
-    std::set<std::string> dataset_fail;
-    std::set<std::string> dataset_success;
-    for (const auto& t : all_set)
-    {
-      YAML::Node node;
-      if (!token::compareToNode(t, dataset->metadata, node))
-      {
-        if (token::hasValue(t) && t.key_root.compare(DATASET_CONFIG_KEY) == 0)
-        {
-          std::set<std::string> keys = token::getChildNodeKeys(node);
-
-          auto it = keys.find(t.value);
-          if (it == keys.end())
-          {
-            add = false;
-            break;
-          }
-        }
-        else if (token::hasValue(t) && t.key_root.compare(DATASET_CONFIG_KEY))
-        {
-          dataset_fail.insert(t.group);
-        }
-        else
-        {
-          add = false;
-          break;
-        }
-      }
-      else
-      {
-        if (t.key_root.compare(DATASET_CONFIG_KEY))
-        {
-          dataset_success.insert(t.group);
-        }
-      }
-    }
-
-    for (const auto& group_fail : dataset_fail)
-    {
-      if (dataset_success.find(group_fail) == dataset_success.end())
-      {
-        add = false;
-        break;
-      }
-    }
-
-    if (add)
-      filtered_datasets.push_back(dataset);
-  }
-
-  return true;
-}
-bool GNUPlotDataSet::filterDataLegend(const DataPtr& data, const YAML::Node& metadata, const TokenSet& legend_set,
-                                      std::string& legend_name, const std::string& del)
-{
-  YAML::Node node;
-  node = YAML::Clone(metadata);
-  node[DATA_CONFIG_KEY] = data->query->group_name_map;
-
-  std::set<std::string> dataset_fail;
-  std::set<std::string> dataset_success;
-
-  for (const auto& token : legend_set)
-  {
-    YAML::Node res;
-
-    if (token::compareToNode(token, node, res))
-      dataset_success.insert(token.group);
-    else
-    {
-      dataset_fail.insert(token.group);
-      continue;
-    }
-
-    if (token::hasValue(token))
-      if (token.key_root.compare(DATA_CONFIG_KEY) == 0)
-        legend_name += token.value;
-
-      else
-        legend_name += token.group + ": " + token.value;
-    else
-    {
-      // try getting child node keys
-      std::set<std::string> keys = token::getChildNodeKeys(res);
-
-      // get node value
-      if (keys.empty())
-        keys.insert(token::getNodeValue(res));
-
-      std::string filter_value;
-      for (const auto& key : keys)
-      {
-        filter_value += key;
-        filter_value += "+";
-      }
-      if (!filter_value.empty())
-        filter_value.pop_back();
-
-      if (token.key_root.compare(DATA_CONFIG_KEY) == 0)
-        legend_name += filter_value;
-
-      else
-        legend_name += token.group + ": " + token.value;
-    }
-
-    legend_name += del;
-  }
-  for (const auto& group_fail : dataset_fail)
-  {
-    if (dataset_success.find(group_fail) == dataset_success.end())
-      return false;
-  }
-  // Remove trailing delimiter
-  if (!legend_name.empty())
-    for (int i = 0; i < del.size(); ++i)
-      legend_name.pop_back();
-
-  if (!legend_set.empty() && legend_name.empty())
-    return false;
-
-  return true;
-}
-
-bool GNUPlotDataSet::filterDataXtick(const DataPtr& data, const YAML::Node& metadata, const TokenSet& xtick_set,
-                                     const TokenSet& legend_set, std::string& xtick_name, const std::string& del,
-                                     bool multiple_datasets)
-{
-  YAML::Node node;
-  node = YAML::Clone(metadata);
-  node[DATA_CONFIG_KEY] = data->query->group_name_map;
-
-  // Add missing default config groups
-  TokenSet xlabel_set = xtick_set;
-  for (const auto& id : data->query->group_name_map)
-  {
-    bool match = false;
-
-    for (const auto& xlabel : xlabel_set)
-    {
-      Token t(xlabel);
-      if (t.group.compare("config/" + id.first + "/") == 0)
-      {
-        match = true;
-        break;
-      }
-    }
-    if (!match)
-      xlabel_set.insert("config/" + id.first + "/" + id.second);
-  }
-
-  std::set<std::string> dataset_fail;
-  std::set<std::string> dataset_success;
-  for (const auto& token : xlabel_set)
-  {
-    YAML::Node res;
-    if (token::compareToNode(token, node, res))
-      dataset_success.insert(token.group);
-    else
-    {
-      dataset_fail.insert(token.group);
-      continue;
-    }
-
-    // Check token againt legend set
-    bool legend_match = false;
-    for (const auto& legend : legend_set)
-    {
-      if (legend.group.compare(token.group) == 0)
-      {
-        legend_match = true;
-        break;
-      }
-    }
-    if (legend_match)
-      continue;
-
-    // Belongs to 'config/' node
-    if (token.key_root.compare(DATA_CONFIG_KEY) == 0)
-    {
-      auto label = token::getNodeValue(res);
-      xtick_name += label + del;
-    }
-    else
-    {
-      auto label = token::getNodeValue(res);
-      if (!label.empty())
-        xtick_name += label + del;
-      else
-      {
-        auto labels = token::getChildNodeKeys(res);
-        for (const auto& label : labels)
-          xtick_name += label + del;
-      }
-    }
-  }
-
-  // Filter out if failure label not in success
-  for (const auto& group_fail : dataset_fail)
-  {
-    if (dataset_success.find(group_fail) == dataset_success.end())
-      return false;
-  }
-
-  if (!xtick_name.empty())
-    for (int i = 0; i < del.size(); ++i)
-      xtick_name.pop_back();  // Remove trailing delimiter
-
-  if (xtick_name.empty())
-    return false;
-
-  return true;
+  helper_.getInstanceOutput(instance_name, output);
 }
