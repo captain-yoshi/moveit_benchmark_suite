@@ -1,6 +1,6 @@
 #include <moveit_benchmark_suite/benchmark.h>
 #include <moveit_benchmark_suite/log.h>
-#include <moveit_benchmark_suite/aggregation.h>
+// #include <moveit_benchmark_suite/aggregation.h>
 #include <moveit_benchmark_suite/config/gnuplot_config.h>
 
 #include <queue>
@@ -28,20 +28,20 @@ bool Benchmark::initialize(const std::string& name, const Options& options)
   }
 
   // Aggregate if config is found
-  AggregateConfig agg_config;
-  if (agg_config.isConfigAvailable(""))
-  {
-    agg_config.setNamespace("");
+  // AggregateConfig agg_config;
+  // if (agg_config.isConfigAvailable(""))
+  // {
+  //   agg_config.setNamespace("");
 
-    const std::vector<std::string>& filter_names = agg_config.getFilterNames();
-    const std::vector<AggregateParams> params = agg_config.getAggregateParams();
+  //   const std::vector<std::string>& filter_names = agg_config.getFilterNames();
+  //   const std::vector<AggregateParams> params = agg_config.getAggregateParams();
 
-    TokenSet filters;
-    for (const auto& filter : filter_names)
-      filters.insert(Token(filter));
+  //   TokenSet filters;
+  //   for (const auto& filter : filter_names)
+  //     filters.insert(Token(filter));
 
-    addPostBenchmarkCallback([=](DataSetPtr dataset) { aggregate::dataset(dataset, filters, params); });
-  }
+  //   addPostBenchmarkCallback([=](DataSetPtr dataset) { aggregate::dataset(dataset, filters, params); });
+  // }
 
   // Plot with gnuplot if config is found
   {

@@ -5,7 +5,7 @@
 #include <moveit_serialization/yaml-cpp/yaml.h>
 #include <moveit_benchmark_suite/benchmark.h>
 #include <moveit_benchmark_suite/config/html_config.h>
-#include <moveit_benchmark_suite/aggregation.h>
+// #include <moveit_benchmark_suite/aggregation.h>
 
 using namespace moveit_benchmark_suite;
 
