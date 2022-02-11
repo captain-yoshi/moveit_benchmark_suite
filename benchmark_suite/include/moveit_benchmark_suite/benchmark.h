@@ -95,6 +95,9 @@ public:
     bool verbose_status_trial = true;   // Verbose status before each query trial
     bool verbose_status_query = false;  // Verbose status before each query
 
+    // Config
+    std::string config_file;
+
     // Benchmark parameter
     std::size_t trials = 10;  // Number of trials
     std::string output_file;
@@ -158,7 +161,7 @@ private:
   std::vector<PostBenchmarkCallback> post_benchmark_callbacks_;     ///< Post-run callback.
 
   BenchmarkSuiteDataSetOutputter outputter_;
-  IO::GNUPlotDataSet plot;
+  IO::GNUPlotDataset gnuplot_;
   bool plot_flag = false;
 };
 
