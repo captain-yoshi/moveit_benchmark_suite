@@ -598,6 +598,9 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
   // Check global options
   GNUPlotLayout layout;
 
+  if (!node["gnuplot_config"])
+    return false;
+
   if (node["gnuplot_config"]["options"])
   {
     layout.mpo = GNUPlotHelper::MultiPlotOptions();
