@@ -54,6 +54,8 @@
 #include <ros/console.h>
 
 #include <moveit_benchmark_suite/query.h>
+
+#include <moveit_benchmark_suite/token.h>  // DatasetFilter
 #include <moveit_serialization/yaml-cpp/yaml.h>
 
 namespace moveit_benchmark_suite
@@ -214,6 +216,68 @@ public:
   std::set<std::string> getMetricNames();
 
   std::vector<QueryResponse> getQueryResponse() const;
+};
+
+enum class Predicate
+{
+  INVALID,
+  EQ,   // equality (=)
+  NEQ,  // non equality (!=)
+  GE,   // greater or equal (>=)
+  GT,   // greater then (>)
+  LE,   // less or equal (<=)
+  LT,   // less then (<)
+};
+
+Predicate stringToPredicate(const std::string& str);
+
+struct Filter
+{
+  Token token;
+  Predicate predicate;
+};
+
+/** \brief Helper class to filter datasets
+ */
+class DatasetFilter
+{
+public:
+  using UUID = std::string;
+  using ContainerID = std::string;
+
+  using DatasetMap = std::multimap<UUID, YAML::Node>;
+  using ContainerMap = std::map<ContainerID, DatasetMap>;
+
+  DatasetFilter();
+  ~DatasetFilter();
+
+  // Dataset from filename | object
+  void loadDataset(const DataSet& dataset);
+  void loadDataset(const YAML::Node& dataset);
+  void loadDataset(const std::string& filename);
+  void loadDatasets(const std::vector<DataSet>& datasets);
+  void loadDatasets(const std::vector<std::string>& filenames);
+
+  /// Except metrics node
+  ///
+  void filter(const std::string& id, const std::vector<Filter>& filters);
+  // TODO add more
+
+  const DatasetMap& getFilteredDataset(const ContainerID& id) const;
+
+private:
+  /** \brief Checks
+   *  \param[in] node Either a dataset node or a data sequence
+   *  \return True if predicate is respected, False otherwise.
+   */
+  bool filterMetadata(const YAML::Node& node, const Token& token, Predicate predicate);
+  /// Queries that contain the metrcis node, for dealing with a variant
+  bool filterMetric(const YAML::Node& node, const Token& token, Predicate predicate);
+
+  DatasetMap dataset_map_;  // Original datasets
+  ContainerMap container_;  // Output of filters
+
+  const DatasetMap empty_dataset_map_;
 };
 
 }  // namespace moveit_benchmark_suite

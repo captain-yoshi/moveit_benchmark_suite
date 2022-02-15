@@ -32,7 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Modified version of Zachary Kingston robowflex
+/* Author: Captain Yoshi
    Desc:
 */
 
@@ -77,225 +77,82 @@ std::string replaceStr(std::string subject, const std::string& search, const std
   return subject;
 }
 
-Token::Token(const std::string& token, const std::string& del) : token(token), del(del)
+Token::Token(const std::string& ns, const std::string& value, const std::string& del)
+  : ns_(ns), value_(value), del_(del)
 {
-  keys = splitStr(token, del);
+  // create Node from Token
+  const auto& keys = splitStr(ns, del);
+  createNode(0, keys, node_);
 
-  // Extract value
-  if (!keys.empty())
-  {
-    if (!keys[keys.size() - 1].empty())
-      value = keys[keys.size() - 1];
-    keys.pop_back();
-  }
-
-  if (keys.empty() || keys[0].empty())
-    reset();
-  else if (keys.size() == 1 && keys[0].empty())
-    reset();
+  // Check if namespace is absolute or relative
+  if (!del.empty() && ns.size() >= del.size() && ns.compare(0, del.size(), del) == 0)
+    ns_rel_ = false;
   else
-  {
-    n_key = keys.size();
-    key_root = keys[0];
-    createTokenNode(0, node);
-
-    // Create group
-    for (int i = 0; i < n_key; ++i)
-      group += keys[i] + del;
-  }
+    ns_rel_ = true;
 }
 
-void Token::createTokenNode(int i, YAML::Node& n)
+void Token::createNode(std::size_t ctr, const std::vector<std::string>& keys, YAML::Node& n)
 {
   YAML::Node temp;
-
-  if (i == n_key - 1)
-    n[keys[i]] = value;
+  if (ctr == keys.size() - 1)
+  {
+    if (keys[ctr].empty())
+      n = value_;
+    else
+      n[keys[ctr]] = value_;
+  }
   else
   {
-    createTokenNode(i + 1, temp);
-    n[keys[i]] = temp;
+    createNode(ctr + 1, keys, temp);
+    if (keys[ctr].empty())
+      n = temp;
+    else
+      n[keys[ctr]] = temp;
   }
 };
 
 void Token::reset()
 {
-  token = "";
-  value = "";
+  ns_ = "";
+  value_ = "";
+  del_ = "/";
 
-  keys = std::vector<std::string>();
-  n_key = 0;
-  node = YAML::Node();
+  ns_rel_ = true;
+  node_ = YAML::Node();
 };
 
-bool operator>(const Token& t1, const Token& t2)
+const std::string& Token::getValue() const
 {
-  return t1.n_key > t2.n_key;
+  return value_;
+}
+const std::string& Token::getDelimiter() const
+{
+  return del_;
+}
+const std::string& Token::getNamespace() const
+{
+  return ns_;
+}
+const YAML::Node& Token::getNode() const
+{
+  return node_;
 }
 
-bool operator>=(const Token& t1, const Token& t2)
+bool Token::hasValue() const
 {
-  return t1.n_key >= t2.n_key;
-}
-
-bool operator<(const Token& t1, const Token& t2)
-{
-  return t1.n_key < t2.n_key;
-}
-
-bool operator<=(const Token& t1, const Token& t2)
-{
-  return t1.n_key <= t2.n_key;
-}
-namespace token
-{
-bool hasValue(const Token& t1)
-{
-  if (t1.value.empty())
+  if (value_.empty())
     return false;
   return true;
 }
-
-// Check tokens overlap ex. overlaps -> "test/alpha" "test/alpha"
-bool overlap(const Token& t1, const Token& t2)
+bool Token::isRelative() const
 {
-  // Case one of the token has no key so don't overlap
-  if (!t1.n_key || !t2.n_key)
-    return false;
-
-  // Case tokens first keys are different
-  if (t1.n_key && t2.n_key && t1.keys[0].compare(t2.keys[0]) != 0)
-    return false;
-
-  // Case tokens are identity (same keys)
-  if (t1.node.is(t2.node))
-  {
-    if (t1.value.empty() || t2.value.empty())  // If empty value they overlap
-      return true;
-    else if (t1.value.compare(t2.value) == 0)  // If same value they overlap
-      return true;
-    return false;
-  }
-
-  // Case tokens are not identity and have values
-  if (!t1.value.empty() && !t2.value.empty() && t1.value.compare(t2.value) != 0)  // has different values don't overlap
-    return false;
-
-  // Case tokens are not identity and one has an empty value
-  int n;
-  if (t1 >= t2)
-    n = t2.n_key;
-  else
-    n = t1.n_key;
-
-  for (int i = 0; i < n; ++i)
-  {
-    if (t1.keys[i].compare(t2.keys[i]) != 0)
-      return false;
-  }
-
-  return true;
+  if (ns_rel_)
+    return true;
+  return false;
+}
+bool Token::isAbsolute() const
+{
+  return !isRelative();
 }
 
-bool compareToNode(const Token& t, const YAML::Node& node, YAML::Node& res)
-{
-  if (t.keys.empty())
-    return false;
-
-  res = YAML::Clone(node);
-  for (const auto& key : t.keys)
-  {
-    try
-    {
-      if (res[key])
-        res = res[key];
-      else
-        return false;
-    }
-    catch (YAML::BadSubscript& e)
-    {
-      return false;
-    }
-  }
-
-  // compare value
-  if (!t.value.empty())
-  {
-    std::string node_value;
-    try
-    {
-      node_value = res.as<std::string>();
-    }
-    catch (YAML::BadConversion& e)
-    {
-      return false;
-    }
-
-    if (t.value.compare(node_value) != 0)
-      return false;
-  }
-  return true;
-}
-
-bool compareToNode(const TokenSet& tokens, const YAML::Node& node)
-{
-  for (const auto& token : tokens)
-  {
-    if (!compareToNode(token, node))
-      return false;
-  }
-  return true;
-}
-
-bool compareToNode(const Token& t, const YAML::Node& node)
-{
-  YAML::Node dummy;
-  return compareToNode(t, node, dummy);
-}
-
-std::set<std::string> getChildNodeKeys(const YAML::Node& node)
-{
-  std::set<std::string> keys;
-  for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
-  {
-    keys.insert(it->first.as<std::string>());
-  }
-  return keys;
-}
-
-std::set<std::string> getChildNodeValues(const YAML::Node& node)
-{
-  std::set<std::string> keys;
-  for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
-  {
-    keys.insert(it->second.as<std::string>());
-  }
-  return keys;
-}
-
-std::map<std::string, std::string> getChildNodeKeyValues(const YAML::Node& node)
-{
-  std::map<std::string, std::string> map;
-  for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
-  {
-    map.insert({ it->first.as<std::string>(), it->second.as<std::string>() });
-  }
-  return map;
-}
-
-std::string getNodeValue(const YAML::Node& node)
-{
-  std::string res;
-  try
-  {
-    res = node.as<std::string>();
-  }
-  catch (YAML::BadConversion& e)
-  {
-    return res;
-  }
-  return res;
-}
-
-}  // namespace token
 }  // namespace moveit_benchmark_suite

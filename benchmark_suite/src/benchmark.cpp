@@ -1,6 +1,6 @@
 #include <moveit_benchmark_suite/benchmark.h>
 #include <moveit_benchmark_suite/log.h>
-#include <moveit_benchmark_suite/aggregation.h>
+// #include <moveit_benchmark_suite/aggregation.h>
 #include <moveit_benchmark_suite/config/gnuplot_config.h>
 
 #include <queue>
@@ -28,53 +28,30 @@ bool Benchmark::initialize(const std::string& name, const Options& options)
   }
 
   // Aggregate if config is found
-  AggregateConfig agg_config;
-  if (agg_config.isConfigAvailable(""))
-  {
-    agg_config.setNamespace("");
+  // AggregateConfig agg_config;
+  // if (agg_config.isConfigAvailable(""))
+  // {
+  //   agg_config.setNamespace("");
 
-    const std::vector<std::string>& filter_names = agg_config.getFilterNames();
-    const std::vector<AggregateParams> params = agg_config.getAggregateParams();
+  //   const std::vector<std::string>& filter_names = agg_config.getFilterNames();
+  //   const std::vector<AggregateParams> params = agg_config.getAggregateParams();
 
-    TokenSet filters;
-    for (const auto& filter : filter_names)
-      filters.insert(Token(filter));
+  //   TokenSet filters;
+  //   for (const auto& filter : filter_names)
+  //     filters.insert(Token(filter));
 
-    addPostBenchmarkCallback([=](DataSetPtr dataset) { aggregate::dataset(dataset, filters, params); });
-  }
+  //   addPostBenchmarkCallback([=](DataSetPtr dataset) { aggregate::dataset(dataset, filters, params); });
+  // }
 
   // Plot with gnuplot if config is found
-  GNUPlotConfig plt_config;
-  if (plt_config.isConfigAvailable(""))
   {
-    plot_flag = true;
-    plt_config.setNamespace("");
+    if (gnuplot_.initializeFromYAML(options_.config_file))
+      addPostBenchmarkCallback([&](DataSetPtr dataset) {
+        gnuplot_.plot(*dataset);
 
-    const std::vector<std::string>& xticks = plt_config.getXticks();
-    const std::vector<std::string>& legends = plt_config.getLegends();
-    const std::vector<GNUPlotConfigMetric>& metrics = plt_config.getMetrics();
-    const GNUPlotConfigOption& option = plt_config.getOption();
-
-    // Create token for xtick and legend
-    TokenSet xtick_filters;
-    for (const auto& xtick : xticks)
-      xtick_filters.insert(Token(xtick));
-
-    TokenSet legend_filters;
-    for (const auto& legend : legends)
-      legend_filters.insert(Token(legend));
-
-    for (const auto& metric : metrics)
-      plot.addMetric(metric.name, metric.type);
-
-    IO::QtTerminal terminal;
-
-    IO::GNUPlotHelper::MultiPlotOptions mpo;
-    mpo.layout.row = option.n_row;
-    mpo.layout.col = option.n_col;
-
-    addPostBenchmarkCallback(
-        [=](DataSetPtr dataset) { plot.dump(dataset, terminal, mpo, xtick_filters, legend_filters); });
+        ROS_WARN("Press CTL-C to close GNUPlot");
+        ros::waitForShutdown();
+      });
   }
   return true;
 };
@@ -111,6 +88,9 @@ bool Benchmark::initializeFromHandle(const ros::NodeHandle& nh)
   int nonsigned_value = opt.trials;
   lnh.getParam("runs", nonsigned_value);
   opt.trials = nonsigned_value;
+
+  // Config file
+  gnh.getParam("config_file", opt.config_file);
 
   // Parameters that can only be loaded from YAML
   initialize(name, opt);

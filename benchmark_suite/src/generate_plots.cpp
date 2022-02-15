@@ -5,9 +5,11 @@
 #include <moveit_serialization/yaml-cpp/yaml.h>
 #include <moveit_benchmark_suite/benchmark.h>
 #include <moveit_benchmark_suite/config/html_config.h>
-#include <moveit_benchmark_suite/aggregation.h>
+// #include <moveit_benchmark_suite/aggregation.h>
 
 using namespace moveit_benchmark_suite;
+
+constexpr char INPUT_PARAMETER[] = "input_files";
 
 int main(int argc, char** argv)
 {
@@ -17,91 +19,27 @@ int main(int argc, char** argv)
 
   ros::NodeHandle pnh("~");
 
-  // Parse input file
-  std::vector<std::string> files;
-  pnh.getParam("input_files", files);
+  // Get config
+  std::string config_file;
+  std::vector<std::string> dataset_files;
+  pnh.getParam(INPUT_PARAMETER, dataset_files);
+  pnh.getParam(CONFIG_PARAMETER, config_file);
 
-  // Load datasets from file
-  std::vector<DataSetPtr> datasets;
-  for (const auto& file : files)
-  {
-    std::string abs_file = IO::getAbsDataSetFile(file);
+  // Generate GNUPlot script
+  IO::GNUPlotDataset gnuplot;
 
-    try
-    {
-      auto node = YAML::LoadFile(abs_file);
-      for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
-        datasets.push_back(std::make_shared<DataSet>(it->as<DataSet>()));
-    }
-    catch (const YAML::BadFile& e)
-    {
-      ROS_FATAL_STREAM("Specified input file '" << abs_file << "' does not exist.");
-      return 1;
-    }
-  }
+  gnuplot.initializeFromYAML(config_file);
+  gnuplot.plot(dataset_files);
 
-  if (datasets.empty())
-  {
-    ROS_WARN_STREAM(log::format("No datasets loaded from files"));
-    return 0;
-  }
-
-  // Aggregate (Optional)
-  AggregateConfig config(ros::this_node::getName());
-
-  const std::vector<std::string>& filter_names = config.getFilterNames();
-  const std::vector<AggregateParams> agg_params = config.getAggregateParams();
-
-  // Create token filters
-  TokenSet agg_filters;
-  for (const auto& filter : filter_names)
-    agg_filters.insert(Token(filter));
-
-  aggregate::dataset(datasets, agg_filters, agg_params);
-
-  // Build HTML
+  // Add GNUPlot instances into HTML
   IO::HTMLPlot html;
-  HTMLConfig html_conf(ros::this_node::getName());
+  auto names = gnuplot.getInstanceNames();
 
-  const auto& configs = html_conf.getConfig();
-  if (configs.empty())
+  for (const auto& name : names)
   {
-    ROS_WARN("No plotting configuration found");
-    return 0;
-  }
-
-  for (const auto& config : configs)
-  {
-    TokenSet legend;
-    TokenSet xtick;
-
-    for (const auto& filter : config.legends)
-      legend.insert(Token(filter));
-    for (const auto& filter : config.xticks)
-      xtick.insert(Token(filter));
-
-    for (const auto& metric : config.metrics)
-    {
-      IO::GNUPlotDataSet plot;
-      plot.addMetric(metric.name, metric.type);
-
-      IO::SvgTerminal terminal;
-      IO::GNUPlotHelper::MultiPlotOptions mpo;
-      mpo.title = config.title;
-
-      plot.dump(datasets, terminal, mpo, xtick, legend);
-
-      // Get terminal stream SVG (XML format)
-      IO::GNUPlotHelper& helper = plot.getGNUPlotHelper();
-      std::set<std::string> instance_names = helper.getInstanceNames();
-
-      std::string output;
-      for (const auto& ins_name : instance_names)
-      {
-        helper.getInstanceOutput(ins_name, output);  // Get SVG stream
-        html.writeline(output);
-      }
-    }
+    std::string output;
+    gnuplot.getInstanceOutput(name, output);
+    html.writeline(output);
   }
 
   html.dump();

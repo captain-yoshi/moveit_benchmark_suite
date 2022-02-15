@@ -1,0 +1,18 @@
+gnuplot_config:
+  plots:
+    - #filters:
+      #  - {key: /hw/cpu/model, val: 158, predicate: '='}
+      legends:
+        - metrics/
+      labels:
+        - config/scene/
+        - metrics/
+      metrics:
+        - type: boxplot
+          names:
+            - stage_solution_costs_grasp pose IK
+            - stage_solution_costs_place pose IK
+  options:
+    terminal: QT
+    n_row: 1
+    n_col: 1

@@ -10,21 +10,8 @@
 
   <node name="plot_dataset" pkg="moveit_benchmark_suite" type="plot_dataset" respawn="false" clear_params="true" required="true" output="screen" launch-prefix="$(arg launch_prefix)">
 
-    <rosparam param="gnuplot_config">
-      xtick_filters:
-        - config/scene/
-      legend_filters:
-        - sw/moveit/git_commit/
-      metrics:
-        - time: boxplot
-        - avg_time: bargraph
-      options:
-          n_row: 2
-          n_col: 1
-          output_script: true
-    </rosparam>
-
-   <rosparam param="input_files" subst_value="True">$(arg input_files)</rosparam>
+    <param name="config_file" value="$(find moveit_benchmark_suite)/config/gnuplot.yaml"/>
+    <rosparam param="input_files" subst_value="True">$(arg input_files)</rosparam>
 
   </node>
 </launch>

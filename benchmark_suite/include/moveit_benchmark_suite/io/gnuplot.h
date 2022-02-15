@@ -22,6 +22,8 @@ namespace IO
 static std::string TERMINAL_QT_STR = "qt";
 static std::string TERMINAL_SVG_STR = "svg";
 
+MOVEIT_CLASS_FORWARD(GNUPlotTerminal);
+
 struct TerminalSize
 {
   double x = 640;
@@ -124,6 +126,10 @@ private:
 class GNUPlotHelper
 {
 public:
+  MOVEIT_STRUCT_FORWARD(PlottingOptions);
+  MOVEIT_STRUCT_FORWARD(BoxPlotOptions);
+  MOVEIT_STRUCT_FORWARD(BarGraphOptions);
+
   GNUPlotHelper() = default;
 
   // non-copyable
@@ -179,27 +185,23 @@ public:
     bool sorted{ true };
 
     ShapeOptions box;
-
-    GNUPlotData datablock;
   };
 
   /** \brief Plot box data.
    *  \param[in] options Plotting options.
    */
-  void boxplot(const BoxPlotOptions& options);
+  void plot(const GNUPlotData& data, const BoxPlotOptions& options);
 
   struct BarGraphOptions : PlottingOptions
   {
     bool percent{ false };  // Defaults to count
     ShapeOptions box;
-
-    GNUPlotData datablock;
   };
 
   /** \brief Plot box data.
    *  \param[in] options Plotting options.
    */
-  void bargraph(const BarGraphOptions& options);
+  void plot(const GNUPlotData& data, const BarGraphOptions& options);
 
   struct MultiPlotOptions : InstanceOptions
   {
@@ -270,69 +272,75 @@ private:
   std::map<std::string, std::shared_ptr<Instance>> instances_;  ///< Map of open GNUPlot instances
 };
 
-/** \brief Helper class to plot a real metric as a box plot using GNUPlot from benchmarking data.
+/** \brief Plot from datasets using GNUPlot
  */
-
-class GNUPlotDataSet
+class GNUPlotDataset
 {
 public:
   enum PlotType
   {
     BoxPlot,
     BarGraph,
-    TimeSeries,
   };
 
-  std::map<std::string, PlotType> plottype_map = { { "boxplot", PlotType::BoxPlot },
-                                                   { "bargraph", PlotType::BarGraph } };
+  // Represents a subplot
+  struct PlotLayout
+  {
+    PlotType type;
+    GNUPlotHelper::PlottingOptionsPtr options;  // interface
+    std::vector<std::string> metric_names;
+  };
+
+  // Represents multiple subplots
+  struct MultiPlotLayout
+  {
+    std::vector<Filter> filters;
+    std::vector<Token> legends;
+    std::vector<Token> labels;
+
+    std::vector<PlotLayout> plots;
+  };
+
+  // Represent gnuplot global
+  struct GNUPlotLayout
+  {
+    GNUPlotTerminalPtr terminal;
+    GNUPlotHelper::MultiPlotOptions mpo;
+
+    std::vector<MultiPlotLayout> mplots;
+  };
 
   /** \brief Constructor.
    */
-  GNUPlotDataSet();
+  GNUPlotDataset();
 
   /** \brief Destructor.
    */
-  ~GNUPlotDataSet();
+  ~GNUPlotDataset();
 
-  /** \brief Visualize results.
-   *  \param[in] results Results to visualize.
-   */
-  void addMetric(const std::string& metric, const PlotType& plottype);
-  void addMetric(const std::string& metric, const std::string& plottype);
+  bool initialize(const GNUPlotLayout& layout);
+  bool initializeFromYAML(const std::string& file);
 
-  void dump(const DataSetPtr& dataset, const GNUPlotTerminal& terminal, const GNUPlotHelper::MultiPlotOptions& mpo,
-            const TokenSet& xtick_set, const TokenSet& legend_set = {});
-  void dump(const std::vector<DataSetPtr>& datasets, const GNUPlotTerminal& terminal,
-            const GNUPlotHelper::MultiPlotOptions& mpo, const TokenSet& xtick_set, const TokenSet& legend_set = {});
+  // Plot layout from initialization
+  void plot(const DataSet& dataset);
+  void plot(const std::vector<DataSet>& datasets);
+  void plot(const std::vector<std::string>& dataset_files);
 
-  GNUPlotHelper& getGNUPlotHelper();
+  std::set<std::string> getInstanceNames() const;
+  void getInstanceOutput(const std::string& instance_name, std::string& output);
 
 private:
-  void dumpBoxPlot(const std::string& metric, const std::vector<DataSetPtr>& results, const TokenSet& xtick_set,
-                   const TokenSet& legend_set, const GNUPlotHelper::MultiPlotOptions& mpo);
-  void dumpBarGraph(const std::string& metric, const std::vector<DataSetPtr>& results, const TokenSet& xtick_set,
-                    const TokenSet& legend_set, const GNUPlotHelper::MultiPlotOptions& mpo);
+  // Filtered dataset
+  void plot(const GNUPlotLayout& layout);
+  void plot(const MultiPlotLayout& layout, const YAML::Node& dataset);
 
-  bool fillDataSet(const std::string& metric, const std::vector<DataSetPtr>& datasets, const TokenSet& xtick_set,
-                   const TokenSet& legend_set, GNUPlotData& datablock);
+  std::string combineTokenNodeValue(const Token& token, const YAML::Node& node, const std::string& tag);
 
-  bool validOverlap(const TokenSet& xtick_set, const TokenSet& legend_set);
-  bool filterDataSet(const TokenSet& xtick_set, const TokenSet& legend_set, const std::vector<DataSetPtr>& datasets,
-                     std::vector<DataSetPtr>& filtered_datasets);
+  GNUPlotLayout layout_;
+  bool init_ = false;
+  bool single_instance_ = true;
 
-  bool filterDataXtick(const DataPtr& data, const YAML::Node& metadata, const TokenSet& legend_set,
-                       const TokenSet& xtick_set, std::string& xtick_name, const std::string& del,
-                       bool multiple_datasets);
-  bool filterDataLegend(const DataPtr& data, const YAML::Node& metadata, const TokenSet& legend_set,
-                        std::string& legend_name, const std::string& del);
-
-  // bool isLegendFilterValid(const Legend& legend, const Filter& filter, std::vector<LegendKey>& legend_keys,
-  //                          std::vector<FilterKey>& filter_keys);
-
-  // bool isValidData(const DataPtr& data, const std::vector<LegendKey>& legend_keys,
-  //                  const std::vector<FilterKey>& filter_keys, std::string& legend_name, std::string& filter_name);
-
-  std::vector<std::pair<std::string, PlotType>> plot_types_;
+  DatasetFilter dataset_;
   GNUPlotHelper helper_;
 };
 

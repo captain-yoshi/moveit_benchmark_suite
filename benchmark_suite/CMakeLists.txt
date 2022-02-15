@@ -57,7 +57,7 @@ add_library(${PROJECT_NAME}
   src/benchmark.cpp
   src/profiler.cpp
   src/serialization.cpp
-  src/aggregation.cpp
+  # src/aggregation.cpp
   src/robot.cpp
   src/scene.cpp
   src/log.cpp
@@ -65,7 +65,7 @@ add_library(${PROJECT_NAME}
   src/trajectory.cpp
   src/io/htmlplot.cpp
   src/io/gnuplot.cpp
-  src/config/aggregate_config.cpp
+  # src/config/aggregate_config.cpp
   src/config/collision_check_config.cpp
   src/config/gnuplot_config.cpp
   src/config/html_config.cpp
@@ -90,8 +90,8 @@ target_link_libraries(motion_planning_pp ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_executable(plot_dataset src/plot_dataset.cpp)
 target_link_libraries(plot_dataset ${PROJECT_NAME} ${catkin_LIBRARIES})
 
-add_executable(aggregate src/aggregate.cpp)
-target_link_libraries(aggregate ${PROJECT_NAME} ${catkin_LIBRARIES})
+# add_executable(aggregate src/aggregate.cpp)
+# target_link_libraries(aggregate ${PROJECT_NAME} ${catkin_LIBRARIES})
 
 add_executable(generate_plots src/generate_plots.cpp)
 target_link_libraries(generate_plots ${PROJECT_NAME} ${catkin_LIBRARIES})
@@ -106,7 +106,7 @@ install(TARGETS
   # collision_check
   plot_dataset
   generate_plots
-  aggregate
+  # aggregate
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
