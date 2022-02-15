@@ -149,7 +149,14 @@ void MoveGroupInterfaceProfiler::preRunQuery(MotionPlanningQuery& query, Data& d
   move_group_->setPlanningPipelineId(request.pipeline_id);
   move_group_->setPlannerId(request.planner_id);
 
-  move_group_->setStartState(request.start_state);
+  // BUG https://github.com/ros-planning/moveit/pull/3008
+  // setStartState from a 'RobotState' instead of 'RobotStateMsg' to support older releases
+  robot_state::RobotState state = query.scene->getScene()->getCurrentState();
+  state.setToDefaultValues();
+  robotStateMsgToRobotState(request.start_state, state);
+
+  move_group_->setStartState(state);
+
   move_group_->setPathConstraints(request.path_constraints);
   move_group_->setTrajectoryConstraints(request.trajectory_constraints);
   move_group_->setMaxVelocityScalingFactor(request.max_velocity_scaling_factor);
