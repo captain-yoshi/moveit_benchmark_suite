@@ -334,7 +334,7 @@ private:
   void plot(const GNUPlotLayout& layout);
   void plot(const MultiPlotLayout& layout, const YAML::Node& dataset);
 
-  std::string combineTokenNodeValue(const Token& token, const YAML::Node& node, const std::string& tag);
+  std::string combineTokenNodeValue(const Token& token, const YAML::Node& node, const std::string& tag, bool keep_ns);
 
   GNUPlotLayout layout_;
   bool init_ = false;

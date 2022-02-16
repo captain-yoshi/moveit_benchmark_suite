@@ -697,15 +697,20 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
   return initialize(layout);
 }
 
-std::string GNUPlotDataset::combineTokenNodeValue(const Token& token, const YAML::Node& node, const std::string& tag)
+std::string GNUPlotDataset::combineTokenNodeValue(const Token& token, const YAML::Node& node, const std::string& tag,
+                                                  bool keep_ns)
 {
+  std::string token_tag;
+  if (keep_ns)
+    token_tag = token.getNamespace() + tag;
+
   YAML::Node scalar;
   bool rc = YAML::getSubsetScalar(token.getNode(), node, scalar);
 
   if (scalar.IsMap())
-    return token.getNamespace() + tag + scalar.begin()->first.as<std::string>();
+    return token_tag + scalar.begin()->first.as<std::string>();
   else if (scalar.IsScalar())
-    return token.getNamespace() + tag + scalar.as<std::string>();
+    return token_tag + scalar.as<std::string>();
 
   ROS_WARN("Node type not handeled");
   return "";
@@ -758,6 +763,8 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const YAML::Node& datas
   const std::string TAG_SPLIT = " : ";
   const std::string TAG_END = "\\n";
 
+  bool keep_ns = false;
+
   // Prepare container for plotting
   std::vector<std::pair<PlotLayout, GNUPlotData>> container;
   for (const auto& plot_layout : layout.plots)
@@ -787,7 +794,7 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const YAML::Node& datas
       continue;
     }
 
-    auto legend = combineTokenNodeValue(token, dataset, TAG_SPLIT);
+    auto legend = combineTokenNodeValue(token, dataset, TAG_SPLIT, keep_ns);
     abs_legend += (legend.empty()) ? "" : legend + TAG_END;
   }
 
@@ -800,8 +807,8 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const YAML::Node& datas
       continue;
     }
 
-    auto label = combineTokenNodeValue(token, dataset, TAG_SPLIT);
-    abs_label += label + TAG_END;
+    auto label = combineTokenNodeValue(token, dataset, TAG_SPLIT, keep_ns);
+    abs_label += (label.empty()) ? "" : label + TAG_END;
   }
 
   // Loop through each queries
@@ -819,7 +826,7 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const YAML::Node& datas
       if (token.isAbsolute() || token.getNode()["metrics"])
         continue;
 
-      auto legend = combineTokenNodeValue(token, query, TAG_SPLIT);
+      auto legend = combineTokenNodeValue(token, query, TAG_SPLIT, keep_ns);
       rel_legend += (legend.empty()) ? "" : legend + TAG_END;
     }
 
@@ -828,7 +835,7 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const YAML::Node& datas
       if (token.isAbsolute() || token.getNode()["metrics"])
         continue;
 
-      auto label = combineTokenNodeValue(token, query, TAG_SPLIT);
+      auto label = combineTokenNodeValue(token, query, TAG_SPLIT, keep_ns);
       rel_label += (label.empty()) ? "" : label + TAG_END;
     }
 
@@ -851,10 +858,14 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const YAML::Node& datas
         std::string legend = abs_legend + rel_legend;
         std::string label = abs_label + rel_label;
 
+        std::string token_tag;
+        if (keep_ns)
+          token_tag = "metrics/" + TAG_SPLIT;
+
         if (addMetricToLegend)
-          legend += "metrics/" + TAG_SPLIT + metric + TAG_END;
+          legend += token_tag + metric + TAG_END;
         if (addMetricToLabel)
-          label += "metrics/" + TAG_SPLIT + metric + TAG_END;
+          label += token_tag + metric + TAG_END;
 
         // Remove trailing delimiter
         if (legend.size() >= TAG_END.size())
