@@ -40,6 +40,7 @@
 
 #include <moveit_benchmark_suite/benchmark.h>
 #include <moveit_benchmark_suite/benchmarks/profiler/collision_check_profiler.h>
+#include <moveit_benchmark_suite/benchmarks/visualizer/motion_planning_visualizer.h>
 
 using namespace moveit_benchmark_suite;
 
@@ -65,6 +66,12 @@ int main(int argc, char** argv)
   // Setup benchmark
   Benchmark benchmark;
   benchmark.initializeFromHandle(pnh);
+
+  // Setup visualizer
+  MotionPlanningVisualizer visualizer;
+
+  if (benchmark.getOptions().visualize)
+    visualizer.addCallback(profiler);
 
   // Run benchmark
   auto dataset = benchmark.run(profiler);

@@ -41,11 +41,10 @@
 #include <moveit_benchmark_suite/visualization.h>
 
 #include <moveit_benchmark_suite/benchmarks/profiler/motion_planning_profiler.h>
+#include <moveit_benchmark_suite/benchmarks/profiler/collision_check_profiler.h>
 
 namespace moveit_benchmark_suite
 {
-MOVEIT_CLASS_FORWARD(MotionPlanningQuery);
-
 struct MotionPlanningVisualizer
 {
   /** \brief Empty constructor.
@@ -54,6 +53,7 @@ struct MotionPlanningVisualizer
 
   void addCallback(PlanningPipelineProfiler& profiler);
   void addCallback(MoveGroupInterfaceProfiler& profiler);
+  void addCallback(CollisionCheckProfiler& profiler);
 
   RVIZHelper rviz_;  ///< Robot used for the query.
 };

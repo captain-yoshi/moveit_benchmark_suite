@@ -6,6 +6,11 @@
   <!-- Overwrite this param as a bool type -->
   <arg name="visualize" default="" doc="turns on and off visualization with rviz (bool type)"/>
 
+
+  <include file="$(find moveit_benchmark_suite)/launch/moveit_rviz.launch" if="$(eval bool(visualize) == 1)">
+    <!--<arg name="debug" value="$(arg debug)"/>-->
+  </include>
+
   <!-- By default, we are not in debug mode -->
   <arg name="debug" default="false" />
   <arg unless="$(arg debug)" name="launch_prefix" value="" />
