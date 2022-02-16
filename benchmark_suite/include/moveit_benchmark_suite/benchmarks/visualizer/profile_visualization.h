@@ -45,11 +45,11 @@
 
 namespace moveit_benchmark_suite
 {
-struct MotionPlanningVisualizer
+struct ProfileVisualization
 {
   /** \brief Empty constructor.
    */
-  MotionPlanningVisualizer() = default;
+  ProfileVisualization() = default;
 
   void addCallback(PlanningPipelineProfiler& profiler);
   void addCallback(MoveGroupInterfaceProfiler& profiler);

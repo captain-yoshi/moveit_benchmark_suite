@@ -1,4 +1,4 @@
-#include <moveit_benchmark_suite/benchmarks/visualizer/motion_planning_visualizer.h>
+#include <moveit_benchmark_suite/benchmarks/visualizer/profile_visualization.h>
 #include <moveit/robot_state/conversions.h>
 
 using namespace moveit_benchmark_suite;
@@ -7,7 +7,7 @@ using namespace moveit_benchmark_suite;
 /// MotionPlanningVisualizer
 ///
 
-void MotionPlanningVisualizer::addCallback(PlanningPipelineProfiler& profiler)
+void ProfileVisualization::addCallback(PlanningPipelineProfiler& profiler)
 {
   profiler.addPostRunQueryCallback([&](const MotionPlanningQuery& query, MotionPlanningResult& result, Data& data) {
     rviz_.initializeRobot(query.robot);
@@ -28,7 +28,7 @@ void MotionPlanningVisualizer::addCallback(PlanningPipelineProfiler& profiler)
   });
 }
 
-void MotionPlanningVisualizer::addCallback(MoveGroupInterfaceProfiler& profiler)
+void ProfileVisualization::addCallback(MoveGroupInterfaceProfiler& profiler)
 {
   profiler.addPostRunQueryCallback([&](const MotionPlanningQuery& query, MotionPlanningResult& result, Data& data) {
     rviz_.initializeRobot(query.robot);
@@ -49,7 +49,7 @@ void MotionPlanningVisualizer::addCallback(MoveGroupInterfaceProfiler& profiler)
   });
 }
 
-void MotionPlanningVisualizer::addCallback(CollisionCheckProfiler& profiler)
+void ProfileVisualization::addCallback(CollisionCheckProfiler& profiler)
 {
   profiler.addPostRunQueryCallback([&](const CollisionCheckQuery& query, CollisionCheckResult& result, Data& data) {
     rviz_.initializeRobot(query.robot);
