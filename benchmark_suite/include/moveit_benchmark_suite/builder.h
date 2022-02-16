@@ -165,7 +165,13 @@ public:
   SceneBuilder() = default;
   ~SceneBuilder() override = default;
 
-  std::map<std::string, ScenePtr> generateResults(const RobotPtr& robot, const std::string& collision_detector) const;
+  std::map<std::string, ScenePtr> generateResults(const RobotPtr& robot, const std::string& collision_detector,
+                                                  const std::map<std::string, moveit_msgs::RobotState>& state_map =
+                                                      std::map<std::string, moveit_msgs::RobotState>()) const;
+
+private:
+  bool buildClutteredSceneFromYAML(ScenePtr& scene, const std::map<std::string, moveit_msgs::RobotState>& state_map,
+                                   const YAML::Node& node) const;
 };
 
 // Build moveit_benchmark_suite/PlanningPipelineEmitter with complex initializations

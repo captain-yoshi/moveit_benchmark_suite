@@ -1,5 +1,7 @@
 #include <moveit_benchmark_suite/builder.h>
 
+#include <geometric_shapes/shape_operations.h>
+
 using namespace moveit_benchmark_suite;
 
 //
@@ -287,8 +289,166 @@ std::map<std::string, RobotPtr> RobotBuilder::generateResults() const
 // SceneBuilder
 //
 
-std::map<std::string, ScenePtr> SceneBuilder::generateResults(const RobotPtr& robot,
-                                                              const std::string& collision_detector) const
+namespace
+{
+/** \brief Factor to compute the maximum number of trials random clutter generation. */
+static const int MAX_SEARCH_FACTOR_CLUTTER = 3;
+
+/** \brief Factor to compute the maximum number of trials for random state generation. */
+static const int MAX_SEARCH_FACTOR_STATES = 30;
+
+/** \brief Defines a random robot state. */
+enum class RobotStateSelector
+{
+  IN_COLLISION,
+  NOT_IN_COLLISION,
+  RANDOM,
+};
+
+enum class CollisionObjectType : int
+{
+  INVALID,
+  MESH,
+  BOX,
+};
+
+/** \brief Clutters the world of the planning scene with random objects in a certain area around the origin. All added
+ *  objects are not in collision with the robot.
+ *
+ *   \param planning_scene The planning scene
+ *   \param num_objects The number of objects to be cluttered
+ *   \param CollisionObjectType Type of object to clutter (mesh or box) */
+bool buildClutteredWorld(const planning_scene::PlanningScenePtr& planning_scene,
+                         const moveit_msgs::RobotState& robot_state, const size_t num_objects, CollisionObjectType type,
+                         const std::string& resource, const std::vector<std::pair<double, double>>& bound,
+                         const uint32_t rng)
+{
+  random_numbers::RandomNumberGenerator num_generator = random_numbers::RandomNumberGenerator(rng);
+
+  collision_detection::CollisionRequest req;
+  req.contacts = true;
+  req.verbose = true;
+  planning_scene->setCurrentState(robot_state);
+
+  std::string name;
+  shapes::ShapeConstPtr shape;
+
+  Eigen::Quaterniond quat;
+  Eigen::Isometry3d pos{ Eigen::Isometry3d::Identity() };
+
+  size_t added_objects{ 0 };
+  size_t i{ 0 };
+
+  // create random objects until as many added as desired or quit if too many attempts
+  while (added_objects < num_objects && i < num_objects * MAX_SEARCH_FACTOR_CLUTTER)
+  {
+    // add with random size and random position
+    pos.translation().x() = num_generator.uniformReal(-1.0, 1.0);
+    pos.translation().y() = num_generator.uniformReal(-1.0, 1.0);
+    pos.translation().z() = num_generator.uniformReal(0.0, 1.0);
+
+    quat.x() = num_generator.uniformReal(-1.0, 1.0);
+    quat.y() = num_generator.uniformReal(-1.0, 1.0);
+    quat.z() = num_generator.uniformReal(-1.0, 1.0);
+    quat.w() = num_generator.uniformReal(-1.0, 1.0);
+    quat.normalize();
+    pos.rotate(quat);
+
+    switch (type)
+    {
+      case CollisionObjectType::MESH:
+      {
+        shapes::Mesh* mesh = shapes::createMeshFromResource(resource);
+        mesh->scale(num_generator.uniformReal(bound[0].first, bound[0].second));
+        shape.reset(mesh);
+        name = "mesh";
+        break;
+      }
+      case CollisionObjectType::BOX:
+      {
+        shape = std::make_shared<shapes::Box>(num_generator.uniformReal(bound[0].first, bound[0].second),
+                                              num_generator.uniformReal(bound[1].first, bound[1].second),
+                                              num_generator.uniformReal(bound[2].first, bound[2].second));
+        name = "box";
+        break;
+      }
+
+      default:
+        ROS_ERROR("Collision object type does not exist.");
+        return false;
+    }
+
+    name.append(std::to_string(i));
+    planning_scene->getWorldNonConst()->addToObject(name, shape, pos);
+
+    // try if it isn't in collision if yes, ok, if no remove.
+    collision_detection::CollisionResult res;
+    planning_scene->checkCollision(req, res, planning_scene->getCurrentState(),
+                                   planning_scene->getAllowedCollisionMatrix());
+
+    if (!res.collision)
+    {
+      added_objects++;
+    }
+    else
+    {
+      ROS_DEBUG_STREAM("Object was in collision, remove");
+      planning_scene->getWorldNonConst()->removeObject(name);
+    }
+
+    i++;
+  }
+
+  if (added_objects != num_objects)
+  {
+    ROS_ERROR("Not able to add objects not in collision with %s %s", std::to_string(added_objects).c_str(),
+              std::to_string(num_objects).c_str());
+    return false;
+  }
+
+  ROS_DEBUG_STREAM("Cluttered the planning scene with " << added_objects << " objects");
+
+  return true;
+}
+
+}  // namespace
+
+bool SceneBuilder::buildClutteredSceneFromYAML(ScenePtr& scene,
+                                               const std::map<std::string, moveit_msgs::RobotState>& state_map,
+                                               const YAML::Node& node) const
+{
+  std::size_t object_size = node["n_objects"].as<std::size_t>();
+
+  // Empty scene
+  if (object_size == 0)
+    return true;
+
+  auto rng = node["rng"].as<uint32_t>();
+  auto bounds = node["bounds"].as<std::vector<std::pair<double, double>>>();
+  auto resource = node["resource"].as<std::string>();
+  auto robot_state = node["robot_state"].as<std::string>();
+  auto type_str = node["object_type"].as<std::string>();
+
+  CollisionObjectType collision_type = CollisionObjectType::INVALID;
+
+  if (type_str.compare("MESH") == 0)
+    collision_type = CollisionObjectType::MESH;
+  else if (type_str.compare("BOX") == 0)
+    collision_type = CollisionObjectType::BOX;
+
+  auto it = state_map.find(robot_state);
+  if (it == state_map.end())
+  {
+    ROS_WARN("RobotState name '%s' not found when building cluttered scene", robot_state.c_str());
+    return false;
+  }
+
+  return buildClutteredWorld(scene->getScene(), it->second, object_size, collision_type, resource, bounds, rng);
+}
+
+std::map<std::string, ScenePtr>
+SceneBuilder::generateResults(const RobotPtr& robot, const std::string& collision_detector,
+                              const std::map<std::string, moveit_msgs::RobotState>& state_map) const
 {
   std::map<std::string, ::ScenePtr> results;
   const auto& node_map = getResources();
@@ -301,7 +461,9 @@ std::map<std::string, ScenePtr> SceneBuilder::generateResults(const RobotPtr& ro
     scene->setName(pair.first);
     success &= scene->setCollisionDetector(collision_detector);
 
-    if (pair.second["resource"].IsScalar())
+    if (pair.second["resource"] && !pair.second["resource"].IsScalar() && pair.second["resource"]["cluttered_scene"])
+      success &= buildClutteredSceneFromYAML(scene, state_map, pair.second["resource"]["cluttered_scene"]);
+    else if (pair.second["resource"].IsScalar())
       success &= scene->fromURDFString(pair.second["resource"].as<std::string>());
     else
       success &= scene->fromYAMLNode(pair.second["resource"]);
