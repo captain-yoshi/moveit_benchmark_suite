@@ -66,10 +66,9 @@ add_library(${PROJECT_NAME}
   src/io/htmlplot.cpp
   src/io/gnuplot.cpp
   # src/config/aggregate_config.cpp
-  src/config/collision_check_config.cpp
   src/config/gnuplot_config.cpp
   src/config/html_config.cpp
-  # src/benchmarks/builder/collision_check_builder.cpp
+  src/benchmarks/builder/collision_check_builder.cpp
   src/benchmarks/builder/motion_planning_builder.cpp
   src/benchmarks/profiler/motion_planning_profiler.cpp
   src/benchmarks/profiler/collision_check_profiler.cpp

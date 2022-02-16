@@ -33,67 +33,30 @@
  *********************************************************************/
 
 /* Author: Captain Yoshi
-   Desc: Build pair wise query combination for profiling collision check
+   Desc: Build pair wise query combination for profiling collision checks
 */
 
 #pragma once
 
-#include <moveit_benchmark_suite/dataset.h>
-#include <moveit_benchmark_suite/robot.h>
-#include <moveit_benchmark_suite/benchmarks/profiler/collision_check_profiler.h>
-#include <moveit_benchmark_suite/config/collision_check_config.h>
+#include <moveit/macros/class_forward.h>
+#include <moveit/planning_scene/planning_scene.h>
+
+#include <moveit_benchmark_suite/query.h>
 
 namespace moveit_benchmark_suite
 {
+MOVEIT_CLASS_FORWARD(CollisionCheckQuery);
+
 class CollisionCheckBuilder
 {
 public:
-  void buildQueries();
-
-  const CollisionCheckConfig& getConfig() const;
-  const std::vector<CollisionCheckQueryPtr>& getQueries() const;
+  void buildQueries(const std::string& filename);
   const QuerySetup& getQuerySetup() const;
+  const std::vector<CollisionCheckQueryPtr>& getQueries() const;
 
-protected:
-  void buildRobot();
-  void buildScenes();
-
+private:
   QuerySetup query_setup_;
-  CollisionCheckConfig config_;
-
   std::vector<CollisionCheckQueryPtr> queries_;
-
-  RobotPtr robot_;
-  std::vector<planning_scene::PlanningScenePtr> scenes_;
 };
 
-namespace collision_check
-{
-static const std::string ROBOT_DESCRIPTION = "robot_description";
-
-/** \brief Factor to compute the maximum number of trials random clutter generation. */
-static const int MAX_SEARCH_FACTOR_CLUTTER = 3;
-
-/** \brief Factor to compute the maximum number of trials for random state generation. */
-static const int MAX_SEARCH_FACTOR_STATES = 30;
-
-/** \brief Defines a random robot state. */
-enum class RobotStateSelector
-{
-  IN_COLLISION,
-  NOT_IN_COLLISION,
-  RANDOM,
-};
-
-/** \brief Clutters the world of the planning scene with random objects in a certain area around the origin. All added
- *  objects are not in collision with the robot.
- *
- *   \param planning_scene The planning scene
- *   \param num_objects The number of objects to be cluttered
- *   \param CollisionObjectType Type of object to clutter (mesh or box) */
-bool clutterWorld(const planning_scene::PlanningScenePtr& planning_scene, const moveit_msgs::RobotState& robot_state,
-                  const size_t num_objects, CollisionCheckConfig::CollisionObjectType type, const std::string& resource,
-                  const std::vector<CollisionCheckConfig::Bound>& bound, const uint32_t rng);
-
-}  // namespace collision_check
 }  // namespace moveit_benchmark_suite
