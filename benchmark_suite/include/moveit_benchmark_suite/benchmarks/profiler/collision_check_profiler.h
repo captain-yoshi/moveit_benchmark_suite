@@ -35,23 +35,17 @@
 /* Author: Jens Petit */
 #pragma once
 
-#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
-#include <moveit/collision_plugin_loader/collision_plugin_loader.h>
-#include <moveit/collision_detection_bullet/collision_detector_allocator_bullet.h>
-#include <moveit/collision_detection_fcl/collision_detector_allocator_fcl.h>
-#include <geometric_shapes/shape_operations.h>
-#include <random_numbers/random_numbers.h>
+#include <moveit/macros/class_forward.h>
 
-#include <moveit/robot_model/robot_model.h>
-#include <moveit/utils/robot_model_test_utils.h>
+#include <moveit/robot_state/robot_state.h>
+#include <moveit/collision_detection/collision_common.h>
 
-#include <moveit_benchmark_suite/dataset.h>
 #include <moveit_benchmark_suite/profiler.h>
+#include <moveit_benchmark_suite/scene.h>
+#include <moveit_benchmark_suite/robot.h>
 
 namespace moveit_benchmark_suite
 {
-MOVEIT_CLASS_FORWARD(CollisionCheckData);
-MOVEIT_CLASS_FORWARD(CollisionCheckDataSet);
 MOVEIT_CLASS_FORWARD(CollisionCheckQuery);
 
 struct CollisionCheckQuery : public Query
@@ -62,13 +56,15 @@ struct CollisionCheckQuery : public Query
    *  \param[in] planner Planner to use to evaluate query.
    *  \param[in] request Request to give planner.
    */
-  CollisionCheckQuery(const std::string& name,                             //
-                      const QueryGroupName& group_name_map,                //
-                      const planning_scene::PlanningSceneConstPtr& scene,  //
-                      const moveit::core::RobotStatePtr& robot_state,      //
+  CollisionCheckQuery(const std::string& name,                         //
+                      const QueryGroupName& group_name_map,            //
+                      const RobotPtr& robot,                           //
+                      const ScenePtr& scene,                           //
+                      const moveit::core::RobotStatePtr& robot_state,  //
                       const collision_detection::CollisionRequest& request);
 
-  planning_scene::PlanningSceneConstPtr scene;    ///< Scene used for the query.
+  RobotPtr robot;                                 ///< Robot used for the query.
+  ScenePtr scene;                                 ///< Scene used for the query.
   moveit::core::RobotStatePtr robot_state;        ///< Planner used for the query.
   collision_detection::CollisionRequest request;  ///< Request used for the query.
 };
@@ -94,6 +90,8 @@ public:
     DISTANCE = 1 << 0,  //
     CONTACTS = 1 << 1,  //
   };
+
+  void buildQueriesFromYAML(const std::string& filename) override;
 
   CollisionCheckResult runQuery(const CollisionCheckQuery& query, Data& result) const override;
   void postRunQuery(const CollisionCheckQuery& query, CollisionCheckResult& result, Data& data) override;

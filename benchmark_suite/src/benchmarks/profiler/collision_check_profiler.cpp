@@ -35,24 +35,23 @@
 /* Author: Jens Petit */
 
 #include <moveit_benchmark_suite/benchmarks/profiler/collision_check_profiler.h>
+#include <moveit_benchmark_suite/benchmarks/builder/collision_check_builder.h>
+
 #include <moveit_benchmark_suite/io.h>
 #include <chrono>
-
-#include <moveit/planning_scene_interface/planning_scene_interface.h>
-#include <moveit/move_group_interface/move_group_interface.h>
-#include <moveit/robot_state/conversions.h>
 
 using namespace moveit_benchmark_suite;
 
 ///
 /// CollisionCheckQuery
 ///
-CollisionCheckQuery::CollisionCheckQuery(const std::string& name,                             //
-                                         const QueryGroupName& group_name_map,                //
-                                         const planning_scene::PlanningSceneConstPtr& scene,  //
-                                         const moveit::core::RobotStatePtr& robot_state,      //
+CollisionCheckQuery::CollisionCheckQuery(const std::string& name,                         //
+                                         const QueryGroupName& group_name_map,            //
+                                         const RobotPtr& robot,                           //
+                                         const ScenePtr& scene,                           //
+                                         const moveit::core::RobotStatePtr& robot_state,  //
                                          const collision_detection::CollisionRequest& request)
-  : Query(name, group_name_map), scene(scene), robot_state(robot_state), request(request)
+  : Query(name, group_name_map), robot(robot), scene(scene), robot_state(robot_state), request(request)
 {
 }
 
@@ -63,14 +62,28 @@ CollisionCheckQuery::CollisionCheckQuery(const std::string& name,               
 CollisionCheckProfiler::CollisionCheckProfiler()
   : ProfilerTemplate<CollisionCheckQuery, CollisionCheckResult>(ProfilerType::COLLISION_CHECK){};
 
+void CollisionCheckProfiler::buildQueriesFromYAML(const std::string& filename)
+{
+  CollisionCheckBuilder builder;
+  builder.buildQueries(filename);
+
+  const auto& queries = builder.getQueries();
+  const auto& setup = builder.getQuerySetup();
+
+  this->setQuerySetup(setup);
+  for (const auto& query : queries)
+    this->addQuery(query);
+}
+
 CollisionCheckResult CollisionCheckProfiler::runQuery(const CollisionCheckQuery& query, Data& data) const
 {
   CollisionCheckResult result;
+  const auto& scene = query.scene->getScene();
 
   // Profile time
   data.start = std::chrono::high_resolution_clock::now();
 
-  query.scene->checkCollision(query.request, result.collision_result, *query.robot_state);
+  scene->checkCollision(query.request, result.collision_result, *query.robot_state);
 
   data.finish = std::chrono::high_resolution_clock::now();
   data.time = IO::getSeconds(data.start, data.finish);

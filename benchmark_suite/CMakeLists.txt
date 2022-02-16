@@ -72,7 +72,7 @@ add_library(${PROJECT_NAME}
   # src/benchmarks/builder/collision_check_builder.cpp
   src/benchmarks/builder/motion_planning_builder.cpp
   src/benchmarks/profiler/motion_planning_profiler.cpp
-  # src/benchmarks/profiler/collision_check_profiler.cpp
+  src/benchmarks/profiler/collision_check_profiler.cpp
   src/benchmarks/visualizer/motion_planning_visualizer.cpp
 )
 
