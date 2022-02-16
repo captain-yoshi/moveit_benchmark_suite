@@ -473,6 +473,14 @@ void RVIZHelper::removeScene()
 }
 
 void RVIZHelper::updateScene(const planning_scene::PlanningSceneConstPtr& scene,
+                             const robot_state::RobotState& robot_state)
+{
+  moveit_msgs::RobotState robot_state_msg;
+  robotStateToRobotStateMsg(robot_state, robot_state_msg);
+  updateScene(scene, robot_state_msg);
+}
+
+void RVIZHelper::updateScene(const planning_scene::PlanningSceneConstPtr& scene,
                              const moveit_msgs::RobotState& robot_state)
 {
   if (scene_pub_.getNumSubscribers() < 1)
