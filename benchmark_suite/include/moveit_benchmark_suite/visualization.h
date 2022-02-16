@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <moveit/collision_detection/collision_common.h>
 #include <moveit/planning_interface/planning_interface.h>
 #include <moveit/macros/class_forward.h>
 
@@ -85,6 +86,8 @@ public:
   void updateScene(const planning_scene::PlanningSceneConstPtr& scene,
                    const moveit_msgs::RobotState& robot_state = moveit_msgs::RobotState());
 
+  void updateScene(const planning_scene::PlanningSceneConstPtr& scene, const robot_state::RobotState& robot_state);
+
   /** \} */
 
   /** \name Markers
@@ -167,9 +170,17 @@ public:
    *  \param[in] request Request to add goal of as a marker.
    */
   void addGoalMarker(const std::string& name, const moveit_msgs::MotionPlanRequest& request);
-  void addPathConstraintMarker(const std::string& name, const moveit_msgs::MotionPlanRequest& request);
   void addConstraintMarker(const std::string& name, const moveit_msgs::Constraints);
+  void addPathConstraintMarker(const std::string& name, const moveit_msgs::MotionPlanRequest& request);
 
+  /** \brief Adds collision contacts as a
+   * set of markers in the marker array.
+   *  \param[in] name Name of the marker(s).
+   *  \param[in] base_frame Base frame of the pose of the marker.
+   *  \param[in] contact Collision contact map.
+   */
+  void addCollisionContactMarkers(const std::string& name, const std::string& base_frame,
+                                  const collision_detection::CollisionResult::ContactMap& contact);
   /** \brief Removes all markers that were added through addMarker().
    */
   void removeAllMarkers();

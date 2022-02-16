@@ -33,107 +33,48 @@
  *********************************************************************/
 
 /* Author: Captain Yoshi
-   Desc: Collision checking benchmark node
+   Desc: Collision check benchmark node
 */
 
-#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
-#include <moveit/collision_plugin_loader/collision_plugin_loader.h>
-#include <moveit/collision_detection_bullet/collision_detector_allocator_bullet.h>
-#include <moveit/collision_detection_fcl/collision_detector_allocator_fcl.h>
-#include <geometric_shapes/shape_operations.h>
-#include <random_numbers/random_numbers.h>
+#include <ros/ros.h>
 
-#include <moveit/robot_model/robot_model.h>
-#include <moveit/utils/robot_model_test_utils.h>
-
-#include <moveit_benchmark_suite/benchmarks/profiler/collision_check_profiler.h>
-#include <moveit_benchmark_suite/scene.h>
 #include <moveit_benchmark_suite/benchmark.h>
-#include <moveit_benchmark_suite/aggregation.h>
-#include <moveit_benchmark_suite/io/gnuplot.h>
-
-#include <moveit_benchmark_suite/config/collision_check_config.h>
-#include <moveit_benchmark_suite/benchmarks/builder/collision_check_builder.h>
+#include <moveit_benchmark_suite/benchmarks/profiler/collision_check_profiler.h>
+#include <moveit_benchmark_suite/benchmarks/visualizer/profile_visualization.h>
 
 using namespace moveit_benchmark_suite;
-using namespace moveit_benchmark_suite::collision_check;
-
-// Parameter names
-constexpr char OUTPUT_PARAMETER[] = "output_file";
-constexpr char VISUALIZATION_PARAMETER[] = "visualize";
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "collision_check");
+  ros::init(argc, argv, "benchmark");
   ros::AsyncSpinner spinner(1);
   spinner.start();
 
   ros::NodeHandle pnh("~");
 
-  // Parse output directory and filename
-  std::string file;
-  std::string filepath;
+  // Get config
   std::string filename;
-  if (!pnh.getParam(OUTPUT_PARAMETER, file))
-  {
-    ROS_FATAL_STREAM("Parameter '" << OUTPUT_PARAMETER << "' is not set.");
-    return 1;
-  }
-
-  filepath = IO::getFilePath(file);
-  filename = IO::getFileName(file);
-
-  // Parse visualization flag
-  bool visualization = false;
-  pnh.getParam(VISUALIZATION_PARAMETER, visualization);
-
-  // Build queries
-  CollisionCheckBuilder builder;
-  builder.buildQueries();
-
-  const auto& queries = builder.getQueries();
-  const auto& config = builder.getConfig();
-
-  std::size_t trials = config.getNumRuns();
-  const auto& benchmark_name = config.getBenchmarkName();
-  const auto& query_setup = builder.getQuerySetup();
+  pnh.getParam(CONFIG_PARAMETER, filename);
 
   // Setup profiler
-  using Metric = CollisionCheckProfiler::Metrics;
+  CollisionCheckProfiler profiler;
+  profiler.buildQueriesFromYAML(filename);
 
-  CollisionCheckProfiler profiler(BenchmarkType::COLLISION_CHECK);
-  profiler.setQuerySetup(query_setup);
-  profiler.options.metrics = Metric::DISTANCE | Metric::CONTACTS;
-
-  for (const auto& query : queries)
-    profiler.addQuery(query);
+  profiler.options.metrics = CollisionCheckProfiler::CONTACTS |  //
+                             CollisionCheckProfiler::DISTANCE;   //
 
   // Setup benchmark
-  Benchmark::Options options = { .verbose_status_query = false, .verbose_status_run = true, .trials = trials };
+  Benchmark benchmark;
+  benchmark.initializeFromHandle(pnh);
 
-  Benchmark benchmark(benchmark_name,  // Name of benchmark
-                      options);        // Options for benchmark
+  // Setup visualizer
+  ProfileVisualization visualizer;
+
+  if (benchmark.getOptions().visualize)
+    visualizer.addCallback(profiler);
 
   // Run benchmark
   auto dataset = benchmark.run(profiler);
-
-  if (!dataset)
-    return 0;
-
-  // Dump metrics to logfile
-  BenchmarkSuiteDataSetOutputter output;
-  output.dump(*dataset, filepath, filename);
-
-  // Wait if GNUPlot was configured
-  if (benchmark.getPlotFlag())
-  {
-    ROS_WARN("Press ENTER to continue");
-    std::cin.ignore();
-  }
-
-  // Visualize dataset results
-  // if (visualization)
-  //   profiler.visualizeQueries();
 
   return 0;
 }

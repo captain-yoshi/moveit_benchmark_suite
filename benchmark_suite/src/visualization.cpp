@@ -10,6 +10,7 @@
 
 #include <moveit/utils/message_checks.h>
 #include <moveit/robot_state/conversions.h>
+#include <moveit/collision_detection/collision_tools.h>
 
 //#include <moveit_benchmark_suite/util.h>
 //#include <moveit_benchmark_suite/builder.h>
@@ -426,6 +427,22 @@ void RVIZHelper::addConstraintMarker(const std::string& name, const moveit_msgs:
   }
 }
 
+void RVIZHelper::addCollisionContactMarkers(const std::string& name, const std::string& base_frame,
+                                            const collision_detection::CollisionResult::ContactMap& contact)
+{
+  visualization_msgs::MarkerArray marker_array;
+
+  std_msgs::ColorRGBA color;
+  color.r = 1.0f;
+  color.g = 0.0f;
+  color.b = 0.0f;
+  color.a = 0.8f;
+  getCollisionMarkersFromContacts(marker_array, base_frame, contact, color, ros::Duration(0.0));
+
+  for (const auto& marker : marker_array.markers)
+    addMarker(marker, name);
+}
+
 void RVIZHelper::removeAllMarkers()
 {
   for (auto& marker : markers_)
@@ -470,6 +487,14 @@ void RVIZHelper::addMarker(const Eigen::Vector3d& point, const std::string& name
 void RVIZHelper::removeScene()
 {
   updateScene(nullptr);
+}
+
+void RVIZHelper::updateScene(const planning_scene::PlanningSceneConstPtr& scene,
+                             const robot_state::RobotState& robot_state)
+{
+  moveit_msgs::RobotState robot_state_msg;
+  robotStateToRobotStateMsg(robot_state, robot_state_msg);
+  updateScene(scene, robot_state_msg);
 }
 
 void RVIZHelper::updateScene(const planning_scene::PlanningSceneConstPtr& scene,

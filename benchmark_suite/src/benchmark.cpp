@@ -92,6 +92,10 @@ bool Benchmark::initializeFromHandle(const ros::NodeHandle& nh)
   // Config file
   gnh.getParam("config_file", opt.config_file);
 
+  // Other parameters
+  lnh.getParam("verbose_status_trial", opt.verbose_status_trial);
+  lnh.getParam("verbose_status_query", opt.verbose_status_query);
+
   // Parameters that can only be loaded from YAML
   initialize(name, opt);
 

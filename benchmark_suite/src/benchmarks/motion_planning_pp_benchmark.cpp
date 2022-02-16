@@ -40,7 +40,7 @@
 
 #include <moveit_benchmark_suite/benchmark.h>
 #include <moveit_benchmark_suite/benchmarks/profiler/motion_planning_profiler.h>
-#include <moveit_benchmark_suite/benchmarks/visualizer/motion_planning_visualizer.h>
+#include <moveit_benchmark_suite/benchmarks/visualizer/profile_visualization.h>
 
 using namespace moveit_benchmark_suite;
 
@@ -71,7 +71,7 @@ int main(int argc, char** argv)
   benchmark.initializeFromHandle(pnh);
 
   // Setup visualizer
-  MotionPlanningVisualizer visualizer;
+  ProfileVisualization visualizer;
 
   if (benchmark.getOptions().visualize)
     visualizer.addCallback(profiler);
