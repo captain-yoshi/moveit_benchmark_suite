@@ -24,7 +24,7 @@ bool Benchmark::initialize(const std::string& name, const Options& options)
     auto filepath = IO::getFilePath(options_.output_file);
     auto filename = IO::getFileName(options_.output_file);
 
-    addPostBenchmarkCallback([=](DataSetPtr dataset) { outputter_.dump(*dataset, filepath, filename); });
+    addPostBenchmarkCallback([=](DataSetPtr& dataset) { outputter_.dump(*dataset, filepath, filename); });
   }
 
   // Aggregate if config is found
@@ -46,7 +46,7 @@ bool Benchmark::initialize(const std::string& name, const Options& options)
   // Plot with gnuplot if config is found
   {
     if (gnuplot_.initializeFromYAML(options_.config_file))
-      addPostBenchmarkCallback([&](DataSetPtr dataset) {
+      addPostBenchmarkCallback([&](DataSetPtr& dataset) {
         gnuplot_.plot(*dataset);
 
         ROS_WARN("Press CTL-C to close GNUPlot");

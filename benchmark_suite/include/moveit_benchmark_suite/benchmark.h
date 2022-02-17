@@ -120,9 +120,9 @@ public:
   bool initialize(const std::string& name, const Options& options);
   bool initializeFromHandle(const ros::NodeHandle& nh);
 
-  using PostQueryTrialCallback = std::function<void(DataSetPtr dataset)>;
-  using PostQueryCallback = std::function<void(DataSetPtr dataset)>;
-  using PostBenchmarkCallback = std::function<void(DataSetPtr dataset)>;
+  using PostQueryTrialCallback = std::function<void(DataSetPtr& dataset)>;
+  using PostQueryCallback = std::function<void(DataSetPtr& dataset)>;
+  using PostBenchmarkCallback = std::function<void(DataSetPtr& dataset)>;
 
   /** \brief Set the post-dataset callback function.
    *  \param[in] callback Callback to use.
