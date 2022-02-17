@@ -57,7 +57,7 @@ add_library(${PROJECT_NAME}
   src/benchmark.cpp
   src/profiler.cpp
   src/serialization.cpp
-  # src/aggregation.cpp
+  src/aggregate.cpp
   src/robot.cpp
   src/scene.cpp
   src/log.cpp
@@ -65,7 +65,6 @@ add_library(${PROJECT_NAME}
   src/trajectory.cpp
   src/io/htmlplot.cpp
   src/io/gnuplot.cpp
-  # src/config/aggregate_config.cpp
   src/config/gnuplot_config.cpp
   src/config/html_config.cpp
   src/benchmarks/builder/collision_check_builder.cpp

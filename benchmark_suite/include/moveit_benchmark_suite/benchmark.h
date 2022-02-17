@@ -39,12 +39,11 @@
 #pragma once
 
 #include <moveit_benchmark_suite/dataset.h>
-//#include <moveit_benchmark_suite/token.h>
-//#include <moveit_benchmark_suite/planning.h>
 #include <moveit_benchmark_suite/io.h>
 #include <moveit_benchmark_suite/log.h>
-#include <moveit_benchmark_suite/io/gnuplot.h>
 #include <moveit_benchmark_suite/profiler.h>
+#include <moveit_benchmark_suite/aggregate.h>
+#include <moveit_benchmark_suite/io/gnuplot.h>
 
 //#include <moveit_benchmark_suite/trajectory.h>
 
@@ -162,6 +161,8 @@ private:
 
   BenchmarkSuiteDataSetOutputter outputter_;
   IO::GNUPlotDataset gnuplot_;
+  AggregateDataset aggregate_;
+
   bool plot_flag = false;
 };
 
