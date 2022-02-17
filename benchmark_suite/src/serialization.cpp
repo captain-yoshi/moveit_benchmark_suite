@@ -280,11 +280,9 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
   return node;
 }
 
-bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& n, moveit_benchmark_suite::DataSet& rhs)
+bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& node, moveit_benchmark_suite::DataSet& rhs)
 {
   using namespace moveit_benchmark_suite;
-
-  const YAML::Node& node = n["dataset"];
 
   rhs.name = node[DATASET_NAME_KEY].as<std::string>();
   rhs.type = node[DATASET_TYPE_KEY].as<std::string>();
