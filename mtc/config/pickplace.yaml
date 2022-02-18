@@ -24,6 +24,7 @@ profiler_config:
     hand_frame: "panda_link8"
 
     # Gripper gap
+    hand_joint_name: "panda_finger_joint1"
     hand_open_gap: 0.08
     hand_close_gap: 0.0254
 

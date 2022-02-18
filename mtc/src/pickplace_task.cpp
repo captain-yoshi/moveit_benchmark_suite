@@ -27,6 +27,7 @@ void PickPlaceTask::loadParameters(const PickPlaceParameters& params, const Task
   // Predefined pose targets
   hand_open_gap_ = params.hand_open_gap;
   hand_close_gap_ = params.hand_close_gap;
+  hand_joint_name_ = params.hand_joint_name;
 
   // Target object
   object_name_ = params.object_name;
@@ -38,13 +39,13 @@ void PickPlaceTask::loadParameters(const PickPlaceParameters& params, const Task
   // TODO add to PickPlaceConfig
   hand_open_pose_.is_diff = true;
   hand_open_pose_.joint_state.name.resize(1);
-  hand_open_pose_.joint_state.name[0] = "panda_finger_joint1";
+  hand_open_pose_.joint_state.name[0] = hand_joint_name_;
   hand_open_pose_.joint_state.position.resize(1);
   hand_open_pose_.joint_state.position[0] = hand_open_gap_ / 2.0;
 
   hand_close_pose_.is_diff = true;
   hand_close_pose_.joint_state.name.resize(1);
-  hand_close_pose_.joint_state.name[0] = "panda_finger_joint1";
+  hand_close_pose_.joint_state.name[0] = hand_joint_name_;
   hand_close_pose_.joint_state.position.resize(1);
   hand_close_pose_.joint_state.position[0] = hand_close_gap_ / 2.0;
 

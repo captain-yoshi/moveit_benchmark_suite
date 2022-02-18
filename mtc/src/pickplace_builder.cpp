@@ -101,6 +101,7 @@ void PickPlaceConfig::readParameters(ros::NodeHandle& nh)
   errors += !rosparam_shortcuts::get(LOGNAME, pnh, "grasp_frame_transform", p.grasp_frame_transform);
 
   // Predefined pose targets
+  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "hand_joint_name", p.hand_joint_name);
   errors += !rosparam_shortcuts::get(LOGNAME, pnh, "hand_open_gap", p.hand_open_gap);
   errors += !rosparam_shortcuts::get(LOGNAME, pnh, "hand_close_gap", p.hand_close_gap);
 

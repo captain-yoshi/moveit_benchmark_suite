@@ -123,6 +123,7 @@ struct PickPlaceParameters
   std::vector<double> object_dimensions;
 
   // Predefined pose targets
+  std::string hand_joint_name;  // Prismatic joint
   double hand_open_gap;
   double hand_close_gap;
 
@@ -181,6 +182,7 @@ private:
   std::vector<double> object_dimensions_;
 
   // Predefined pose targets
+  std::string hand_joint_name_;
   double hand_open_gap_;
   double hand_close_gap_;
 
