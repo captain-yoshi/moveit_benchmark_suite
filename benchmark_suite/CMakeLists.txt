@@ -88,8 +88,8 @@ endif()
 add_executable(plot_dataset src/plot_dataset.cpp)
 target_link_libraries(plot_dataset ${PROJECT_NAME} ${catkin_LIBRARIES})
 
-# add_executable(aggregate src/aggregate.cpp)
-# target_link_libraries(aggregate ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_executable(aggregate src/aggregate_dataset.cpp)
+target_link_libraries(aggregate ${PROJECT_NAME} ${catkin_LIBRARIES})
 
 add_executable(generate_plots src/generate_plots.cpp)
 target_link_libraries(generate_plots ${PROJECT_NAME} ${catkin_LIBRARIES})
@@ -104,7 +104,7 @@ install(TARGETS
   collision_check
   plot_dataset
   generate_plots
-  # aggregate
+  aggregate
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
