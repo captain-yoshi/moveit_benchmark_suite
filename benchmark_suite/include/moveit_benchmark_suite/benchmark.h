@@ -39,12 +39,11 @@
 #pragma once
 
 #include <moveit_benchmark_suite/dataset.h>
-//#include <moveit_benchmark_suite/token.h>
-//#include <moveit_benchmark_suite/planning.h>
 #include <moveit_benchmark_suite/io.h>
 #include <moveit_benchmark_suite/log.h>
-#include <moveit_benchmark_suite/io/gnuplot.h>
 #include <moveit_benchmark_suite/profiler.h>
+#include <moveit_benchmark_suite/aggregate.h>
+#include <moveit_benchmark_suite/io/gnuplot.h>
 
 //#include <moveit_benchmark_suite/trajectory.h>
 
@@ -120,9 +119,9 @@ public:
   bool initialize(const std::string& name, const Options& options);
   bool initializeFromHandle(const ros::NodeHandle& nh);
 
-  using PostQueryTrialCallback = std::function<void(DataSetPtr dataset)>;
-  using PostQueryCallback = std::function<void(DataSetPtr dataset)>;
-  using PostBenchmarkCallback = std::function<void(DataSetPtr dataset)>;
+  using PostQueryTrialCallback = std::function<void(DataSetPtr& dataset)>;
+  using PostQueryCallback = std::function<void(DataSetPtr& dataset)>;
+  using PostBenchmarkCallback = std::function<void(DataSetPtr& dataset)>;
 
   /** \brief Set the post-dataset callback function.
    *  \param[in] callback Callback to use.
@@ -162,6 +161,8 @@ private:
 
   BenchmarkSuiteDataSetOutputter outputter_;
   IO::GNUPlotDataset gnuplot_;
+  AggregateDataset aggregate_;
+
   bool plot_flag = false;
 };
 

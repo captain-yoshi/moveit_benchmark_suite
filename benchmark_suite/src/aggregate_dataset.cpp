@@ -32,41 +32,62 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Modified version of Zachary Kingston robowflex
-   Desc:
+/* Author: CaptainYoshi
+   Desc: Aggregate metrics from datasets into new datasets
 */
 
-#pragma once
+#include <ros/ros.h>
 
-#include <ros/node_handle.h>
-
-#include <moveit_benchmark_suite/dataset.h>
+#include <moveit_benchmark_suite/aggregate.h>
 #include <moveit_benchmark_suite/io.h>
-#include <moveit_benchmark_suite/log.h>
-#include <moveit_benchmark_suite/token.h>
+#include <moveit_benchmark_suite/profiler.h>
+#include <moveit_benchmark_suite/benchmark.h>
 
-#include <moveit_benchmark_suite/config/aggregate_config.h>
+using namespace moveit_benchmark_suite;
 
-namespace moveit_benchmark_suite
+constexpr char INPUT_PARAMETER[] = "input_files";
+constexpr char OUTPUT_PARAMETER[] = "output_file";
+
+int main(int argc, char** argv)
 {
-namespace aggregate
-{
-static const std::string AVERAGE_KEY = "average";
-static const std::string FREQUENCY_KEY = "frequency";
+  ros::init(argc, argv, "aggregate_dataset");
+  ros::AsyncSpinner spinner(1);
+  spinner.start();
 
-using Callback = std::function<void(const std::string& metric, const std::string& new_metric, DataSetPtr& dataset,
-                                    const Query& query)>;
+  ros::NodeHandle pnh("~");
 
-void toFrequency(const std::string& metric, const std::string& new_metric, DataSetPtr& dataset, const Query& query);
-void toMean(const std::string& metric, const std::string& new_metric, DataSetPtr& dataset, const Query& query);
+  // Get ros params
+  std::string config_file;
 
-static const std::map<std::string, Callback> CallbackMap = {
-  { AVERAGE_KEY, &toMean },
-  { FREQUENCY_KEY, &toFrequency },
-};
+  std::vector<std::string> input_files;
+  std::string output_file;
+  std::string output_filepath;
+  std::string output_filename;
 
-void dataset(DataSetPtr& datasets, const TokenSet& filters, const std::vector<AggregateParams>& agg_params);
-void dataset(std::vector<DataSetPtr>& datasets, const TokenSet& filters, const std::vector<AggregateParams>& agg_params);
+  pnh.getParam(INPUT_PARAMETER, input_files);
+  pnh.getParam(OUTPUT_PARAMETER, output_file);
+  pnh.getParam(CONFIG_PARAMETER, config_file);
 
-}  // namespace aggregate
-}  // namespace moveit_benchmark_suite
+  output_filepath = IO::getFilePath(output_file);
+  output_filename = IO::getFileName(output_file);
+
+  for (auto& file : input_files)
+    file = IO::getAbsDataSetFile(file);
+
+  // Aggregate datasets
+  std::vector<AggregateDataset::Operation> operations;
+  std::vector<Filter> filters;
+
+  AggregateDataset agg_dataset;
+  agg_dataset.buildParamsFromYAML(config_file, operations, filters);
+
+  auto datasets = agg_dataset.aggregate(operations, input_files, filters);
+
+  // Save aggregated dataset
+  BenchmarkSuiteDataSetOutputter output;
+
+  for (const auto& dataset : datasets)
+    output.dump(*dataset, output_filepath, output_filename);
+
+  return 0;
+}

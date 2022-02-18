@@ -30,6 +30,7 @@ GNUPlotTerminal::GNUPlotTerminal(const std::string& mode) : mode(mode){};
 ///
 /// QtTerminal
 ///
+
 QtTerminal::QtTerminal() : GNUPlotTerminal(TERMINAL_QT_STR)
 {
 }
@@ -853,7 +854,10 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const YAML::Node& datas
       for (const auto& metric : plot.metric_names)
       {
         if (!metric_node[metric])
+        {
+          ROS_WARN("Metric '%s' not found in query #%s", metric.c_str(), std::to_string(j + 1).c_str());
           continue;
+        }
 
         std::string legend = abs_legend + rel_legend;
         std::string label = abs_label + rel_label;
@@ -875,19 +879,42 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const YAML::Node& datas
           for (int k = 0; k < TAG_END.size(); ++k)
             label.pop_back();
 
-        // Decode metric and add to Datablock
+        // Try decoding metric as
+        //   - double
+        //   - vector<double>
+        //   - vector<vector<double>>
+        try
+        {
+          auto value = metric_node[metric].as<double>();
+          container[j].second.add(value, label, legend);
+          continue;
+        }
+        catch (YAML::BadConversion& e)
+        {
+        }
         try
         {
           auto values = metric_node[metric].as<std::vector<double>>();
           container[j].second.add(values, label, legend);
+          continue;
         }
         catch (YAML::BadConversion& e)
+        {
+        }
+        try
         {
           auto values = metric_node[metric].as<std::vector<std::vector<double>>>();
 
           for (const auto& value : values)
             container[j].second.add(value, label, legend);
+          continue;
         }
+        catch (YAML::BadConversion& e)
+        {
+        }
+
+        // Should not
+        ROS_WARN("Metric can be a double or 1d or 2d vector");
       }
     }
   }
