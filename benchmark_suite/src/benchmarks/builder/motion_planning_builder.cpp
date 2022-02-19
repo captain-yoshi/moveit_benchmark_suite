@@ -139,12 +139,9 @@ void MotionPlanningBuilder::buildQueries(const std::string& filename, const std:
               req.pipeline_id = pipeline.second->getPipelineId();
               req.planner_id = planner;
 
-              // Load robot kinemativs wrt. JMG
-              if (!robot.second->getModelConst()->hasJointModelGroup(req.group_name))
+              // TODO don't load if request does not need IK ?
+              if (!robot.second->loadKinematics(req.group_name, false))
                 continue;
-
-              // Dont care if failed because request does not necessalrely use kinematics
-              robot.second->loadKinematics(req.group_name, false);
 
               // Fille query_setup
               query_setup_.addQuery("robot", robot.first);
