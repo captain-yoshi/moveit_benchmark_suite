@@ -278,8 +278,16 @@ std::map<std::string, RobotPtr> RobotBuilder::generateResults() const
   {
     auto robot = std::make_shared<Robot>(pair.first);
 
+    // initialize but don't load kinematics
     if (robot->initializeFromYAML(pair.second["resources"]))
+    {
+      if (pair.second["parameters"] && pair.second["parameters"]["robot_state"])
+      {
+        auto state = pair.second["parameters"]["robot_state"].as<moveit_msgs::RobotState>();
+        robot->setState(state);
+      }
       results.insert({ pair.first, robot });
+    }
   }
 
   return results;
@@ -459,6 +467,9 @@ SceneBuilder::generateResults(const RobotPtr& robot, const std::string& collisio
 
     auto scene = std::make_shared<Scene>(robot->getModelConst());
     scene->setName(pair.first);
+
+    // current state + collision detectors
+    scene->getScene()->setCurrentState(*robot->getState());
     success &= scene->setCollisionDetector(collision_detector);
 
     if (pair.second["resource"] && !pair.second["resource"].IsScalar() && pair.second["resource"]["cluttered_scene"])
