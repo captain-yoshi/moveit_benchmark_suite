@@ -62,7 +62,7 @@ public:
   PlanningPipelineEmitter(PlanningPipelineEmitter const&) = delete;
   void operator=(PlanningPipelineEmitter const&) = delete;
 
-  bool initializeFromYAML(const YAML::Node& node, const std::vector<std::string>& planners);
+  bool initializeFromYAML(const YAML::Node& node, const std::vector<std::string>& planners = {});
 
   const std::string& getName() const;
   const std::string& getPipelineId() const;
