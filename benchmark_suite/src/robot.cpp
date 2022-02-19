@@ -432,7 +432,7 @@ bool Robot::loadKinematics(const std::string& group_name, bool load_subgroups)
     return false;
   }
 
-  std::vector<std::string> load_names;
+  std::vector<std::string> load_names = { group_name };
 
   // If requested, also attempt to load the kinematics solvers for subgroups.
   if (load_subgroups)
@@ -440,10 +440,6 @@ bool Robot::loadKinematics(const std::string& group_name, bool load_subgroups)
     const auto& subgroups = model_->getJointModelGroup(group_name)->getSubgroupNames();
     load_names.insert(load_names.end(), subgroups.begin(), subgroups.end());
   }
-
-  // Check if this group also has an associated kinematics solver to load.
-  if (std::find(groups.begin(), groups.end(), group_name) != groups.end())
-    load_names.emplace_back(group_name);
 
   auto timeout = kinematics_->getIKTimeout();
 
