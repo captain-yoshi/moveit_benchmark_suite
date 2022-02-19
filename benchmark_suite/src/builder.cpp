@@ -497,7 +497,6 @@ std::map<std::string, PlanningPipelineEmitterPtr> PlanningPipelineEmitterBuilder
 
   for (const auto& pair : node_map)
   {
-    const auto& planners = pair.second["parameters"]["planners"].as<std::vector<std::string>>();
     auto pipeline = std::make_shared<PlanningPipelineEmitter>(pair.first, "planning_pipelines/" + pair.first);
 
     if (!pair.second["resource"])
@@ -505,8 +504,18 @@ std::map<std::string, PlanningPipelineEmitterPtr> PlanningPipelineEmitterBuilder
       ROS_ERROR("Empty resource for '%s' name", pair.first.c_str());
       return std::map<std::string, PlanningPipelineEmitterPtr>();
     }
-    if (pipeline->initializeFromYAML(pair.second["resource"], planners))
-      results.insert({ pair.first, pipeline });
+
+    if (pair.second["parameters"])
+    {
+      const auto& planners = pair.second["parameters"]["planners"].as<std::vector<std::string>>();
+      if (pipeline->initializeFromYAML(pair.second["resource"], planners))
+        results.insert({ pair.first, pipeline });
+    }
+    else
+    {
+      if (pipeline->initializeFromYAML(pair.second["resource"]))
+        results.insert({ pair.first, pipeline });
+    }
   }
   return results;
 }
