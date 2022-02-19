@@ -19,7 +19,7 @@ goal_constraints:
           z: 0
         constraint_region:
           primitives:
-            - type: box
+            - type: 1
               dimensions: [0.01, 0.01, 0.01]
           primitive_poses:
             - position:
@@ -58,7 +58,7 @@ path_constraints:
         z: 0
       constraint_region:
         primitives:
-          - type: box
+          - type: 1
             dimensions: [0.4, 0.1, 0.4]
         primitive_poses:
           - position:
