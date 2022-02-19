@@ -1,0 +1,7 @@
+aggregate_config:
+  # filters:
+  #   - {key: /hw/cpu/model, val: 158, predicate: '='}
+  aggregators:
+    - raw_metric: time
+      new_metric: avg_time
+      type: frequency
