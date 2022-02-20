@@ -51,7 +51,7 @@
 #include <moveit/task_constructor/task.h>
 #include <moveit/task_constructor/stages/compute_ik.h>
 #include <moveit/task_constructor/stages/connect.h>
-#include <moveit/task_constructor/stages/current_state.h>
+#include <moveit/task_constructor/stages/fixed_state.h>
 #include <moveit/task_constructor/stages/generate_grasp_pose.h>
 #include <moveit/task_constructor/stages/generate_pose.h>
 #include <moveit/task_constructor/stages/generate_place_pose.h>
@@ -150,7 +150,7 @@ public:
 
   void loadParameters(const PickPlaceParameters& params, const TaskProperty& task_property);
 
-  void init();
+  void init(const planning_scene::PlanningScenePtr& scene);
   void pick();
   void place();
   bool plan();

@@ -48,12 +48,13 @@ constexpr char LOGNAME[] = "pick_place_task";
 /// PickPlaceQuery
 ///
 
-PickPlaceQuery::PickPlaceQuery(const std::string& name,                  //
-                               const QueryGroupName& group_name_map,     //
-                               const PickPlaceParameters& parameters,    //
-                               const moveit_msgs::PlanningScene& scene,  //
+PickPlaceQuery::PickPlaceQuery(const std::string& name,                //
+                               const QueryGroupName& group_name_map,   //
+                               const RobotPtr& robot,                  //
+                               const ScenePtr& scene,                  //
+                               const PickPlaceParameters& parameters,  //
                                const TaskProperty& task)
-  : Query(name, group_name_map), parameters(parameters), scene(scene), task(task){};
+  : Query(name, group_name_map), robot(robot), scene(scene), parameters(parameters), task(task){};
 
 ///
 /// PickPlaceProfiler
@@ -65,7 +66,7 @@ PickPlaceProfiler::PickPlaceProfiler()
 void PickPlaceProfiler::buildQueriesFromYAML(const std::string& filename)
 {
   PickPlaceBuilder builder;
-  builder.buildQueries();
+  builder.buildQueries(filename);
 
   const auto& queries = builder.getQueries();
   const auto& setup = builder.getQuerySetup();
@@ -77,32 +78,12 @@ void PickPlaceProfiler::buildQueriesFromYAML(const std::string& filename)
 
 void PickPlaceProfiler::initializeQuery(const PickPlaceQuery& query)
 {
-  // Remove all scene objects
-  moveit::planning_interface::PlanningSceneInterface psi;
-  {
-    moveit_msgs::PlanningScene rm;
-    rm.is_diff = true;
-    rm.robot_state.is_diff = true;
-    rm.robot_state.attached_collision_objects.resize(1);
-    rm.robot_state.attached_collision_objects[0].object.operation = moveit_msgs::CollisionObject::REMOVE;
-    rm.world.collision_objects.resize(1);
-    rm.world.collision_objects[0].operation = moveit_msgs::CollisionObject::REMOVE;
-    psi.applyPlanningScene(rm);
-  }
-
-  // Add collision objects to the planning scene
-  if (!psi.applyCollisionObjects(query.scene.world.collision_objects))
-  {
-    ROS_ERROR("Failed to apply collision objects");
-    return;
-  }
-
   // Initialize PickPlaceTask
   pick_place_task = std::make_shared<PickPlaceTask>(query.task.name);
 
   pick_place_task->loadParameters(query.parameters, query.task);
 
-  pick_place_task->init();
+  pick_place_task->init(query.scene->getScene());
   pick_place_task->pick();
   pick_place_task->place();
 }

@@ -106,26 +106,24 @@ public:
   void setNamespace(const std::string& ros_namespace);
 
   const PickPlaceParameters& getParameters() const;
-  const std::map<std::string, std::string>& getScenes() const;
   const std::map<std::string, solvers::PlannerInterfacePtr>& getSolvers() const;
   const std::map<std::string, moveit_msgs::Constraints>& getConstraints() const;
   const std::map<std::string, Task>& getTasks() const;
 
   static SolverType resolveSolverType(const std::string& type);
+  void buildSolvers(ros::NodeHandle& nh,
+                    const std::map<std::string, planning_pipeline::PlanningPipelinePtr>& pipeline_map);
 
 protected:
   void readBenchmarkConfig(const std::string& ros_namespace);
 
   void readParameters(ros::NodeHandle& nh);
-  void readSolvers(ros::NodeHandle& nh);
   void readConstraints(ros::NodeHandle& nh);
   void readTasks(ros::NodeHandle& nh);
-  void readScenes(ros::NodeHandle& nh);
 
   void fillTaskStages(Task& task, const XmlRpc::XmlRpcValue& node);
 
   PickPlaceParameters parameters_;
-  std::map<std::string, std::string> scene_map_;  // name, filepath
   std::map<std::string, solvers::PlannerInterfacePtr> solver_map_;
   std::map<std::string, moveit_msgs::Constraints> constraints_map_;
   std::map<std::string, Task> task_map_;
@@ -136,15 +134,14 @@ using namespace moveit_benchmark_suite;
 class PickPlaceBuilder
 {
 public:
-  void buildQueries();
+  void buildQueries(const std::string& filename);
 
   const PickPlaceConfig& getConfig() const;
   const QuerySetup& getQuerySetup() const;
   const std::vector<PickPlaceQueryPtr>& getQueries() const;
 
 protected:
-  void buildScenes();
-  void buildTasks();
+  void buildTasks(ros::NodeHandle& nh, std::map<std::string, planning_pipeline::PlanningPipelinePtr>& pipeline_map);
 
   QuerySetup query_setup_;
   PickPlaceConfig config_;

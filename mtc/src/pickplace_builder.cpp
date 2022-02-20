@@ -5,6 +5,12 @@
 
 #include <urdf_to_scene/scene_parser.h>
 #include <moveit_benchmark_suite_mtc/pickplace_profiler.h>
+#include <moveit_benchmark_suite/serialization.h>
+#include <moveit_benchmark_suite/io.h>
+
+#include <moveit_benchmark_suite/robot.h>
+#include <moveit_benchmark_suite/scene.h>
+#include <moveit_benchmark_suite/builder.h>
 
 using namespace moveit_benchmark_suite_mtc;
 
@@ -31,10 +37,6 @@ void PickPlaceConfig::setNamespace(const std::string& ros_namespace)
 const PickPlaceParameters& PickPlaceConfig::getParameters() const
 {
   return parameters_;
-}
-const std::map<std::string, std::string>& PickPlaceConfig::getScenes() const
-{
-  return scene_map_;
 }
 
 const std::map<std::string, solvers::PlannerInterfacePtr>& PickPlaceConfig::getSolvers() const
@@ -72,10 +74,8 @@ void PickPlaceConfig::readBenchmarkConfig(const std::string& ros_namespace)
   if (nh.getParam("profiler_config", profiler_config))
   {
     readParameters(nh);
-    readSolvers(nh);
     readConstraints(nh);
     readTasks(nh);
-    readScenes(nh);
   }
   else
   {
@@ -121,8 +121,11 @@ void PickPlaceConfig::readParameters(ros::NodeHandle& nh)
   rosparam_shortcuts::shutdownIfError(LOGNAME, errors);
 }
 
-void PickPlaceConfig::readSolvers(ros::NodeHandle& nh)
+void PickPlaceConfig::buildSolvers(ros::NodeHandle& nh,
+                                   const std::map<std::string, planning_pipeline::PlanningPipelinePtr>& pipeline_map)
 {
+  solver_map_.clear();
+
   XmlRpc::XmlRpcValue node;
 
   if (nh.getParam("profiler_config/solvers", node))
@@ -147,10 +150,19 @@ void PickPlaceConfig::readSolvers(ros::NodeHandle& nh)
       {
         case SolverType::SAMPLING_BASED:
         {
-          std::string piepline = static_cast<std::string>(solver_node["pipeline"]);
+          std::string pipeline = static_cast<std::string>(solver_node["pipeline"]);
           std::string planner = static_cast<std::string>(solver_node["planner"]);
 
-          auto solver = std::make_shared<solvers::PipelinePlanner>(piepline);
+          solvers::PipelinePlannerPtr solver;
+
+          auto it = pipeline_map.find(pipeline);
+          if (it != pipeline_map.end())
+            // Pass the PlanningPipeline directly
+            solver = std::make_shared<solvers::PipelinePlanner>(it->second);
+          else
+            // Constructs default ompl planning pipeline with 'move_group' namespace
+            solver = std::make_shared<solvers::PipelinePlanner>(pipeline);
+
           solver->setPlannerId(planner);
 
           if (solver_node.hasMember("goal_joint_tolerance"))
@@ -351,34 +363,99 @@ void PickPlaceConfig::readTasks(ros::NodeHandle& nh)
   }
 }
 
-void PickPlaceConfig::readScenes(ros::NodeHandle& nh)
-{
-  nh.getParam("/scenes", scene_map_);
-}
-
 ///
-/// CollisionCheckBuilder
+/// PickPlaceBuilder
 ///
 
-void PickPlaceBuilder::buildQueries()
+void PickPlaceBuilder::buildQueries(const std::string& filename)
 {
   // Read config
+  YAML::Node node;
+  if (!IO::loadFileToYAML(filename, node, true))
+    return;
+
+  std::map<std::string, RobotPtr> robot_map;
+  std::map<std::string, ScenePtr> scene_map;
+  std::vector<std::string> collision_detectors;
+  SceneBuilder scene_builder;
+  std::map<std::string, PlanningPipelineEmitterPtr> pipeline_emitter_map;
+
+  {
+    // Build robots
+    RobotBuilder builder;
+    builder.loadResources(node["profiler_config"]["robot"]);
+    builder.extendResources(node["extend_resource_config"]["robot"]);
+    robot_map = builder.generateResults();
+  }
+  {  // Build scenes
+    scene_builder.loadResources(node["profiler_config"]["scene"]);
+    scene_builder.extendResources(node["extend_resource_config"]["scene"]);
+    // Don't generate results yet because depends on Robot and Collision detector
+  }
+  {
+    // Build collision detectors
+    collision_detectors = node["profiler_config"]["collision_detectors"].as<std::vector<std::string>>();
+  }
+  {
+    // Build pipelines (Optional) does not count as a pair-wise
+    PlanningPipelineEmitterBuilder builder;
+
+    builder.loadResources(node["profiler_config"]["planning_pipelines"]);
+    builder.extendResources(node["extend_resource_config"]["planning_pipelines"]);
+    pipeline_emitter_map = builder.generateResults();
+  }
+
+  // Build parameters
   config_.setNamespace(ros::this_node::getName());
   const auto& parameters = config_.getParameters();
-
-  // Build each components of a query
-  buildScenes();
-  buildTasks();
-  // Build queries
-  for (const auto& scene : scenes_)
+  ros::NodeHandle nh(ros::this_node::getName());
+  // Loop through pair wise parameters
+  for (const auto& robot : robot_map)
   {
-    for (auto& task : tasks_)
+    std::map<std::string, planning_pipeline::PlanningPipelinePtr> pipeline_map;
+    for (const auto& emitter : pipeline_emitter_map)
     {
-      std::string query_name = scene.name + task.name;
-      QueryGroupName query_gn = { { "scene", scene.name }, { "task", task.name } };
+      auto pipeline = std::make_shared<planning_pipeline::PlanningPipeline>(robot.second->getModel(),
+                                                                            emitter.second->getHandler().getHandle());
 
-      auto query = std::make_shared<PickPlaceQuery>(query_name, query_gn, parameters, scene, task);
-      queries_.push_back(query);
+      pipeline_map.insert({ emitter.first, pipeline });
+    }
+
+    buildTasks(nh, pipeline_map);
+
+    for (const auto& detector : collision_detectors)
+    {
+      // Get scenes wrt. robot and collision detector
+      scene_map = scene_builder.generateResults(robot.second, detector);
+
+      for (auto& scene : scene_map)
+        for (const auto& task : tasks_)
+        {
+          // Load robot kinematics
+          if (!robot.second->loadKinematics(parameters.arm_group_name, false))
+            continue;
+
+          // Fille query_setup
+          query_setup_.addQuery("robot", robot.first);
+          query_setup_.addQuery("collision_detector", detector);
+          query_setup_.addQuery("scene", scene.first);
+          query_setup_.addQuery("task", task.name);
+
+          // Fill QueryGroup
+          const std::string TAG = " + ";
+          std::string query_name = robot.first + TAG + detector + TAG + scene.first + TAG + task.name;
+
+          QueryGroupName query_group = {
+            { "robot", robot.first },
+            { "collision_detector", detector },
+            { "scene", scene.first },
+            { "task", task.name },
+          };
+
+          auto query =
+              std::make_shared<PickPlaceQuery>(query_name, query_group, robot.second, scene.second, parameters, task);
+          queries_.emplace_back(query);
+        }
     }
   }
 }
@@ -398,32 +475,12 @@ const QuerySetup& PickPlaceBuilder::getQuerySetup() const
   return query_setup_;
 }
 
-void PickPlaceBuilder::buildScenes()
+void PickPlaceBuilder::buildTasks(ros::NodeHandle& nh,
+                                  std::map<std::string, planning_pipeline::PlanningPipelinePtr>& pipeline_map)
 {
-  SceneParser parser;
-
-  const auto& scene_map = config_.getScenes();
-
-  // Prepare scenes
-  for (const auto& scene : scene_map)
-  {
-    query_setup_.addQuery("scene", scene.first, "");
-
-    parser.loadURDF(scene.second);
-    parser.parseURDF();
-
-    scenes_.emplace_back();
-    scenes_.back().name = scene.first;
-    scenes_.back().is_diff = true;
-
-    const auto& ps = parser.getPlanningScene();
-    scenes_.back().world.collision_objects = ps.world.collision_objects;
-  }
-}
-
-void PickPlaceBuilder::buildTasks()
-{
+  tasks_.clear();
   const auto& task_map = config_.getTasks();
+  config_.buildSolvers(nh, pipeline_map);
   const auto& solver_map = config_.getSolvers();
   const auto& constraint_map = config_.getConstraints();
 

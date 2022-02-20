@@ -51,6 +51,9 @@
 #include <moveit_benchmark_suite/profiler.h>
 #include <moveit_benchmark_suite_mtc/pickplace_task.h>
 
+#include <moveit_benchmark_suite/robot.h>
+#include <moveit_benchmark_suite/scene.h>
+
 namespace moveit_benchmark_suite_mtc
 {
 using namespace moveit_benchmark_suite;
@@ -67,14 +70,16 @@ struct PickPlaceQuery : public Query
    *  \param[in] planner Planner to use to evaluate query.
    *  \param[in] request Request to give planner.
    */
-  PickPlaceQuery(const std::string& name,                  //
-                 const QueryGroupName& group_name_map,     //
-                 const PickPlaceParameters& parameters,    //
-                 const moveit_msgs::PlanningScene& scene,  //
+  PickPlaceQuery(const std::string& name,                //
+                 const QueryGroupName& group_name_map,   //
+                 const RobotPtr& robot,                  //
+                 const ScenePtr& scene,                  //
+                 const PickPlaceParameters& parameters,  //
                  const TaskProperty& task);
 
+  RobotPtr robot;  ///< Robot used for the query.
+  ScenePtr scene;  ///< Scene used for the query.
   PickPlaceParameters parameters;
-  moveit_msgs::PlanningScene scene;  ///< Scene used for the query.
   TaskProperty task;
 };
 

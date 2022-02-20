@@ -10,10 +10,6 @@
   <arg unless="$(arg debug)" name="launch_prefix" value="" />
   <arg     if="$(arg debug)" name="launch_prefix" value="gdb --args" />
 
-  <!-- Scenes -->
-  <group ns="scenes" clear_params="true">
-    <param name="openshelf-hq" command="$(find xacro)/xacro '$(find moveit_benchmark_suite_resources)/scenes/shelf/simple.urdf.xacro'"/>
-  </group>
 
   <!-- Benchmark/Profiler config file -->
   <arg name="config_file" value="$(find moveit_benchmark_suite_mtc)/config/pickplace.yaml"/>

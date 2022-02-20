@@ -64,7 +64,7 @@ void PickPlaceTask::loadParameters(const PickPlaceParameters& params, const Task
   task_property_ = task_property;
 }
 
-void PickPlaceTask::init()
+void PickPlaceTask::init(const planning_scene::PlanningScenePtr& scene)
 {
   ROS_INFO_NAMED(LOGNAME, "Initializing task pipeline");
 
@@ -75,9 +75,8 @@ void PickPlaceTask::init()
 
   Task& t = *task_;
   t.stages()->setName(task_name_);
-  t.loadRobotModel();
-  // const auto& robot_model = t.getRobotModel();
-  // t.setRobotModel(robot_model);
+  t.setRobotModel(scene->getRobotModel());
+  t.enableIntrospection(false);
 
   // Set task properties
   t.setProperty("group", arm_group_name_);
@@ -88,14 +87,15 @@ void PickPlaceTask::init()
 
   /****************************************************
    *                                                  *
-   *               Current State                      *
+   *               Fixed State                        *
    *                                                  *
    ***************************************************/
   {
-    auto current_state = std::make_unique<stages::CurrentState>("current state");
+    auto fixed_state = std::make_unique<stages::FixedState>("current state");
+    fixed_state->setState(scene);
+    stage_forward_ptr_ = fixed_state.get();  // Forward current_state on to grasp pose generator
 
-    stage_forward_ptr_ = current_state.get();  // Forward current_state on to grasp pose generator
-    t.add(std::move(current_state));
+    t.add(std::move(fixed_state));
   }
 }
 
@@ -352,7 +352,7 @@ void PickPlaceTask::place()
       geometry_msgs::PoseStamped p;
       p.header.frame_id = object_reference_frame_;
       p.pose = place_pose_;
-      p.pose.position.z += 0.5 * object_dimensions_[0] + place_surface_offset_;
+      p.pose.position.z += place_surface_offset_;
       stage->setPose(p);
       stage->setMonitoredStage(stage_forward_ptr_);  // Hook into attach_object_stage
 
