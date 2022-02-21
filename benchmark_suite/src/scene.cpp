@@ -576,6 +576,14 @@ bool Scene::fromURDFString(const std::string& str)
   msg.world.collision_objects = ps.world.collision_objects;
   msg.fixed_frame_transforms = ps.fixed_frame_transforms;
 
+  // Add default /static_tf from 'world' to robot root link
+  geometry_msgs::TransformStamped transform;
+  transform.header.frame_id = "world";
+  transform.child_frame_id = scene_->getRobotModel()->getRootLinkName();
+  transform.transform.rotation.w = 1;
+
+  tf2sbr_.sendTransform(transform);
+
   // Store mesh resources for possible conversion
   const auto& resource_map = parser.getMeshResourceMap();
   mesh_resources_ = resource_map;

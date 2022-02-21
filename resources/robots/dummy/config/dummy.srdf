@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<robot name="dummy">
+
+  <virtual_joint name="virtual_joint" parent_frame="world" child_link="base_link" type="fixed"/>
+
+</robot>

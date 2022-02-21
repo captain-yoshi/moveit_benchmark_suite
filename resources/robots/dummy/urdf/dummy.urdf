@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<!-- Minimal URDF without output warning/errors -->
+<robot name="dummy">
+
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="0 0 0" />
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0 0 0" />
+      </geometry>
+    </collision>
+  </link>
+
+</robot>

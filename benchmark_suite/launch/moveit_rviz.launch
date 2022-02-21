@@ -1,5 +1,8 @@
 <launch>
 
+  <!-- Default empty urdf and srdf, will be updated at runtime -->
+  <param name="robot_description" textfile="$(find moveit_benchmark_suite_resources)/robots/dummy/urdf/dummy.urdf" />
+  <param name="robot_description_semantic" textfile="$(find moveit_benchmark_suite_resources)/robots/dummy/config/dummy.srdf" />
 
   <arg name="rviz_config" default="$(find moveit_benchmark_suite)/config/rviz/moveit.rviz"/>
 
