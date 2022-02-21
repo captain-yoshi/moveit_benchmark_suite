@@ -367,7 +367,7 @@ const RosPkgInfo IO::getMoveitInfo()
 
   RosPkgInfo info;
 
-  info.version = MOVEIT_VERSION;
+  info.version = MOVEIT_VERSION_STR;
   // info.git_branch = MOVEIT_GIT_BRANCH;
   // info.git_commit = MOVEIT_GIT_COMMIT_HASH;
   info.git_branch = IO::runCommand(log::format("(cd %1% && git rev-parse --abbrev-ref HEAD | tr -d '\n')", path));
