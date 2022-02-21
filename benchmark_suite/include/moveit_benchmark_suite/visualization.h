@@ -234,6 +234,8 @@ private:
   ros::ServiceClient rviz_srv_;
   rviz::SendFilePath srv_msg_;
 
+  IO::Handler handler_;  ///< Handle for publishing.
+
   moveit_msgs::PlanningScene empty_scene_;
 
   std::multimap<std::string, visualization_msgs::Marker> markers_;  ///< Markers to publish.

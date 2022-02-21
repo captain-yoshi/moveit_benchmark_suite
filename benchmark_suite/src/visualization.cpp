@@ -39,7 +39,7 @@ Eigen::Vector4d getRandomColor()
 }
 };  // namespace
 
-RVIZHelper::RVIZHelper(const std::string& name) : nh_("/" + name)
+RVIZHelper::RVIZHelper(const std::string& name) : nh_("/" + name), handler_("/" + name)
 {
   // MoveGroup services
   trajectory_pub_ = nh_.advertise<moveit_msgs::DisplayTrajectory>("display_planned_path", 1);
@@ -78,12 +78,15 @@ void RVIZHelper::initialize(const RobotConstPtr& robot, const SceneConstPtr& sce
   robot_ = robot;
 
   std::string description;
-  robot_->getHandlerConst().getParam(Robot::ROBOT_DESCRIPTION, description);
   std::string semantic;
+  YAML::Node kinematics_node;
+  robot_->getHandlerConst().getParam(Robot::ROBOT_DESCRIPTION, description);
   robot_->getHandlerConst().getParam(Robot::ROBOT_SEMANTIC, semantic);
+  robot_->getHandlerConst().loadROStoYAML(Robot::ROBOT_KINEMATICS, kinematics_node);
 
   nh_.setParam("/" + Robot::ROBOT_DESCRIPTION, description);
   nh_.setParam("/" + Robot::ROBOT_SEMANTIC, semantic);
+  handler_.loadYAMLtoROS(kinematics_node, "/" + Robot::ROBOT_KINEMATICS);
 
   // HACK for visualizing different robots in RVIZ
   if (!rviz_srv_.call(srv_msg_))
