@@ -10,7 +10,7 @@ using namespace moveit_benchmark_suite;
 void ProfileVisualization::addCallback(PlanningPipelineProfiler& profiler)
 {
   profiler.addPostRunQueryCallback([&](const MotionPlanningQuery& query, MotionPlanningResult& result, Data& data) {
-    rviz_.initializeRobot(query.robot);
+    rviz_.initialize(query.robot, query.scene);
 
     rviz_.updateScene(query.scene->getScene(), query.request.start_state);
     rviz_.addGoalMarker("goal", query.request);
@@ -31,7 +31,7 @@ void ProfileVisualization::addCallback(PlanningPipelineProfiler& profiler)
 void ProfileVisualization::addCallback(MoveGroupInterfaceProfiler& profiler)
 {
   profiler.addPostRunQueryCallback([&](const MotionPlanningQuery& query, MotionPlanningResult& result, Data& data) {
-    rviz_.initializeRobot(query.robot);
+    rviz_.initialize(query.robot, query.scene);
 
     rviz_.updateScene(query.scene->getScene(), query.request.start_state);
     rviz_.addGoalMarker("goal", query.request);
@@ -52,7 +52,7 @@ void ProfileVisualization::addCallback(MoveGroupInterfaceProfiler& profiler)
 void ProfileVisualization::addCallback(CollisionCheckProfiler& profiler)
 {
   profiler.addPostRunQueryCallback([&](const CollisionCheckQuery& query, CollisionCheckResult& result, Data& data) {
-    rviz_.initializeRobot(query.robot);
+    rviz_.initialize(query.robot, query.scene);
 
     auto& scene = query.scene->getScene();
     moveit_msgs::PlanningScene original_scene;

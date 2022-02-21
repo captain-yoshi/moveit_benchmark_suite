@@ -41,26 +41,41 @@ Eigen::Vector4d getRandomColor()
 
 RVIZHelper::RVIZHelper(const std::string& name) : nh_("/" + name)
 {
-  rviz_srv_ = nh_.serviceClient<rviz::SendFilePath>("/rviz/load_config");
-
+  // MoveGroup services
   trajectory_pub_ = nh_.advertise<moveit_msgs::DisplayTrajectory>("display_planned_path", 1);
   state_pub_ = nh_.advertise<moveit_msgs::DisplayRobotState>("state", 1);
   scene_pub_ = nh_.advertise<moveit_msgs::PlanningScene>("monitored_planning_scene", 1);
   marker_pub_ = nh_.advertise<visualization_msgs::MarkerArray>("/visualization_marker_array", 100);
+  get_scene_service_ = nh_.advertiseService("/get_planning_scene", &RVIZHelper::getPlanningSceneServiceCallback, this);
 
+  // RViz service
+  rviz_srv_ = nh_.serviceClient<rviz::SendFilePath>("/rviz/load_config");
   std::string full_path = IO::resolvePath("package://moveit_benchmark_suite/config/rviz/moveit.rviz");
   srv_msg_.request.path.data = full_path;
+
+  // Empty scene
+  // TODO not sure this is necessary
+  empty_scene_.is_diff = true;
+  empty_scene_.robot_state.is_diff = true;
+  empty_scene_.robot_state.attached_collision_objects.resize(1);
+  empty_scene_.robot_state.attached_collision_objects[0].object.operation = moveit_msgs::CollisionObject::REMOVE;
+  empty_scene_.world.collision_objects.resize(1);
+  empty_scene_.world.collision_objects[0].operation = moveit_msgs::CollisionObject::REMOVE;
 }
 
-void RVIZHelper::initializeRobot(const RobotConstPtr& robot)
+void RVIZHelper::initialize(const RobotConstPtr& robot, const SceneConstPtr& scene)
 {
+  // Change scene if different
+  if (scene != scene_)
+  {
+    boost::unique_lock<boost::shared_mutex> ulock(scene_update_mutex_);
+    scene_ = scene;
+  }
+
   if (robot && robot == robot_)
     return;
 
   robot_ = robot;
-
-  // nh_.deleteParam(Robot::ROBOT_DESCRIPTION);
-  // nh_.deleteParam(Robot::ROBOT_SEMANTIC);
 
   std::string description;
   robot_->getHandlerConst().getParam(Robot::ROBOT_DESCRIPTION, description);
@@ -73,6 +88,24 @@ void RVIZHelper::initializeRobot(const RobotConstPtr& robot)
   // HACK for visualizing different robots in RVIZ
   if (!rviz_srv_.call(srv_msg_))
     ROS_WARN("Failed to call service '/rviz/load_config'");
+}
+
+bool RVIZHelper::getPlanningSceneServiceCallback(moveit_msgs::GetPlanningSceneRequest& req,
+                                                 moveit_msgs::GetPlanningSceneResponse& res)
+{
+  // if (req.components.components & moveit_msgs::PlanningSceneComponents::TRANSFORMS)
+  //   updateFrameTransforms();
+
+  moveit_msgs::PlanningSceneComponents all_components;
+  all_components.components = UINT_MAX;  // Return all scene components if nothing is specified.
+
+  boost::unique_lock<boost::shared_mutex> ulock(scene_update_mutex_);
+  if (!scene_)
+    res.scene = empty_scene_;
+  else
+    scene_->getSceneConst()->getPlanningSceneMsg(res.scene, req.components.components ? req.components : all_components);
+
+  return true;
 }
 
 void RVIZHelper::updateTrajectory(const planning_interface::MotionPlanResponse& response)
