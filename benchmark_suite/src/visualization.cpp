@@ -50,8 +50,10 @@ RVIZHelper::RVIZHelper(const std::string& name) : nh_("/" + name), handler_("/" 
 
   // RViz service
   rviz_srv_ = nh_.serviceClient<rviz::SendFilePath>("/rviz/load_config");
-  std::string full_path = IO::resolvePath("package://moveit_benchmark_suite/config/rviz/moveit.rviz");
-  srv_msg_.request.path.data = full_path;
+
+  std::string rviz_config_path;
+  nh_.getParam("/rviz_config", rviz_config_path);
+  srv_msg_.request.path.data = rviz_config_path;
 
   // Empty scene
   // TODO not sure this is necessary
@@ -89,8 +91,13 @@ void RVIZHelper::initialize(const RobotConstPtr& robot, const SceneConstPtr& sce
   handler_.loadYAMLtoROS(kinematics_node, "/" + Robot::ROBOT_KINEMATICS);
 
   // HACK for visualizing different robots in RVIZ
+  // Reloads RViz by setting the rosservice call to /rviz_node/load_config
   if (!rviz_srv_.call(srv_msg_))
-    ROS_WARN("Failed to call service '/rviz/load_config'");
+  {
+    // Warn user only if the benchmark RViz node is running
+    if (nh_.hasParam("/rviz_config"))
+      ROS_WARN("Failed to call service '/rviz/load_config'");
+  }
 }
 
 bool RVIZHelper::getPlanningSceneServiceCallback(moveit_msgs::GetPlanningSceneRequest& req,
