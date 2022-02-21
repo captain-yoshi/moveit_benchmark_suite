@@ -690,7 +690,7 @@ void IO::Handler::loadYAMLtoROS(const YAML::Node& node, const std::string& prefi
   }
 }
 
-void IO::Handler::loadROStoYAML(const std::string& ns, YAML::Node& node)
+void IO::Handler::loadROStoYAML(const std::string& ns, YAML::Node& node) const
 {
   XmlRpc::XmlRpcValue rpc;
   if (!nh_.getParam(ns, rpc))
