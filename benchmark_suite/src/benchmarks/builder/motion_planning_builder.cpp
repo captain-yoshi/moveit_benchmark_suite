@@ -139,9 +139,8 @@ void MotionPlanningBuilder::buildQueries(const std::string& filename, const std:
               req.pipeline_id = pipeline.second->getPipelineId();
               req.planner_id = planner;
 
-              // TODO don't load if request does not need IK ?
-              if (!robot.second->loadKinematics(req.group_name, false))
-                continue;
+              // TODO Load only if request needs it? e.g. with OrientationConstraint
+              robot.second->loadKinematics(req.group_name, false);
 
               // Fille query_setup
               query_setup_.addQuery("robot", robot.first);
