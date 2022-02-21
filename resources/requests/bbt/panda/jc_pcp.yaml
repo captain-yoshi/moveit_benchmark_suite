@@ -1,5 +1,5 @@
 # above box1 to above box16 with joint constraint goal and orientation path constraint
-group_name: panda_arm_hand
+group_name: panda_arm
 
 start_state:
   joint_state:
@@ -24,10 +24,6 @@ goal_constraints:
       position: 2.67012
     - joint_name: panda_joint7
       position: 2.86986
-    - joint_name: panda_finger_joint1
-      position: 0.012708
-    - joint_name: panda_finger_joint2
-      position: 0.012708
 
 path_constraints:
   orientation_constraints:
