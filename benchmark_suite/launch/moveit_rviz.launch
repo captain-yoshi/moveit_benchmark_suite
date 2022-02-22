@@ -1,7 +1,14 @@
+<?xml version="1.0" ?>
 <launch>
 
+  <!-- Default empty urdf and srdf, will be updated at runtime -->
+  <param name="robot_description" textfile="$(find moveit_benchmark_suite_resources)/robots/dummy/urdf/dummy.urdf" />
+  <param name="robot_description_semantic" textfile="$(find moveit_benchmark_suite_resources)/robots/dummy/config/dummy.srdf" />
 
   <arg name="rviz_config" default="$(find moveit_benchmark_suite)/config/rviz/moveit.rviz"/>
+
+  <!-- Add config to ROS Param server -->
+  <param name="rviz_config" value="$(arg rviz_config)"/>
 
   <arg name="debug" default="false" />
   <arg unless="$(arg debug)" name="launch_prefix" value="" />
@@ -11,7 +18,7 @@
   <arg unless="$(eval rviz_config=='')" name="command_args" value="-d $(arg rviz_config)" />
 
   <node name="rviz" launch-prefix="$(arg launch_prefix)" pkg="rviz" type="rviz" respawn="false"
-        args="$(arg command_args)" output="screen">
+        args="$(arg command_args)" clear_params="true" output="screen">
   </node>
 
 </launch>

@@ -6,6 +6,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <tf2_ros/static_transform_broadcaster.h>
 
 #include <moveit_msgs/PlanningScene.h>
 
@@ -330,8 +331,9 @@ private:
    */
   void fixCollisionObjectFrame(moveit_msgs::PlanningScene& msg);
 
-  CollisionPluginLoaderPtr loader_;         ///< Plugin loader that sets collision detectors for the scene.
-  planning_scene::PlanningScenePtr scene_;  ///< Underlying planning scene.
+  CollisionPluginLoaderPtr loader_;             ///< Plugin loader that sets collision detectors for the scene.
+  planning_scene::PlanningScenePtr scene_;      ///< Underlying planning scene.
+  tf2_ros::StaticTransformBroadcaster tf2sbr_;  ///< TF2 static broadcaster
 
   std::map<std::string, std::string> mesh_resources_ = {};  ///<
 };

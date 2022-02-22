@@ -2,6 +2,13 @@
 
 #pragma once
 
+#include <ros/service.h>
+
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/recursive_mutex.hpp>
+
+#include <moveit_msgs/GetPlanningScene.h>
+
 #include <moveit/collision_detection/collision_common.h>
 #include <moveit/planning_interface/planning_interface.h>
 #include <moveit/macros/class_forward.h>
@@ -9,6 +16,7 @@
 #include <moveit_benchmark_suite/colormap.h>
 #include <moveit_benchmark_suite/geometry.h>
 #include <moveit_benchmark_suite/robot.h>
+#include <moveit_benchmark_suite/scene.h>
 
 #include <rviz/SendFilePath.h>
 
@@ -21,7 +29,10 @@ class RVIZHelper
 public:
   RVIZHelper(const std::string& name = "move_group");
 
-  void initializeRobot(const RobotConstPtr& robot);
+  void initialize(const RobotConstPtr& robot, const SceneConstPtr& scene);
+
+  bool getPlanningSceneServiceCallback(moveit_msgs::GetPlanningSceneRequest& req,
+                                       moveit_msgs::GetPlanningSceneResponse& res);
 
   /** \name Trajectories
    *  \{ */
@@ -210,14 +221,22 @@ private:
                   const Eigen::Vector4d& color, const Eigen::Vector3d& scale) const;
 
   RobotConstPtr robot_;            ///< Robot being visualized.
+  SceneConstPtr scene_;            ///< Robot being visualized.
   ros::NodeHandle nh_;             ///< Handle for publishing.
   ros::Publisher marker_pub_;      ///< Marker publisher.
   ros::Publisher trajectory_pub_;  ///< Trajectory publisher.
   ros::Publisher scene_pub_;       ///< Scene publisher.
   ros::Publisher state_pub_;       ///< State publisher.
 
+  ros::ServiceServer get_scene_service_;
+  boost::shared_mutex scene_update_mutex_;  /// mutex for stored scene
+
   ros::ServiceClient rviz_srv_;
   rviz::SendFilePath srv_msg_;
+
+  IO::Handler handler_;  ///< Handle for publishing.
+
+  moveit_msgs::PlanningScene empty_scene_;
 
   std::multimap<std::string, visualization_msgs::Marker> markers_;  ///< Markers to publish.
 };
