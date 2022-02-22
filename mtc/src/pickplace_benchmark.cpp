@@ -40,6 +40,7 @@
 
 #include <moveit_benchmark_suite_mtc/pickplace_profiler.h>
 #include <moveit_benchmark_suite_mtc/pickplace_builder.h>
+#include <moveit_benchmark_suite/visualization.h>
 
 using namespace moveit_benchmark_suite;
 using namespace moveit_benchmark_suite_mtc;
@@ -75,11 +76,17 @@ int main(int argc, char** argv)
   benchmark.initializeFromHandle(pnh);
 
   // Setup visualizer
+  RVIZHelper rviz;
   if (benchmark.getOptions().visualize)
+  {
+    profiler.addPreRunQueryCallback(
+        [&](PickPlaceQuery& query, Data& data) { rviz.initialize(query.robot, query.scene); });
+
     profiler.addPostRunQueryCallback([&](const PickPlaceQuery& query, PickPlaceResult& result, Data& data) {
       ROS_INFO("Press `enter` to view next query");
       std::cin.ignore();
     });
+  }
 
   // Run benchmark
   auto dataset = benchmark.run(profiler);
