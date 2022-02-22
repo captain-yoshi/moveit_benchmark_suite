@@ -76,7 +76,9 @@ void PickPlaceTask::init(const planning_scene::PlanningScenePtr& scene)
   Task& t = *task_;
   t.stages()->setName(task_name_);
   t.setRobotModel(scene->getRobotModel());
-  t.enableIntrospection(false);
+
+  // TODO enable/disable depending on visualization flag
+  // t.enableIntrospection(false);
 
   // Set task properties
   t.setProperty("group", arm_group_name_);
