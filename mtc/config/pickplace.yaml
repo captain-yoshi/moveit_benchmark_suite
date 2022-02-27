@@ -1,0 +1,137 @@
+########################
+# Pick and Place (MTC) #
+########################
+
+# Describes benchmark parameters (independant of profilers)
+benchmark_config:
+  parameters:
+    runs: 5                         # Number of trials for each query
+    name: "PickPlace MTC"           # Default ""    | Overridden by ROS Param /benchmark/name
+    visualize: false                # Default false | Overridden by ROS Param /benchmark/visualize
+    output_file: ""                 # Default ""    | Overridden by ROS Param /benchmark/output_file
+
+# Describes config for building pick and place tasks pair-wise queries
+profiler_config:
+  parameters:
+    # Total planning attempts
+    max_solutions: 1
+    timeout: 0
+
+    # Planning group and link names
+    arm_group_name: "panda_arm"
+    eef_name: "hand"
+    hand_group_name: "hand"
+    hand_frame: "panda_link8"
+
+    # Gripper gap
+    hand_joint_name: "panda_finger_joint1"
+    hand_open_gap: 0.08
+    hand_close_gap: 0.067
+
+    # Scene frames
+    world_frame: "world"
+    table_reference_frame: "world"
+    object_reference_frame: "shelf_board4"
+    surface_link: "shelf_board4"
+
+    # Collision object for picking
+    object_name: "soupcan"
+    object_dimensions: [0.067911, 0.067743, 0.101855] # [length, width, height]
+
+    # Gripper grasp frame transform [x,y,z,r,p,y]
+    grasp_frame_transform: [0.0441, -0.0441, 0.1, 1.5707, -2.356, 1.5707]
+
+    # Place pose [x,y,z,r,p,y]
+    place_pose: [0, 0, 0.01, 0, 0, 0]
+    place_surface_offset: 0.0001 # place offset from table
+
+    # Valid distance range when approaching an object for picking
+    approach_object_min_dist: 0.001
+    approach_object_max_dist: 0.15
+
+    # Valid height range when lifting an object after pick
+    lift_object_min_dist: 0.003
+    lift_object_max_dist: 0.1
+
+  # Resource moveit_config (robot)
+  robot:
+    name: panda
+    resources:
+      urdf: package://moveit_benchmark_suite_resources/robots/panda/urdf/panda.urdf
+      srdf: package://moveit_benchmark_suite_resources/robots/panda/config/panda.srdf
+      kinematics: package://moveit_benchmark_suite_resources/robots/panda/config/kinematics.yaml
+      joint_limits: package://moveit_benchmark_suite_resources/robots/panda/config/joint_limits.yaml
+    parameters:
+      # ready state
+      robot_state:
+        joint_state:
+          header:
+            frame_id: panda_link0
+          name: [panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7]
+          position: [0, -0.785, 0, -2.356, 0, 1.571, 0.785]
+
+  scene:
+    name: simple-shelf
+    resource: package://moveit_benchmark_suite_resources/scenes/shelf/panda/simple.urdf.xacro
+
+  collision_detectors:
+    - FCL
+
+  planning_pipelines:
+    - name: ompl
+      resource: package://moveit_benchmark_suite_resources/robots/panda/config/ompl_planning.yaml
+
+  # Configure solvers/planners that will be used in tasks
+  solvers:
+    - name: solver1
+      type: sampling                        # sampling, cartesian, joint_interpolation
+      pipeline: ompl
+      planner: RRT
+      goal_joint_tolerance: 1.0e-5          # tolerance for reaching joint goals
+      goal_position_tolerance: 1.0e-4       # tolerance for reaching position goals
+      goal_orientation_tolerance: 1.0e-4    # tolerance for reaching orientation goals
+      max_velocity_scaling_factor: 0.1
+      max_acceleration_scaling_factor: 0.1
+
+    - name: solver2
+      type: sampling
+      pipeline: ompl
+      planner: RRTConnect
+
+    - name: solver3
+      type: cartesian
+      step_size: 0.01                       # step size between consecutive waypoints
+      jump_threshold: 1.5                   # acceptable fraction of mean joint motion per step
+      min_fraction: 1.0                     # fraction of motion required for success
+      max_velocity_scaling_factor: 0.1
+      max_acceleration_scaling_factor: 0.1
+
+    - name: solver4
+      type: joint_interpolation
+      max_step: 0.1                         # max joint step
+      max_velocity_scaling_factor: 0.1
+      max_acceleration_scaling_factor: 0.1
+
+  # Configure path constraints following the moveit_msgs/Constraints Message
+  # path_constraints:
+  #   - name: pc
+  #     constraint:
+
+  # Create tasks and set parameters for each stages (planner, timeout, path_constraint)
+  tasks:
+    - name: pick_n_place
+      solver: solver1             # global planner for all stages of this taks
+      timeout: 5.0                # global timeout for all stages of this task
+      #path_constraint: pc
+      
+      # uncomment stages to override global parameters
+      stages:
+        #pre_open_hand:
+        #move_to_pick:
+        approach_object:  {solver: solver3}
+        #close_hand:
+        lift_object:      {solver: solver3}
+        move_to_place:    {solver: solver2, timeout: 15.0}
+        lower_object:     {solver: solver3}
+        #post_open_hand:
+        retreat:          {solver: solver3}

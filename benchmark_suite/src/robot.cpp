@@ -115,18 +115,19 @@ bool Robot::initializeFromYAML(const YAML::Node& node)
       return false;
     }
 
-  if (not node["kinematics"])
+  if (kinematics_)
+  {
+    ROS_ERROR("Already loaded kinematics!");
+    return false;
+  }
 
-    if (kinematics_)
+  if (node["kinematics"])
+  {
+    if (!loadYAMLNode(ROBOT_KINEMATICS, node["kinematics"], kinematics_function_))
     {
-      ROS_ERROR("Already loaded kinematics!");
+      ROS_ERROR("Failed to load kinematics!");
       return false;
     }
-
-  if (!loadYAMLNode(ROBOT_KINEMATICS, node["kinematics"], kinematics_function_))
-  {
-    ROS_ERROR("Failed to load kinematics!");
-    return false;
   }
 
   initializeInternal();

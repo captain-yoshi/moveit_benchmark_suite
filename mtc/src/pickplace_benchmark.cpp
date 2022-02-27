@@ -34,76 +34,62 @@
    Desc:   A demo to show MoveIt Task Constructor in action
 */
 
-// ROS
 #include <ros/ros.h>
 
-#include <urdf_to_scene/scene_parser.h>
+#include <moveit_benchmark_suite/benchmark.h>
 
-// MTC pick/place demo implementation
-#include "mtc_pickplace.h"
+#include <moveit_benchmark_suite_mtc/pickplace_profiler.h>
+#include <moveit_benchmark_suite_mtc/pickplace_builder.h>
+#include <moveit_benchmark_suite/visualization.h>
 
-constexpr char LOGNAME[] = "moveit_benchmark_suite_run_task";
+using namespace moveit_benchmark_suite;
+using namespace moveit_benchmark_suite_mtc;
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "scene_parser");
+  ros::init(argc, argv, "pickplace_benchmark");
   ros::AsyncSpinner spinner(1);
   spinner.start();
 
   ros::NodeHandle pnh("~");
 
-  // Remove all scene objects
-  moveit::planning_interface::PlanningSceneInterface psi;
+  // Get config
+  std::string filename;
+  pnh.getParam(CONFIG_PARAMETER, filename);
+
+  // Setup profiler
+  PickPlaceProfiler profiler;
+  profiler.buildQueriesFromYAML(filename);
+
+  profiler.options.metrics = PickPlaceProfiler::Metrics::TASK_FAILURE_COUNT |   //
+                             PickPlaceProfiler::Metrics::TASK_SUCCESS_COUNT |   //
+                             PickPlaceProfiler::Metrics::TASK_FAILURES_COST |   //
+                             PickPlaceProfiler::Metrics::TASK_SOLUTIONS_COST |  //
+                             PickPlaceProfiler::Metrics::STAGE_TOTAL_TIME |     //
+                             PickPlaceProfiler::Metrics::STAGE_FAILURE_COUNT |  //
+                             PickPlaceProfiler::Metrics::STAGE_SUCCESS_COUNT |  //
+                             PickPlaceProfiler::Metrics::STAGE_FAILURES_COST |  //
+                             PickPlaceProfiler::Metrics::STAGE_SOLUTIONS_COST;  //
+
+  // Setup benchmark
+  Benchmark benchmark;
+  benchmark.initializeFromHandle(pnh);
+
+  // Setup visualizer
+  RVIZHelper rviz;
+  if (benchmark.getOptions().visualize)
   {
-    moveit_msgs::PlanningScene rm;
-    rm.is_diff = true;
-    rm.robot_state.is_diff = true;
-    rm.robot_state.attached_collision_objects.resize(1);
-    rm.robot_state.attached_collision_objects[0].object.operation = moveit_msgs::CollisionObject::REMOVE;
-    rm.world.collision_objects.resize(1);
-    rm.world.collision_objects[0].operation = moveit_msgs::CollisionObject::REMOVE;
-    psi.applyPlanningScene(rm);
+    profiler.addPreRunQueryCallback(
+        [&](PickPlaceQuery& query, Data& data) { rviz.initialize(query.robot, query.scene); });
+
+    profiler.addPostRunQueryCallback([&](const PickPlaceQuery& query, PickPlaceResult& result, Data& data) {
+      ROS_INFO("Press `enter` to view next query");
+      std::cin.ignore();
+    });
   }
 
-  // Parse URDF into a planning scene
-  SceneParser parser;
-  parser.loadURDF(pnh, "/mtc_scene");
-  const auto& ps = parser.getPlanningScene();
+  // Run benchmark
+  auto dataset = benchmark.run(profiler);
 
-  // Add collision objects to the planning scene
-  if (!psi.applyCollisionObjects(ps.world.collision_objects))
-  {
-    ROS_ERROR("Failed to apply collision objects");
-    return -1;
-  }
-
-  // Construct and run pick/place task
-  moveit::benchmark_suite::PickPlaceTask pick_place_task("pick_place_task", pnh);
-  pick_place_task.loadParameters();
-
-  pick_place_task.init();
-  pick_place_task.pick();
-  pick_place_task.place();
-
-  if (pick_place_task.plan())
-  {
-    ROS_INFO_NAMED(LOGNAME, "Planning succeded");
-    if (pnh.param("execute", false))
-    {
-      pick_place_task.execute();
-      ROS_INFO_NAMED(LOGNAME, "Execution complete");
-    }
-    else
-    {
-      ROS_INFO_NAMED(LOGNAME, "Execution disabled");
-    }
-  }
-  else
-  {
-    ROS_INFO_NAMED(LOGNAME, "Planning failed");
-  }
-
-  // Keep alive for introspection
-  //ros::waitForShutdown();
   return 0;
 }

@@ -4,6 +4,7 @@ project(moveit_benchmark_suite_mtc)
 find_package(catkin REQUIRED COMPONENTS
   actionlib
   eigen_conversions
+  moveit_benchmark_suite
   moveit_benchmark_suite_resources
   moveit_core
   moveit_ros_planning_interface
@@ -18,16 +19,19 @@ catkin_package()
 
 set(CMAKE_CXX_STANDARD 14)
 
-include_directories(${catkin_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS})
 
-add_executable(mtc_runtask
-  src/mtc_runtask.cpp
-  src/mtc_pickplace.cpp
+add_library(${PROJECT_NAME}
+  src/pickplace_builder.cpp
+  src/pickplace_profiler.cpp
+  src/pickplace_task.cpp
 )
 
-target_link_libraries(mtc_runtask ${catkin_LIBRARIES})
+add_executable(pickplace src/pickplace_benchmark.cpp)
 
-install(TARGETS mtc_runtask
+target_link_libraries(pickplace ${PROJECT_NAME} ${catkin_LIBRARIES})
+
+install(TARGETS pickplace
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

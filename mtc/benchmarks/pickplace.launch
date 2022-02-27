@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="name" default=""/>
+  <arg name="output_file" default=""/>
+  <!-- Overwrite this param as a bool type -->
+  <arg name="visualize" default="" doc="turns on and off visualization with rviz (bool type)"/>
+
+  <!-- By default, we are not in debug mode -->
+  <arg name="debug" default="false" />
+  <arg unless="$(arg debug)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --args" />
+
+  <!-- Load RViz without robot_description -->
+  <include file="$(find moveit_benchmark_suite_mtc)/launch/moveit_rviz.launch" if="$(eval bool(visualize) == 1)">
+    <!--<arg name="debug" value="$(arg debug)"/>-->
+  </include>
+
+  <!-- Benchmark/Profiler config file -->
+  <arg name="config_file" value="$(find moveit_benchmark_suite_mtc)/config/pickplace.yaml"/>
+
+  <!-- Launch benchmark node -->
+  <node name="benchmark" pkg="moveit_benchmark_suite_mtc" type="pickplace" output="screen" required="true" launch-prefix="$(arg launch_prefix)" >
+
+    <rosparam command="load" file="$(arg config_file)"/>
+
+    <!-- Override config file if not emprty -->
+    <param name="name" value="$(arg name)"/>
+    <param name="config_file" value="$(arg config_file)"/>
+    <param name="output_file" value="$(arg output_file)"/>
+    <param name="visualize" value="$(arg visualize)"/>
+
+    <param name="execute" value="false" />
+  </node>
+</launch>

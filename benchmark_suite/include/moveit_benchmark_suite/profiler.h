@@ -51,6 +51,9 @@ const std::string MOTION_PLANNING_PP = "Motion planning PlanningPipeline";
 const std::string MOTION_PLANNING_MGI = "Motion planning MoveGroupInterface";
 const std::string COLLISION_CHECK = "COLLISION CHECK";
 
+// MTC
+const std::string MTC_PICK_N_PLACE = "MTC_PICK_N_PLACE";
+
 }  // namespace ProfilerType
 
 using QueryId = std::size_t;
@@ -70,6 +73,7 @@ public:
   virtual ~Profiler() = default;
 
   /// Use internal queries of derived class
+  virtual bool initializeQuery(const QueryId query_id) = 0;
   virtual bool profileQuery(const QueryId query_id, Data& data) = 0;
 
   const std::string& getProfilerName() const;
@@ -119,6 +123,18 @@ public:
     return true;
   };
 
+  /// Internal queries with automated steps
+  bool initializeQuery(const QueryId query_id) final
+  {
+    auto query = getQuery(query_id);
+    if (!query)
+      return false;
+
+    initializeQuery(*query);
+
+    return true;
+  };
+
   void profileQuery(const DerivedQuery& original_query, Data& data)
   {
     // Copy original query
@@ -142,6 +158,7 @@ public:
   };
 
   /// Internal/External queries
+  virtual void initializeQuery(const DerivedQuery& query){};
   virtual DerivedResult runQuery(const DerivedQuery& query, Data& data) const = 0;
   virtual void preRunQuery(DerivedQuery& query, Data& data){};
   virtual void postRunQuery(const DerivedQuery& query, DerivedResult& result, Data& data){};
