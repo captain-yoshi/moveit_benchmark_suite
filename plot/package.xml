@@ -1,14 +1,13 @@
 <package format="2">
-	<name>moveit_benchmark_suite</name>
+	<name>moveit_benchmark_suite_plot</name>
 	<version>0.0.0</version>
-	<description>Benchmark backend for testing MoveIt</description>
+	<description>Plots datasets</description>
 
 	<license>BSD</license>
 	<maintainer email="captain.yoshisaur@gmail.com">Captain Yoshi</maintainer>
 
 	<buildtool_depend>catkin</buildtool_depend>
 
-	<depend>boost</depend>
 	<depend>moveit_benchmark_suite_core</depend>
 
 	<export>
