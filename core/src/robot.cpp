@@ -716,7 +716,7 @@ YAML::Node addLinkGeometry(const urdf::GeometrySharedPtr& geometry, bool resolve
       if (mesh->scale.x != 1 || mesh->scale.y != 1 || mesh->scale.z != 1)
       {
         node["dimensions"] = std::vector<double>({ mesh->scale.x, mesh->scale.y, mesh->scale.z });
-        ROBOWFLEX_YAML_FLOW(node["dimensions"]);
+        node["dimensions"].SetStyle(YAML::EmitterStyle::Flow);
       }
       break;
     }
@@ -725,7 +725,7 @@ YAML::Node addLinkGeometry(const urdf::GeometrySharedPtr& geometry, bool resolve
       const auto& box = static_cast<urdf::Box*>(geometry.get());
       node["type"] = "box";
       node["dimensions"] = std::vector<double>({ box->dim.x, box->dim.y, box->dim.z });
-      ROBOWFLEX_YAML_FLOW(node["dimensions"]);
+      node["dimensions"].SetStyle(YAML::EmitterStyle::Flow);
       break;
     }
     case urdf::Geometry::SPHERE:
@@ -733,7 +733,7 @@ YAML::Node addLinkGeometry(const urdf::GeometrySharedPtr& geometry, bool resolve
       const auto& sphere = static_cast<urdf::Sphere*>(geometry.get());
       node["type"] = "sphere";
       node["dimensions"] = std::vector<double>({ sphere->radius });
-      ROBOWFLEX_YAML_FLOW(node["dimensions"]);
+      node["dimensions"].SetStyle(YAML::EmitterStyle::Flow);
       break;
     }
     case urdf::Geometry::CYLINDER:
@@ -741,7 +741,7 @@ YAML::Node addLinkGeometry(const urdf::GeometrySharedPtr& geometry, bool resolve
       const auto& cylinder = static_cast<urdf::Cylinder*>(geometry.get());
       node["type"] = "cylinder";
       node["dimensions"] = std::vector<double>({ cylinder->length, cylinder->radius });
-      ROBOWFLEX_YAML_FLOW(node["dimensions"]);
+      node["dimensions"].SetStyle(YAML::EmitterStyle::Flow);
       break;
     }
     default:
@@ -755,7 +755,7 @@ void addLinkMaterial(YAML::Node& node, const urdf::MaterialSharedPtr& material)
 {
   node["color"] = std::vector<double>({ material->color.r, material->color.g, material->color.b, material->color.a });
 
-  ROBOWFLEX_YAML_FLOW(node["color"]);
+  node["color"].SetStyle(YAML::EmitterStyle::Flow);
   // node["texture"] = visual->texture_filename;
 }
 
@@ -765,7 +765,7 @@ void addLinkOrigin(YAML::Node& node, const urdf::Pose& pose)
   origin["position"] = std::vector<double>({ pose.position.x, pose.position.y, pose.position.z });
   origin["orientation"] = std::vector<double>({ pose.rotation.x, pose.rotation.y, pose.rotation.z, pose.rotation.w });
   node["origin"] = origin;
-  ROBOWFLEX_YAML_FLOW(node["origin"]);
+  node["origin"].SetStyle(YAML::EmitterStyle::Flow);
 }
 
 YAML::Node addLinkVisual(const urdf::VisualSharedPtr& visual, bool resolve = true)
@@ -998,7 +998,7 @@ bool Robot::dumpToScene(const std::string& filename) const
             mesh["dimensions"].push_back(1.);
           }
 
-          ROBOWFLEX_YAML_FLOW(mesh["dimensions"]);
+          mesh["dimensions"].SetStyle(YAML::EmitterStyle::Flow);
 
           meshes.push_back(mesh);
           mesh_poses.push_back(posey);
