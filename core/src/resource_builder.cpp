@@ -1,4 +1,4 @@
-#include <moveit_benchmark_suite/builder.h>
+#include <moveit_benchmark_suite/resource_builder.h>
 
 #include <geometric_shapes/shape_operations.h>
 
@@ -8,21 +8,21 @@ using namespace moveit_benchmark_suite;
 // Builder
 //
 
-Builder::~Builder()
+ResourceBuilder::~ResourceBuilder()
 {
 }
 
-void Builder::reset()
+void ResourceBuilder::reset()
 {
   node_map_.clear();
 }
 
-const std::map<std::string, YAML::Node>& Builder::getResources() const
+const std::map<std::string, YAML::Node>& ResourceBuilder::getResources() const
 {
   return node_map_;
 }
 
-void Builder::insertResource(const std::string name, const YAML::Node& node)
+void ResourceBuilder::insertResource(const std::string name, const YAML::Node& node)
 {
   auto it = node_map_.find(name);
   if (it == node_map_.end())
@@ -31,12 +31,12 @@ void Builder::insertResource(const std::string name, const YAML::Node& node)
     ROS_WARN("Resource name `%s` already in map.", name.c_str());
 }
 
-bool Builder::validateResource(const YAML::Node& node)
+bool ResourceBuilder::validateResource(const YAML::Node& node)
 {
   return true;
 }
 
-bool Builder::cloneResource(const std::string& src, const std::string& dst)
+bool ResourceBuilder::cloneResource(const std::string& src, const std::string& dst)
 {
   auto it_src = node_map_.find(src);
   if (it_src == node_map_.end())
@@ -56,13 +56,13 @@ bool Builder::cloneResource(const std::string& src, const std::string& dst)
   return true;
 }
 
-bool Builder::deleteResource(const std::string& name)
+bool ResourceBuilder::deleteResource(const std::string& name)
 {
   node_map_.erase(name);
   return true;
 }
 
-void Builder::decodeResourceTag(const YAML::Node& source, YAML::Node& target)
+void ResourceBuilder::decodeResourceTag(const YAML::Node& source, YAML::Node& target)
 {
   // resource is a filename or a namespace
   if (source.IsScalar())
@@ -102,7 +102,7 @@ void Builder::decodeResourceTag(const YAML::Node& source, YAML::Node& target)
   else
     target = source;
 }
-void Builder::loadResources(const YAML::Node& node)
+void ResourceBuilder::loadResources(const YAML::Node& node)
 {
   if (node.IsMap())
     loadResource(node);
@@ -113,7 +113,7 @@ void Builder::loadResources(const YAML::Node& node)
     ROS_WARN("YAML node MUST be a sequence or a map");
 }
 
-void Builder::loadResource(const YAML::Node& node)
+void ResourceBuilder::loadResource(const YAML::Node& node)
 {
   YAML::Node n;
   std::string name;
@@ -158,13 +158,13 @@ void Builder::loadResource(const YAML::Node& node)
     insertResource(name, n);
 }
 
-void Builder::mergeResources(const YAML::Node& node)
+void ResourceBuilder::mergeResources(const YAML::Node& node)
 {
   for (auto& resource : node_map_)
     mergeResource(resource.first, node);
 }
 
-void Builder::mergeResource(const std::string& name, const YAML::Node& node)
+void ResourceBuilder::mergeResource(const std::string& name, const YAML::Node& node)
 {
   auto it = node_map_.find(name);
   if (it == node_map_.end())
@@ -182,7 +182,7 @@ void Builder::mergeResource(const std::string& name, const YAML::Node& node)
     ROS_ERROR("Merge failed for resource name `%s`.", name.c_str());
 }
 
-void Builder::extendResources(const YAML::Node& node)
+void ResourceBuilder::extendResources(const YAML::Node& node)
 {
   std::vector<std::string> resource_names;
 
@@ -199,7 +199,7 @@ void Builder::extendResources(const YAML::Node& node)
     node_map_.erase(name);
 }
 
-void Builder::extendResource(const YAML::Node& node, std::vector<std::string>& resource_names)
+void ResourceBuilder::extendResource(const YAML::Node& node, std::vector<std::string>& resource_names)
 {
   if (!node["name"] || !node["resources"] || !node["resources"].IsSequence())
   {
@@ -269,7 +269,7 @@ void Builder::extendResource(const YAML::Node& node, std::vector<std::string>& r
 // RobotBuilder
 //
 
-std::map<std::string, RobotPtr> RobotBuilder::generateResults() const
+std::map<std::string, RobotPtr> RobotBuilder::generateResources() const
 {
   std::map<std::string, ::RobotPtr> results;
   const auto& node_map = getResources();
@@ -454,8 +454,8 @@ bool SceneBuilder::buildClutteredSceneFromYAML(ScenePtr& scene,
 }
 
 std::map<std::string, ScenePtr>
-SceneBuilder::generateResults(const RobotPtr& robot, const std::string& collision_detector,
-                              const std::map<std::string, moveit_msgs::RobotState>& state_map) const
+SceneBuilder::generateResources(const RobotPtr& robot, const std::string& collision_detector,
+                                const std::map<std::string, moveit_msgs::RobotState>& state_map) const
 {
   std::map<std::string, ::ScenePtr> results;
   const auto& node_map = getResources();
@@ -489,7 +489,7 @@ SceneBuilder::generateResults(const RobotPtr& robot, const std::string& collisio
 // PlanningPipelineEmitterBuilder
 //
 
-std::map<std::string, PlanningPipelineEmitterPtr> PlanningPipelineEmitterBuilder::generateResults() const
+std::map<std::string, PlanningPipelineEmitterPtr> PlanningPipelineEmitterBuilder::generateResources() const
 {
   std::map<std::string, ::PlanningPipelineEmitterPtr> results;
   const auto& node_map = getResources();

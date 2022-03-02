@@ -8,7 +8,7 @@
 
 #include <moveit_benchmark_suite/robot.h>
 #include <moveit_benchmark_suite/scene.h>
-#include <moveit_benchmark_suite/builder.h>
+#include <moveit_benchmark_suite/resource_builder.h>
 
 using namespace moveit_benchmark_suite::mtc;
 using namespace moveit::task_constructor;
@@ -384,7 +384,7 @@ void PickPlaceBuilder::buildQueries(const std::string& filename)
     RobotBuilder builder;
     builder.loadResources(node["profiler_config"]["robot"]);
     builder.extendResources(node["extend_resource_config"]["robot"]);
-    robot_map = builder.generateResults();
+    robot_map = builder.generateResources();
   }
   {  // Build scenes
     scene_builder.loadResources(node["profiler_config"]["scene"]);
@@ -401,7 +401,7 @@ void PickPlaceBuilder::buildQueries(const std::string& filename)
 
     builder.loadResources(node["profiler_config"]["planning_pipelines"]);
     builder.extendResources(node["extend_resource_config"]["planning_pipelines"]);
-    pipeline_emitter_map = builder.generateResults();
+    pipeline_emitter_map = builder.generateResources();
   }
 
   // Build parameters
@@ -425,7 +425,7 @@ void PickPlaceBuilder::buildQueries(const std::string& filename)
     for (const auto& detector : collision_detectors)
     {
       // Get scenes wrt. robot and collision detector
-      scene_map = scene_builder.generateResults(robot.second, detector);
+      scene_map = scene_builder.generateResources(robot.second, detector);
 
       for (auto& scene : scene_map)
         for (const auto& task : tasks_)

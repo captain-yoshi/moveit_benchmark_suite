@@ -38,7 +38,7 @@
 
 #include <moveit/robot_state/conversions.h>
 
-#include <moveit_benchmark_suite/builder.h>
+#include <moveit_benchmark_suite/resource_builder.h>
 #include <moveit_benchmark_suite/builders/collision_check_builder.h>
 #include <moveit_benchmark_suite/profilers/collision_check_profiler.h>
 
@@ -71,7 +71,7 @@ void CollisionCheckBuilder::buildQueries(const std::string& filename)
     RobotBuilder builder;
     builder.loadResources(node["profiler_config"]["robot"]);
     builder.extendResources(node["extend_resource_config"]["robot"]);
-    robot_map = builder.generateResults();
+    robot_map = builder.generateResources();
   }
   {  // Build scenes
     scene_builder.loadResources(node["profiler_config"]["scenes"]);
@@ -83,14 +83,14 @@ void CollisionCheckBuilder::buildQueries(const std::string& filename)
     YAMLDeserializerBuilder<collision_detection::CollisionRequest> builder;
     builder.loadResources(node["profiler_config"]["collision_requests"]);
     builder.extendResources(node["extend_resource_config"]["collision_requests"]);
-    request_map = builder.generateResults();
+    request_map = builder.generateResources();
   }
   {
     // Build RobotState
     YAMLDeserializerBuilder<moveit_msgs::RobotState> builder;
     builder.loadResources(node["profiler_config"]["robot_states"]);
     builder.extendResources(node["extend_resource_config"]["robot_states"]);
-    state_map = builder.generateResults();
+    state_map = builder.generateResources();
   }
 
   {
@@ -103,7 +103,7 @@ void CollisionCheckBuilder::buildQueries(const std::string& filename)
     for (const auto& detector : collision_detectors)
     {
       // Get scenes wrt. robot and collision detector
-      scene_map = scene_builder.generateResults(robot.second, detector, state_map);
+      scene_map = scene_builder.generateResources(robot.second, detector, state_map);
 
       for (auto& scene : scene_map)
         for (const auto& request : request_map)

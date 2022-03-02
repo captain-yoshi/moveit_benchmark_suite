@@ -48,11 +48,12 @@
 #include <moveit_benchmark_suite/io.h>
 
 namespace moveit_benchmark_suite {
-class Builder
+
+class ResourceBuilder
 {
 public:
-  Builder() = default;
-  virtual ~Builder() = 0;
+  ResourceBuilder() = default;
+  virtual ~ResourceBuilder() = 0;
 
   virtual void reset();
 
@@ -118,7 +119,7 @@ private:
 
 /// Builds any object that can be deserialized with YAML
 template <typename T>
-class YAMLDeserializerBuilder : public Builder
+class YAMLDeserializerBuilder : public ResourceBuilder
 {
 public:
   YAMLDeserializerBuilder(bool use_validation = true) : use_validation_(use_validation){};
@@ -131,7 +132,7 @@ public:
     return true;
   };
 
-  std::map<std::string, T> generateResults() const
+  std::map<std::string, T> generateResources() const
   {
     std::map<std::string, T> requests;
     const auto& node_map = getResources();
@@ -148,25 +149,25 @@ private:
 };
 
 // Build moveit_benchmark_suite/Robot with complex initializations
-class RobotBuilder : public Builder
+class RobotBuilder : public ResourceBuilder
 {
 public:
   RobotBuilder() = default;
   ~RobotBuilder() override = default;
 
-  std::map<std::string, RobotPtr> generateResults() const;
+  std::map<std::string, RobotPtr> generateResources() const;
 };
 
 // Build moveit_benchmark_suite/Scene with complex initializations
-class SceneBuilder : public Builder
+class SceneBuilder : public ResourceBuilder
 {
 public:
   SceneBuilder() = default;
   ~SceneBuilder() override = default;
 
-  std::map<std::string, ScenePtr> generateResults(const RobotPtr& robot, const std::string& collision_detector,
-                                                  const std::map<std::string, moveit_msgs::RobotState>& state_map =
-                                                      std::map<std::string, moveit_msgs::RobotState>()) const;
+  std::map<std::string, ScenePtr>
+  generateResources(const RobotPtr& robot, const std::string& collision_detector,
+                    const std::map<std::string, moveit_msgs::RobotState>& state_map = {}) const;
 
 private:
   bool buildClutteredSceneFromYAML(ScenePtr& scene, const std::map<std::string, moveit_msgs::RobotState>& state_map,
@@ -174,12 +175,12 @@ private:
 };
 
 // Build moveit_benchmark_suite/PlanningPipelineEmitter with complex initializations
-class PlanningPipelineEmitterBuilder : public Builder
+class PlanningPipelineEmitterBuilder : public ResourceBuilder
 {
 public:
   PlanningPipelineEmitterBuilder() = default;
   ~PlanningPipelineEmitterBuilder() override = default;
 
-  std::map<std::string, PlanningPipelineEmitterPtr> generateResults() const;
+  std::map<std::string, PlanningPipelineEmitterPtr> generateResources() const;
 };
 }  // namespace moveit_benchmark_suite

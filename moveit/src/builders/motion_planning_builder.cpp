@@ -37,7 +37,7 @@
 */
 #include <moveit/robot_state/conversions.h>
 
-#include <moveit_benchmark_suite/builder.h>
+#include <moveit_benchmark_suite/resource_builder.h>
 
 #include <moveit_benchmark_suite/dataset.h>
 #include <moveit_benchmark_suite/scene.h>
@@ -81,7 +81,7 @@ void MotionPlanningBuilder::buildQueries(const std::string& filename, const std:
     RobotBuilder builder;
     builder.loadResources(node["profiler_config"][robot_key]);
     builder.extendResources(node["extend_resource_config"][robot_key]);
-    robot_map = builder.generateResults();
+    robot_map = builder.generateResources();
   }
   {  // Build scenes
     scene_builder.loadResources(node["profiler_config"]["scenes"]);
@@ -95,7 +95,7 @@ void MotionPlanningBuilder::buildQueries(const std::string& filename, const std:
     // Merge global request
     builder.mergeResources(node["profiler_config"]["requests_override"]);
     builder.extendResources(node["extend_resource_config"]["requests"]);
-    request_map = builder.generateResults();
+    request_map = builder.generateResources();
   }
   {
     // Build pipelines
@@ -103,7 +103,7 @@ void MotionPlanningBuilder::buildQueries(const std::string& filename, const std:
 
     builder.loadResources(node["profiler_config"]["planning_pipelines"]);
     builder.extendResources(node["extend_resource_config"]["planning_pipelines"]);
-    pipeline_map = builder.generateResults();
+    pipeline_map = builder.generateResources();
   }
 
   {
@@ -116,7 +116,7 @@ void MotionPlanningBuilder::buildQueries(const std::string& filename, const std:
     for (const auto& detector : collision_detectors)
     {
       // Get scenes wrt. robot and collision detector
-      scene_map = scene_builder.generateResults(robot.second, detector);
+      scene_map = scene_builder.generateResources(robot.second, detector);
 
       for (auto& scene : scene_map)
         for (const auto& request : request_map)

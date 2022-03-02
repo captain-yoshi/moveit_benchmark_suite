@@ -37,7 +37,7 @@ set(CMAKE_CXX_STANDARD 14)
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME}
-  src/builder.cpp
+  src/resource_builder.cpp
   src/random.cpp
   src/tf.cpp
   src/colormap.cpp
