@@ -3,7 +3,7 @@
 #include <memory>
 
 #include <moveit_benchmark_suite/io.h>
-#include <moveit_benchmark_suite/plot/gnuplot.h>
+#include <moveit_benchmark_suite/output/gnuplot.h>
 #include <moveit_serialization/yaml-cpp/yaml.h>
 #include <moveit_serialization/yaml-cpp/node_manipulation.h>
 #include <moveit_benchmark_suite/token.h>
@@ -14,7 +14,7 @@
 #include <boost/iostreams/stream_buffer.hpp>
 #include <boost/variant/apply_visitor.hpp>
 
-using namespace moveit_benchmark_suite::plot;
+using namespace moveit_benchmark_suite::output;
 
 #if IS_BOOST_164
 namespace bp = boost::process;

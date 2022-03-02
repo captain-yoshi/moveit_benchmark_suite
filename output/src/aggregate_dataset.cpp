@@ -42,10 +42,10 @@
 #include <moveit_benchmark_suite/profiler.h>
 #include <moveit_benchmark_suite/benchmark.h>
 
-#include <moveit_benchmark_suite/plot/aggregate.h>
+#include <moveit_benchmark_suite/output/aggregate.h>
 
 using namespace moveit_benchmark_suite;
-using namespace moveit_benchmark_suite::plot;
+using namespace moveit_benchmark_suite::output;
 
 constexpr char INPUT_PARAMETER[] = "input_files";
 constexpr char OUTPUT_PARAMETER[] = "output_file";

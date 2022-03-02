@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1.3)
-project(moveit_benchmark_suite_plot)
+project(moveit_benchmark_suite_output)
 
 find_package(Boost REQUIRED)
 find_package(Eigen3 REQUIRED)

@@ -1,7 +1,7 @@
 <package format="2">
-	<name>moveit_benchmark_suite_plot</name>
+	<name>moveit_benchmark_suite_output</name>
 	<version>0.0.0</version>
-	<description>Plots datasets</description>
+	<description>Store, plot and visualize components of the MoveIt Benchmark Suite</description>
 
 	<license>BSD</license>
 	<maintainer email="captain.yoshisaur@gmail.com">Captain Yoshi</maintainer>

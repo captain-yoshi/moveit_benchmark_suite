@@ -41,7 +41,7 @@
 #include <moveit_benchmark_suite/dataset_filter.h>
 
 namespace moveit_benchmark_suite {
-namespace plot {
+namespace output {
 namespace statistic {
 
 using EquationFn = std::function<double(const std::vector<double>&)>;
@@ -110,5 +110,5 @@ private:
   DatasetFilter ds_filter_;
 };
 
-}  // namespace plot
+}  // namespace output
 }  // namespace moveit_benchmark_suite

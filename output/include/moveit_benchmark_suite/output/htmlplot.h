@@ -4,7 +4,7 @@
 #include <fstream>
 
 namespace moveit_benchmark_suite {
-namespace plot {
+namespace output {
 
 class HTMLPlot
 {
@@ -23,5 +23,5 @@ private:
   std::string out_filename;
 };
 
-}  // namespace plot
+}  // namespace output
 }  // namespace moveit_benchmark_suite

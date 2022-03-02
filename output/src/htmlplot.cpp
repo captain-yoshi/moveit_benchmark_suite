@@ -1,11 +1,11 @@
 /* Author: Zachary Kingston */
 
-#include <moveit_benchmark_suite/plot/htmlplot.h>
+#include <moveit_benchmark_suite/output/htmlplot.h>
 
 #include <moveit_benchmark_suite/io.h>
 #include <moveit_benchmark_suite/log.h>
 
-using namespace moveit_benchmark_suite::plot;
+using namespace moveit_benchmark_suite::output;
 
 ///
 /// HTMLPlot
