@@ -12,10 +12,7 @@ bool Benchmark::initialize(const std::string& name, const Options& options)
 
   // Output dataset to logfile
   {
-    auto filepath = IO::getFilePath(options_.output_file);
-    auto filename = IO::getFileName(options_.output_file);
-
-    addPostBenchmarkCallback([=](DataSetPtr& dataset) { outputter_.dump(*dataset, filepath, filename); });
+    addPostBenchmarkCallback([=](DataSetPtr& dataset) { outputter_.dump(*dataset, options_.output_file); });
   }
 
   return true;
@@ -230,13 +227,15 @@ BenchmarkSuiteDataSetOutputter::~BenchmarkSuiteDataSetOutputter()
 {
 }
 
-void BenchmarkSuiteDataSetOutputter::dump(const DataSet& dataset, const std::string& filepath,
-                                          const std::string& filename)
+void BenchmarkSuiteDataSetOutputter::dump(const DataSet& dataset, const std::string& pathname)
 {
   std::ofstream out;
   std::string out_file;
   std::string out_filepath;
   std::string out_filename;
+
+  auto filepath = IO::getFilePath(pathname);
+  auto filename = IO::getFileName(pathname);
 
   // Create filename if not specified and add extension
   out_filename = filename;

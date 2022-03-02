@@ -63,15 +63,10 @@ int main(int argc, char** argv)
 
   std::vector<std::string> input_files;
   std::string output_file;
-  std::string output_filepath;
-  std::string output_filename;
 
   pnh.getParam(INPUT_PARAMETER, input_files);
   pnh.getParam(OUTPUT_PARAMETER, output_file);
   pnh.getParam(CONFIG_PARAMETER, config_file);
-
-  output_filepath = IO::getFilePath(output_file);
-  output_filename = IO::getFileName(output_file);
 
   for (auto& file : input_files)
     file = IO::getAbsDataSetFile(file);
@@ -89,7 +84,7 @@ int main(int argc, char** argv)
   BenchmarkSuiteDataSetOutputter output;
 
   for (const auto& dataset : datasets)
-    output.dump(*dataset, output_filepath, output_filename);
+    output.dump(*dataset, output_file);
 
   return 0;
 }

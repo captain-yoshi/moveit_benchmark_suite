@@ -57,7 +57,7 @@ public:
    *  Must be implemented by child classes.
    *  \param[in] results The results of one query of benchmarking.
    */
-  virtual void dump(const DataSet& results, const std::string& filepath, const std::string& filename) = 0;
+  virtual void dump(const DataSet& results, const std::string& pathname) = 0;
 };
 
 class BenchmarkSuiteDataSetOutputter : public DataSetOutputter
@@ -77,7 +77,7 @@ public:
    *  name_.
    *  \param[in] results Results to dump to file.
    */
-  void dump(const DataSet& dataset, const std::string& filepath, const std::string& filename) override;
+  void dump(const DataSet& dataset, const std::string& pathname) override;
 };
 
 class Benchmark
