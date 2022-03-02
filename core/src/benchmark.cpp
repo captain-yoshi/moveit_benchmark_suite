@@ -70,9 +70,9 @@ bool Benchmark::initializeFromHandle(const ros::NodeHandle& nh)
 /** \brief Set the post-dataset callback function.
  *  \param[in] callback Callback to use.
  */
-void Benchmark::addPostQueryTrialCallback(const PostQueryTrialCallback& callback)
+void Benchmark::addPostTrialCallback(const PostTrialCallback& callback)
 {
-  post_query_trial_callbacks_.push_back(callback);
+  post_trial_callbacks_.push_back(callback);
 };
 
 void Benchmark::addPostQueryCallback(const PostQueryCallback& callback)
@@ -174,8 +174,8 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
 
       dataset->addDataPoint(query_name, data);
 
-      for (const auto& post_query_trial_cb : post_query_trial_callbacks_)
-        post_query_trial_cb(dataset);
+      for (const auto& post_trial_cb : post_trial_callbacks_)
+        post_trial_cb(dataset);
     }
 
     for (const auto& post_query_cb : post_query_callbacks_)

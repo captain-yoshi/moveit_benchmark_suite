@@ -114,14 +114,14 @@ public:
   bool initialize(const std::string& name, const Options& options);
   bool initializeFromHandle(const ros::NodeHandle& nh);
 
-  using PostQueryTrialCallback = std::function<void(DataSetPtr& dataset)>;
+  using PostTrialCallback = std::function<void(DataSetPtr& dataset)>;
   using PostQueryCallback = std::function<void(DataSetPtr& dataset)>;
   using PostBenchmarkCallback = std::function<void(DataSetPtr& dataset)>;
 
   /** \brief Set the post-dataset callback function.
    *  \param[in] callback Callback to use.
    */
-  void addPostQueryTrialCallback(const PostQueryTrialCallback& callback);
+  void addPostTrialCallback(const PostTrialCallback& callback);
 
   /** \brief Set the post-query callback function.
    *  \param[in] callback Callback to use.
@@ -150,9 +150,9 @@ private:
 
   Options options_;
 
-  std::vector<PostQueryTrialCallback> post_query_trial_callbacks_;  ///< Post-run callback with dataset.
-  std::vector<PostQueryCallback> post_query_callbacks_;             ///< Post-run callback.
-  std::vector<PostBenchmarkCallback> post_benchmark_callbacks_;     ///< Post-run callback.
+  std::vector<PostTrialCallback> post_trial_callbacks_;
+  std::vector<PostQueryCallback> post_query_callbacks_;
+  std::vector<PostBenchmarkCallback> post_benchmark_callbacks_;
 
   BenchmarkSuiteDataSetOutputter outputter_;
 
