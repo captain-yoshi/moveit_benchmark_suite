@@ -14,7 +14,7 @@
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
- *   * Neither the name of Bielefeld University nor the names of its
+ *   * Neither the name of the copyright holder nor the names of its
  *     contributors may be used to endorse or promote products derived
  *     from this software without specific prior written permission.
  *
@@ -32,54 +32,56 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: CaptainYoshi
-   Desc: Aggregate metrics from datasets into new datasets
+/* Author: Captain Yoshi
+   Desc: Generate log files from a DataSet
+
+   Comment: Heavily inspired by robowflex_library
 */
 
-#include <ros/ros.h>
+#pragma once
 
-#include <moveit_benchmark_suite/output/aggregate.h>
-#include <moveit_benchmark_suite/output/dataset_log.h>
+#include <moveit_benchmark_suite/dataset.h>
 
-using namespace moveit_benchmark_suite;
-using namespace moveit_benchmark_suite::output;
+namespace moveit_benchmark_suite {
+namespace output {
 
-constexpr char INPUT_PARAMETER[] = "input_files";
-constexpr char OUTPUT_PARAMETER[] = "output_file";
-constexpr char CONFIG_PARAMETER[] = "config_file";
-
-int main(int argc, char** argv)
+/** \brief An abstract class for outputting benchmark results.
+ */
+class DataSetOutputter
 {
-  ros::init(argc, argv, "aggregate_dataset");
-  ros::AsyncSpinner spinner(1);
-  spinner.start();
+public:
+  /** \brief Virtual destructor for cleaning up resources.
+   */
+  virtual ~DataSetOutputter() = default;
 
-  ros::NodeHandle pnh("~");
+  /** \brief Write the \a results of a benchmarking query out.
+   *  Must be implemented by child classes.
+   *  \param[in] results The results of one query of benchmarking.
+   */
+  virtual void dump(const DataSet& results, const std::string& pathname) = 0;
+};
 
-  // Get ros params
-  std::string config_file;
+/** \brief Generates/Edit a log file from a YAML conversion
+ */
+class BenchmarkSuiteOutputter : public DataSetOutputter
+{
+public:
+  /** \brief Constructor.
+   *  \param[in] prefix Prefix to place in front of all log files generated.
+   *  \param[in] dumpScene If true, will output scene into log file.
+   */
+  BenchmarkSuiteOutputter();
 
-  std::vector<std::string> input_files;
-  std::string output_file;
+  /** \brief Destructor, runs `ompl_benchmark_statistics.py` to generate benchmarking database.
+   */
+  ~BenchmarkSuiteOutputter() override;
 
-  pnh.getParam(INPUT_PARAMETER, input_files);
-  pnh.getParam(OUTPUT_PARAMETER, output_file);
-  pnh.getParam(CONFIG_PARAMETER, config_file);
+  /** \brief Dumps \a results into a OMPL benchmarking log file in \a prefix_ named after the request \a
+   *  name_.
+   *  \param[in] results Results to dump to file.
+   */
+  void dump(const DataSet& dataset, const std::string& pathname) override;
+};
 
-  // Aggregate datasets
-  std::vector<AggregateDataset::Operation> operations;
-  std::vector<Filter> filters;
-
-  AggregateDataset agg_dataset;
-  agg_dataset.buildParamsFromYAML(config_file, operations, filters);
-
-  auto datasets = agg_dataset.aggregate(operations, input_files, filters);
-
-  // Save aggregated dataset
-  BenchmarkSuiteOutputter output;
-
-  for (const auto& dataset : datasets)
-    output.dump(*dataset, output_file);
-
-  return 0;
-}
+}  // namespace output
+}  // namespace moveit_benchmark_suite

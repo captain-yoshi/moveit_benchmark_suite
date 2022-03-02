@@ -24,6 +24,7 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME}
   src/aggregate.cpp
+  src/dataset_log.cpp
   src/gnuplot.cpp
   src/htmlplot.cpp
   src/rviz_visualization.cpp
