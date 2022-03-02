@@ -5,6 +5,7 @@ find_package(Boost REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
   moveit_benchmark_suite_core
+  moveit_benchmark_suite_output
 )
 
 catkin_package(
@@ -14,6 +15,7 @@ catkin_package(
     include
   CATKIN_DEPENDS
     moveit_benchmark_suite_core
+    moveit_benchmark_suite_output
 )
 
 set(CMAKE_CXX_STANDARD 14)

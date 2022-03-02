@@ -38,10 +38,10 @@
 
 #pragma once
 
-#include <moveit_benchmark_suite/visualization.h>
-
 #include <moveit_benchmark_suite/profilers/motion_planning_profiler.h>
 #include <moveit_benchmark_suite/profilers/collision_check_profiler.h>
+
+#include <moveit_benchmark_suite/output/rviz_visualization.h>
 
 namespace moveit_benchmark_suite {
 
@@ -55,7 +55,7 @@ struct ProfileVisualization
   void addCallback(MoveGroupInterfaceProfiler& profiler);
   void addCallback(CollisionCheckProfiler& profiler);
 
-  RVIZHelper rviz_;  ///< Robot used for the query.
+  output::RVIZVisualization rviz_;  ///< Robot used for the query.
 };
 
 }  // namespace moveit_benchmark_suite

@@ -53,7 +53,6 @@ add_library(${PROJECT_NAME}
   src/log.cpp
   src/planning.cpp
   src/trajectory.cpp
-  src/visualization.cpp
   src/serialization.cpp
 )
 

@@ -37,13 +37,14 @@
 #include <ros/ros.h>
 
 #include <moveit_benchmark_suite/benchmark.h>
-#include <moveit_benchmark_suite/visualization.h>
+#include <moveit_benchmark_suite/output/rviz_visualization.h>
 
 #include <moveit_benchmark_suite/mtc/pickplace_profiler.h>
 #include <moveit_benchmark_suite/mtc/pickplace_builder.h>
 
 using namespace moveit_benchmark_suite;
 using namespace moveit_benchmark_suite::mtc;
+using namespace moveit_benchmark_suite::output;
 
 int main(int argc, char** argv)
 {
@@ -76,7 +77,7 @@ int main(int argc, char** argv)
   benchmark.initializeFromHandle(pnh);
 
   // Setup visualizer
-  RVIZHelper rviz;
+  RVIZVisualization rviz;
   if (benchmark.getOptions().visualize)
   {
     profiler.addPreRunQueryCallback(

@@ -26,6 +26,7 @@ add_library(${PROJECT_NAME}
   src/aggregate.cpp
   src/gnuplot.cpp
   src/htmlplot.cpp
+  src/rviz_visualization.cpp
 )
 
 

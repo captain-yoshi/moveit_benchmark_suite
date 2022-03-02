@@ -10,6 +10,7 @@
 
 	<depend>boost</depend>
 	<depend>moveit_benchmark_suite_core</depend>
+	<depend>moveit_benchmark_suite_output</depend>
 
 	<export>
 		<moveit_benchmark_suite benchmarks="${prefix}/benchmarks"/>

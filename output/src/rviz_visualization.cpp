@@ -17,7 +17,7 @@
 #include <moveit_benchmark_suite/constants.h>
 #include <moveit_benchmark_suite/geometry.h>
 #include <moveit_benchmark_suite/colormap.h>
-#include <moveit_benchmark_suite/visualization.h>
+#include <moveit_benchmark_suite/output/rviz_visualization.h>
 #include <moveit_benchmark_suite/log.h>
 #include <moveit_benchmark_suite/planning.h>
 #include <moveit_benchmark_suite/random.h>
@@ -27,25 +27,26 @@
 #include <moveit_benchmark_suite/trajectory.h>
 #include <moveit_benchmark_suite/io.h>
 
-using namespace moveit_benchmark_suite;
+using namespace moveit_benchmark_suite::output;
 
 namespace {
 Eigen::Vector4d getRandomColor()
 {
   Eigen::Vector4d color;
-  color::turbo(RNG::uniform01(), color);
+  moveit_benchmark_suite::color::turbo(moveit_benchmark_suite::RNG::uniform01(), color);
   return color;
 }
 };  // namespace
 
-RVIZHelper::RVIZHelper(const std::string& name) : nh_("/" + name), handler_("/" + name)
+RVIZVisualization::RVIZVisualization(const std::string& name) : nh_("/" + name), handler_("/" + name)
 {
   // MoveGroup services
   trajectory_pub_ = nh_.advertise<moveit_msgs::DisplayTrajectory>("display_planned_path", 1);
   state_pub_ = nh_.advertise<moveit_msgs::DisplayRobotState>("state", 1);
   scene_pub_ = nh_.advertise<moveit_msgs::PlanningScene>("monitored_planning_scene", 1);
   marker_pub_ = nh_.advertise<visualization_msgs::MarkerArray>("/visualization_marker_array", 100);
-  get_scene_service_ = nh_.advertiseService("/get_planning_scene", &RVIZHelper::getPlanningSceneServiceCallback, this);
+  get_scene_service_ =
+      nh_.advertiseService("/get_planning_scene", &RVIZVisualization::getPlanningSceneServiceCallback, this);
 
   // RViz service
   rviz_srv_ = nh_.serviceClient<rviz::SendFilePath>("/rviz/load_config");
@@ -64,7 +65,7 @@ RVIZHelper::RVIZHelper(const std::string& name) : nh_("/" + name), handler_("/" 
   empty_scene_.world.collision_objects[0].operation = moveit_msgs::CollisionObject::REMOVE;
 }
 
-void RVIZHelper::initialize(const RobotConstPtr& robot, const SceneConstPtr& scene)
+void RVIZVisualization::initialize(const RobotConstPtr& robot, const SceneConstPtr& scene)
 {
   // Change scene if different
   if (scene != scene_)
@@ -99,8 +100,8 @@ void RVIZHelper::initialize(const RobotConstPtr& robot, const SceneConstPtr& sce
   }
 }
 
-bool RVIZHelper::getPlanningSceneServiceCallback(moveit_msgs::GetPlanningSceneRequest& req,
-                                                 moveit_msgs::GetPlanningSceneResponse& res)
+bool RVIZVisualization::getPlanningSceneServiceCallback(moveit_msgs::GetPlanningSceneRequest& req,
+                                                        moveit_msgs::GetPlanningSceneResponse& res)
 {
   // if (req.components.components & moveit_msgs::PlanningSceneComponents::TRANSFORMS)
   //   updateFrameTransforms();
@@ -117,12 +118,12 @@ bool RVIZHelper::getPlanningSceneServiceCallback(moveit_msgs::GetPlanningSceneRe
   return true;
 }
 
-void RVIZHelper::updateTrajectory(const planning_interface::MotionPlanResponse& response)
+void RVIZVisualization::updateTrajectory(const planning_interface::MotionPlanResponse& response)
 {
   updateTrajectory(response.trajectory_);
 }
 
-void RVIZHelper::updateTrajectory(const robot_trajectory::RobotTrajectoryPtr& trajectory)
+void RVIZVisualization::updateTrajectory(const robot_trajectory::RobotTrajectoryPtr& trajectory)
 {
   moveit_msgs::RobotTrajectory msg;
   trajectory->getRobotTrajectoryMsg(msg);
@@ -130,7 +131,7 @@ void RVIZHelper::updateTrajectory(const robot_trajectory::RobotTrajectoryPtr& tr
   updateTrajectory(msg, trajectory->getFirstWayPoint());
 }
 
-void RVIZHelper::updateTrajectory(const moveit_msgs::RobotTrajectory& traj, const moveit::core::RobotState& start)
+void RVIZVisualization::updateTrajectory(const moveit_msgs::RobotTrajectory& traj, const moveit::core::RobotState& start)
 {
   moveit_msgs::DisplayTrajectory out;
 
@@ -150,7 +151,7 @@ void RVIZHelper::updateTrajectory(const moveit_msgs::RobotTrajectory& traj, cons
   trajectory_pub_.publish(out);
 }
 
-void RVIZHelper::updateTrajectories(const std::vector<robot_trajectory::RobotTrajectoryPtr>& trajectories)
+void RVIZVisualization::updateTrajectories(const std::vector<robot_trajectory::RobotTrajectoryPtr>& trajectories)
 {
   moveit_msgs::DisplayTrajectory out;
   out.model_id = robot_->getModelName();
@@ -181,7 +182,7 @@ void RVIZHelper::updateTrajectories(const std::vector<robot_trajectory::RobotTra
   trajectory_pub_.publish(out);
 }
 
-void RVIZHelper::updateTrajectories(const std::vector<planning_interface::MotionPlanResponse>& responses)
+void RVIZVisualization::updateTrajectories(const std::vector<planning_interface::MotionPlanResponse>& responses)
 {
   auto moveit_trajectories = std::vector<robot_trajectory::RobotTrajectoryPtr>();
 
@@ -192,7 +193,7 @@ void RVIZHelper::updateTrajectories(const std::vector<planning_interface::Motion
   updateTrajectories(moveit_trajectories);
 }
 
-void RVIZHelper::visualizeState(const robot_state::RobotStatePtr& state)
+void RVIZVisualization::visualizeState(const robot_state::RobotStatePtr& state)
 {
   if (state_pub_.getNumSubscribers() < 1)
   {
@@ -209,7 +210,7 @@ void RVIZHelper::visualizeState(const robot_state::RobotStatePtr& state)
   state_pub_.publish(out);
 }
 
-void RVIZHelper::visualizeState(const std::vector<double>& state_vec)
+void RVIZVisualization::visualizeState(const std::vector<double>& state_vec)
 {
   auto state = std::make_shared<robot_state::RobotState>(robot_->getModelConst());
 
@@ -222,14 +223,14 @@ void RVIZHelper::visualizeState(const std::vector<double>& state_vec)
   visualizeState(state);
 }
 
-void RVIZHelper::visualizeCurrentState()
+void RVIZVisualization::visualizeCurrentState()
 {
   visualizeState(robot_->getStateConst());
 }
 
-void RVIZHelper::fillMarker(visualization_msgs::Marker& marker, const std::string& base_frame,
-                            const Eigen::Isometry3d& pose, const Eigen::Vector4d& color,
-                            const Eigen::Vector3d& scale) const
+void RVIZVisualization::fillMarker(visualization_msgs::Marker& marker, const std::string& base_frame,
+                                   const Eigen::Isometry3d& pose, const Eigen::Vector4d& color,
+                                   const Eigen::Vector3d& scale) const
 {
   marker.header.frame_id = base_frame;
   marker.frame_locked = true;
@@ -248,8 +249,9 @@ void RVIZHelper::fillMarker(visualization_msgs::Marker& marker, const std::strin
   marker.color.a = color[3];
 }
 
-void RVIZHelper::addArrowMarker(const std::string& name, const std::string& base_frame, const Eigen::Isometry3d& pose,
-                                const Eigen::Vector4d& color, const Eigen::Vector3d& scale)
+void RVIZVisualization::addArrowMarker(const std::string& name, const std::string& base_frame,
+                                       const Eigen::Isometry3d& pose, const Eigen::Vector4d& color,
+                                       const Eigen::Vector3d& scale)
 {
   visualization_msgs::Marker marker;
   fillMarker(marker, base_frame, pose, color, scale);
@@ -259,8 +261,8 @@ void RVIZHelper::addArrowMarker(const std::string& name, const std::string& base
   addMarker(marker, name);
 }
 
-void RVIZHelper::addTextMarker(const std::string& name, const std::string& text, const std::string& base_frame,
-                               const Eigen::Isometry3d& pose, double height, const Eigen::Vector4d& color)
+void RVIZVisualization::addTextMarker(const std::string& name, const std::string& text, const std::string& base_frame,
+                                      const Eigen::Isometry3d& pose, double height, const Eigen::Vector4d& color)
 {
   visualization_msgs::Marker marker;
   fillMarker(marker, base_frame, pose, color, { 0, 0, height });
@@ -271,8 +273,8 @@ void RVIZHelper::addTextMarker(const std::string& name, const std::string& text,
   addMarker(marker, name);
 }
 
-void RVIZHelper::addLineMarker(const std::string& name, const std::vector<Eigen::Vector3d>& points,
-                               const std::vector<Eigen::Vector4d>& colors, double scale)
+void RVIZVisualization::addLineMarker(const std::string& name, const std::vector<Eigen::Vector3d>& points,
+                                      const std::vector<Eigen::Vector4d>& colors, double scale)
 {
   visualization_msgs::Marker marker;
 
@@ -301,8 +303,8 @@ void RVIZHelper::addLineMarker(const std::string& name, const std::vector<Eigen:
   addMarker(marker, name);
 }
 
-void RVIZHelper::addTransformMarker(const std::string& name, const std::string& base_frame,
-                                    const Eigen::Isometry3d& pose, double scale)
+void RVIZVisualization::addTransformMarker(const std::string& name, const std::string& base_frame,
+                                           const Eigen::Isometry3d& pose, double scale)
 {
   const auto& arrow_size = Eigen::Vector3d{ 0.1, 0.008, 0.003 };  // A nice default size of arrow
   const auto& z_rot90 = TF::createPoseXYZ(0, 0, 0, 0, 0, constants::half_pi);
@@ -313,9 +315,9 @@ void RVIZHelper::addTransformMarker(const std::string& name, const std::string& 
   addArrowMarker(name + "Z", base_frame, pose * y_rot90, color::BLUE, scale * arrow_size);
 }
 
-void RVIZHelper::addGeometryMarker(const std::string& name, const GeometryConstPtr& geometry,
-                                   const std::string& base_frame, const Eigen::Isometry3d& pose,
-                                   const Eigen::Vector4d& color)
+void RVIZVisualization::addGeometryMarker(const std::string& name, const GeometryConstPtr& geometry,
+                                          const std::string& base_frame, const Eigen::Isometry3d& pose,
+                                          const Eigen::Vector4d& color)
 {
   visualization_msgs::Marker marker;
 
@@ -367,7 +369,7 @@ void RVIZHelper::addGeometryMarker(const std::string& name, const GeometryConstP
 
   addMarker(marker, name);
 }
-void RVIZHelper::addGoalMarker(const std::string& name, const moveit_msgs::MotionPlanRequest& request)
+void RVIZVisualization::addGoalMarker(const std::string& name, const moveit_msgs::MotionPlanRequest& request)
 {
   const auto& goals = request.goal_constraints;
 
@@ -376,12 +378,12 @@ void RVIZHelper::addGoalMarker(const std::string& name, const moveit_msgs::Motio
     addConstraintMarker(name, goal);
 }
 
-void RVIZHelper::addPathConstraintMarker(const std::string& name, const moveit_msgs::MotionPlanRequest& request)
+void RVIZVisualization::addPathConstraintMarker(const std::string& name, const moveit_msgs::MotionPlanRequest& request)
 {
   addConstraintMarker(name, request.path_constraints);
 }
 
-void RVIZHelper::addConstraintMarker(const std::string& name, const moveit_msgs::Constraints constraints)
+void RVIZVisualization::addConstraintMarker(const std::string& name, const moveit_msgs::Constraints constraints)
 {
   auto color = getRandomColor();  // Use the same color for all elements of this goal
   color[3] = 0.7;                 // Make slightly transparent
@@ -469,8 +471,8 @@ void RVIZHelper::addConstraintMarker(const std::string& name, const moveit_msgs:
   }
 }
 
-void RVIZHelper::addCollisionContactMarkers(const std::string& name, const std::string& base_frame,
-                                            const collision_detection::CollisionResult::ContactMap& contact)
+void RVIZVisualization::addCollisionContactMarkers(const std::string& name, const std::string& base_frame,
+                                                   const collision_detection::CollisionResult::ContactMap& contact)
 {
   visualization_msgs::MarkerArray marker_array;
 
@@ -485,13 +487,13 @@ void RVIZHelper::addCollisionContactMarkers(const std::string& name, const std::
     addMarker(marker, name);
 }
 
-void RVIZHelper::removeAllMarkers()
+void RVIZVisualization::removeAllMarkers()
 {
   for (auto& marker : markers_)
     marker.second.action = visualization_msgs::Marker::DELETE;
 }
 
-void RVIZHelper::removeMarker(const std::string& name)
+void RVIZVisualization::removeMarker(const std::string& name)
 {
   auto markers = markers_.equal_range(name);
 
@@ -499,12 +501,12 @@ void RVIZHelper::removeMarker(const std::string& name)
     it->second.action = visualization_msgs::Marker::DELETE;
 }
 
-void RVIZHelper::addMarker(const visualization_msgs::Marker& marker, const std::string& name)
+void RVIZVisualization::addMarker(const visualization_msgs::Marker& marker, const std::string& name)
 {
   markers_.emplace(name, marker);
 }
 
-void RVIZHelper::addMarker(double x, double y, double z, const std::string& name)
+void RVIZVisualization::addMarker(double x, double y, double z, const std::string& name)
 {
   visualization_msgs::Marker marker;
   const std::string& base_frame = "map";
@@ -521,26 +523,26 @@ void RVIZHelper::addMarker(double x, double y, double z, const std::string& name
   addMarker(marker, name);
 }
 
-void RVIZHelper::addMarker(const Eigen::Vector3d& point, const std::string& name)
+void RVIZVisualization::addMarker(const Eigen::Vector3d& point, const std::string& name)
 {
   addMarker(point.x(), point.y(), point.z(), name);
 }
 
-void RVIZHelper::removeScene()
+void RVIZVisualization::removeScene()
 {
   updateScene(nullptr);
 }
 
-void RVIZHelper::updateScene(const planning_scene::PlanningSceneConstPtr& scene,
-                             const robot_state::RobotState& robot_state)
+void RVIZVisualization::updateScene(const planning_scene::PlanningSceneConstPtr& scene,
+                                    const robot_state::RobotState& robot_state)
 {
   moveit_msgs::RobotState robot_state_msg;
   robotStateToRobotStateMsg(robot_state, robot_state_msg);
   updateScene(scene, robot_state_msg);
 }
 
-void RVIZHelper::updateScene(const planning_scene::PlanningSceneConstPtr& scene,
-                             const moveit_msgs::RobotState& robot_state)
+void RVIZVisualization::updateScene(const planning_scene::PlanningSceneConstPtr& scene,
+                                    const moveit_msgs::RobotState& robot_state)
 {
   if (scene_pub_.getNumSubscribers() < 1)
   {
@@ -574,7 +576,7 @@ void RVIZHelper::updateScene(const planning_scene::PlanningSceneConstPtr& scene,
   scene_pub_.publish(to_pub);
 }
 
-void RVIZHelper::updateMarkers()
+void RVIZVisualization::updateMarkers()
 {
   visualization_msgs::MarkerArray msg;
 

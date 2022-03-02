@@ -21,12 +21,14 @@
 #include <rviz/SendFilePath.h>
 
 namespace moveit_benchmark_suite {
-MOVEIT_CLASS_FORWARD(RVIZHelper);
+namespace output {
 
-class RVIZHelper
+MOVEIT_CLASS_FORWARD(RVIZVisualization);
+
+class RVIZVisualization
 {
 public:
-  RVIZHelper(const std::string& name = "move_group");
+  RVIZVisualization(const std::string& name = "move_group");
 
   void initialize(const RobotConstPtr& robot, const SceneConstPtr& scene);
 
@@ -240,4 +242,5 @@ private:
   std::multimap<std::string, visualization_msgs::Marker> markers_;  ///< Markers to publish.
 };
 
+}  // namespace output
 }  // namespace moveit_benchmark_suite
