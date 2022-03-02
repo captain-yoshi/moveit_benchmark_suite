@@ -143,8 +143,6 @@ public:
 
   const Options& getOptions() const;
 
-  bool getPlotFlag();
-
 private:
   void fillMetaData(DataSetPtr& dataset) const;
 
@@ -157,7 +155,5 @@ private:
   std::vector<PostBenchmarkCallback> post_benchmark_callbacks_;
 
   BenchmarkSuiteDataSetOutputter outputter_;
-
-  bool plot_flag = false;
 };
 }  // namespace moveit_benchmark_suite

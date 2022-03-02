@@ -210,11 +210,6 @@ void Benchmark::fillMetaData(DataSetPtr& dataset) const
   // dataset->metadata[DATASET_CONFIG_KEY] = dataset->query_setup.query_setup;
 }
 
-bool Benchmark::getPlotFlag()
-{
-  return plot_flag;
-}
-
 ///
 /// BenchmarkSuiteDataSetOutputter
 ///
