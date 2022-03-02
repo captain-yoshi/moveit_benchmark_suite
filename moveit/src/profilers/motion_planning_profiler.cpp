@@ -11,7 +11,7 @@
 #include <moveit/robot_state/conversions.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>  // MoveGroupPlan
 
-#include <moveit_benchmark_suite/builders/motion_planning_builder.h>
+#include <moveit_benchmark_suite/query_builders/motion_planning_builder.h>
 
 using namespace moveit_benchmark_suite;
 

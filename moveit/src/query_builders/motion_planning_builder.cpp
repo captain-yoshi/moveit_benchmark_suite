@@ -41,7 +41,7 @@
 
 #include <moveit_benchmark_suite/dataset.h>
 #include <moveit_benchmark_suite/scene.h>
-#include <moveit_benchmark_suite/builders/motion_planning_builder.h>
+#include <moveit_benchmark_suite/query_builders/motion_planning_builder.h>
 #include <moveit_benchmark_suite/profilers/motion_planning_profiler.h>
 #include <moveit_benchmark_suite/serialization.h>
 

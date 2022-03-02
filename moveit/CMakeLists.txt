@@ -23,11 +23,11 @@ set(CMAKE_CXX_STANDARD 14)
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME}
-  src/builders/collision_check_builder.cpp
-  src/builders/motion_planning_builder.cpp
   src/profilers/motion_planning_profiler.cpp
   src/profilers/collision_check_profiler.cpp
   src/profilers/profile_visualization.cpp
+  src/query_builders/collision_check_builder.cpp
+  src/query_builders/motion_planning_builder.cpp
 )
 
 add_executable(motion_planning_mgi src/motion_planning_mgi_benchmark.cpp)

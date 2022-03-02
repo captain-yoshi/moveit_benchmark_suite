@@ -36,8 +36,8 @@
 
 #include <chrono>
 
-#include <moveit_benchmark_suite/builders/collision_check_builder.h>
 #include <moveit_benchmark_suite/profilers/collision_check_profiler.h>
+#include <moveit_benchmark_suite/query_builders/collision_check_builder.h>
 
 #include <moveit_benchmark_suite/io.h>
 
