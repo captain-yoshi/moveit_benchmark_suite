@@ -3,16 +3,11 @@ project(moveit_benchmark_suite_mtc)
 
 find_package(catkin REQUIRED COMPONENTS
   actionlib
-  eigen_conversions
-  moveit_benchmark_suite
-  moveit_benchmark_suite_resources
-  moveit_core
-  moveit_ros_planning_interface
+  moveit_benchmark_suite_core
+  moveit_benchmark_suite_output
   moveit_task_constructor_core
   moveit_task_constructor_msgs
-  roscpp
   rosparam_shortcuts
-  urdf_to_scene
 )
 
 catkin_package()

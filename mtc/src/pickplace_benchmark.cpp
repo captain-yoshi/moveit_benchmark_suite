@@ -37,13 +37,15 @@
 #include <ros/ros.h>
 
 #include <moveit_benchmark_suite/benchmark.h>
+#include <moveit_benchmark_suite/output/dataset_log.h>
+#include <moveit_benchmark_suite/output/rviz_visualization.h>
 
-#include <moveit_benchmark_suite_mtc/pickplace_profiler.h>
-#include <moveit_benchmark_suite_mtc/pickplace_builder.h>
-#include <moveit_benchmark_suite/visualization.h>
+#include <moveit_benchmark_suite/mtc/pickplace_profiler.h>
+#include <moveit_benchmark_suite/mtc/pickplace_builder.h>
 
 using namespace moveit_benchmark_suite;
-using namespace moveit_benchmark_suite_mtc;
+using namespace moveit_benchmark_suite::mtc;
+using namespace moveit_benchmark_suite::output;
 
 int main(int argc, char** argv)
 {
@@ -75,8 +77,16 @@ int main(int argc, char** argv)
   Benchmark benchmark;
   benchmark.initializeFromHandle(pnh);
 
-  // Setup visualizer
-  RVIZHelper rviz;
+  // Output dataset to logfile
+  std::string output_file = benchmark.getOptions().output_file;
+
+  benchmark.addPostBenchmarkCallback([=](DataSetPtr& dataset) {
+    BenchmarkSuiteOutputter logfile;
+    logfile.dump(*dataset, output_file);
+  });
+
+  // Visualize profiler
+  RVIZVisualization rviz;
   if (benchmark.getOptions().visualize)
   {
     profiler.addPreRunQueryCallback(

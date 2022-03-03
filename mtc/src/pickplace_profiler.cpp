@@ -37,11 +37,12 @@
 
 #include <moveit_benchmark_suite/io.h>
 
-#include <moveit_benchmark_suite_mtc/pickplace_profiler.h>
-#include <moveit_benchmark_suite_mtc/pickplace_builder.h>
+#include <moveit_benchmark_suite/mtc/pickplace_profiler.h>
+#include <moveit_benchmark_suite/mtc/pickplace_builder.h>
 
-namespace moveit_benchmark_suite_mtc
-{
+namespace moveit_benchmark_suite {
+namespace mtc {
+
 constexpr char LOGNAME[] = "pick_place_task";
 
 ///
@@ -141,7 +142,7 @@ void PickPlaceProfiler::postRunQuery(const PickPlaceQuery& query, PickPlaceResul
     data.metrics[task_failures_cost_key] = task_failures_cost;
 
   // Compute stage metrics
-  const ContainerBase* stages = task->stages();
+  const auto* stages = task->stages();
   auto stage_cb = [&](const moveit::task_constructor::Stage& stage, unsigned int depth) -> bool {
     std::string stage_time_key = "stage/time/" + stage.name();
     std::string stage_success_key = "stage/success/" + stage.name();
@@ -173,4 +174,5 @@ void PickPlaceProfiler::postRunQuery(const PickPlaceQuery& query, PickPlaceResul
   stages->traverseRecursively(stage_cb);
 }
 
-}  // namespace moveit_benchmark_suite_mtc
+}  // namespace mtc
+}  // namespace moveit_benchmark_suite

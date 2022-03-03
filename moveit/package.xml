@@ -1,18 +1,16 @@
 <package format="2">
-	<name>moveit_benchmark_suite_mtc</name>
+	<name>moveit_benchmark_suite</name>
 	<version>0.0.0</version>
-	<description>Benchmark backend for testing MoveIt Task Constructor</description>
+	<description>Benchmark backend for testing MoveIt</description>
 
 	<license>BSD</license>
 	<maintainer email="captain.yoshisaur@gmail.com">Captain Yoshi</maintainer>
 
 	<buildtool_depend>catkin</buildtool_depend>
 
+	<depend>boost</depend>
 	<depend>moveit_benchmark_suite_core</depend>
 	<depend>moveit_benchmark_suite_output</depend>
-	<depend>moveit_task_constructor_core</depend>
-	<depend>moveit_task_constructor_msgs</depend>
-	<depend>rosparam_shortcuts</depend>
 
 	<export>
 		<moveit_benchmark_suite benchmarks="${prefix}/benchmarks"/>

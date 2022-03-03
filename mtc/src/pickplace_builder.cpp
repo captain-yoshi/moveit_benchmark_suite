@@ -1,18 +1,17 @@
-#include <moveit_benchmark_suite_mtc/pickplace_builder.h>
-#include <moveit_serialization/yaml-cpp/conversion/conversion.h>
+#include <moveit_benchmark_suite/mtc/pickplace_builder.h>
 
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
 
-#include <urdf_to_scene/scene_parser.h>
-#include <moveit_benchmark_suite_mtc/pickplace_profiler.h>
+#include <moveit_benchmark_suite/mtc/pickplace_profiler.h>
 #include <moveit_benchmark_suite/serialization.h>
 #include <moveit_benchmark_suite/io.h>
 
 #include <moveit_benchmark_suite/robot.h>
 #include <moveit_benchmark_suite/scene.h>
-#include <moveit_benchmark_suite/builder.h>
+#include <moveit_benchmark_suite/resource_builder.h>
 
-using namespace moveit_benchmark_suite_mtc;
+using namespace moveit_benchmark_suite::mtc;
+using namespace moveit::task_constructor;
 
 constexpr char LOGNAME[] = "mtc_pick_place";
 
@@ -49,7 +48,7 @@ const std::map<std::string, moveit_msgs::Constraints>& PickPlaceConfig::getConst
   return constraints_map_;
 }
 
-const std::map<std::string, moveit_benchmark_suite_mtc::Task>& PickPlaceConfig::getTasks() const
+const std::map<std::string, moveit_benchmark_suite::mtc::Task>& PickPlaceConfig::getTasks() const
 {
   return task_map_;
 }
@@ -385,7 +384,7 @@ void PickPlaceBuilder::buildQueries(const std::string& filename)
     RobotBuilder builder;
     builder.loadResources(node["profiler_config"]["robot"]);
     builder.extendResources(node["extend_resource_config"]["robot"]);
-    robot_map = builder.generateResults();
+    robot_map = builder.generateResources();
   }
   {  // Build scenes
     scene_builder.loadResources(node["profiler_config"]["scene"]);
@@ -402,7 +401,7 @@ void PickPlaceBuilder::buildQueries(const std::string& filename)
 
     builder.loadResources(node["profiler_config"]["planning_pipelines"]);
     builder.extendResources(node["extend_resource_config"]["planning_pipelines"]);
-    pipeline_emitter_map = builder.generateResults();
+    pipeline_emitter_map = builder.generateResources();
   }
 
   // Build parameters
@@ -426,7 +425,7 @@ void PickPlaceBuilder::buildQueries(const std::string& filename)
     for (const auto& detector : collision_detectors)
     {
       // Get scenes wrt. robot and collision detector
-      scene_map = scene_builder.generateResults(robot.second, detector);
+      scene_map = scene_builder.generateResources(robot.second, detector);
 
       for (auto& scene : scene_map)
         for (const auto& task : tasks_)
@@ -470,7 +469,7 @@ const std::vector<PickPlaceQueryPtr>& PickPlaceBuilder::getQueries() const
   return queries_;
 }
 
-const QuerySetup& PickPlaceBuilder::getQuerySetup() const
+const moveit_benchmark_suite::QuerySetup& PickPlaceBuilder::getQuerySetup() const
 {
   return query_setup_;
 }

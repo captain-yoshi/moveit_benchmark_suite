@@ -1,6 +1,6 @@
-#include <moveit_benchmark_suite_mtc/pickplace_task.h>
+#include <moveit_benchmark_suite/mtc/pickplace_task.h>
 
-using namespace moveit_benchmark_suite_mtc;
+using namespace moveit_benchmark_suite::mtc;
 using namespace moveit::task_constructor;
 
 constexpr char LOGNAME[] = "mtc_pick_place";
