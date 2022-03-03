@@ -112,10 +112,7 @@ public:
   const Options& getOptions() const;
 
 private:
-  void fillMetaData(DataSetPtr& dataset) const;
-
   std::string name_;  ///< Name of this experiment.
-
   Options options_;
 
   std::vector<PostTrialCallback> post_trial_callbacks_;

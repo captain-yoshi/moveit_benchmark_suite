@@ -383,19 +383,6 @@ bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& node, moveit_b
     }
   }
 
-  // Fill metadata
-  // rhs.metadata[DATASET_HW_KEY]["cpu"] = rhs.cpuinfo;
-  // rhs.metadata[DATASET_HW_KEY]["gpu"] = rhs.gpuinfo;
-  // rhs.metadata[DATASET_SW_KEY]["moveit"] = rhs.moveitinfo;
-  // rhs.metadata[DATASET_SW_KEY]["moveit_benchmark_suite"] = rhs.moveitbenchmarksuiteinfo;
-  // rhs.metadata[DATASET_OS_KEY] = rhs.osinfo;
-  // rhs.metadata[DATASET_NAME_KEY] = rhs.name;
-  // rhs.metadata[DATASET_TYPE_KEY] = rhs.type;
-  // rhs.metadata[DATASET_UUID_KEY] = rhs.uuid;
-  // rhs.metadata[DATASET_DATE_KEY] = to_simple_string(rhs.date);
-  // rhs.metadata[DATASET_TOTAL_TIME_KEY] = rhs.time;
-  // rhs.metadata[DATASET_CONFIG_KEY] = rhs.query_setup.query_setup;
-
   return true;
 }
 Node convert<moveit_benchmark_suite::Metric>::encode(const moveit_benchmark_suite::Metric& rhs)
