@@ -33,29 +33,34 @@
  *********************************************************************/
 
 /* Author: Captain Yoshi
-   Desc: Helper for adding RViz visualization to profilers
+   Desc: Default collection of callbacks for Benchmark and Profilers
 */
 
 #pragma once
 
+#include <moveit_benchmark_suite/benchmark.h>
 #include <moveit_benchmark_suite/profilers/motion_planning_profiler.h>
 #include <moveit_benchmark_suite/profilers/collision_check_profiler.h>
 
 #include <moveit_benchmark_suite/output/rviz_visualization.h>
+#include <moveit_benchmark_suite/output/gnuplot.h>
 
 namespace moveit_benchmark_suite {
 
-struct ProfileVisualization
+class BenchmarkCallbackLoader
 {
-  /** \brief Empty constructor.
-   */
-  ProfileVisualization();
+public:
+  BenchmarkCallbackLoader(Benchmark& benchmark);
 
-  void addCallback(PlanningPipelineProfiler& profiler);
-  void addCallback(MoveGroupInterfaceProfiler& profiler);
-  void addCallback(CollisionCheckProfiler& profiler);
+  void addCallbacks(PlanningPipelineProfiler& profiler);
+  void addCallbacks(MoveGroupInterfaceProfiler& profiler);
+  void addCallbacks(CollisionCheckProfiler& profiler);
 
-  output::RVIZVisualization rviz_;  ///< Robot used for the query.
+private:
+  Benchmark& benchmark_;
+
+  output::GNUPlotDataset gnuplot_;
+  std::unique_ptr<output::RVIZVisualization> rviz_;  ///< Robot used for the query.
 };
 
 }  // namespace moveit_benchmark_suite

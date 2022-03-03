@@ -100,8 +100,8 @@ public:
   std::vector<DataSetPtr> aggregate(const std::vector<Operation>& operations,
                                     const std::vector<std::string>& dataset_files, std::vector<Filter> filters = {});
 
-  bool buildParamsFromYAML(const std::string& filename, std::vector<Operation>& operations,
-                           std::vector<Filter>& filters);
+  static bool buildParamsFromYAML(const std::string& filename, std::vector<Operation>& operations,
+                                  std::vector<Filter>& filters);
 
 private:
   // Dataset already dfiltered

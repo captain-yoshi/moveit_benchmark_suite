@@ -38,10 +38,9 @@
 
 #include <ros/ros.h>
 
-#include <moveit_benchmark_suite/profilers/collision_check_profiler.h>
-#include <moveit_benchmark_suite/profilers/profile_visualization.h>
-
 #include <moveit_benchmark_suite/benchmark.h>
+#include <moveit_benchmark_suite/benchmark_callback_loader.h>
+#include <moveit_benchmark_suite/profilers/collision_check_profiler.h>
 
 using namespace moveit_benchmark_suite;
 
@@ -68,11 +67,9 @@ int main(int argc, char** argv)
   Benchmark benchmark;
   benchmark.initializeFromHandle(pnh);
 
-  // Setup visualizer
-  ProfileVisualization visualizer;
-
-  if (benchmark.getOptions().visualize)
-    visualizer.addCallback(profiler);
+  // Setup callbacks
+  BenchmarkCallbackLoader loader(benchmark);
+  loader.addCallbacks(profiler);
 
   // Run benchmark
   auto dataset = benchmark.run(profiler);
