@@ -71,6 +71,12 @@ void Benchmark::addPostQueryCallback(const PostQueryCallback& callback)
 {
   post_query_callbacks_.push_back(callback);
 }
+
+void Benchmark::addPreBenchmarkCallback(const PreBenchmarkCallback& callback)
+{
+  pre_benchmark_callbacks_.push_back(callback);
+}
+
 void Benchmark::addPostBenchmarkCallback(const PostBenchmarkCallback& callback)
 {
   post_benchmark_callbacks_.push_back(callback);
@@ -116,6 +122,9 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
     ROS_ERROR("Cannot run benchmark, no query available");
     return nullptr;
   }
+
+  for (const auto& pre_benchmark_cb : pre_benchmark_callbacks_)
+    pre_benchmark_cb(dataset);
 
   for (std::size_t query_index = 0; query_index < query_size; ++query_index)
   {
