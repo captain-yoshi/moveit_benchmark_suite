@@ -173,12 +173,13 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
     for (const auto& post_query_cb : post_query_callbacks_)
       post_query_cb(dataset);
   }
-  for (const auto& post_benchmark_cb : post_benchmark_callbacks_)
-    post_benchmark_cb(dataset);
 
   // Store benchmark time
   dataset->finish = std::chrono::high_resolution_clock::now();
   dataset->time = IO::getSeconds(dataset->start, dataset->finish);
+
+  for (const auto& post_benchmark_cb : post_benchmark_callbacks_)
+    post_benchmark_cb(dataset);
 
   return dataset;
 };
