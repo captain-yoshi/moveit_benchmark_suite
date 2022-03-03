@@ -33,55 +33,42 @@
  *********************************************************************/
 
 /* Author: Captain Yoshi
-   Desc: Statistics and aggregators for dataset metrics
+   Desc: Collection of statistics equations
 */
 
-#pragma once
-
-#include <moveit_benchmark_suite/dataset_filter.h>
-#include <moveit_benchmark_suite/statistics.h>
+#include <functional>
+#include <map>
+#include <string>
+#include <vector>
 
 namespace moveit_benchmark_suite {
-namespace output {
+namespace statistics {
 
-/** \brief Plot from datasets using GNUPlot
- */
-class AggregateDataset
+using EquationFn = std::function<double(const std::vector<double>&)>;
+
+enum EquationType : int
 {
-public:
-  using DataSets = std::vector<DataSet>;
-  struct Operation
-  {
-    std::string raw_metric;  // Dataste metric name to aggregate
-    std::string new_metric;  // Dataset metric name for storing the statistic
-    statistics::EquationType eq_type = statistics::EquationType::INVALID;
-  };
-
-  /** \brief Constructor.
-   */
-  AggregateDataset() = default;
-
-  /** \brief Destructor.
-   */
-  ~AggregateDataset() = default;
-
-  /// Aggregate a Dataset object with optional filtering. Returns a new dataset
-  DataSetPtr aggregate(const std::vector<Operation>& operations, const DataSet& dataset,
-                       std::vector<Filter> filters = {});
-
-  /// Aggregate multiple Dataset, as files, with optional filtering. Returns a new dataset
-  std::vector<DataSetPtr> aggregate(const std::vector<Operation>& operations,
-                                    const std::vector<std::string>& dataset_files, std::vector<Filter> filters = {});
-
-  static bool buildParamsFromYAML(const std::string& filename, std::vector<Operation>& operations,
-                                  std::vector<Filter>& filters);
-
-private:
-  // Dataset already dfiltered
-  DataSetPtr aggregate(const std::vector<Operation>& operations, const YAML::Node& dataset);
-
-  DatasetFilter ds_filter_;
+  INVALID,
+  MEAN,     // Idem
+  AVERAGE,  // Idem
+  STD,      // Standard deviation
+  FREQUENCY,
 };
 
-}  // namespace output
+static const std::map<std::string, EquationType> str_to_eqtype_map = {
+  { "mean", EquationType::MEAN },
+  { "average", EquationType::AVERAGE },
+  { "frequency", EquationType::FREQUENCY },
+  { "std", EquationType::STD },
+};
+
+EquationFn getEquationFnFromType(const EquationType type);
+EquationType getEquationTypeFromString(const std::string& type);
+
+// Statistics equations
+double computeMean(const std::vector<double>& values);
+double computeFrequency(const std::vector<double>& values);
+double computeStandardDeviation(const std::vector<double>& values);
+
+}  // namespace statistics
 }  // namespace moveit_benchmark_suite

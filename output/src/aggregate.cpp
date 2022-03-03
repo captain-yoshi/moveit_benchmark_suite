@@ -1,72 +1,8 @@
-#include <cmath>
-
 #include <moveit_benchmark_suite/output/aggregate.h>
 #include <moveit_benchmark_suite/io.h>
 
 using namespace moveit_benchmark_suite;
 using namespace moveit_benchmark_suite::output;
-
-//
-// statistic
-//
-
-double statistic::computeMean(const std::vector<double>& values)
-{
-  double sum = 0;
-  for (const auto& value : values)
-    sum += value;
-
-  return sum / values.size();
-}
-
-double statistic::computeFrequency(const std::vector<double>& values)
-{
-  double sum = 0;
-  for (const auto& value : values)
-    sum += value;
-
-  return values.size() / sum;
-}
-
-double statistic::computeStandardDeviation(const std::vector<double>& values)
-{
-  double std = 0;
-  auto mean = computeMean(values);
-
-  for (const auto& value : values)
-    std += pow(value - mean, 2);
-
-  return sqrt(std / values.size());
-}
-
-statistic::EquationFn statistic::getEquationFnFromType(const EquationType type)
-{
-  switch (type)
-  {
-    case EquationType::MEAN:
-    case EquationType::AVERAGE:
-      return computeMean;
-    case EquationType::FREQUENCY:
-      return computeFrequency;
-    case EquationType::STD:
-      return computeStandardDeviation;
-    case EquationType::INVALID:
-      // Do nothing, handeled after switch case
-      break;
-  }
-
-  ROS_WARN("Invalid statistic equation type");
-  return {};
-}
-
-statistic::EquationType statistic::getEquationTypeFromString(const std::string& str)
-{
-  auto it = str_to_eqtype_map.find(str);
-  if (it != str_to_eqtype_map.end())
-    return it->second;
-
-  return EquationType::INVALID;
-}
 
 //
 // AggregateDataset
@@ -103,7 +39,7 @@ DataSetPtr AggregateDataset::aggregate(const std::vector<Operation>& operations,
         continue;
       }
 
-      auto eq_fn = statistic::getEquationFnFromType(operation.eq_type);
+      auto eq_fn = statistics::getEquationFnFromType(operation.eq_type);
       if (!eq_fn)
         continue;
 
@@ -229,8 +165,9 @@ bool AggregateDataset::buildParamsFromYAML(const std::string& filename, std::vec
       std::string new_metric = filter["new_metric"].as<std::string>();
       std::string type = filter["type"].as<std::string>();
 
-      operations.push_back(
-          { .raw_metric = raw_metric, .new_metric = new_metric, .eq_type = statistic::getEquationTypeFromString(type) });
+      operations.push_back({ .raw_metric = raw_metric,
+                             .new_metric = new_metric,
+                             .eq_type = statistics::getEquationTypeFromString(type) });
     }
   }
   catch (YAML::BadConversion& e)
