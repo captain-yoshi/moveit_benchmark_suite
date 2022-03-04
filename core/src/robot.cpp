@@ -481,6 +481,17 @@ bool Robot::loadKinematics(const std::string& group_name, bool load_subgroups)
     jmg->setDefaultIKTimeout(timeout[name]);
   }
 
+  // Store kinematic plugin names
+  for (const auto& pair : imap_)
+  {
+    std::string plugin_name;
+    if (handler_.getParam(ROBOT_KINEMATICS + "/" + pair.first + "/kinematics_solver", plugin_name))
+
+      kinematic_plugin_names_.insert(plugin_name);
+    else
+      ROS_WARN("Kinematic solver name missing on Param server");
+  }
+
   model_->setKinematicsAllocators(imap_);
   return true;
 }
@@ -553,6 +564,11 @@ srdf::ModelConstSharedPtr Robot::getSRDF() const
 const std::string& Robot::getSRDFString() const
 {
   return srdf_;
+}
+
+const std::set<std::string>& Robot::getKinematicPluginNames()
+{
+  return kinematic_plugin_names_;
 }
 
 const robot_model::RobotStatePtr& Robot::getStateConst() const

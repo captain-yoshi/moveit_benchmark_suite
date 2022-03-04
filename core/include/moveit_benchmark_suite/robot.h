@@ -250,6 +250,8 @@ public:
 
   /** \} */
 
+  const std::set<std::string>& getKinematicPluginNames();
+
   /** \name Robot State Operations
       \{ */
 
@@ -434,6 +436,7 @@ protected:
 
   std::string urdf_;  ///< The URDF as a string.
   std::string srdf_;  ///< The SRDF as a string.
+  std::set<std::string> kinematic_plugin_names_;
 
   PostProcessXMLFunction urdf_function_;         ///< URDF post-processing function.
   PostProcessXMLFunction srdf_function_;         ///< SRDF post-processing function.
