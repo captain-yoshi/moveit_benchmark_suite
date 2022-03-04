@@ -380,6 +380,60 @@ metadata::SW IO::getROSPkgMetadata(const std::string& name)
   return sw;
 }
 
+std::vector<metadata::SW> IO::getROSPkgMetadataFromPlugins(const std::set<std::string>& plugin_names,
+                                                           const std::string& package_name, const std::string& filter)
+{
+  tinyxml2::XMLDocument xml;
+  std::map<std::string, metadata::SW> pkg_map;
+  std::vector<std::pair<std::string, std::string>> exports;
+
+  // Get plugins packages associated with the given package name
+  ros::package::getPlugins(package_name, "plugin", exports, true);
+
+  for (const auto& pair : exports)
+  {
+    const auto& pkg = pair.first;
+    const auto& plugin_path = pair.second;
+
+    // Load XML file
+    tinyxml2::XMLError ec = xml.LoadFile(plugin_path.c_str());
+    if (ec != tinyxml2::XMLError::XML_SUCCESS)
+      throw std::runtime_error("Unable to load files");
+
+    // Search plugin XML name attribute from class element
+    for (tinyxml2::XMLElement* child = xml.FirstChildElement("library"); child != NULL;
+         child = child->NextSiblingElement())
+    {
+      tinyxml2::XMLElement* class_element = child->FirstChildElement("class");
+      if (class_element)
+      {
+        const char* name = class_element->Attribute("name");
+        if (name != NULL)
+        {
+          auto it = plugin_names.find(name);
+          if (it != plugin_names.end())
+            pkg_map.insert({ name, IO::getROSPkgMetadata(pkg) });
+        }
+      }
+    }
+  }
+
+  if (plugin_names.size() != pkg_map.size())
+    throw std::runtime_error("Did not find all plugins ROS package metadata");
+
+  std::vector<metadata::SW> sw;
+  for (const auto& pair : pkg_map)
+  {
+    // Filter out packages that starts with given filter
+    if (pair.first.rfind(filter, 0) == 0)
+      continue;
+
+    sw.push_back(pair.second);
+  }
+
+  return sw;
+}
+
 metadata::SW IO::getDebianPkgMetadata(const std::string& name)
 {
   metadata::SW sw;

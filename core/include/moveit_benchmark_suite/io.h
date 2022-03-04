@@ -181,6 +181,17 @@ metadata::OS getOSMetadata();
  */
 metadata::SW getROSPkgMetadata(const std::string& name);
 
+/** \brief Get ROS package specification from pluginlib.
+ *  \param[in] plugin_names Names of the plugin class from the xml plugin file
+ *             e.g. <class name="ur_kinematics/UR5KinematicsPlugin" ... >
+ *  \param[in] package_name Names of the ROS package
+ *  \param[in] filter_prefix Package name prefix to filter out
+ *  \return The software specifications.
+ */
+std::vector<metadata::SW> getROSPkgMetadataFromPlugins(const std::set<std::string>& plugin_names,
+                                                       const std::string& package_name = "moveit_core",
+                                                       const std::string& filter_prefix = "moveit");
+
 /** \brief Get Debian package specification.
  *  \param[in] name Name of the package.
  *  \return The Software spec.
