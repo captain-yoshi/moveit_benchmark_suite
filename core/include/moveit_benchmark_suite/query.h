@@ -93,6 +93,19 @@ struct QuerySetup
       it->second.insert(std::pair<QueryName, QueryResource>(name, resource));
   }
 
+  bool hasQueryKey(const std::string& group, const std::string& key) const
+  {
+    auto it = query_setup.find(group);
+    if (it == query_setup.end())
+      return false;
+
+    auto it2 = it->second.find(key);
+    if (it2 == it->second.end())
+      return false;
+
+    return true;
+  }
+
   std::map<QueryGroup, std::map<QueryName, QueryResource>> query_setup;
 };
 
