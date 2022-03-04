@@ -137,35 +137,40 @@ public:
 
   std::vector<metadata::SW> getSoftwareMetadata() override
   {
+    const auto& setup = this->getQuerySetup();
     std::vector<metadata::SW> metadata;
 
     // Default ROS pkg
     metadata.push_back(IO::getROSPkgMetadata("moveit_core"));
     metadata.push_back(IO::getROSPkgMetadata("moveit_benchmark_suite"));
 
-    // SW depending on queries
-    const auto& setup = this->getQuerySetup();
-
+    // Collision detectors
     if (setup.hasQueryKey("collision_detector", "FCL"))
       metadata.push_back(IO::getROSPkgMetadata("fcl"));
     if (setup.hasQueryKey("collision_detector", "Bullet"))
       metadata.push_back(IO::getDebianPkgMetadata("libbullet-dev"));
 
+    // Motion planning pipelines
     if (setup.hasQueryKey("pipeline", "ompl"))
       metadata.push_back(IO::getROSPkgMetadata("ompl"));
-
-    // chomp is part of moveit so not adding it
-
+    // skip chomp because part of moveit so not adding it
     if (setup.hasQueryKey("pipeline", "stomp"))
       metadata.push_back(IO::getROSPkgMetadata("stomp"));
 
-    // TODO retrieve kinematics from ROS Param
-    std::set<std::string> plugin_names = { "ur_kinematics/UR3KinematicsPlugin" };
+    // Robot kinematics
+    std::set<std::string> plugin_names;
+    for (const auto& query : this->getQueries())
+    {
+      const auto& plugins = query->robot->getKinematicPluginNames();
 
-    auto sw = IO::getROSPkgMetadataFromPlugins(plugin_names);
+      for (const auto& plugin : plugins)
+        plugin_names.insert(plugin);
+    }
 
-    for (const auto& s : sw)
-      metadata.push_back(s);
+    auto plugin_metadata = IO::getROSPkgMetadataFromPlugins(plugin_names, "moveit_core", "moveit");
+
+    for (const auto& plugin : plugin_metadata)
+      metadata.push_back(plugin);
 
     return metadata;
   }
