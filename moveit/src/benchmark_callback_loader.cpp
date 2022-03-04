@@ -62,6 +62,11 @@ BenchmarkCallbackLoader::BenchmarkCallbackLoader(Benchmark& benchmark) : benchma
 
 void BenchmarkCallbackLoader::addCallbacks(PlanningPipelineProfiler& profiler)
 {
+  // Software metadata
+  benchmark_.addPreBenchmarkCallback(
+      [&](DataSetPtr& dataset) { dataset->sw_metadata = profiler.getSoftwareMetadata(); });
+
+  // Visuals
   if (rviz_)
     profiler.addPostRunQueryCallback([&](const MotionPlanningQuery& query, MotionPlanningResult& result, Data& data) {
       rviz_->initialize(query.robot, query.scene);
@@ -84,6 +89,11 @@ void BenchmarkCallbackLoader::addCallbacks(PlanningPipelineProfiler& profiler)
 
 void BenchmarkCallbackLoader::addCallbacks(MoveGroupInterfaceProfiler& profiler)
 {
+  // Software metadata
+  benchmark_.addPreBenchmarkCallback(
+      [&](DataSetPtr& dataset) { dataset->sw_metadata = profiler.getSoftwareMetadata(); });
+
+  // Visuals
   if (rviz_)
     profiler.addPostRunQueryCallback([&](const MotionPlanningQuery& query, MotionPlanningResult& result, Data& data) {
       rviz_->initialize(query.robot, query.scene);
@@ -106,6 +116,11 @@ void BenchmarkCallbackLoader::addCallbacks(MoveGroupInterfaceProfiler& profiler)
 
 void BenchmarkCallbackLoader::addCallbacks(CollisionCheckProfiler& profiler)
 {
+  // Software metadata
+  benchmark_.addPreBenchmarkCallback(
+      [&](DataSetPtr& dataset) { dataset->sw_metadata = profiler.getSoftwareMetadata(); });
+
+  // Visuals
   if (rviz_)
     profiler.addPostRunQueryCallback([&](const CollisionCheckQuery& query, CollisionCheckResult& result, Data& data) {
       rviz_->initialize(query.robot, query.scene);
