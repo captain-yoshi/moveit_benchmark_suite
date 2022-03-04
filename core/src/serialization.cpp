@@ -94,7 +94,7 @@ bool convert<moveit_benchmark_suite::QuerySetup>::decode(const Node& node, movei
   return true;
 }
 
-Node convert<moveit_benchmark_suite::CPUInfo>::encode(const moveit_benchmark_suite::CPUInfo& rhs)
+Node convert<moveit_benchmark_suite::metadata::CPU>::encode(const moveit_benchmark_suite::metadata::CPU& rhs)
 {
   Node node;
 
@@ -110,7 +110,7 @@ Node convert<moveit_benchmark_suite::CPUInfo>::encode(const moveit_benchmark_sui
   return node;
 }
 
-bool convert<moveit_benchmark_suite::CPUInfo>::decode(const Node& node, moveit_benchmark_suite::CPUInfo& rhs)
+bool convert<moveit_benchmark_suite::metadata::CPU>::decode(const Node& node, moveit_benchmark_suite::metadata::CPU& rhs)
 {
   rhs.model = node["model"].as<std::string>();
   rhs.model_name = node["model_name"].as<std::string>();
@@ -124,27 +124,27 @@ bool convert<moveit_benchmark_suite::CPUInfo>::decode(const Node& node, moveit_b
   return true;
 }
 
-Node convert<moveit_benchmark_suite::GPUInfo>::encode(const moveit_benchmark_suite::GPUInfo& rhs)
+Node convert<moveit_benchmark_suite::metadata::GPU>::encode(const moveit_benchmark_suite::metadata::GPU& rhs)
 {
   Node node;
 
-  for (const auto& model_name : rhs.model_names)
-    node["model_names"].push_back(model_name);
+  node["product"] = rhs.product;
+  node["vendor"] = rhs.vendor;
+  node["version"] = rhs.version;
 
   return node;
 }
 
-bool convert<moveit_benchmark_suite::GPUInfo>::decode(const Node& node, moveit_benchmark_suite::GPUInfo& rhs)
+bool convert<moveit_benchmark_suite::metadata::GPU>::decode(const Node& node, moveit_benchmark_suite::metadata::GPU& rhs)
 {
-  int n_model = node["model_names"].size();
-
-  for (int i = 0; i < n_model; ++i)
-    rhs.model_names.push_back(node["model_names"][i].as<std::string>());
+  rhs.product = node["product"].as<std::string>("");
+  rhs.vendor = node["vendor"].as<std::string>("");
+  rhs.version = node["version"].as<std::string>("");
 
   return true;
 }
 
-Node convert<moveit_benchmark_suite::OSInfo>::encode(const moveit_benchmark_suite::OSInfo& rhs)
+Node convert<moveit_benchmark_suite::metadata::OS>::encode(const moveit_benchmark_suite::metadata::OS& rhs)
 {
   Node node;
 
@@ -156,32 +156,43 @@ Node convert<moveit_benchmark_suite::OSInfo>::encode(const moveit_benchmark_suit
   return node;
 }
 
-bool convert<moveit_benchmark_suite::OSInfo>::decode(const Node& node, moveit_benchmark_suite::OSInfo& rhs)
+bool convert<moveit_benchmark_suite::metadata::OS>::decode(const Node& node, moveit_benchmark_suite::metadata::OS& rhs)
 {
-  rhs.kernel_name = node["kernel_name"].as<std::string>();
-  rhs.kernel_release = node["kernel_release"].as<std::string>();
-  rhs.distribution = node["distribution"].as<std::string>();
-  rhs.version = node["version"].as<std::string>();
+  rhs.kernel_name = node["kernel_name"].as<std::string>("");
+  rhs.kernel_release = node["kernel_release"].as<std::string>("");
+  rhs.distribution = node["distribution"].as<std::string>("");
+  rhs.version = node["version"].as<std::string>("");
 
   return true;
 }
 
-Node convert<moveit_benchmark_suite::RosPkgInfo>::encode(const moveit_benchmark_suite::RosPkgInfo& rhs)
+Node convert<moveit_benchmark_suite::metadata::SW>::encode(const moveit_benchmark_suite::metadata::SW& rhs)
 {
   Node node;
 
+  node["name"] = rhs.name;
   node["version"] = rhs.version;
-  node["git_branch"] = rhs.git_branch;
-  node["git_commit"] = rhs.git_commit;
+
+  if (!rhs.pkg_manager.empty())
+    node["pkg_manager"] = rhs.pkg_manager;
+
+  if (!rhs.git_branch.empty())
+  {
+    node["git_branch"] = rhs.git_branch;
+    node["git_commit"] = rhs.git_commit;
+  }
 
   return node;
 }
 
-bool convert<moveit_benchmark_suite::RosPkgInfo>::decode(const Node& node, moveit_benchmark_suite::RosPkgInfo& rhs)
+bool convert<moveit_benchmark_suite::metadata::SW>::decode(const Node& node, moveit_benchmark_suite::metadata::SW& rhs)
 {
+  rhs.name = node["name"].as<std::string>();
   rhs.version = node["version"].as<std::string>();
-  rhs.git_branch = node["git_branch"].as<std::string>();
-  rhs.git_commit = node["git_commit"].as<std::string>();
+  rhs.pkg_manager = node["pkg_manager"].as<std::string>("");
+
+  rhs.git_branch = node["git_branch"].as<std::string>("");
+  rhs.git_commit = node["git_commit"].as<std::string>("");
 
   return true;
 }
@@ -218,28 +229,27 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
   Node node;
 
   // dataset
-  node[DATASET_NAME_KEY] = rhs.name;
-  node[DATASET_TYPE_KEY] = rhs.type;
-  node[DATASET_UUID_KEY] = rhs.uuid;
-  node[DATASET_DATE_KEY] = to_simple_string(rhs.date);
-  node[DATASET_DATE_UTC_KEY] = to_simple_string(rhs.date_utc);
-  node[DATASET_TOTAL_TIME_KEY] = rhs.time;
-  node[DATASET_TIME_LIMIT_KEY] = rhs.allowed_time;
-  node[DATASET_TRIALS_KEY] = rhs.trials;
-  node[DATASET_HOSTNAME_KEY] = rhs.hostname;
+  node["name"] = rhs.name;
+  node["type"] = rhs.type;
+  node["uuid"] = rhs.uuid;
+  node["date"] = to_simple_string(rhs.date);
+  node["date_utc"] = to_simple_string(rhs.date_utc);
+  node["total_time"] = rhs.time;
+  node["timelimit"] = rhs.allowed_time;
+  node["trials"] = rhs.trials;
+  node["hostname"] = rhs.hostname;
 
   // hw
-  node[DATASET_HW_KEY]["cpu"] = rhs.cpuinfo;
-  node[DATASET_HW_KEY]["gpu"] = rhs.gpuinfo;
+  node["cpu"] = rhs.cpu;
+  node["gpu"] = rhs.gpus;
 
   // sw
-  node[DATASET_SW_KEY]["moveit"] = rhs.moveitinfo;
-  node[DATASET_SW_KEY]["moveit_benchmark_suite"] = rhs.moveitbenchmarksuiteinfo;
+  node["sw"] = rhs.sw_metadata;
 
   // os
-  node[DATASET_OS_KEY] = rhs.osinfo;
+  node["os"] = rhs.os;
 
-  node[DATASET_CONFIG_KEY] = rhs.query_setup.query_setup;
+  node["config"] = rhs.query_setup.query_setup;
 
   for (const auto& data_map : rhs.data)
   {
@@ -247,17 +257,17 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
 
     for (const auto& data : data_map.second)
     {
-      d_node[DATASET_NAME_KEY] = data_map.first;
-      d_node[DATASET_CONFIG_KEY] = data->query->group_name_map;
+      d_node["name"] = data_map.first;
+      d_node["config"] = data->query->group_name_map;
 
       for (const auto& metric : data->metrics)
       {
-        d_node[DATA_METRIC_KEY][metric.first].push_back(metric.second);
-        d_node[DATA_METRIC_KEY][metric.first].SetStyle(EmitterStyle::Flow);
+        d_node["metrics"][metric.first].push_back(metric.second);
+        d_node["metrics"][metric.first].SetStyle(EmitterStyle::Flow);
       }
     }
     // Remove sequence if metric has only one value
-    for (YAML::iterator it = d_node[DATA_METRIC_KEY].begin(); it != d_node[DATA_METRIC_KEY].end(); ++it)
+    for (YAML::iterator it = d_node["metrics"].begin(); it != d_node["metrics"].end(); ++it)
     {
       YAML::Node value = it->second;
       if (value.Type() == YAML::NodeType::Sequence)
@@ -272,7 +282,7 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
       }
     }
 
-    node[DATASET_DATA_KEY].push_back(d_node);
+    node["data"].push_back(d_node);
   }
 
   return node;
@@ -282,28 +292,27 @@ bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& node, moveit_b
 {
   using namespace moveit_benchmark_suite;
 
-  rhs.name = node[DATASET_NAME_KEY].as<std::string>();
-  rhs.type = node[DATASET_TYPE_KEY].as<std::string>();
-  rhs.uuid = node[DATASET_UUID_KEY].as<std::string>();
-  rhs.date = boost::posix_time::time_from_string(node[DATASET_DATE_KEY].as<std::string>());
-  rhs.date_utc = boost::posix_time::time_from_string(node[DATASET_DATE_UTC_KEY].as<std::string>());
-  rhs.time = node[DATASET_TOTAL_TIME_KEY].as<double>();
-  rhs.allowed_time = node[DATASET_TIME_LIMIT_KEY].as<double>();
-  rhs.trials = node[DATASET_TRIALS_KEY].as<int>();
-  rhs.hostname = node[DATASET_HOSTNAME_KEY].as<std::string>();
+  rhs.name = node["name"].as<std::string>();
+  rhs.type = node["type"].as<std::string>();
+  rhs.uuid = node["uuid"].as<std::string>();
+  rhs.date = boost::posix_time::time_from_string(node["date"].as<std::string>());
+  rhs.date_utc = boost::posix_time::time_from_string(node["date_utc"].as<std::string>());
+  rhs.time = node["total_time"].as<double>();
+  rhs.allowed_time = node["timelimit"].as<double>();
+  rhs.trials = node["trials"].as<int>();
+  rhs.hostname = node["hostname"].as<std::string>();
 
   // hw
-  rhs.cpuinfo = node[DATASET_HW_KEY]["cpu"].as<CPUInfo>();
-  rhs.gpuinfo = node[DATASET_HW_KEY]["gpu"].as<GPUInfo>();
+  rhs.cpu = node["cpu"].as<metadata::CPU>();
+  rhs.gpus = node["gpu"].as<std::vector<metadata::GPU>>();
 
   // sw
-  rhs.moveitinfo = node[DATASET_SW_KEY]["moveit"].as<RosPkgInfo>();
-  rhs.moveitbenchmarksuiteinfo = node[DATASET_SW_KEY]["moveit_benchmark_suite"].as<RosPkgInfo>();
+  rhs.sw_metadata = node["sw"].as<std::vector<metadata::SW>>();
 
   // os
-  rhs.osinfo = node[DATASET_OS_KEY].as<OSInfo>();
+  rhs.os = node["os"].as<metadata::OS>();
 
-  rhs.query_setup = node[DATASET_CONFIG_KEY].as<QuerySetup>();
+  rhs.query_setup = node["config"].as<QuerySetup>();
 
   // data
   for (YAML::const_iterator it = node["data"].begin(); it != node["data"].end(); ++it)
@@ -385,6 +394,7 @@ bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& node, moveit_b
 
   return true;
 }
+
 Node convert<moveit_benchmark_suite::Metric>::encode(const moveit_benchmark_suite::Metric& rhs)
 {
   Node node;

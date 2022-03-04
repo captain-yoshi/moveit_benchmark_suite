@@ -103,11 +103,10 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
   dataset->threads = 1.0;
   dataset->hostname = IO::getHostname();
 
-  dataset->cpuinfo = IO::getHardwareCPU();
-  dataset->gpuinfo = IO::getHardwareGPU();
-  dataset->osinfo = IO::getOSInfo();
-  dataset->moveitinfo = IO::getMoveitInfo();
-  dataset->moveitbenchmarksuiteinfo = IO::getMoveitBenchmarkSuiteInfo();
+  dataset->cpu = IO::getCPUMetadata();
+  dataset->gpus = IO::getGPUMetadata();
+  dataset->os = IO::getOSMetadata();
+  // Add software metadata through the pre benchmark callback
 
   dataset->type = profiler.getProfilerName();
   dataset->query_setup = profiler.getQuerySetup();

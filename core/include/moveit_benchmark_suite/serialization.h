@@ -51,31 +51,31 @@ struct convert<moveit_benchmark_suite::QuerySetup>
 };
 
 template <>
-struct convert<moveit_benchmark_suite::CPUInfo>
+struct convert<moveit_benchmark_suite::metadata::CPU>
 {
-  static Node encode(const moveit_benchmark_suite::CPUInfo& rhs);
-  static bool decode(const Node& node, moveit_benchmark_suite::CPUInfo& rhs);
+  static Node encode(const moveit_benchmark_suite::metadata::CPU& rhs);
+  static bool decode(const Node& node, moveit_benchmark_suite::metadata::CPU& rhs);
 };
 
 template <>
-struct convert<moveit_benchmark_suite::GPUInfo>
+struct convert<moveit_benchmark_suite::metadata::GPU>
 {
-  static Node encode(const moveit_benchmark_suite::GPUInfo& rhs);
-  static bool decode(const Node& node, moveit_benchmark_suite::GPUInfo& rhs);
+  static Node encode(const moveit_benchmark_suite::metadata::GPU& rhs);
+  static bool decode(const Node& node, moveit_benchmark_suite::metadata::GPU& rhs);
 };
 
 template <>
-struct convert<moveit_benchmark_suite::OSInfo>
+struct convert<moveit_benchmark_suite::metadata::OS>
 {
-  static Node encode(const moveit_benchmark_suite::OSInfo& rhs);
-  static bool decode(const Node& node, moveit_benchmark_suite::OSInfo& rhs);
+  static Node encode(const moveit_benchmark_suite::metadata::OS& rhs);
+  static bool decode(const Node& node, moveit_benchmark_suite::metadata::OS& rhs);
 };
 
 template <>
-struct convert<moveit_benchmark_suite::RosPkgInfo>
+struct convert<moveit_benchmark_suite::metadata::SW>
 {
-  static Node encode(const moveit_benchmark_suite::RosPkgInfo& rhs);
-  static bool decode(const Node& node, moveit_benchmark_suite::RosPkgInfo& rhs);
+  static Node encode(const moveit_benchmark_suite::metadata::SW& rhs);
+  static bool decode(const Node& node, moveit_benchmark_suite::metadata::SW& rhs);
 };
 
 template <>

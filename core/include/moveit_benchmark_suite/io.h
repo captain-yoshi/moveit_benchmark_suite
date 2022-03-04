@@ -46,6 +46,7 @@
 #include <boost/date_time.hpp>  // for date operations
 
 #include <moveit_benchmark_suite/dataset.h>
+#include <moveit_benchmark_suite/metadata.h>
 #include <moveit_benchmark_suite/serialization.h>
 
 namespace moveit_benchmark_suite {
@@ -144,15 +145,6 @@ void deleteFile(const std::string& file);
  */
 const std::pair<bool, std::vector<std::string>> listDirectory(const std::string& directory);
 
-const CPUInfo getHardwareCPU();
-
-const GPUInfo getHardwareGPU();
-
-const OSInfo getOSInfo();
-
-const RosPkgInfo getMoveitInfo();
-const RosPkgInfo getMoveitBenchmarkSuiteInfo();
-
 /** \brief Get the hostname of the system.
  *  \return String of the hostname.
  */
@@ -167,6 +159,33 @@ std::size_t getProcessID();
  *  \return The thread ID.
  */
 std::size_t getThreadID();
+
+/** \brief Get the CPU specification.
+ *  \return The CPU spec.
+ */
+metadata::CPU getCPUMetadata();
+
+/** \brief Get the GPU specification.
+ *  \return The list of GPU spec.
+ */
+std::vector<metadata::GPU> getGPUMetadata();
+
+/** \brief Get the operating system specification.
+ *  \return The OS spec.
+ */
+metadata::OS getOSMetadata();
+
+/** \brief Get ROS package specification.
+ *  \param[in] name Name of the package.
+ *  \return The Software spec.
+ */
+metadata::SW getROSPkgMetadata(const std::string& name);
+
+/** \brief Get Debian package specification.
+ *  \param[in] name Name of the package.
+ *  \return The Software spec.
+ */
+metadata::SW getDebianPkgMetadata(const std::string& name);
 
 /** \brief Get the current time (up to milliseconds)
  *  \return The time.
