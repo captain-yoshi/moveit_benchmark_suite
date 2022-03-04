@@ -38,6 +38,8 @@
 
 #pragma once
 
+#include <pluginlib/class_loader.h>
+
 #include <moveit_benchmark_suite/dataset.h>
 #include <moveit_benchmark_suite/profiler.h>
 #include <moveit_benchmark_suite/planning.h>
@@ -131,6 +133,41 @@ public:
 
     if (this->options.metrics & Metrics::SMOOTHNESS)
       data.metrics["smoothness"] = result.success ? result.trajectory->getSmoothness() : 0.0;
+  }
+
+  std::vector<metadata::SW> getSoftwareMetadata() override
+  {
+    std::vector<metadata::SW> metadata;
+
+    // Default ROS pkg
+    metadata.push_back(IO::getROSPkgMetadata("moveit_core"));
+    metadata.push_back(IO::getROSPkgMetadata("moveit_benchmark_suite"));
+
+    // SW depending on queries
+    const auto& setup = this->getQuerySetup();
+
+    if (setup.hasQueryKey("collision_detector", "FCL"))
+      metadata.push_back(IO::getROSPkgMetadata("fcl"));
+    if (setup.hasQueryKey("collision_detector", "Bullet"))
+      metadata.push_back(IO::getDebianPkgMetadata("libbullet-dev"));
+
+    if (setup.hasQueryKey("pipeline", "ompl"))
+      metadata.push_back(IO::getROSPkgMetadata("ompl"));
+
+    // chomp is part of moveit so not adding it
+
+    if (setup.hasQueryKey("pipeline", "stomp"))
+      metadata.push_back(IO::getROSPkgMetadata("stomp"));
+
+    // TODO retrieve kinematics from ROS Param
+    std::set<std::string> plugin_names = { "ur_kinematics/UR3KinematicsPlugin" };
+
+    auto sw = IO::getROSPkgMetadataFromPlugins(plugin_names);
+
+    for (const auto& s : sw)
+      metadata.push_back(s);
+
+    return metadata;
   }
 };
 

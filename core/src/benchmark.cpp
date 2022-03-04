@@ -71,6 +71,12 @@ void Benchmark::addPostQueryCallback(const PostQueryCallback& callback)
 {
   post_query_callbacks_.push_back(callback);
 }
+
+void Benchmark::addPreBenchmarkCallback(const PreBenchmarkCallback& callback)
+{
+  pre_benchmark_callbacks_.push_back(callback);
+}
+
 void Benchmark::addPostBenchmarkCallback(const PostBenchmarkCallback& callback)
 {
   post_benchmark_callbacks_.push_back(callback);
@@ -97,17 +103,13 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
   dataset->threads = 1.0;
   dataset->hostname = IO::getHostname();
 
-  dataset->cpuinfo = IO::getHardwareCPU();
-  dataset->gpuinfo = IO::getHardwareGPU();
-  dataset->osinfo = IO::getOSInfo();
-  dataset->moveitinfo = IO::getMoveitInfo();
-  dataset->moveitbenchmarksuiteinfo = IO::getMoveitBenchmarkSuiteInfo();
+  dataset->cpu = IO::getCPUMetadata();
+  dataset->gpus = IO::getGPUMetadata();
+  dataset->os = IO::getOSMetadata();
+  // Add software metadata through the pre benchmark callback
 
   dataset->type = profiler.getProfilerName();
   dataset->query_setup = profiler.getQuerySetup();
-
-  // Metadata as a YAML node
-  fillMetaData(dataset);
 
   const auto query_size = profiler.getQuerySize();
 
@@ -116,6 +118,9 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
     ROS_ERROR("Cannot run benchmark, no query available");
     return nullptr;
   }
+
+  for (const auto& pre_benchmark_cb : pre_benchmark_callbacks_)
+    pre_benchmark_cb(dataset);
 
   for (std::size_t query_index = 0; query_index < query_size; ++query_index)
   {
@@ -183,25 +188,3 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
 
   return dataset;
 };
-
-/** \brief Run benchmarking on this experiment.
- *  Note that, for some planners, multiple threads cannot be used without polluting the dataset, due
- * to reuse of underlying datastructures between queries, e.g., the robowflex_ompl planner.
- *  \param[in] n_threads Number of threads to use for benchmarking.
- *  \return The computed dataset.
- */
-
-void Benchmark::fillMetaData(DataSetPtr& dataset) const
-{
-  // dataset->metadata[DATASET_HW_KEY]["cpu"] = dataset->cpuinfo;
-  // dataset->metadata[DATASET_HW_KEY]["gpu"] = dataset->gpuinfo;
-  // dataset->metadata[DATASET_SW_KEY]["moveit"] = dataset->moveitinfo;
-  // dataset->metadata[DATASET_SW_KEY]["moveit_benchmark_suite"] = dataset->moveitbenchmarksuiteinfo;
-  // dataset->metadata[DATASET_OS_KEY] = dataset->osinfo;
-  // dataset->metadata[DATASET_NAME_KEY] = dataset->name;
-  // dataset->metadata[DATASET_TYPE_KEY] = dataset->type;
-  // dataset->metadata[DATASET_UUID_KEY] = dataset->uuid;
-  // dataset->metadata[DATASET_DATE_KEY] = to_simple_string(dataset->date);
-  // dataset->metadata[DATASET_TOTAL_TIME_KEY] = dataset->time;
-  // dataset->metadata[DATASET_CONFIG_KEY] = dataset->query_setup.query_setup;
-}

@@ -33,92 +33,58 @@
  *********************************************************************/
 
 /* Author: Captain Yoshi
-   Desc:
+   Desc: Collection of hardware and software metadata
 */
 
 #pragma once
 
-#include <cstdint>
+#include <functional>
+#include <map>
 #include <string>
 #include <vector>
-#include <tuple>
-#include <map>
-#include <fstream>
-#include <chrono>
-
-#include <boost/variant.hpp>
-
-#include <moveit/macros/class_forward.h>
-
-#include <ros/console.h>
 
 namespace moveit_benchmark_suite {
-MOVEIT_CLASS_FORWARD(Query);
-MOVEIT_CLASS_FORWARD(Result);
+namespace metadata {
 
-using QueryGroup = std::string;
-using QueryName = std::string;
-using QueryResource = std::string;
-
-using QueryGroupName = std::map<QueryGroup, QueryName>;
-
-class Query
+/// Central processing unit
+struct CPU
 {
-public:
-  /** \brief Empty constructor.
-   */
-  Query() = default;
-
-  virtual ~Query(){};
-
-  Query(const std::string& name, const QueryGroupName& group_name_map) : name(name), group_name_map(group_name_map){};
-
-  std::string name;  ///< Name of this query.
-  QueryGroupName group_name_map;
+  std::string model;
+  std::string model_name;
+  std::string family;
+  std::string vendor_id;
+  std::string architecture;
+  std::string sockets;
+  std::string core_per_socket;
+  std::string thread_per_core;
 };
 
-// pair - wise combinations of a query
-struct QuerySetup
+/// Graphics processing unit
+struct GPU
 {
-  /** \brief Empty constructor.
-   */
-  QuerySetup() = default;
-
-  void addQuery(const QueryGroup& group, const QueryName& name, const QueryResource& resource = "")
-  {
-    auto it = query_setup.find(group);
-    if (it == query_setup.end())
-      query_setup.insert(std::pair<QueryGroup, std::map<QueryName, QueryResource>>(group, { { name, resource } }));
-    else
-      it->second.insert(std::pair<QueryName, QueryResource>(name, resource));
-  }
-
-  bool hasQueryKey(const std::string& group, const std::string& key) const
-  {
-    auto it = query_setup.find(group);
-    if (it == query_setup.end())
-      return false;
-
-    auto it2 = it->second.find(key);
-    if (it2 == it->second.end())
-      return false;
-
-    return true;
-  }
-
-  std::map<QueryGroup, std::map<QueryName, QueryResource>> query_setup;
+  std::string product;
+  std::string vendor;
+  std::string version;
 };
 
-class Result
+/// Operating system
+struct OS
 {
-public:
-  Result() = default;
-
-  virtual ~Result(){};
-  /** \name Planning Query and Response
-      \{ */
-
-  bool success = false;  ///< Was the plan successful?
+  std::string kernel_name;
+  std::string kernel_release;
+  std::string distribution;
+  std::string version;
 };
 
+/// General software
+struct SW
+{
+  std::string name;
+  std::string version;
+  std::string git_branch;
+  std::string git_commit;
+  std::string pkg_manager;  // e.g. DPKG, ROSPackage
+};
+
+}  // namespace metadata
 }  // namespace moveit_benchmark_suite

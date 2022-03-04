@@ -63,6 +63,25 @@ CollisionCheckQuery::CollisionCheckQuery(const std::string& name,               
 CollisionCheckProfiler::CollisionCheckProfiler()
   : ProfilerTemplate<CollisionCheckQuery, CollisionCheckResult>(ProfilerType::COLLISION_CHECK){};
 
+std::vector<metadata::SW> CollisionCheckProfiler::getSoftwareMetadata()
+{
+  std::vector<metadata::SW> metadata;
+
+  // Default ROS pkg
+  metadata.push_back(IO::getROSPkgMetadata("moveit_core"));
+  metadata.push_back(IO::getROSPkgMetadata("moveit_benchmark_suite"));
+
+  // SW depending on queries
+  const auto& setup = getQuerySetup();
+
+  if (setup.hasQueryKey("collision_detector", "FCL"))
+    metadata.push_back(IO::getROSPkgMetadata("fcl"));
+  if (setup.hasQueryKey("collision_detector", "Bullet"))
+    metadata.push_back(IO::getDebianPkgMetadata("libbullet-dev"));
+
+  return metadata;
+}
+
 void CollisionCheckProfiler::buildQueriesFromYAML(const std::string& filename)
 {
   CollisionCheckBuilder builder;

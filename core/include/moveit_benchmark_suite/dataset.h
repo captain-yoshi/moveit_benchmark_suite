@@ -57,62 +57,12 @@
 #include <ros/console.h>
 
 #include <moveit_benchmark_suite/query.h>
+#include <moveit_benchmark_suite/metadata.h>
 
 namespace moveit_benchmark_suite {
+
 MOVEIT_CLASS_FORWARD(Data);
 MOVEIT_CLASS_FORWARD(DataSet);
-
-// Dataset
-static const std::string DATASET_CONFIG_KEY = "config";
-static const std::string DATASET_HW_KEY = "hw";
-static const std::string DATASET_SW_KEY = "sw";
-static const std::string DATASET_OS_KEY = "os";
-static const std::string DATASET_NAME_KEY = "name";
-static const std::string DATASET_UUID_KEY = "uuid";
-static const std::string DATASET_DATE_KEY = "date";
-static const std::string DATASET_DATE_UTC_KEY = "dateutc";
-static const std::string DATASET_TOTAL_TIME_KEY = "totaltime";
-static const std::string DATASET_TYPE_KEY = "type";
-static const std::string DATASET_TIME_LIMIT_KEY = "timelimit";
-static const std::string DATASET_TRIALS_KEY = "trials";
-static const std::string DATASET_HOSTNAME_KEY = "hostname";
-static const std::string DATASET_DATA_KEY = "data";
-
-// Data
-static const std::string DATA_CONFIG_KEY = DATASET_CONFIG_KEY;
-static const std::string DATA_METRIC_KEY = "metrics";
-
-struct CPUInfo
-{
-  std::string model;
-  std::string model_name;
-  std::string family;
-  std::string vendor_id;
-  std::string architecture;
-  std::string sockets;
-  std::string core_per_socket;
-  std::string thread_per_core;
-};
-
-struct GPUInfo
-{
-  std::vector<std::string> model_names;
-};
-
-struct OSInfo
-{
-  std::string kernel_name;
-  std::string kernel_release;
-  std::string distribution;
-  std::string version;
-};
-
-struct RosPkgInfo
-{
-  std::string version;
-  std::string git_branch;
-  std::string git_commit;
-};
 
 // WARNING
 // Adding/Removing variant types will affect:
@@ -175,18 +125,14 @@ public:
   boost::posix_time::ptime date;                          ///< Query start time.
   boost::posix_time::ptime date_utc;                      ///< Query start time.
 
-  // Metadata
-  CPUInfo cpuinfo;
-  GPUInfo gpuinfo;
-  OSInfo osinfo;
-  RosPkgInfo moveitinfo;
-  RosPkgInfo moveitbenchmarksuiteinfo;
+  // HW/SW metadata
+  metadata::OS os;
+  metadata::CPU cpu;
+  std::vector<metadata::GPU> gpus;
+  std::vector<metadata::SW> sw_metadata;
 
   // Setup
   QuerySetup query_setup;
-
-  // Used for filtering diffeent metrics
-  // YAML::Node metadata;
 
   // Benchmark parameters
   double allowed_time;          ///< Allowed time for all queries.

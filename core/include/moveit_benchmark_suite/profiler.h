@@ -39,6 +39,7 @@
 #pragma once
 
 #include <moveit_benchmark_suite/dataset.h>
+#include <moveit_benchmark_suite/metadata.h>
 #include <ros/node_handle.h>
 
 namespace moveit_benchmark_suite {
@@ -162,6 +163,10 @@ public:
   virtual void postRunQuery(const DerivedQuery& query, DerivedResult& result, Data& data){};
 
   virtual void buildQueriesFromYAML(const std::string& filename){};
+  virtual std::vector<metadata::SW> getSoftwareMetadata()
+  {
+    return {};
+  };
 
   virtual const std::string& getQueryName(const QueryId query_id) override
   {

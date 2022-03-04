@@ -315,79 +315,135 @@ bool IO::createFile(std::ofstream& out, const std::string& file)
   return true;
 }
 
-const CPUInfo IO::getHardwareCPU()
+metadata::CPU IO::getCPUMetadata()
 {
-  CPUInfo cpuinfo;
+  metadata::CPU cpu;
 
-  cpuinfo.model = IO::runCommand("lscpu | sed -n 's/Model:[ \t]*//p' | tr -d '\n'");
-  cpuinfo.model_name = IO::runCommand("lscpu | sed -n 's/Model name:[ \t]*//p' | tr -d '\n'");
-  cpuinfo.family = IO::runCommand("lscpu | sed -n 's/CPU family:[ \t]*//p' | tr -d '\n'");
-  cpuinfo.vendor_id = IO::runCommand("lscpu | sed -n 's/Vendor ID:[ \t]*//p' | tr -d '\n'");
-  cpuinfo.architecture = IO::runCommand("lscpu | sed -n 's/Architecture:[ \t]*//p' | tr -d '\n'");
-  cpuinfo.sockets = IO::runCommand("lscpu | sed -n 's/Socket(s):[ \t]*//p' | tr -d '\n'");
-  cpuinfo.core_per_socket = IO::runCommand("lscpu | sed -n 's/Core(s) per socket:[ \t]*//p' | tr -d '\n'");
-  cpuinfo.thread_per_core = IO::runCommand("lscpu | sed -n 's/Thread(s) per core:[ \t]*//p' | tr -d '\n'");
+  cpu.model = IO::runCommand("lscpu | sed -n 's/Model:[ \t]*//p' | tr -d '\n'");
+  cpu.model_name = IO::runCommand("lscpu | sed -n 's/Model name:[ \t]*//p' | tr -d '\n'");
+  cpu.family = IO::runCommand("lscpu | sed -n 's/CPU family:[ \t]*//p' | tr -d '\n'");
+  cpu.vendor_id = IO::runCommand("lscpu | sed -n 's/Vendor ID:[ \t]*//p' | tr -d '\n'");
+  cpu.architecture = IO::runCommand("lscpu | sed -n 's/Architecture:[ \t]*//p' | tr -d '\n'");
+  cpu.sockets = IO::runCommand("lscpu | sed -n 's/Socket(s):[ \t]*//p' | tr -d '\n'");
+  cpu.core_per_socket = IO::runCommand("lscpu | sed -n 's/Core(s) per socket:[ \t]*//p' | tr -d '\n'");
+  cpu.thread_per_core = IO::runCommand("lscpu | sed -n 's/Thread(s) per core:[ \t]*//p' | tr -d '\n'");
 
-  return cpuinfo;
+  return cpu;
 }
 
-const GPUInfo IO::getHardwareGPU()
+std::vector<metadata::GPU> IO::getGPUMetadata()
 {
-  GPUInfo gpuinfo;
+  // Supress warnings about not being sudo
+  const std::string N_GPU_STR = IO::runCommand("lshw -C display 2> /dev/null | grep -c '*-display' | tr -d '\n'");
 
-  std::string n_str_lines = IO::runCommand("lspci | grep -c VGA | tr -d '\n'");
-  int n_lines = std::stoi(n_str_lines);
+  const int N_GPU = std::stoi(N_GPU_STR);
+  std::vector<metadata::GPU> gpus;
 
-  for (int i = 0; i < n_lines; ++i)
+  for (int i = 0; i < N_GPU; ++i)
   {
-    std::string model_name = IO::runCommand("lspci | grep VGA | sed -n '" + std::to_string(i + 1) +
-                                            " p' | sed -n 's/.*compatible controller: //p' | tr -d '\n'");
-    gpuinfo.model_names.push_back(model_name);
+    gpus.emplace_back();
+    gpus.back().vendor = IO::runCommand("lshw -C display 2> /dev/null | grep 'vendor:' | sed -n '" +
+                                        std::to_string(i + 1) + " p' | sed -n 's/.*vendor: //p'  | tr -d '\n'");
+    gpus.back().product = IO::runCommand("lshw -C display 2> /dev/null | grep 'product:' | sed -n '" +
+                                         std::to_string(i + 1) + " p' | sed -n 's/.*product: //p'  | tr -d '\n'");
+    gpus.back().version = IO::runCommand("lshw -C display 2> /dev/null | grep 'version:' | sed -n '" +
+                                         std::to_string(i + 1) + " p' | sed -n 's/.*version: //p'  | tr -d '\n'");
   }
-  return gpuinfo;
+
+  return gpus;
 }
 
-const OSInfo IO::getOSInfo()
+metadata::OS IO::getOSMetadata()
 {
-  OSInfo osinfo;
-
-  osinfo.kernel_name = IO::runCommand("uname --kernel-name | tr -d '\n'");
-  osinfo.kernel_release = IO::runCommand("uname --kernel-release | tr -d '\n'");
-  osinfo.distribution = IO::runCommand("cat /etc/*release | sed -n 's/DISTRIB_ID=//p' | tr -d '\n'");
-  osinfo.version =
+  metadata::OS os;
+  os.kernel_name = IO::runCommand("uname --kernel-name | tr -d '\n'");
+  os.kernel_release = IO::runCommand("uname --kernel-release | tr -d '\n'");
+  os.distribution = IO::runCommand("cat /etc/*release | sed -n 's/DISTRIB_ID=//p' | tr -d '\n'");
+  os.version =
       IO::runCommand("cat /etc/*release | sed -n 's/VERSION=//p' | tr -d '\n' | sed -e 's/^\"//' -e 's/\"$//'");
 
-  return osinfo;
+  return os;
 }
 
-const RosPkgInfo IO::getMoveitInfo()
+metadata::SW IO::getROSPkgMetadata(const std::string& name)
 {
-  std::string path = resolvePackage("package://moveit_core");
+  metadata::SW sw;
 
-  RosPkgInfo info;
+  std::string pathname = resolvePackage("package://" + name);
 
-  info.version = MOVEIT_VERSION_STR;
-  // info.git_branch = MOVEIT_GIT_BRANCH;
-  // info.git_commit = MOVEIT_GIT_COMMIT_HASH;
-  info.git_branch = IO::runCommand(log::format("(cd %1% && git rev-parse --abbrev-ref HEAD | tr -d '\n')", path));
-  info.git_commit = IO::runCommand(log::format("(cd %1% && git rev-parse HEAD | tr -d '\n')", path));
+  sw.name = name;
+  sw.version = IO::runCommand(log::format("(rosversion %1% | tr -d '\n')", name));
+  sw.git_branch = IO::runCommand(log::format("(cd %1% && git rev-parse --abbrev-ref HEAD | tr -d '\n')", pathname));
+  sw.git_commit = IO::runCommand(log::format("(cd %1% && git rev-parse HEAD | tr -d '\n')", pathname));
+  sw.pkg_manager = "ROS Package";
 
-  return info;
+  return sw;
 }
 
-const RosPkgInfo IO::getMoveitBenchmarkSuiteInfo()
+std::vector<metadata::SW> IO::getROSPkgMetadataFromPlugins(const std::set<std::string>& plugin_names,
+                                                           const std::string& package_name, const std::string& filter)
 {
-  std::string path = resolvePackage("package://moveit_benchmark_suite_core");
+  tinyxml2::XMLDocument xml;
+  std::map<std::string, metadata::SW> pkg_map;
+  std::vector<std::pair<std::string, std::string>> exports;
 
-  RosPkgInfo info;
+  // Get plugins packages associated with the given package name
+  ros::package::getPlugins(package_name, "plugin", exports, true);
 
-  info.version = "0.0.7";
-  // info.git_branch = MOVEIT_GIT_BRANCH;
-  // info.git_commit = MOVEIT_GIT_COMMIT_HASH;
-  info.git_branch = IO::runCommand(log::format("(cd %1% && git rev-parse --abbrev-ref HEAD | tr -d '\n')", path));
-  info.git_commit = IO::runCommand(log::format("(cd %1% && git rev-parse HEAD | tr -d '\n')", path));
+  for (const auto& pair : exports)
+  {
+    const auto& pkg = pair.first;
+    const auto& plugin_path = pair.second;
 
-  return info;
+    // Load XML file
+    tinyxml2::XMLError ec = xml.LoadFile(plugin_path.c_str());
+    if (ec != tinyxml2::XMLError::XML_SUCCESS)
+      throw std::runtime_error("Unable to load files");
+
+    // Search plugin XML name attribute from class element
+    for (tinyxml2::XMLElement* child = xml.FirstChildElement("library"); child != NULL;
+         child = child->NextSiblingElement())
+    {
+      tinyxml2::XMLElement* class_element = child->FirstChildElement("class");
+      if (class_element)
+      {
+        const char* name = class_element->Attribute("name");
+        if (name != NULL)
+        {
+          auto it = plugin_names.find(name);
+          if (it != plugin_names.end())
+            pkg_map.insert({ name, IO::getROSPkgMetadata(pkg) });
+        }
+      }
+    }
+  }
+
+  if (plugin_names.size() != pkg_map.size())
+    throw std::runtime_error("Did not find all plugins ROS package metadata");
+
+  std::vector<metadata::SW> sw;
+  for (const auto& pair : pkg_map)
+  {
+    // Filter out packages that starts with given filter
+    if (pair.first.rfind(filter, 0) == 0)
+      continue;
+
+    sw.push_back(pair.second);
+  }
+
+  return sw;
+}
+
+metadata::SW IO::getDebianPkgMetadata(const std::string& name)
+{
+  metadata::SW sw;
+
+  sw.name = name;
+  sw.version =
+      IO::runCommand(log::format("dpkg -s %1% | grep '^Version:' | sed -n 's/.*Version: //p' | tr -d '\n'", name));
+  sw.pkg_manager = "DPKG";
+
+  return sw;
 }
 
 const std::string IO::getHostname()

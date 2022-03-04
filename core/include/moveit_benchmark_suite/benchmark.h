@@ -64,6 +64,12 @@ public:
     std::string output_file;
     bool visualize = false;
   };
+
+  using PostTrialCallback = std::function<void(DataSetPtr& dataset)>;
+  using PostQueryCallback = std::function<void(DataSetPtr& dataset)>;
+  using PreBenchmarkCallback = std::function<void(DataSetPtr& dataset)>;
+  using PostBenchmarkCallback = std::function<void(DataSetPtr& dataset)>;
+
   /** \name Building Experiment
       \{ */
 
@@ -81,10 +87,6 @@ public:
   bool initialize(const std::string& name, const Options& options);
   bool initializeFromHandle(const ros::NodeHandle& nh);
 
-  using PostTrialCallback = std::function<void(DataSetPtr& dataset)>;
-  using PostQueryCallback = std::function<void(DataSetPtr& dataset)>;
-  using PostBenchmarkCallback = std::function<void(DataSetPtr& dataset)>;
-
   /** \brief Set the post-dataset callback function.
    *  \param[in] callback Callback to use.
    */
@@ -95,6 +97,7 @@ public:
    */
   void addPostQueryCallback(const PostQueryCallback& callback);
 
+  void addPreBenchmarkCallback(const PreBenchmarkCallback& callback);
   void addPostBenchmarkCallback(const PostBenchmarkCallback& callback);
 
   /** \brief Run benchmarking on this experiment.
@@ -109,14 +112,12 @@ public:
   const Options& getOptions() const;
 
 private:
-  void fillMetaData(DataSetPtr& dataset) const;
-
   std::string name_;  ///< Name of this experiment.
-
   Options options_;
 
   std::vector<PostTrialCallback> post_trial_callbacks_;
   std::vector<PostQueryCallback> post_query_callbacks_;
+  std::vector<PreBenchmarkCallback> pre_benchmark_callbacks_;
   std::vector<PostBenchmarkCallback> post_benchmark_callbacks_;
 };
 }  // namespace moveit_benchmark_suite
