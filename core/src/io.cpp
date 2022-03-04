@@ -425,7 +425,7 @@ std::vector<metadata::SW> IO::getROSPkgMetadataFromPlugins(const std::set<std::s
   for (const auto& pair : pkg_map)
   {
     // Filter out packages that starts with given filter
-    if (pair.first.rfind(filter, 0) == 0)
+    if (pair.second.name.rfind(filter, 0) == 0)
       continue;
 
     sw.push_back(pair.second);
