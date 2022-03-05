@@ -95,9 +95,9 @@ template <typename DerivedQuery, typename DerivedResult>
 class ProfilerTemplate : public Profiler
 {
   static_assert(std::is_base_of<Query, DerivedQuery>::value,
-                "Template type 'DerivedQuery' must be derived from moveit_benchmark_suite_core::Query");
+                "Template type 'DerivedQuery' must be derived from moveit_benchmark_suite::Query");
   static_assert(std::is_base_of<Result, DerivedResult>::value,
-                "Template type 'DerivedResult' must be derived from moveit_benchmark_suite_core::Result");
+                "Template type 'DerivedResult' must be derived from moveit_benchmark_suite::Result");
 
 public:
   using DerivedQueryPtr = std::shared_ptr<DerivedQuery>;
