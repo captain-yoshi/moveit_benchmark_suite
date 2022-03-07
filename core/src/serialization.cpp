@@ -228,26 +228,23 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
   using namespace moveit_benchmark_suite;
   Node node;
 
-  // dataset
+  // benchmark
   node["name"] = rhs.name;
   node["type"] = rhs.type;
-  node["uuid"] = rhs.uuid;
   node["date"] = to_simple_string(rhs.date);
-  node["date_utc"] = to_simple_string(rhs.date_utc);
-  node["total_time"] = rhs.time;
-  node["timelimit"] = rhs.allowed_time;
-  node["trials"] = rhs.trials;
+  node["uuid"] = rhs.uuid;
   node["hostname"] = rhs.hostname;
+  node["trials"] = rhs.trials;
+  node["timelimit"] = rhs.allowed_time;
+  node["totaltime"] = rhs.totaltime;
 
-  // hw
-  node["cpu"] = rhs.cpu;
-  node["gpu"] = rhs.gpus;
-
-  // sw
-  node["sw"] = rhs.sw_metadata;
-
-  // os
+  // metadata
   node["os"] = rhs.os;
+  node["cpu"] = rhs.cpu;
+  node["gpus"] = rhs.gpus;
+  node["software"] = rhs.sw_metadata;
+
+  node["queries"] = rhs.query_collection;
 
   node["config"] = rhs.query_setup.query_setup;
 
@@ -296,23 +293,18 @@ bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& node, moveit_b
   rhs.type = node["type"].as<std::string>();
   rhs.uuid = node["uuid"].as<std::string>();
   rhs.date = boost::posix_time::time_from_string(node["date"].as<std::string>());
-  rhs.date_utc = boost::posix_time::time_from_string(node["date_utc"].as<std::string>());
-  rhs.time = node["total_time"].as<double>();
-  rhs.allowed_time = node["timelimit"].as<double>();
   rhs.trials = node["trials"].as<int>();
+  rhs.allowed_time = node["timelimit"].as<double>();
+  rhs.totaltime = node["totaltime"].as<double>();
   rhs.hostname = node["hostname"].as<std::string>();
 
-  // hw
-  rhs.cpu = node["cpu"].as<metadata::CPU>();
-  rhs.gpus = node["gpu"].as<std::vector<metadata::GPU>>();
-
-  // sw
-  rhs.sw_metadata = node["sw"].as<std::vector<metadata::SW>>();
-
-  // os
+  // Metadata
   rhs.os = node["os"].as<metadata::OS>();
+  rhs.cpu = node["cpu"].as<metadata::CPU>();
+  rhs.gpus = node["gpus"].as<std::vector<metadata::GPU>>();
+  rhs.sw_metadata = node["software"].as<std::vector<metadata::SW>>();
 
-  rhs.query_setup = node["config"].as<QuerySetup>();
+  rhs.query_collection = node["queries"].as<QueryCollection>();
 
   // data
   for (YAML::const_iterator it = node["data"].begin(); it != node["data"].end(); ++it)

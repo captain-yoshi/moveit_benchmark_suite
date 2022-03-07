@@ -89,7 +89,6 @@ public:
   std::chrono::high_resolution_clock::time_point finish;  ///< Query end time.
 
   /** Host Metadata */
-  std::string hostname;    ///< Hostname of the machine the plan was run on.
   std::size_t process_id;  ///< Process ID of the process the profiler was run in.
   std::size_t thread_id;   ///< Thread ID of profiler execution.
 
@@ -113,19 +112,18 @@ public:
   };
 
   std::string name;  ///< Name of this dataset.
-  std::string type;  ///< Name of this dataset.
-  std::string hostname;
+  std::string type;  ///< Type of this dataset.
   std::string uuid;
+  std::string hostname;
 
   /** Timing */
-  double time;  ///< Total computation time for entire dataset.
+  double totaltime;  ///< Total computation time for entire dataset.
 
   std::chrono::high_resolution_clock::time_point start;   ///< Start time of dataset computation.
   std::chrono::high_resolution_clock::time_point finish;  ///< End time for dataset computation.
-  boost::posix_time::ptime date;                          ///< Query start time.
-  boost::posix_time::ptime date_utc;                      ///< Query start time.
+  boost::posix_time::ptime date;                          ///< UTC datetime
 
-  // HW/SW metadata
+  // Metadata
   metadata::OS os;
   metadata::CPU cpu;
   std::vector<metadata::GPU> gpus;

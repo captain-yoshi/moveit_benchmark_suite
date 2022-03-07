@@ -94,8 +94,7 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
   dataset->name = name_;
   dataset->uuid = IO::generateUUID();
   boost::posix_time::microsec_clock clock;
-  dataset->date = IO::getDate(clock);
-  dataset->date_utc = IO::getDateUTC(clock);
+  dataset->date = IO::getDateUTC(clock);
   dataset->start = std::chrono::high_resolution_clock::now();
   // dataset->allowed_time = options_.query_timeout;
   dataset->trials = options_.trials;
@@ -163,7 +162,6 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
       }
 
       data->query = profiler.getBaseQuery(query_index);
-      data->hostname = IO::getHostname();
       data->process_id = IO::getProcessID();
       data->thread_id = IO::getThreadID();
       data->metrics["thread_id"] = data->thread_id;
@@ -181,7 +179,7 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
 
   // Store benchmark time
   dataset->finish = std::chrono::high_resolution_clock::now();
-  dataset->time = IO::getSeconds(dataset->start, dataset->finish);
+  dataset->totaltime = IO::getSeconds(dataset->start, dataset->finish);
 
   for (const auto& post_benchmark_cb : post_benchmark_callbacks_)
     post_benchmark_cb(dataset);
