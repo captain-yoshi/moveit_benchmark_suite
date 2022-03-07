@@ -762,7 +762,8 @@ void GNUPlotDataset::plot(const GNUPlotLayout& layout)
 void GNUPlotDataset::plot(const MultiPlotLayout& layout, const YAML::Node& dataset)
 {
   const std::string TAG_SPLIT = " : ";
-  const std::string TAG_END = "\\n";
+  const std::string TAG_LABEL_END = "\\n";
+  const std::string TAG_LEGEND_END = " + ";
 
   bool keep_ns = false;
 
@@ -796,7 +797,7 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const YAML::Node& datas
     }
 
     auto legend = combineTokenNodeValue(token, dataset, TAG_SPLIT, keep_ns);
-    abs_legend += (legend.empty()) ? "" : legend + TAG_END;
+    abs_legend += (legend.empty()) ? "" : legend + TAG_LEGEND_END;
   }
 
   for (const auto& token : layout.labels)
@@ -809,7 +810,7 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const YAML::Node& datas
     }
 
     auto label = combineTokenNodeValue(token, dataset, TAG_SPLIT, keep_ns);
-    abs_label += (label.empty()) ? "" : label + TAG_END;
+    abs_label += (label.empty()) ? "" : label + TAG_LABEL_END;
   }
 
   // Loop through each queries
@@ -828,7 +829,7 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const YAML::Node& datas
         continue;
 
       auto legend = combineTokenNodeValue(token, query, TAG_SPLIT, keep_ns);
-      rel_legend += (legend.empty()) ? "" : legend + TAG_END;
+      rel_legend += (legend.empty()) ? "" : legend + TAG_LEGEND_END;
     }
 
     for (const auto& token : layout.labels)
@@ -837,7 +838,7 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const YAML::Node& datas
         continue;
 
       auto label = combineTokenNodeValue(token, query, TAG_SPLIT, keep_ns);
-      rel_label += (label.empty()) ? "" : label + TAG_END;
+      rel_label += (label.empty()) ? "" : label + TAG_LABEL_END;
     }
 
     if (!query["metrics"])
@@ -867,16 +868,16 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const YAML::Node& datas
           token_tag = "metrics/" + TAG_SPLIT;
 
         if (addMetricToLegend)
-          legend += token_tag + metric + TAG_END;
+          legend += token_tag + metric + TAG_LEGEND_END;
         if (addMetricToLabel)
-          label += token_tag + metric + TAG_END;
+          label += token_tag + metric + TAG_LABEL_END;
 
         // Remove trailing delimiter
-        if (legend.size() >= TAG_END.size())
-          for (int k = 0; k < TAG_END.size(); ++k)
+        if (legend.size() >= TAG_LEGEND_END.size())
+          for (int k = 0; k < TAG_LEGEND_END.size(); ++k)
             legend.pop_back();
-        if (label.size() >= TAG_END.size())
-          for (int k = 0; k < TAG_END.size(); ++k)
+        if (label.size() >= TAG_LABEL_END.size())
+          for (int k = 0; k < TAG_LABEL_END.size(); ++k)
             label.pop_back();
 
         // Try decoding metric as
