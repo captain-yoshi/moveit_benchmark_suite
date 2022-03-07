@@ -15,6 +15,7 @@
 #include <boost/uuid/uuid_io.hpp>          // for UUID generation
 #include <ros/package.h>                   // for package resolving
 #include <ros/console.h>
+#include <tinyxml2.h>
 
 #include <moveit_benchmark_suite/io.h>
 #include <moveit_benchmark_suite/handler.h>

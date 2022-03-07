@@ -6,6 +6,7 @@ find_package(Eigen3 REQUIRED)
 find_package(fcl REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
+  cmake_modules
   eigen_conversions
   moveit_core
   moveit_ros_planning
@@ -15,6 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   urdf_to_scene
 )
+
+find_package(TinyXML2 REQUIRED)
 
 catkin_package(
   LIBRARIES
@@ -34,7 +37,10 @@ catkin_package(
 
 set(CMAKE_CXX_STANDARD 14)
 
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(include
+  ${catkin_INCLUDE_DIRS}
+  ${TinyXML2_INCLUDE_DIRS}
+)
 
 add_library(${PROJECT_NAME}
   src/resource_builder.cpp
