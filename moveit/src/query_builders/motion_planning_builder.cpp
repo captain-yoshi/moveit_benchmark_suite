@@ -141,35 +141,18 @@ void MotionPlanningBuilder::buildQueries(const std::string& filename, const std:
               // TODO Load only if request needs it? e.g. with OrientationConstraint
               robot.second->loadKinematics(req.group_name, false);
 
-              // Fille query_setup
-              query_setup_.addQuery("robot", robot.first);
-              query_setup_.addQuery("collision_detector", detector);
-              query_setup_.addQuery("scene", scene.first);
-              query_setup_.addQuery("request", request.first);
-              query_setup_.addQuery("pipeline", pipeline.first);
-              query_setup_.addQuery("planner", planner);
+              QueryID query_id = { { "robot", robot.first },       { "collision_detector", detector },
+                                   { "scene", scene.first },       { "request", request.first },
+                                   { "pipeline", pipeline.first }, { "planner", planner } };
 
-              // Fill QueryGroup
-              const std::string TAG = " + ";
-              std::string query_name = robot.first + TAG + detector + TAG + scene.first + TAG + request.first + TAG +
-                                       pipeline.first + TAG + planner;
-
-              QueryGroupName query_group = { { "robot", robot.first },       { "collision_detector", detector },
-                                             { "scene", scene.first },       { "request", request.first },
-                                             { "pipeline", pipeline.first }, { "planner", planner } };
-
-              auto query = std::make_shared<MotionPlanningQuery>(query_name, query_group, robot.second, scene.second,
-                                                                 pipeline.second, req);
+              auto query =
+                  std::make_shared<MotionPlanningQuery>(query_id, robot.second, scene.second, pipeline.second, req);
               queries_.emplace_back(query);
             }
           }
     }
 }
 
-const QuerySetup& MotionPlanningBuilder::getQuerySetup() const
-{
-  return query_setup_;
-}
 const std::vector<MotionPlanningQueryPtr>& MotionPlanningBuilder::getQueries() const
 {
   return queries_;

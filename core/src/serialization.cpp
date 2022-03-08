@@ -79,17 +79,49 @@ public:
 };
 }  // namespace
 
-Node convert<moveit_benchmark_suite::QuerySetup>::encode(const moveit_benchmark_suite::QuerySetup& rhs)
+Node convert<moveit_benchmark_suite::QueryID>::encode(const moveit_benchmark_suite::QueryID& rhs)
 {
   Node node;
+
+  for (const auto& id : rhs)
+  {
+    node[id.first] = id.second;
+    node[id.first].SetStyle(EmitterStyle::Flow);
+  }
+
   return node;
 }
 
-bool convert<moveit_benchmark_suite::QuerySetup>::decode(const Node& node, moveit_benchmark_suite::QuerySetup& rhs)
+bool convert<moveit_benchmark_suite::QueryID>::decode(const Node& node, moveit_benchmark_suite::QueryID& rhs)
+{
+  for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
+    rhs.emplace(it->first.as<std::string>(), it->second.as<std::string>());
+
+  return true;
+}
+
+Node convert<moveit_benchmark_suite::QueryCollection>::encode(const moveit_benchmark_suite::QueryCollection& rhs)
+{
+  Node node;
+
+  for (const auto& id : rhs.getCollectionID())
+  {
+    // Encode set as a vector
+    for (const auto& val : id.second)
+      node[id.first].push_back(val);
+
+    node[id.first].SetStyle(EmitterStyle::Flow);
+  }
+
+  return node;
+}
+
+bool convert<moveit_benchmark_suite::QueryCollection>::decode(const Node& node,
+                                                              moveit_benchmark_suite::QueryCollection& rhs)
 {
   for (YAML::const_iterator it1 = node.begin(); it1 != node.end(); ++it1)
     for (YAML::const_iterator it2 = it1->second.begin(); it2 != it1->second.end(); ++it2)
-      rhs.addQuery(it1->first.as<std::string>(), it2->first.as<std::string>(), it2->second.as<std::string>());
+      rhs.addID(it1->first.as<std::string>(), (*it2).as<std::string>());
 
   return true;
 }
@@ -189,6 +221,8 @@ bool convert<moveit_benchmark_suite::metadata::SW>::decode(const Node& node, mov
 {
   rhs.name = node["name"].as<std::string>();
   rhs.version = node["version"].as<std::string>();
+
+  // Optional
   rhs.pkg_manager = node["pkg_manager"].as<std::string>("");
 
   rhs.git_branch = node["git_branch"].as<std::string>("");
@@ -197,92 +231,64 @@ bool convert<moveit_benchmark_suite::metadata::SW>::decode(const Node& node, mov
   return true;
 }
 
-Node convert<moveit_benchmark_suite::Data>::encode(const moveit_benchmark_suite::Data& rhs)
+Node convert<moveit_benchmark_suite::DataContainer>::encode(const moveit_benchmark_suite::DataContainer& rhs)
 {
-  // TODO
   Node node;
+
+  node["query"] = rhs.query_id;
+
+  for (const auto& pair : rhs.metrics)
+  {
+    node["metrics"][pair.first] = pair.second;
+    node["metrics"][pair.first].SetStyle(YAML::EmitterStyle::Flow);
+  }
+
   return node;
 }
-bool convert<moveit_benchmark_suite::Data>::decode(const Node& node, moveit_benchmark_suite::Data& rhs)
+
+bool convert<moveit_benchmark_suite::DataContainer>::decode(const Node& node, moveit_benchmark_suite::DataContainer& rhs)
 {
-  rhs.query = std::make_shared<moveit_benchmark_suite::Query>();
-  rhs.query->name = node["name"].as<std::string>();
+  rhs.query_id = node["query"].as<moveit_benchmark_suite::QueryID>();
 
   for (YAML::const_iterator it = node["metrics"].begin(); it != node["metrics"].end(); ++it)
   {
-    if (it->second.IsSequence())
-    {
-      for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2) {}
-    }
+    const auto& metric = *it;
 
-    else
-    {
-      rhs.metrics.insert({ it->first.as<std::string>(), it->second.as<double>() });
-    }
+    rhs.metrics.emplace(metric.first.as<std::string>(), metric.second.as<std::vector<moveit_benchmark_suite::Metric>>());
   }
   return true;
-}  // namespace YAML
+}
 
 Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_suite::DataSet& rhs)
 {
   using namespace moveit_benchmark_suite;
   Node node;
 
-  // dataset
+  // benchmark
   node["name"] = rhs.name;
   node["type"] = rhs.type;
-  node["uuid"] = rhs.uuid;
   node["date"] = to_simple_string(rhs.date);
-  node["date_utc"] = to_simple_string(rhs.date_utc);
-  node["total_time"] = rhs.time;
-  node["timelimit"] = rhs.allowed_time;
-  node["trials"] = rhs.trials;
+  node["uuid"] = rhs.uuid;
   node["hostname"] = rhs.hostname;
+  node["trials"] = rhs.trials;
+  node["timelimit"] = rhs.allowed_time;
+  node["totaltime"] = rhs.totaltime;
 
-  // hw
-  node["cpu"] = rhs.cpu;
-  node["gpu"] = rhs.gpus;
-
-  // sw
-  node["sw"] = rhs.sw_metadata;
-
-  // os
+  // metadata
   node["os"] = rhs.os;
+  node["cpu"] = rhs.cpu;
+  node["gpus"] = rhs.gpus;
+  node["software"] = rhs.software;
 
-  node["config"] = rhs.query_setup.query_setup;
+  node["queries"] = rhs.query_collection;
 
-  for (const auto& data_map : rhs.data)
+  for (const auto& pair : rhs.data)
   {
-    Node d_node;
+    // Encode DataCollection
+    Node n;
+    n = pair.second;
 
-    for (const auto& data : data_map.second)
-    {
-      d_node["name"] = data_map.first;
-      d_node["config"] = data->query->group_name_map;
-
-      for (const auto& metric : data->metrics)
-      {
-        d_node["metrics"][metric.first].push_back(metric.second);
-        d_node["metrics"][metric.first].SetStyle(EmitterStyle::Flow);
-      }
-    }
-    // Remove sequence if metric has only one value
-    for (YAML::iterator it = d_node["metrics"].begin(); it != d_node["metrics"].end(); ++it)
-    {
-      YAML::Node value = it->second;
-      if (value.Type() == YAML::NodeType::Sequence)
-      {
-        if (value.size() == 1)
-        {
-          value = value[0];
-
-          if (value.Type() == YAML::NodeType::Sequence)
-            value.SetStyle(EmitterStyle::Flow);
-        }
-      }
-    }
-
-    node["data"].push_back(d_node);
+    node["data"].push_back(n);
   }
 
   return node;
@@ -296,100 +302,26 @@ bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& node, moveit_b
   rhs.type = node["type"].as<std::string>();
   rhs.uuid = node["uuid"].as<std::string>();
   rhs.date = boost::posix_time::time_from_string(node["date"].as<std::string>());
-  rhs.date_utc = boost::posix_time::time_from_string(node["date_utc"].as<std::string>());
-  rhs.time = node["total_time"].as<double>();
-  rhs.allowed_time = node["timelimit"].as<double>();
   rhs.trials = node["trials"].as<int>();
+  rhs.allowed_time = node["timelimit"].as<double>();
+  rhs.totaltime = node["totaltime"].as<double>();
   rhs.hostname = node["hostname"].as<std::string>();
 
-  // hw
-  rhs.cpu = node["cpu"].as<metadata::CPU>();
-  rhs.gpus = node["gpu"].as<std::vector<metadata::GPU>>();
-
-  // sw
-  rhs.sw_metadata = node["sw"].as<std::vector<metadata::SW>>();
-
-  // os
+  // Metadata
   rhs.os = node["os"].as<metadata::OS>();
+  rhs.cpu = node["cpu"].as<metadata::CPU>();
+  rhs.gpus = node["gpus"].as<std::vector<metadata::GPU>>();
+  rhs.software = node["software"].as<std::vector<metadata::SW>>();
 
-  rhs.query_setup = node["config"].as<QuerySetup>();
+  rhs.query_collection = node["queries"].as<QueryCollection>();
 
   // data
+  std::size_t ctr = 0;
   for (YAML::const_iterator it = node["data"].begin(); it != node["data"].end(); ++it)
   {
-    const YAML::Node& d = *it;
-
-    DataPtr data = std::make_shared<Data>();
-
-    // Fill query
-    std::string query_name = d["name"].as<std::string>();
-    QueryGroupName query_group;
-
-    for (YAML::const_iterator it_query = d["config"].begin(); it_query != d["config"].end(); ++it_query)
-      query_group.insert({ it_query->first.as<std::string>(), it_query->second.as<std::string>() });
-
-    data->query = std::make_shared<Query>();
-    data->query->name = query_name;
-    data->query->group_name_map = query_group;
-
-    // First pass for removing non sequence metrics
-    struct SequenceIt
-    {
-      std::string name;
-      YAML::const_iterator it;
-      int size;
-    };
-
-    std::vector<SequenceIt> iterators;
-    int max_iterator_index = 0;
-    int max_iterator_size = 0;
-    int ctr = 0;
-
-    for (YAML::const_iterator it_metric = d["metrics"].begin(); it_metric != d["metrics"].end(); ++it_metric)
-    {
-      if (it_metric->second.IsSequence())
-      {
-        int metric_size = it_metric->second.size() - 1;
-        if (metric_size > max_iterator_size)
-        {
-          max_iterator_size = metric_size;
-          max_iterator_index = ctr;
-        }
-        ctr++;
-        if (it_metric->second.begin() != it_metric->second.end())
-        {
-          YAML::Node metric_node = *it_metric->second.begin();
-          data->metrics.insert({ it_metric->first.as<std::string>(), metric_node.as<moveit_benchmark_suite::Metric>() });
-        }
-        iterators.emplace_back();
-        iterators.back().name = it_metric->first.as<std::string>();
-        iterators.back().size = metric_size;
-        iterators.back().it = ++(it_metric->second.begin());
-
-        // iterators.push_back({ it_metric->first.as<std::string>(), ++(it_metric->second.begin()) });
-      }
-      else
-        data->metrics.insert(
-            { it_metric->first.as<std::string>(), it_metric->second.as<moveit_benchmark_suite::Metric>() });
-    }
-    rhs.addDataPoint(query_name, data);
-
-    // Add remaining sequences
-    for (int i = 0; i < max_iterator_size; ++i)
-    {
-      DataPtr data = std::make_shared<Data>();
-      data->query = std::make_shared<Query>();
-      data->query->name = query_name;
-      data->query->group_name_map = query_group;
-
-      for (auto& it_seq : iterators)
-      {
-        if (i < it_seq.size)
-          data->metrics.insert({ it_seq.name, it_seq.it->as<moveit_benchmark_suite::Metric>() });
-        ++it_seq.it;
-      }
-      rhs.addDataPoint(query_name, data);
-    }
+    const auto& data = *it;
+    rhs.data.emplace(std::to_string(ctr), data.as<DataContainer>());
+    ++ctr;
   }
 
   return true;

@@ -33,92 +33,100 @@
  *********************************************************************/
 
 /* Author: Captain Yoshi
-   Desc:
+   Desc: Query and Result base class needed by the profiler
 */
 
 #pragma once
 
-#include <cstdint>
-#include <string>
-#include <vector>
-#include <tuple>
 #include <map>
-#include <fstream>
-#include <chrono>
-
-#include <boost/variant.hpp>
-
+#include <set>
+#include <string>
 #include <moveit/macros/class_forward.h>
 
-#include <ros/console.h>
-
 namespace moveit_benchmark_suite {
+
 MOVEIT_CLASS_FORWARD(Query);
 MOVEIT_CLASS_FORWARD(Result);
 
-using QueryGroup = std::string;
-using QueryName = std::string;
-using QueryResource = std::string;
+// Unique ID of a Query
+//
+// E.g. { robot: panda
+//        scene: empty_scene
+//        planner: RRTConnect
+//        request: jc
+//        pipeline: ompl
+//        collision_detector: FCL
+//      }
+using QueryID = std::map<std::string, std::string>;
 
-using QueryGroupName = std::map<QueryGroup, QueryName>;
-
+/// Base class for query
 class Query
 {
 public:
-  /** \brief Empty constructor.
-   */
-  Query() = default;
-
   virtual ~Query(){};
 
-  Query(const std::string& name, const QueryGroupName& group_name_map) : name(name), group_name_map(group_name_map){};
+  Query(const QueryID& id) : id_(id){};
 
-  std::string name;  ///< Name of this query.
-  QueryGroupName group_name_map;
+  const QueryID& getID() const
+  {
+    return id_;
+  };
+
+private:
+  const QueryID id_;
 };
 
-// pair - wise combinations of a query
-struct QuerySetup
+/// Base class for the result of a query
+class Result
 {
-  /** \brief Empty constructor.
-   */
-  QuerySetup() = default;
+public:
+  Result() = default;
+  virtual ~Result(){};
 
-  void addQuery(const QueryGroup& group, const QueryName& name, const QueryResource& resource = "")
+  bool success = false;
+};
+
+/// Collection of all possible query ids
+class QueryCollection
+{
+public:
+  QueryCollection() = default;
+
+  void addID(const std::string& key, const std::string& val)
   {
-    auto it = query_setup.find(group);
-    if (it == query_setup.end())
-      query_setup.insert(std::pair<QueryGroup, std::map<QueryName, QueryResource>>(group, { { name, resource } }));
+    auto it = id_collection_.find(key);
+    if (it == id_collection_.end())
+      id_collection_.emplace(key, std::initializer_list<std::string>{ val });
     else
-      it->second.insert(std::pair<QueryName, QueryResource>(name, resource));
+      it->second.emplace(val);
   }
 
-  bool hasQueryKey(const std::string& group, const std::string& key) const
+  void addID(const Query& query)
   {
-    auto it = query_setup.find(group);
-    if (it == query_setup.end())
+    for (const auto& pair : query.getID())
+      addID(pair.first, pair.second);
+  }
+
+  bool hasID(const std::string& key, const std::string& val) const
+  {
+    auto it = id_collection_.find(key);
+    if (it == id_collection_.end())
       return false;
 
-    auto it2 = it->second.find(key);
-    if (it2 == it->second.end())
+    auto it_set = it->second.find(val);
+    if (it_set == it->second.end())
       return false;
 
     return true;
   }
 
-  std::map<QueryGroup, std::map<QueryName, QueryResource>> query_setup;
-};
+  const std::map<std::string, std::set<std::string>>& getCollectionID() const
+  {
+    return id_collection_;
+  };
 
-class Result
-{
-public:
-  Result() = default;
-
-  virtual ~Result(){};
-  /** \name Planning Query and Response
-      \{ */
-
-  bool success = false;  ///< Was the plan successful?
+private:
+  std::map<std::string, std::set<std::string>> id_collection_;
 };
 
 }  // namespace moveit_benchmark_suite

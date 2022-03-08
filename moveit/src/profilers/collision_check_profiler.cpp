@@ -46,13 +46,12 @@ using namespace moveit_benchmark_suite;
 ///
 /// CollisionCheckQuery
 ///
-CollisionCheckQuery::CollisionCheckQuery(const std::string& name,                         //
-                                         const QueryGroupName& group_name_map,            //
+CollisionCheckQuery::CollisionCheckQuery(const QueryID& id,                               //
                                          const RobotPtr& robot,                           //
                                          const ScenePtr& scene,                           //
                                          const moveit::core::RobotStatePtr& robot_state,  //
                                          const collision_detection::CollisionRequest& request)
-  : Query(name, group_name_map), robot(robot), scene(scene), robot_state(robot_state), request(request)
+  : Query(id), robot(robot), scene(scene), robot_state(robot_state), request(request)
 {
 }
 
@@ -72,11 +71,11 @@ std::vector<metadata::SW> CollisionCheckProfiler::getSoftwareMetadata()
   metadata.push_back(IO::getROSPkgMetadata("moveit_benchmark_suite"));
 
   // SW depending on queries
-  const auto& setup = getQuerySetup();
+  const auto& query_ids = getQueryCollection();
 
-  if (setup.hasQueryKey("collision_detector", "FCL"))
+  if (query_ids.hasID("collision_detector", "FCL"))
     metadata.push_back(IO::getROSPkgMetadata("fcl"));
-  if (setup.hasQueryKey("collision_detector", "Bullet"))
+  if (query_ids.hasID("collision_detector", "Bullet"))
     metadata.push_back(IO::getDebianPkgMetadata("libbullet-dev"));
 
   return metadata;
@@ -88,9 +87,7 @@ void CollisionCheckProfiler::buildQueriesFromYAML(const std::string& filename)
   builder.buildQueries(filename);
 
   const auto& queries = builder.getQueries();
-  const auto& setup = builder.getQuerySetup();
 
-  this->setQuerySetup(setup);
   for (const auto& query : queries)
     this->addQuery(query);
 }

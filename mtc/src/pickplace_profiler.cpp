@@ -49,13 +49,12 @@ constexpr char LOGNAME[] = "pick_place_task";
 /// PickPlaceQuery
 ///
 
-PickPlaceQuery::PickPlaceQuery(const std::string& name,                //
-                               const QueryGroupName& group_name_map,   //
+PickPlaceQuery::PickPlaceQuery(const QueryID& id,                      //
                                const RobotPtr& robot,                  //
                                const ScenePtr& scene,                  //
                                const PickPlaceParameters& parameters,  //
                                const TaskProperty& task)
-  : Query(name, group_name_map), robot(robot), scene(scene), parameters(parameters), task(task){};
+  : Query(id), robot(robot), scene(scene), parameters(parameters), task(task){};
 
 ///
 /// PickPlaceProfiler
@@ -70,9 +69,7 @@ void PickPlaceProfiler::buildQueriesFromYAML(const std::string& filename)
   builder.buildQueries(filename);
 
   const auto& queries = builder.getQueries();
-  const auto& setup = builder.getQuerySetup();
 
-  this->setQuerySetup(setup);
   for (const auto& query : queries)
     this->addQuery(query);
 }

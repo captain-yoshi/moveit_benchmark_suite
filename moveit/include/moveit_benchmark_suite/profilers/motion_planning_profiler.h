@@ -55,10 +55,6 @@ MOVEIT_CLASS_FORWARD(MotionPlanningResult);
 
 struct MotionPlanningQuery : public Query
 {
-  /** \brief Empty constructor.
-   */
-  MotionPlanningQuery() = default;
-
   /** \brief Constructor. Fills in fields.
    *  \param[in] name Name of this query.
    *  \param[in] scene Scene to use.
@@ -66,8 +62,7 @@ struct MotionPlanningQuery : public Query
    *  \param[in] request Request to give planner.
    */
 
-  MotionPlanningQuery(const std::string& name,
-                      const QueryGroupName& group_name_map,        //
+  MotionPlanningQuery(const QueryID& id,
                       const RobotPtr& robot,                       //
                       const ScenePtr& scene,                       //
                       const PlanningPipelineEmitterPtr& pipeline,  //
@@ -137,7 +132,7 @@ public:
 
   std::vector<metadata::SW> getSoftwareMetadata() override
   {
-    const auto& setup = this->getQuerySetup();
+    const auto& query_ids = this->getQueryCollection();
     std::vector<metadata::SW> metadata;
 
     // Default ROS pkg
@@ -145,16 +140,16 @@ public:
     metadata.push_back(IO::getROSPkgMetadata("moveit_benchmark_suite"));
 
     // Collision detectors
-    if (setup.hasQueryKey("collision_detector", "FCL"))
+    if (query_ids.hasID("collision_detector", "FCL"))
       metadata.push_back(IO::getROSPkgMetadata("fcl"));
-    if (setup.hasQueryKey("collision_detector", "Bullet"))
+    if (query_ids.hasID("collision_detector", "Bullet"))
       metadata.push_back(IO::getDebianPkgMetadata("libbullet-dev"));
 
     // Motion planning pipelines
-    if (setup.hasQueryKey("pipeline", "ompl"))
+    if (query_ids.hasID("pipeline", "ompl"))
       metadata.push_back(IO::getROSPkgMetadata("ompl"));
     // skip chomp because part of moveit so not adding it
-    if (setup.hasQueryKey("pipeline", "stomp"))
+    if (query_ids.hasID("pipeline", "stomp"))
       metadata.push_back(IO::getROSPkgMetadata("stomp"));
 
     // Robot kinematics

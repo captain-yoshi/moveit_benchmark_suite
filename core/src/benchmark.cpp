@@ -94,8 +94,7 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
   dataset->name = name_;
   dataset->uuid = IO::generateUUID();
   boost::posix_time::microsec_clock clock;
-  dataset->date = IO::getDate(clock);
-  dataset->date_utc = IO::getDateUTC(clock);
+  dataset->date = IO::getDateUTC(clock);
   dataset->start = std::chrono::high_resolution_clock::now();
   // dataset->allowed_time = options_.query_timeout;
   dataset->trials = options_.trials;
@@ -108,8 +107,8 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
   dataset->os = IO::getOSMetadata();
   // Add software metadata through the pre benchmark callback
 
-  dataset->type = profiler.getProfilerName();
-  dataset->query_setup = profiler.getQuerySetup();
+  dataset->type = profiler.getName();
+  dataset->query_collection = profiler.getQueryCollection();
 
   const auto query_size = profiler.getQuerySize();
 
@@ -124,19 +123,20 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
 
   for (std::size_t query_index = 0; query_index < query_size; ++query_index)
   {
-    const auto& query_name = profiler.getQueryName(query_index);
+    const QueryID& query_id = profiler.getQueryID(query_index);
 
-    // Check if this name is unique, if so, add it to dataset list.
-    const auto& it = std::find(dataset->query_names.begin(), dataset->query_names.end(), query_name);
-    if (it == dataset->query_names.end())
-      dataset->query_names.emplace_back(query_name);
+    std::vector<std::string> query_combinations;
+    for (const auto& pair : query_id)
+      query_combinations.push_back(pair.first + ": " + pair.second);
 
     if (options_.verbose_status_query && options_.trials > 0)
 
     {
       ROS_INFO_STREAM("");
-      ROS_INFO_STREAM(log::format("Running Query [%1%/%2%] with %3% Trials '%4%'",  //
-                                  query_index + 1, query_size, options_.trials, query_name));
+      ROS_INFO_STREAM(log::format("Running Query [%1%/%2%] with %3% Trials",  //
+                                  query_index + 1, query_size, options_.trials));
+      for (const auto& combination : query_combinations)
+        ROS_INFO_STREAM("\t" + combination);
     }
 
     if (!profiler.initializeQuery(query_index))
@@ -151,7 +151,9 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
       {
         ROS_INFO_STREAM("");
         ROS_INFO_STREAM(log::format("Running Query [%1%/%2%] Trial [%3%/%4%] '%5%'",  //
-                                    query_index + 1, query_size, trial + 1, options_.trials, query_name));
+                                    query_index + 1, query_size, trial + 1, options_.trials));
+        for (const auto& combination : query_combinations)
+          ROS_INFO_STREAM("\t" + combination);
       }
 
       auto data = std::make_shared<Data>();
@@ -163,13 +165,12 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
       }
 
       data->query = profiler.getBaseQuery(query_index);
-      data->hostname = IO::getHostname();
       data->process_id = IO::getProcessID();
       data->thread_id = IO::getThreadID();
       data->metrics["thread_id"] = data->thread_id;
       data->metrics["process_id"] = data->process_id;
 
-      dataset->addDataPoint(query_name, data);
+      dataset->addDataPoint(std::to_string(query_index), data);
 
       for (const auto& post_trial_cb : post_trial_callbacks_)
         post_trial_cb(dataset);
@@ -181,7 +182,7 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
 
   // Store benchmark time
   dataset->finish = std::chrono::high_resolution_clock::now();
-  dataset->time = IO::getSeconds(dataset->start, dataset->finish);
+  dataset->totaltime = IO::getSeconds(dataset->start, dataset->finish);
 
   for (const auto& post_benchmark_cb : post_benchmark_callbacks_)
     post_benchmark_cb(dataset);

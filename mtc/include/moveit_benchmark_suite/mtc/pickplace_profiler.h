@@ -72,8 +72,7 @@ struct PickPlaceQuery : public Query
    *  \param[in] planner Planner to use to evaluate query.
    *  \param[in] request Request to give planner.
    */
-  PickPlaceQuery(const std::string& name,                //
-                 const QueryGroupName& group_name_map,   //
+  PickPlaceQuery(const QueryID& id,                      //
                  const RobotPtr& robot,                  //
                  const ScenePtr& scene,                  //
                  const PickPlaceParameters& parameters,  //

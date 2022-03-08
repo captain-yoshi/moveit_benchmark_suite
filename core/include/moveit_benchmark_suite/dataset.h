@@ -64,22 +64,12 @@ namespace moveit_benchmark_suite {
 MOVEIT_CLASS_FORWARD(Data);
 MOVEIT_CLASS_FORWARD(DataSet);
 
-// WARNING
-// Adding/Removing variant types will affect:
-//   - yaml.cpp convert<moveit_benchmark_suite::Metric>::decode
 using Metric = boost::variant<bool, int, double, std::size_t, std::string, std::vector<bool>, std::vector<int>,
                               std::vector<double>, std::vector<std::size_t>, std::vector<std::string>>;
 
 using MetricPtr = std::shared_ptr<Metric>;
 
-/** \brief Convert a planner metric into a string.
- *  \param[in] metric The metric to convert.
- *  \return The metric as a string.
- */
-std::string toMetricString(const Metric& metric);
-double toMetricDouble(const Metric& metric);
-
-/** */
+/// Detailed statistics and metrics computed from a profiler
 class Data
 {
 public:
@@ -89,11 +79,8 @@ public:
   std::chrono::high_resolution_clock::time_point finish;  ///< Query end time.
 
   /** Host Metadata */
-  std::string hostname;    ///< Hostname of the machine the plan was run on.
   std::size_t process_id;  ///< Process ID of the process the profiler was run in.
   std::size_t thread_id;   ///< Thread ID of profiler execution.
-
-  // bool success;
 
   // Store query and response base class
   QueryPtr query;    ///< Query evaluated to create this data.
@@ -103,36 +90,39 @@ public:
   std::map<std::string, Metric> metrics;  ///< Map of metric name to value.
 };
 
+/// Detailed sequence of statistics and metrics computed by multiple trials of the same query
+struct DataContainer
+{
+  QueryID query_id;
+
+  // Map of metric name to a sequence of metrics
+  std::map<std::string, std::vector<Metric>> metrics;
+};
+
+/// Detailed data collection about a benchmark from multiple queries
 class DataSet
 {
 public:
-  struct QueryResponse
-  {
-    QueryPtr query;
-    ResultPtr result;
-  };
-
   std::string name;  ///< Name of this dataset.
-  std::string type;  ///< Name of this dataset.
-  std::string hostname;
+  std::string type;  ///< Type of this dataset.
   std::string uuid;
+  std::string hostname;
 
   /** Timing */
-  double time;  ///< Total computation time for entire dataset.
+  double totaltime;  ///< Total computation time for entire dataset.
 
   std::chrono::high_resolution_clock::time_point start;   ///< Start time of dataset computation.
   std::chrono::high_resolution_clock::time_point finish;  ///< End time for dataset computation.
-  boost::posix_time::ptime date;                          ///< Query start time.
-  boost::posix_time::ptime date_utc;                      ///< Query start time.
+  boost::posix_time::ptime date;                          ///< UTC datetime
 
-  // HW/SW metadata
+  // Metadata
   metadata::OS os;
   metadata::CPU cpu;
   std::vector<metadata::GPU> gpus;
-  std::vector<metadata::SW> sw_metadata;
+  std::vector<metadata::SW> software;
 
   // Setup
-  QuerySetup query_setup;
+  QueryCollection query_collection;
 
   // Benchmark parameters
   double allowed_time;          ///< Allowed time for all queries.
@@ -142,11 +132,7 @@ public:
                                 ///< until time ran out.
   std::size_t threads;          ///< Threads used for dataset computation.
 
-  std::map<std::string, std::vector<std::shared_ptr<Data>>> data;  ///< Map of query name to collected data.
-
-  /**Query Information*/
-  std::vector<std::string> query_names;  ///< All unique names used by planning queries.
-  // std::vector<QueryPtr> queries;         ///< All planning queries. Note that planning queries can share
+  std::map<std::string, DataContainer> data;  ///< Map of query name to collected data.
 
   /** \brief Add a computed plan data under a query as a data point.
    *  \param[in] query_name Name of query to store point under.
@@ -156,10 +142,6 @@ public:
 
   void eraseMetric(const std::string& metric);
 
-  std::vector<DataPtr> getFlatData() const;
-
-  std::set<std::string> getMetricNames();
-
-  std::vector<QueryResponse> getQueryResponse() const;
+  std::vector<DataContainer> getFlatData() const;
 };
 }  // namespace moveit_benchmark_suite

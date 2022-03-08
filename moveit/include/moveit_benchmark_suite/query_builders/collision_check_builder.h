@@ -51,11 +51,9 @@ class CollisionCheckBuilder
 {
 public:
   void buildQueries(const std::string& filename);
-  const QuerySetup& getQuerySetup() const;
   const std::vector<CollisionCheckQueryPtr>& getQueries() const;
 
 private:
-  QuerySetup query_setup_;
   std::vector<CollisionCheckQueryPtr> queries_;
 };
 

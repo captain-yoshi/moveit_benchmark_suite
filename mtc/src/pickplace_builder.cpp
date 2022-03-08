@@ -434,25 +434,18 @@ void PickPlaceBuilder::buildQueries(const std::string& filename)
           if (!robot.second->loadKinematics(parameters.arm_group_name, false))
             continue;
 
-          // Fille query_setup
-          query_setup_.addQuery("robot", robot.first);
-          query_setup_.addQuery("collision_detector", detector);
-          query_setup_.addQuery("scene", scene.first);
-          query_setup_.addQuery("task", task.name);
-
           // Fill QueryGroup
           const std::string TAG = " + ";
           std::string query_name = robot.first + TAG + detector + TAG + scene.first + TAG + task.name;
 
-          QueryGroupName query_group = {
+          QueryID query_id = {
             { "robot", robot.first },
             { "collision_detector", detector },
             { "scene", scene.first },
             { "task", task.name },
           };
 
-          auto query =
-              std::make_shared<PickPlaceQuery>(query_name, query_group, robot.second, scene.second, parameters, task);
+          auto query = std::make_shared<PickPlaceQuery>(query_id, robot.second, scene.second, parameters, task);
           queries_.emplace_back(query);
         }
     }
@@ -469,11 +462,6 @@ const std::vector<PickPlaceQueryPtr>& PickPlaceBuilder::getQueries() const
   return queries_;
 }
 
-const moveit_benchmark_suite::QuerySetup& PickPlaceBuilder::getQuerySetup() const
-{
-  return query_setup_;
-}
-
 void PickPlaceBuilder::buildTasks(ros::NodeHandle& nh,
                                   std::map<std::string, planning_pipeline::PlanningPipelinePtr>& pipeline_map)
 {
@@ -485,8 +473,6 @@ void PickPlaceBuilder::buildTasks(ros::NodeHandle& nh,
 
   for (auto& task : task_map)
   {
-    query_setup_.addQuery("task", task.first, "");
-
     // Fill task
     std::map<StageName, StageProperty> stage_map;
     for (const auto& stage : STAGE_NAME_SET)

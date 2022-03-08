@@ -38,6 +38,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include <moveit/macros/class_forward.h>
 
 #include <moveit_benchmark_suite/query.h>
@@ -51,14 +53,12 @@ class MotionPlanningBuilder
 public:
   void buildPlanningPipelineQueries(const std::string& filename);
   void buildMoveGroupInterfaceQueries(const std::string& filename);
-  const QuerySetup& getQuerySetup() const;
   const std::vector<MotionPlanningQueryPtr>& getQueries() const;
 
 protected:
   void buildQueries(const std::string& filename, const std::string& robot_key);
 
 private:
-  QuerySetup query_setup_;
   std::vector<MotionPlanningQueryPtr> queries_;
 };
 

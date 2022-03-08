@@ -19,13 +19,12 @@ using namespace moveit_benchmark_suite;
 /// MotionPlanningQuery
 ///
 
-MotionPlanningQuery::MotionPlanningQuery(const std::string& name,
-                                         const QueryGroupName& group_name_map,        //
+MotionPlanningQuery::MotionPlanningQuery(const QueryID& id,
                                          const RobotPtr& robot,                       //
                                          const ScenePtr& scene,                       //
                                          const PlanningPipelineEmitterPtr& pipeline,  //
                                          const planning_interface::MotionPlanRequest& request)
-  : Query(name, group_name_map), robot(robot), scene(scene), pipeline(pipeline), request(request)
+  : Query(id), robot(robot), scene(scene), pipeline(pipeline), request(request)
 {
 }
 
@@ -42,9 +41,7 @@ void PlanningPipelineProfiler::buildQueriesFromYAML(const std::string& filename)
   builder.buildPlanningPipelineQueries(filename);
 
   const auto& queries = builder.getQueries();
-  const auto& setup = builder.getQuerySetup();
 
-  this->setQuerySetup(setup);
   for (const auto& query : queries)
     this->addQuery(query);
 }
@@ -129,9 +126,6 @@ void MoveGroupInterfaceProfiler::buildQueriesFromYAML(const std::string& filenam
   builder.buildMoveGroupInterfaceQueries(filename);
 
   const auto& queries = builder.getQueries();
-  const auto& setup = builder.getQuerySetup();
-
-  this->setQuerySetup(setup);
   for (const auto& query : queries)
     this->addQuery(query);
 }
