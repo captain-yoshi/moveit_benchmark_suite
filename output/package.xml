@@ -8,6 +8,8 @@
 
 	<buildtool_depend>catkin</buildtool_depend>
 
+	<build_depend>rviz</build_depend>
+
 	<depend>moveit_benchmark_suite_core</depend>
 
 	<export>

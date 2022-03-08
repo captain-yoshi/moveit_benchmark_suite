@@ -7,6 +7,7 @@ find_package(fcl REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
   moveit_benchmark_suite_core
+  rviz # depends only on 'SendFilePath.srv' service msg
 )
 
 catkin_package(
