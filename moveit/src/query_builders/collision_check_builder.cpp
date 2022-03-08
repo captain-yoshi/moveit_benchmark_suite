@@ -109,30 +109,18 @@ void CollisionCheckBuilder::buildQueries(const std::string& filename)
         for (const auto& request : request_map)
           for (const auto& state : state_map)
           {
-            // Fille query_setup
-            query_setup_.addQuery("robot", robot.first);
-            query_setup_.addQuery("collision_detector", detector);
-            query_setup_.addQuery("scene", scene.first);
-            query_setup_.addQuery("request", request.first);
-            query_setup_.addQuery("state", state.first);
-
-            // Fill QueryGroup
-            const std::string TAG = " + ";
-            std::string query_name =
-                robot.first + TAG + detector + TAG + scene.first + TAG + request.first + TAG + state.first;
-
-            QueryGroupName query_gn = { { "scene", scene.first },
-                                        { "robot", robot.first },
-                                        { "robot_state", state.first },
-                                        { "collision_detector", detector },
-                                        { "request", request.first } };
+            QueryID query_id = { { "scene", scene.first },
+                                 { "robot", robot.first },
+                                 { "robot_state", state.first },
+                                 { "collision_detector", detector },
+                                 { "request", request.first } };
 
             robot_state::RobotStatePtr rs = std::make_shared<robot_state::RobotState>(robot.second->getModel());
             rs->setToDefaultValues();
             moveit::core::robotStateMsgToRobotState(state.second, *rs);
 
-            auto query = std::make_shared<CollisionCheckQuery>(query_name, query_gn, robot.second, scene.second, rs,
-                                                               request.second);
+            auto query =
+                std::make_shared<CollisionCheckQuery>(query_id, robot.second, scene.second, rs, request.second);
             queries_.push_back(query);
           }
     }
@@ -141,9 +129,4 @@ void CollisionCheckBuilder::buildQueries(const std::string& filename)
 const std::vector<CollisionCheckQueryPtr>& CollisionCheckBuilder::getQueries() const
 {
   return queries_;
-}
-
-const QuerySetup& CollisionCheckBuilder::getQuerySetup() const
-{
-  return query_setup_;
 }

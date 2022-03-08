@@ -105,12 +105,6 @@ public:
 class DataSet
 {
 public:
-  struct QueryResponse
-  {
-    QueryPtr query;
-    ResultPtr result;
-  };
-
   std::string name;  ///< Name of this dataset.
   std::string type;  ///< Type of this dataset.
   std::string uuid;
@@ -130,7 +124,7 @@ public:
   std::vector<metadata::SW> sw_metadata;
 
   // Setup
-  QuerySetup query_setup;
+  QueryCollection query_collection;
 
   // Benchmark parameters
   double allowed_time;          ///< Allowed time for all queries.
@@ -143,7 +137,6 @@ public:
   std::map<std::string, std::vector<std::shared_ptr<Data>>> data;  ///< Map of query name to collected data.
 
   /**Query Information*/
-  std::vector<std::string> query_names;  ///< All unique names used by planning queries.
   // std::vector<QueryPtr> queries;         ///< All planning queries. Note that planning queries can share
 
   /** \brief Add a computed plan data under a query as a data point.
@@ -155,9 +148,5 @@ public:
   void eraseMetric(const std::string& metric);
 
   std::vector<DataPtr> getFlatData() const;
-
-  std::set<std::string> getMetricNames();
-
-  std::vector<QueryResponse> getQueryResponse() const;
 };
 }  // namespace moveit_benchmark_suite

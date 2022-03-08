@@ -6,19 +6,14 @@ using namespace moveit_benchmark_suite;
 /// Profiler
 ///
 
-Profiler::Profiler(const std::string& name) : profiler_name_(name){};
+Profiler::Profiler(const std::string& name) : name_(name){};
 
-const std::string& Profiler::getProfilerName() const
+const std::string& Profiler::getName() const
 {
-  return profiler_name_;
+  return name_;
 };
 
-const QuerySetup& Profiler::getQuerySetup() const
+const QueryCollection& Profiler::getQueryCollection() const
 {
-  return query_setup_;
-}
-
-void Profiler::setQuerySetup(const QuerySetup& query_setup)
-{
-  query_setup_ = query_setup;
+  return query_collection_;
 }

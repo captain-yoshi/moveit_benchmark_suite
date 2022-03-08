@@ -136,13 +136,11 @@ public:
   void buildQueries(const std::string& filename);
 
   const PickPlaceConfig& getConfig() const;
-  const QuerySetup& getQuerySetup() const;
   const std::vector<PickPlaceQueryPtr>& getQueries() const;
 
 protected:
   void buildTasks(ros::NodeHandle& nh, std::map<std::string, planning_pipeline::PlanningPipelinePtr>& pipeline_map);
 
-  QuerySetup query_setup_;
   PickPlaceConfig config_;
 
   std::vector<PickPlaceQueryPtr> queries_;

@@ -44,10 +44,17 @@
 
 namespace YAML {
 template <>
-struct convert<moveit_benchmark_suite::QuerySetup>
+struct convert<moveit_benchmark_suite::QueryID>
 {
-  static Node encode(const moveit_benchmark_suite::QuerySetup& rhs);
-  static bool decode(const Node& node, moveit_benchmark_suite::QuerySetup& rhs);
+  static Node encode(const moveit_benchmark_suite::QueryID& rhs);
+  static bool decode(const Node& node, moveit_benchmark_suite::QueryID& rhs);
+};
+
+template <>
+struct convert<moveit_benchmark_suite::QueryCollection>
+{
+  static Node encode(const moveit_benchmark_suite::QueryCollection& rhs);
+  static bool decode(const Node& node, moveit_benchmark_suite::QueryCollection& rhs);
 };
 
 template <>

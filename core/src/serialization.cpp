@@ -79,17 +79,49 @@ public:
 };
 }  // namespace
 
-Node convert<moveit_benchmark_suite::QuerySetup>::encode(const moveit_benchmark_suite::QuerySetup& rhs)
+Node convert<moveit_benchmark_suite::QueryID>::encode(const moveit_benchmark_suite::QueryID& rhs)
 {
   Node node;
+
+  for (const auto& id : rhs)
+  {
+    node[id.first] = id.second;
+    node[id.first].SetStyle(EmitterStyle::Flow);
+  }
+
   return node;
 }
 
-bool convert<moveit_benchmark_suite::QuerySetup>::decode(const Node& node, moveit_benchmark_suite::QuerySetup& rhs)
+bool convert<moveit_benchmark_suite::QueryID>::decode(const Node& node, moveit_benchmark_suite::QueryID& rhs)
+{
+  for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
+    rhs.emplace(it->first.as<std::string>(), it->second.as<std::string>());
+
+  return true;
+}
+
+Node convert<moveit_benchmark_suite::QueryCollection>::encode(const moveit_benchmark_suite::QueryCollection& rhs)
+{
+  Node node;
+
+  for (const auto& id : rhs.getCollectionID())
+  {
+    // Encode set as a vector
+    for (const auto& val : id.second)
+      node[id.first].push_back(val);
+
+    node[id.first].SetStyle(EmitterStyle::Flow);
+  }
+
+  return node;
+}
+
+bool convert<moveit_benchmark_suite::QueryCollection>::decode(const Node& node,
+                                                              moveit_benchmark_suite::QueryCollection& rhs)
 {
   for (YAML::const_iterator it1 = node.begin(); it1 != node.end(); ++it1)
     for (YAML::const_iterator it2 = it1->second.begin(); it2 != it1->second.end(); ++it2)
-      rhs.addQuery(it1->first.as<std::string>(), it2->first.as<std::string>(), it2->second.as<std::string>());
+      rhs.addID(it1->first.as<std::string>(), (*it2).as<std::string>());
 
   return true;
 }
@@ -245,8 +277,6 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
   node["software"] = rhs.sw_metadata;
 
   node["queries"] = rhs.query_collection;
-
-  node["config"] = rhs.query_setup.query_setup;
 
   for (const auto& data_map : rhs.data)
   {

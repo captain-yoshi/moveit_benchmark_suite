@@ -55,8 +55,8 @@ const std::string MTC_PICK_N_PLACE = "MTC_PICK_N_PLACE";
 
 }  // namespace ProfilerType
 
-using QueryId = std::size_t;
-using ResultId = std::size_t;
+using QueryIndex = std::size_t;
+using ResultIndex = std::size_t;
 
 /// Interface for all profilers
 class Profiler
@@ -72,22 +72,21 @@ public:
   virtual ~Profiler() = default;
 
   /// Use internal queries of derived class
-  virtual bool initializeQuery(const QueryId query_id) = 0;
-  virtual bool profileQuery(const QueryId query_id, Data& data) = 0;
+  virtual bool initializeQuery(const QueryIndex index) = 0;
+  virtual bool profileQuery(const QueryIndex index, Data& data) = 0;
 
-  const std::string& getProfilerName() const;
-  virtual QueryPtr getBaseQuery(const QueryId query_id) = 0;
-  virtual const std::string& getQueryName(const QueryId query_id) = 0;
+  const std::string& getName() const;
+  virtual QueryPtr getBaseQuery(const QueryIndex index) = 0;
   virtual const std::size_t getQuerySize() = 0;
 
-  const QuerySetup& getQuerySetup() const;
-  void setQuerySetup(const QuerySetup& query_setup);
+  virtual const QueryID& getQueryID(const QueryIndex index) = 0;
+  const QueryCollection& getQueryCollection() const;
 
   Options options;
 
-private:
-  const std::string profiler_name_;
-  QuerySetup query_setup_;
+protected:
+  const std::string name_;
+  QueryCollection query_collection_;
 };
 
 /// Template to reduce boilerplate of derived Profiler class
@@ -111,21 +110,9 @@ public:
   virtual ~ProfilerTemplate() = default;
 
   /// Internal queries with automated steps
-  bool profileQuery(const QueryId query_id, Data& data) final
+  bool initializeQuery(const QueryIndex index) final
   {
-    auto query = getQuery(query_id);
-    if (!query)
-      return false;
-
-    profileQuery(*query, data);
-
-    return true;
-  };
-
-  /// Internal queries with automated steps
-  bool initializeQuery(const QueryId query_id) final
-  {
-    auto query = getQuery(query_id);
+    auto query = getQuery(index);
     if (!query)
       return false;
 
@@ -134,26 +121,31 @@ public:
     return true;
   };
 
-  void profileQuery(const DerivedQuery& original_query, Data& data)
+  bool profileQuery(const QueryIndex index, Data& data) final
   {
+    auto query = getQuery(index);
+    if (!query)
+      return false;
+
     // Copy original query
-    auto query = original_query;
-    preRunQuery(query, data);
+    auto query_cp = query;
+    preRunQuery(*query_cp, data);
 
     // Pre-run Callback
     for (const auto& cb : pre_run_query_callbacks_)
-      cb(query, data);
+      cb(*query_cp, data);
 
-    auto result = runQuery(query, data);
+    auto result = runQuery(*query_cp, data);
 
-    postRunQuery(query, result, data);
+    postRunQuery(*query_cp, result, data);
 
     // Post-run Callback
     for (const auto& cb : post_run_query_callbacks_)
-      cb(query, result, data);
+      cb(*query_cp, result, data);
 
     // Store result
-    addResult(query.name, result);
+    addResult(index, result);
+    return true;
   };
 
   /// Internal/External queries
@@ -168,23 +160,22 @@ public:
     return {};
   };
 
-  virtual const std::string& getQueryName(const QueryId query_id) override
-  {
-    auto query = getQuery(query_id);
-    if (!query)
-      return empty_str;
-
-    return query->name;
-  };
-
   virtual const std::size_t getQuerySize() override
   {
     return queries_.size();
   }
-
-  virtual QueryPtr getBaseQuery(const QueryId query_id) override
+  virtual const QueryID& getQueryID(const QueryIndex index) override
   {
-    return getQuery(query_id);
+    auto query = getQuery(index);
+    if (!query)
+      return empty_query_id_;
+
+    return query->getID();
+  }
+
+  virtual QueryPtr getBaseQuery(const QueryIndex index) override
+  {
+    return getQuery(index);
   }
   /** \brief Set the post-dataset callback function.
    *  \param[in] callback Callback to use.
@@ -203,36 +194,41 @@ public:
   {
     addQuery(std::make_shared<DerivedQuery>(query));
   }
+
   void addQuery(const DerivedQueryPtr& query)
   {
     auto cp_query = query;
-    name_to_index_map_.insert({ query->name, queries_.size() });
 
     queries_.push_back(cp_query);
     results_.emplace_back();  // Prepare result for storage
+
+    // Store IDs
+    query_collection_.addID(*cp_query);
   }
-  void addResult(const std::string& query_name, const DerivedResultPtr& result)
+
+  void addResult(const QueryIndex index, const DerivedResultPtr& result)
   {
-    auto it = name_to_index_map_.find(query_name);
-    if (it == name_to_index_map_.end())
+    auto query = getQuery(index);
+
+    if (!query)
     {
-      ROS_WARN("Cannot add result to non existant query name '%s'", query_name.c_str());
+      ROS_WARN("Cannot add result to non existant query index '%zu'", index);
       return;
     }
 
-    results_[it->second].push_back(result);
+    results_[index].push_back(result);
   }
 
-  void addResult(const std::string& query_name, const DerivedResult& result)
+  void addResult(const QueryIndex index, const DerivedResult& result)
   {
-    addResult(query_name, std::make_shared<DerivedResult>(result));
+    addResult(index, std::make_shared<DerivedResult>(result));
   }
 
-  DerivedQueryPtr getQuery(QueryId query_id)
+  DerivedQueryPtr getQuery(QueryIndex index)
   {
-    if (query_id >= queries_.size())
+    if (index >= queries_.size())
       return nullptr;
-    return queries_[query_id];
+    return queries_[index];
   }
 
   const std::vector<DerivedQueryPtr>& getQueries() const
@@ -240,40 +236,30 @@ public:
     return queries_;
   }
 
-  DerivedResultPtr getResult(const QueryId query_id, ResultId result_id)
+  DerivedResultPtr getResult(const QueryIndex query_index, ResultIndex result_index)
   {
-    if (query_id < results_.size() || result_id < results_[query_id])
+    if (query_index < results_.size() || result_index < results_[query_index])
       return nullptr;
 
-    return results_[query_id][result_id];
+    return results_[query_index][result_index];
   }
 
-  DerivedResultPtr getResult(const DerivedQuery& query, ResultId result_id)
+  DerivedResultPtr getLastResult(const QueryIndex& index)
   {
-    auto it = name_to_index_map_.find(query.name);
-    if (it != name_to_index_map_.end())
-      if (result_id < results_[it->second].size())
-        return results_[it->second][result_id];
-    return nullptr;
+    auto query = getQuery(index);
+    if (!query && results_[index].empty())
+      return nullptr;
+
+    return getResult(index, results_[index].size() - 1);
   }
 
-  DerivedResultPtr getLastResult(const DerivedQuery& query)
+  std::vector<DerivedResultPtr>& getResults(const QueryIndex id)
   {
-    auto it = name_to_index_map_.find(query.name);
-    if (it != name_to_index_map_.end())
-      if (!results_[it->second].empty())
-        return results_[it->second][results_[it->second].size() - 1];
-    return nullptr;
-  }
+    auto query = getQuery(id);
+    if (!query)
+      return empty_results_;
 
-  std::vector<DerivedResultPtr>& getResults(const DerivedQuery& query)
-  {
-    auto it = name_to_index_map_.find(query.name);
-    if (it != name_to_index_map_.end())
-      return results_[it->second];
-
-    ROS_WARN("Query name '%s' not present", query.name.c_str());
-    return empty_results;
+    return results_[id];
   }
 
 private:
@@ -282,10 +268,9 @@ private:
 
   std::vector<DerivedQueryPtr> queries_;
   std::vector<std::vector<DerivedResultPtr>> results_;
-  std::map<std::string, QueryId> name_to_index_map_;
 
-  const std::string empty_str = "";
-  const std::vector<DerivedResult> empty_results;
+  const std::vector<DerivedResultPtr> empty_results_;
+  const QueryID empty_query_id_;
 };
 
 }  // namespace moveit_benchmark_suite
