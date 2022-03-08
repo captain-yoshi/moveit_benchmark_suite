@@ -64,22 +64,12 @@ namespace moveit_benchmark_suite {
 MOVEIT_CLASS_FORWARD(Data);
 MOVEIT_CLASS_FORWARD(DataSet);
 
-// WARNING
-// Adding/Removing variant types will affect:
-//   - yaml.cpp convert<moveit_benchmark_suite::Metric>::decode
 using Metric = boost::variant<bool, int, double, std::size_t, std::string, std::vector<bool>, std::vector<int>,
                               std::vector<double>, std::vector<std::size_t>, std::vector<std::string>>;
 
 using MetricPtr = std::shared_ptr<Metric>;
 
-/** \brief Convert a planner metric into a string.
- *  \param[in] metric The metric to convert.
- *  \return The metric as a string.
- */
-std::string toMetricString(const Metric& metric);
-double toMetricDouble(const Metric& metric);
-
-/** */
+/// Detailed statistics and metrics computed from a profiler
 class Data
 {
 public:
@@ -91,8 +81,6 @@ public:
   /** Host Metadata */
   std::size_t process_id;  ///< Process ID of the process the profiler was run in.
   std::size_t thread_id;   ///< Thread ID of profiler execution.
-
-  // bool success;
 
   // Store query and response base class
   QueryPtr query;    ///< Query evaluated to create this data.
@@ -111,7 +99,7 @@ struct DataContainer
   std::map<std::string, std::vector<Metric>> metrics;
 };
 
-/// collection of dat
+/// Detailed data collection about a benchmark from multiple queries
 class DataSet
 {
 public:
@@ -131,7 +119,7 @@ public:
   metadata::OS os;
   metadata::CPU cpu;
   std::vector<metadata::GPU> gpus;
-  std::vector<metadata::SW> sw_metadata;
+  std::vector<metadata::SW> software;
 
   // Setup
   QueryCollection query_collection;
@@ -144,9 +132,6 @@ public:
                                 ///< until time ran out.
   std::size_t threads;          ///< Threads used for dataset computation.
 
-
-  /**Query Information*/
-  // std::vector<QueryPtr> queries;         ///< All planning queries. Note that planning queries can share
   std::map<std::string, DataContainer> data;  ///< Map of query name to collected data.
 
   /** \brief Add a computed plan data under a query as a data point.

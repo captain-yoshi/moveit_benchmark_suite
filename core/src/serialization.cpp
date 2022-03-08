@@ -278,7 +278,7 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
   node["os"] = rhs.os;
   node["cpu"] = rhs.cpu;
   node["gpus"] = rhs.gpus;
-  node["software"] = rhs.sw_metadata;
+  node["software"] = rhs.software;
 
   node["queries"] = rhs.query_collection;
 
@@ -311,7 +311,7 @@ bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& node, moveit_b
   rhs.os = node["os"].as<metadata::OS>();
   rhs.cpu = node["cpu"].as<metadata::CPU>();
   rhs.gpus = node["gpus"].as<std::vector<metadata::GPU>>();
-  rhs.sw_metadata = node["software"].as<std::vector<metadata::SW>>();
+  rhs.software = node["software"].as<std::vector<metadata::SW>>();
 
   rhs.query_collection = node["queries"].as<QueryCollection>();
 

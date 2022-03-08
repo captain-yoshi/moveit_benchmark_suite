@@ -64,8 +64,7 @@ BenchmarkCallbackLoader::BenchmarkCallbackLoader(Benchmark& benchmark) : benchma
 void BenchmarkCallbackLoader::addCallbacks(PlanningPipelineProfiler& profiler)
 {
   // Software metadata
-  benchmark_.addPreBenchmarkCallback(
-      [&](DataSetPtr& dataset) { dataset->sw_metadata = profiler.getSoftwareMetadata(); });
+  benchmark_.addPreBenchmarkCallback([&](DataSetPtr& dataset) { dataset->software = profiler.getSoftwareMetadata(); });
 
   // Visuals
   if (rviz_)
@@ -91,8 +90,7 @@ void BenchmarkCallbackLoader::addCallbacks(PlanningPipelineProfiler& profiler)
 void BenchmarkCallbackLoader::addCallbacks(MoveGroupInterfaceProfiler& profiler)
 {
   // Software metadata
-  benchmark_.addPreBenchmarkCallback(
-      [&](DataSetPtr& dataset) { dataset->sw_metadata = profiler.getSoftwareMetadata(); });
+  benchmark_.addPreBenchmarkCallback([&](DataSetPtr& dataset) { dataset->software = profiler.getSoftwareMetadata(); });
 
   // Visuals
   if (rviz_)
@@ -118,8 +116,7 @@ void BenchmarkCallbackLoader::addCallbacks(MoveGroupInterfaceProfiler& profiler)
 void BenchmarkCallbackLoader::addCallbacks(CollisionCheckProfiler& profiler)
 {
   // Software metadata
-  benchmark_.addPreBenchmarkCallback(
-      [&](DataSetPtr& dataset) { dataset->sw_metadata = profiler.getSoftwareMetadata(); });
+  benchmark_.addPreBenchmarkCallback([&](DataSetPtr& dataset) { dataset->software = profiler.getSoftwareMetadata(); });
 
   // Visuals
   if (rviz_)
