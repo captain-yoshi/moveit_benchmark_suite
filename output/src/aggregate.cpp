@@ -50,7 +50,7 @@ DataSetPtr AggregateDataset::aggregate(const std::vector<Operation>& operations,
         double result = eq_fn(values);
 
         // store
-        query["metrics"][operation.new_metric] = result;
+        query["metrics"][operation.new_metric] = std::vector<double>{ result };
       }
       catch (YAML::BadConversion& e)
       {

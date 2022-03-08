@@ -102,6 +102,16 @@ public:
   std::map<std::string, Metric> metrics;  ///< Map of metric name to value.
 };
 
+/// Detailed sequence of statistics and metrics computed by multiple trials of the same query
+struct DataContainer
+{
+  QueryID query_id;
+
+  // Map of metric name to a sequence of metrics
+  std::map<std::string, std::vector<Metric>> metrics;
+};
+
+/// collection of dat
 class DataSet
 {
 public:
@@ -134,10 +144,10 @@ public:
                                 ///< until time ran out.
   std::size_t threads;          ///< Threads used for dataset computation.
 
-  std::map<std::string, std::vector<std::shared_ptr<Data>>> data;  ///< Map of query name to collected data.
 
   /**Query Information*/
   // std::vector<QueryPtr> queries;         ///< All planning queries. Note that planning queries can share
+  std::map<std::string, DataContainer> data;  ///< Map of query name to collected data.
 
   /** \brief Add a computed plan data under a query as a data point.
    *  \param[in] query_name Name of query to store point under.
@@ -147,6 +157,6 @@ public:
 
   void eraseMetric(const std::string& metric);
 
-  std::vector<DataPtr> getFlatData() const;
+  std::vector<DataContainer> getFlatData() const;
 };
 }  // namespace moveit_benchmark_suite

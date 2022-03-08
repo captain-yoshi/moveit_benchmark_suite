@@ -105,44 +105,40 @@ void DataSet::addDataPoint(const std::string& query_name, const DataPtr& run)
 {
   auto it = data.find(query_name);
   if (it == data.end())
-    data.emplace(query_name, std::vector<DataPtr>{ run });
+  {
+    DataCollection dc;
+    dc.query_id = run->query->getID();
+
+    for (const auto pair : run->metrics)
+      dc.metrics.insert({ pair.first, std::vector<Metric>{ pair.second } });
+
+    data.emplace(query_name, dc);
+  }
   else
-    it->second.emplace_back(run);
+  {
+    for (const auto pair : run->metrics)
+    {
+      auto it2 = it->second.metrics.find(pair.first);
+      if (it2 == it->second.metrics.end())
+        it->second.metrics.insert({ pair.first, std::vector<Metric>{ pair.second } });
+      else
+        it2->second.push_back(pair.second);
+    }
+  }
 }
 
-std::vector<DataPtr> DataSet::getFlatData() const
+std::vector<DataContainer> DataSet::getFlatData() const
 {
-  std::vector<DataPtr> r;
-  for (const auto& query : data)
-    r.insert(r.end(), query.second.begin(), query.second.end());
+  // std::vector<DataPtr> r;
+  // for (const auto& query : data)
+  //   r.insert(r.end(), query.second);
 
-  return r;
-}
-
-{
-
+  // return r;
 }
 
 void DataSet::eraseMetric(const std::string& metric)
 {
-  for (const auto& data_map : data)
-    for (const auto& d : data_map.second)
-      d->metrics.erase(metric);
-}
-
-std::vector<DataSet::QueryResponse> DataSet::getQueryResponse() const
-{
-  std::vector<QueryResponse> qr;
-
-  for (const auto& d : data)
-  {
-    if (!d.second.empty())
-    {
-      qr.emplace_back();
-      qr.back().query = d.second.front()->query;
-      qr.back().result = d.second.front()->result;
-    }
-  }
-
-  return qr;
+  // for (const auto& data_map : data)
+  //   for (const auto& d : data_map.second)
+  //     d->metrics.erase(metric);
 }

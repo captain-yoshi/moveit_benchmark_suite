@@ -221,6 +221,8 @@ bool convert<moveit_benchmark_suite::metadata::SW>::decode(const Node& node, mov
 {
   rhs.name = node["name"].as<std::string>();
   rhs.version = node["version"].as<std::string>();
+
+  // Optional
   rhs.pkg_manager = node["pkg_manager"].as<std::string>("");
 
   rhs.git_branch = node["git_branch"].as<std::string>("");
@@ -229,31 +231,33 @@ bool convert<moveit_benchmark_suite::metadata::SW>::decode(const Node& node, mov
   return true;
 }
 
-Node convert<moveit_benchmark_suite::Data>::encode(const moveit_benchmark_suite::Data& rhs)
+Node convert<moveit_benchmark_suite::DataContainer>::encode(const moveit_benchmark_suite::DataContainer& rhs)
 {
-  // TODO
   Node node;
+
+  node["query"] = rhs.query_id;
+
+  for (const auto& pair : rhs.metrics)
+  {
+    node["metrics"][pair.first] = pair.second;
+    node["metrics"][pair.first].SetStyle(YAML::EmitterStyle::Flow);
+  }
+
   return node;
 }
-bool convert<moveit_benchmark_suite::Data>::decode(const Node& node, moveit_benchmark_suite::Data& rhs)
+
+bool convert<moveit_benchmark_suite::DataContainer>::decode(const Node& node, moveit_benchmark_suite::DataContainer& rhs)
 {
-  rhs.query = std::make_shared<moveit_benchmark_suite::Query>();
-  rhs.query->name = node["name"].as<std::string>();
+  rhs.query_id = node["query"].as<moveit_benchmark_suite::QueryID>();
 
   for (YAML::const_iterator it = node["metrics"].begin(); it != node["metrics"].end(); ++it)
   {
-    if (it->second.IsSequence())
-    {
-      for (YAML::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2) {}
-    }
+    const auto& metric = *it;
 
-    else
-    {
-      rhs.metrics.insert({ it->first.as<std::string>(), it->second.as<double>() });
-    }
+    rhs.metrics.emplace(metric.first.as<std::string>(), metric.second.as<std::vector<moveit_benchmark_suite::Metric>>());
   }
   return true;
-}  // namespace YAML
+}
 
 Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_suite::DataSet& rhs)
 {
@@ -278,38 +282,13 @@ Node convert<moveit_benchmark_suite::DataSet>::encode(const moveit_benchmark_sui
 
   node["queries"] = rhs.query_collection;
 
-  for (const auto& data_map : rhs.data)
+  for (const auto& pair : rhs.data)
   {
-    Node d_node;
+    // Encode DataCollection
+    Node n;
+    n = pair.second;
 
-    for (const auto& data : data_map.second)
-    {
-      d_node["name"] = data_map.first;
-      d_node["config"] = data->query->group_name_map;
-
-      for (const auto& metric : data->metrics)
-      {
-        d_node["metrics"][metric.first].push_back(metric.second);
-        d_node["metrics"][metric.first].SetStyle(EmitterStyle::Flow);
-      }
-    }
-    // Remove sequence if metric has only one value
-    for (YAML::iterator it = d_node["metrics"].begin(); it != d_node["metrics"].end(); ++it)
-    {
-      YAML::Node value = it->second;
-      if (value.Type() == YAML::NodeType::Sequence)
-      {
-        if (value.size() == 1)
-        {
-          value = value[0];
-
-          if (value.Type() == YAML::NodeType::Sequence)
-            value.SetStyle(EmitterStyle::Flow);
-        }
-      }
-    }
-
-    node["data"].push_back(d_node);
+    node["data"].push_back(n);
   }
 
   return node;
@@ -337,81 +316,12 @@ bool convert<moveit_benchmark_suite::DataSet>::decode(const Node& node, moveit_b
   rhs.query_collection = node["queries"].as<QueryCollection>();
 
   // data
+  std::size_t ctr = 0;
   for (YAML::const_iterator it = node["data"].begin(); it != node["data"].end(); ++it)
   {
-    const YAML::Node& d = *it;
-
-    DataPtr data = std::make_shared<Data>();
-
-    // Fill query
-    std::string query_name = d["name"].as<std::string>();
-    QueryGroupName query_group;
-
-    for (YAML::const_iterator it_query = d["config"].begin(); it_query != d["config"].end(); ++it_query)
-      query_group.insert({ it_query->first.as<std::string>(), it_query->second.as<std::string>() });
-
-    data->query = std::make_shared<Query>();
-    data->query->name = query_name;
-    data->query->group_name_map = query_group;
-
-    // First pass for removing non sequence metrics
-    struct SequenceIt
-    {
-      std::string name;
-      YAML::const_iterator it;
-      int size;
-    };
-
-    std::vector<SequenceIt> iterators;
-    int max_iterator_index = 0;
-    int max_iterator_size = 0;
-    int ctr = 0;
-
-    for (YAML::const_iterator it_metric = d["metrics"].begin(); it_metric != d["metrics"].end(); ++it_metric)
-    {
-      if (it_metric->second.IsSequence())
-      {
-        int metric_size = it_metric->second.size() - 1;
-        if (metric_size > max_iterator_size)
-        {
-          max_iterator_size = metric_size;
-          max_iterator_index = ctr;
-        }
-        ctr++;
-        if (it_metric->second.begin() != it_metric->second.end())
-        {
-          YAML::Node metric_node = *it_metric->second.begin();
-          data->metrics.insert({ it_metric->first.as<std::string>(), metric_node.as<moveit_benchmark_suite::Metric>() });
-        }
-        iterators.emplace_back();
-        iterators.back().name = it_metric->first.as<std::string>();
-        iterators.back().size = metric_size;
-        iterators.back().it = ++(it_metric->second.begin());
-
-        // iterators.push_back({ it_metric->first.as<std::string>(), ++(it_metric->second.begin()) });
-      }
-      else
-        data->metrics.insert(
-            { it_metric->first.as<std::string>(), it_metric->second.as<moveit_benchmark_suite::Metric>() });
-    }
-    rhs.addDataPoint(query_name, data);
-
-    // Add remaining sequences
-    for (int i = 0; i < max_iterator_size; ++i)
-    {
-      DataPtr data = std::make_shared<Data>();
-      data->query = std::make_shared<Query>();
-      data->query->name = query_name;
-      data->query->group_name_map = query_group;
-
-      for (auto& it_seq : iterators)
-      {
-        if (i < it_seq.size)
-          data->metrics.insert({ it_seq.name, it_seq.it->as<moveit_benchmark_suite::Metric>() });
-        ++it_seq.it;
-      }
-      rhs.addDataPoint(query_name, data);
-    }
+    const auto& data = *it;
+    rhs.data.emplace(std::to_string(ctr), data.as<DataContainer>());
+    ++ctr;
   }
 
   return true;
