@@ -157,7 +157,7 @@ bool AggregateDataset::buildParamsFromYAML(const std::string& filename, std::vec
     }
 
     // Build operations
-    for (YAML::const_iterator it = root["aggregators"].begin(); it != root["aggregators"].end(); ++it)
+    for (YAML::const_iterator it = root["statistics"].begin(); it != root["statistics"].end(); ++it)
     {
       const auto& filter = *it;
 
