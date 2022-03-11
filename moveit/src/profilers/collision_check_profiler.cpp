@@ -62,7 +62,7 @@ CollisionCheckQuery::CollisionCheckQuery(const QueryID& id,                     
 CollisionCheckProfiler::CollisionCheckProfiler()
   : ProfilerTemplate<CollisionCheckQuery, CollisionCheckResult>(ProfilerType::COLLISION_CHECK){};
 
-std::vector<metadata::SW> CollisionCheckProfiler::getSoftwareMetadata()
+std::vector<metadata::SW> CollisionCheckProfiler::collectMetadata()
 {
   std::vector<metadata::SW> metadata;
 

@@ -93,7 +93,7 @@ public:
   };
 
   void buildQueriesFromYAML(const std::string& filename) override;
-  std::vector<metadata::SW> getSoftwareMetadata() override;
+  std::vector<metadata::SW> collectMetadata() override;
 
   CollisionCheckResult runQuery(const CollisionCheckQuery& query, Data& result) const override;
   void postRunQuery(const CollisionCheckQuery& query, CollisionCheckResult& result, Data& data) override;

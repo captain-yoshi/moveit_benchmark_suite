@@ -155,7 +155,7 @@ public:
   virtual void postRunQuery(const DerivedQuery& query, DerivedResult& result, Data& data){};
 
   virtual void buildQueriesFromYAML(const std::string& filename){};
-  virtual std::vector<metadata::SW> getSoftwareMetadata()
+  virtual std::vector<metadata::SW> collectMetadata()
   {
     return {};
   };

@@ -130,7 +130,7 @@ public:
       data.metrics["smoothness"] = result.success ? result.trajectory->getSmoothness() : 0.0;
   }
 
-  std::vector<metadata::SW> getSoftwareMetadata() override
+  std::vector<metadata::SW> collectMetadata() override
   {
     const auto& query_ids = this->getQueryCollection();
     std::vector<metadata::SW> metadata;
