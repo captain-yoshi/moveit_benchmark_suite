@@ -205,14 +205,14 @@ Node convert<moveit_benchmark_suite::metadata::SW>::encode(const moveit_benchmar
   node["name"] = rhs.name;
   node["version"] = rhs.version;
 
-  if (!rhs.pkg_manager.empty())
-    node["pkg_manager"] = rhs.pkg_manager;
-
   if (!rhs.git_branch.empty())
   {
     node["git_branch"] = rhs.git_branch;
     node["git_commit"] = rhs.git_commit;
   }
+
+  if (!rhs.pkg_manager.empty())
+    node["pkg_manager"] = rhs.pkg_manager;
 
   return node;
 }
