@@ -10,11 +10,11 @@
 
 
   <!-- Generate Plots options file -->
-  <arg name="options_file" default="$(find moveit_benchmark_suite_plot)/config/plots.yaml"/>
+  <arg name="options_file" default="$(find moveit_benchmark_suite_output)/config/plots.yaml"/>
 
   <!-- Launch plot generator node -->
-  <node name="generate_plots" pkg="moveit_benchmark_suite_plot" type="generate_plots" respawn="false" clear_params="true" required="true" output="screen" launch-prefix="$(arg launch_prefix)">
-    <param name="config_file" value="$(find moveit_benchmark_suite_plot)/config/plots.yaml"/>
+  <node name="generate_plots" pkg="moveit_benchmark_suite_output" type="generate_plots" respawn="false" clear_params="true" required="true" output="screen" launch-prefix="$(arg launch_prefix)">
+    <param name="config_file" value="$(find moveit_benchmark_suite_output)/config/plots.yaml"/>
     <rosparam param="input_files" subst_value="True">$(arg input_files)</rosparam>
   </node>
 
