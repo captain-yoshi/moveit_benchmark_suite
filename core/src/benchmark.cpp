@@ -150,7 +150,7 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
       if (options_.verbose_status_trial)
       {
         ROS_INFO_STREAM("");
-        ROS_INFO_STREAM(log::format("Running Query [%1%/%2%] Trial [%3%/%4%] '%5%'",  //
+        ROS_INFO_STREAM(log::format("Running Query [%1%/%2%] Trial [%3%/%4%]",  //
                                     query_index + 1, query_size, trial + 1, options_.trials));
         for (const auto& combination : query_combinations)
           ROS_INFO_STREAM("\t" + combination);
