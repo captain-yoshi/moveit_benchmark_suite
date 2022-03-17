@@ -406,7 +406,9 @@ void GNUPlotHelper::plot(const GNUPlotData& data, const BoxPlotOptions& options)
   std::size_t data_ctr = 0;
   double offset = options.box.label_gap;
   double data_pos_prev = 0;
-  std::vector<bool> legend_added = { false, false, false };
+  std::vector<bool> legend_added(data.getLegendCount());
+  std::fill(legend_added.begin(), legend_added.end(), false);
+
   const auto& labels = data.getUniqueLabels();
   in->write("plot ");
 
@@ -494,7 +496,9 @@ void GNUPlotHelper::plot(const GNUPlotData& data, const BarGraphOptions& options
   std::size_t data_ctr = 0;
   double offset = options.box.label_gap;
   double data_pos_prev = 0;
-  std::vector<bool> legend_added = { false, false, false };
+  std::vector<bool> legend_added(data.getLegendCount());
+  std::fill(legend_added.begin(), legend_added.end(), false);
+
   const auto& labels = data.getUniqueLabels();
   in->write("plot ");
 
