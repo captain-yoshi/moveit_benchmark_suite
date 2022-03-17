@@ -404,6 +404,7 @@ void GNUPlotHelper::plot(const GNUPlotData& data, const BoxPlotOptions& options)
 
   // Plot
   std::size_t data_ctr = 0;
+  std::size_t color_index = 0;
   double offset = options.box.label_gap;
   double data_pos_prev = 0;
   std::vector<bool> legend_added(data.getLegendCount());
@@ -433,7 +434,9 @@ void GNUPlotHelper::plot(const GNUPlotData& data, const BoxPlotOptions& options)
 
         in->write(log::format("'$data%1%' using (%2%):1 ", data_ctr, data_pos));
         in->write(log::format("title \"%1%\" ", title));
-        in->write(log::format("lt %1%", legend_ctr + 1));  // color index starts at 1
+        in->write(log::format("lt %1%", (title.empty() && data.getLegendCount() == 1) ?
+                                            color_index + 1 :
+                                            legend_ctr + 1));  // color index starts at 1
 
         bool isLastData = data_ctr >= data.getLabelTotalCount() - 1;
         in->writeline((isLastData) ? "" : ", \\");
@@ -449,7 +452,7 @@ void GNUPlotHelper::plot(const GNUPlotData& data, const BoxPlotOptions& options)
       }
       legend_ctr++;
     }
-
+    color_index++;
     data_pos_prev += offset;
   }
 }
@@ -494,6 +497,7 @@ void GNUPlotHelper::plot(const GNUPlotData& data, const BarGraphOptions& options
 
   // Plot
   std::size_t data_ctr = 0;
+  std::size_t color_index = 0;
   double offset = options.box.label_gap;
   double data_pos_prev = 0;
   std::vector<bool> legend_added(data.getLegendCount());
@@ -524,7 +528,9 @@ void GNUPlotHelper::plot(const GNUPlotData& data, const BarGraphOptions& options
         in->write(log::format("'$data%1%' using (%2%):1 ", data_ctr, data_pos));
         in->write(log::format("title \"%1%\" ", title));
         in->write(log::format("with boxes "));
-        in->write(log::format("lt %1%", legend_ctr + 1));  // color index starts at 1
+        in->write(log::format("lt %1%", (title.empty() && data.getLegendCount() == 1) ?
+                                            color_index + 1 :
+                                            legend_ctr + 1));  // color index starts at 1
 
         bool isLastData = data_ctr >= data.getLabelTotalCount() - 1;
         in->writeline((isLastData) ? "" : ", \\");
@@ -540,7 +546,7 @@ void GNUPlotHelper::plot(const GNUPlotData& data, const BarGraphOptions& options
       }
       legend_ctr++;
     }
-
+    color_index++;
     data_pos_prev += offset;
   }
 
