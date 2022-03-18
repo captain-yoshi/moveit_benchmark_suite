@@ -747,7 +747,7 @@ void GNUPlotDataset::plot(const GNUPlotLayout& layout)
 {
   if (single_instance_)
   {
-    helper_.configureTerminal("", *layout.terminal);
+    helper_.configureTerminal(layout.mpo.instance, *layout.terminal);
     helper_.multiplot(layout.mpo);
   }
 
