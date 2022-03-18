@@ -55,6 +55,7 @@ public:
     std::string raw_metric;  // Dataste metric name to aggregate
     std::string new_metric;  // Dataset metric name for storing the statistic
     statistics::EquationType eq_type = statistics::EquationType::INVALID;
+    double postmultiply = 1;
   };
 
   /** \brief Constructor.

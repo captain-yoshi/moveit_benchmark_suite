@@ -48,6 +48,7 @@ DataSetPtr AggregateDataset::aggregate(const std::vector<Operation>& operations,
       {
         auto values = query["metrics"][operation.raw_metric].as<std::vector<double>>();
         double result = eq_fn(values);
+        result *= operation.postmultiply;
 
         // store
         query["metrics"][operation.new_metric] = std::vector<double>{ result };
@@ -61,6 +62,8 @@ DataSetPtr AggregateDataset::aggregate(const std::vector<Operation>& operations,
           for (const auto& values : values2d)
           {
             auto result = eq_fn(values);
+            result *= operation.postmultiply;
+
             results.push_back(result);
           }
 
@@ -164,10 +167,16 @@ bool AggregateDataset::buildParamsFromYAML(const std::string& filename, std::vec
       std::string raw_metric = filter["raw_metric"].as<std::string>();
       std::string new_metric = filter["new_metric"].as<std::string>();
       std::string type = filter["type"].as<std::string>();
+      bool percentage = filter["percentage"].as<bool>(false);
+
+      double postmultiply = 1;
+      if (percentage)
+        postmultiply = 100;
 
       operations.push_back({ .raw_metric = raw_metric,
                              .new_metric = new_metric,
-                             .eq_type = statistics::getEquationTypeFromString(type) });
+                             .eq_type = statistics::getEquationTypeFromString(type),
+                             .postmultiply = postmultiply });
     }
   }
   catch (YAML::BadConversion& e)
