@@ -676,11 +676,13 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
     {
       const auto& filter = *it;
 
+      std::string title = filter["title"].as<std::string>("");
       std::string type = filter["type"].as<std::string>();
       std::string name = filter["name"].as<std::string>("");
       auto names = filter["names"].as<std::vector<std::string>>(std::vector<std::string>());
 
       PlotLayout plot;
+
       if (name.empty())
         plot.metric_names = names;
       else
@@ -696,6 +698,8 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
         plot.type = PlotType::BarGraph;
         plot.options = std::make_shared<GNUPlotHelper::BarGraphOptions>();
       }
+
+      plot.options->title = title;
 
       if (!single_instance_)
       {
