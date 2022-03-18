@@ -619,6 +619,9 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
       layout.terminal = std::make_shared<SvgTerminal>();
     else
       layout.terminal = std::make_shared<QtTerminal>();
+
+    layout.terminal->size.x = node["gnuplot_config"]["options"]["size"]["x"].as<int>(640);
+    layout.terminal->size.y = node["gnuplot_config"]["options"]["size"]["y"].as<int>(480);
   }
   else
   {
@@ -629,13 +632,7 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
   if (layout.mpo.layout.col == 1 && layout.mpo.layout.row == 1)
     single_instance_ = false;
   else
-  {
     single_instance_ = true;
-
-    // Resize to standard monitor
-    layout.terminal->size.x = 1280;
-    layout.terminal->size.y = 720;
-  }
 
   std::size_t ctr = 0;  // counter for multiple instances
 
