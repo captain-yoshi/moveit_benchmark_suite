@@ -628,7 +628,13 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
   if (layout.mpo.layout.col == 1 && layout.mpo.layout.row == 1)
     single_instance_ = false;
   else
+  {
     single_instance_ = true;
+
+    // Resize to standard monitor
+    layout.terminal->size.x = 1920;
+    layout.terminal->size.y = 1080;
+  }
 
   std::size_t ctr = 0;  // counter for multiple instances
 
