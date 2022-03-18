@@ -678,7 +678,13 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
 
       std::string type = filter["type"].as<std::string>();
       std::string name = filter["name"].as<std::string>("");
+      auto names = filter["names"].as<std::vector<std::string>>(std::vector<std::string>());
+
       PlotLayout plot;
+      if (name.empty())
+        plot.metric_names = names;
+      else
+        plot.metric_names = { name };
 
       if (type.compare("boxplot") == 0)
       {
@@ -696,8 +702,6 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
         plot.options->instance = std::to_string(ctr);
         ctr++;
       }
-
-      plot.metric_names = filter["names"].as<std::vector<std::string>>();
 
       mplots.plots.push_back(plot);
     }
