@@ -376,7 +376,7 @@ void GNUPlotHelper::plot(const GNUPlotData& data, const BoxPlotOptions& options)
 
   // Border, margin and style
   in->writeline("set border back");
-  in->writeline("set bmargin 6");
+  in->writeline("set lmargin 6");
   in->writeline("set style data boxplot");
   in->writeline("set style fill solid 0.5 border -1");
 
@@ -469,10 +469,11 @@ void GNUPlotHelper::plot(const GNUPlotData& data, const BarGraphOptions& options
 
   // Border, margin and style
   in->writeline("set border back");
-  in->writeline("set bmargin 6");
+  in->writeline("set lmargin 6");
   in->writeline("set style fill solid 0.5 border -1");
-  // HACK Adjust offet to align with boxplots
-  in->writeline(log::format("set offsets %1%, %1%, 0, 0", options.box.width / 2.0));
+
+  // Adjust offet to align with boxplots
+  in->writeline(log::format("set offsets %1%, %1%, 0, 0", options.box.width));
   in->writeline(log::format("set boxwidth %1%", options.box.width));
 
   if (options.percent)
@@ -632,8 +633,8 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
     single_instance_ = true;
 
     // Resize to standard monitor
-    layout.terminal->size.x = 1920;
-    layout.terminal->size.y = 1080;
+    layout.terminal->size.x = 1280;
+    layout.terminal->size.y = 720;
   }
 
   std::size_t ctr = 0;  // counter for multiple instances
