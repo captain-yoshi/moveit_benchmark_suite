@@ -35,10 +35,6 @@ QtTerminal::QtTerminal() : GNUPlotTerminal(TERMINAL_QT_STR)
 {
 }
 
-QtTerminal::QtTerminal(const TerminalSize& size) : GNUPlotTerminal(TERMINAL_QT_STR), size(size)
-{
-}
-
 QtTerminal::~QtTerminal()
 {
 }
@@ -53,10 +49,6 @@ std::string QtTerminal::getCmd() const
 ///
 
 SvgTerminal::SvgTerminal() : GNUPlotTerminal(TERMINAL_SVG_STR)
-{
-}
-
-SvgTerminal::SvgTerminal(const TerminalSize& size) : GNUPlotTerminal(TERMINAL_SVG_STR), size(size)
 {
 }
 

@@ -82,6 +82,7 @@ public:
   virtual std::string getCmd() const = 0;
 
   const std::string mode;
+  TerminalSize size;
 };
 
 // Generates output in a separate window with the Qt library
@@ -89,15 +90,12 @@ class QtTerminal : public GNUPlotTerminal
 {
 public:
   QtTerminal();
-  QtTerminal(const TerminalSize& size);
   /** \brief Virtual destructor for cleaning up resources.
    */
   ~QtTerminal() override;
 
   // Get GNUPlot command as a string
   std::string getCmd() const override;
-
-  TerminalSize size = { .x = 640, .y = 480 };
 };
 
 // Produces files in the W3C Scalable Vector Graphics format
@@ -105,15 +103,12 @@ class SvgTerminal : public GNUPlotTerminal
 {
 public:
   SvgTerminal();
-  SvgTerminal(const TerminalSize& size);
   /** \brief Virtual destructor for cleaning up resources.
    */
   ~SvgTerminal() override;
 
   // Get GNUPlot command as a string
   std::string getCmd() const override;
-
-  TerminalSize size = { .x = 640, .y = 480 };
 };
 
 /** \brief Storage accounting for multiple plot types, legend
