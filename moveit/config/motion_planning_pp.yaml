@@ -5,7 +5,7 @@
 # Describes benchmark parameters (independant of profilers)
 benchmark_config:
   parameters:
-    runs: 5                         # Number of trials for each query
+    runs: 20                        # Number of trials for each query
     name: "MotionPlanning PP"       # Default ""    | Overridden by ROS Param /benchmark/name
     visualize: false                # Default false | Overridden by ROS Param /benchmark/visualize
     output_file: ""                 # Default ""    | Overridden by ROS Param /benchmark/output_file
@@ -13,17 +13,17 @@ benchmark_config:
 # Describes config for building motion planning pair-wise queries
 profiler_config:
 
-  # OPTIONAL Override 'requests' with moveit_msgs/MotionPlanRequest respective field/s
+  # Override 'requests' with moveit_msgs/MotionPlanRequest respective field/s
   requests_override:
-    allowed_planning_time: 5.0
+    allowed_planning_time: 10.0
     num_planning_attempts: 1
 
   # Resource moveit_msgs/MotionPlanRequest
   requests:
     - name: jc
       resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/jc.yaml
-    - name: jc_pcp
-      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/jc_pcp.yaml
+    # - name: jc_pcp
+    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/jc_pcp.yaml
 
   # Resource moveit_config (robot)
   robot:
@@ -36,22 +36,33 @@ profiler_config:
 
   # Resource moveit_msgs/PlanningScene
   scenes:
-    - name: empty_scene
+    - name: empty
       resource: package://moveit_benchmark_suite_resources/scenes/empty/empty.urdf.xacro
-    - name: primitive_scene
+    - name: primitive
       resource: package://moveit_benchmark_suite_resources/scenes/bbt/panda/primitive.urdf.xacro
-    # - name: mesh_scene
+    # - name: mesh
     #   resource: package://moveit_benchmark_suite_resources/scenes/bbt/panda/mesh_16k.urdf.xacro
 
   collision_detectors:
     - FCL
+    - Bullet
 
   # Resource moveit_config (planning pipeline)
+  # - Override the 'requests' pipeline_id field
+  # - Extends query 'planners' which overrides the 'requests' planner_id field
   planning_pipelines:
     - name: ompl
-      # Override/Extend moveit_msgs/MotionPlanRequest pipeline_id field
       resource: package://moveit_benchmark_suite_resources/robots/panda/config/ompl_planning.yaml
-      # OPTIONAL Override/Extend moveit_msgs/MotionPlanRequest planner_id field
       parameters:
         planners:
+          - RRT
           - RRTConnect
+          - EST
+          - PRM
+          - LBKPIECE
+          - BiEST
+    # - name: chomp
+    #   resource: package://moveit_benchmark_suite_resources/robots/panda/config/chomp_planning.yaml
+    #   parameters:
+    #     planners:
+    #       - CHOMP
