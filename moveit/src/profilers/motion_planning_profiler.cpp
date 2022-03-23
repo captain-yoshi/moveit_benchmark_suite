@@ -2,7 +2,7 @@
 #include <moveit_benchmark_suite/log.h>
 
 #include <queue>
-#include <moveit/version.h>
+#include <moveit_benchmark_suite/moveit_compatibility.h>
 
 #include <moveit/collision_detection_fcl/fcl_compat.h>
 #include <moveit/collision_detection_bullet/collision_env_bullet.h>
@@ -142,8 +142,11 @@ void MoveGroupInterfaceProfiler::preRunQuery(MotionPlanningQuery& query, Data& d
   move_group_->clearTrajectoryConstraints();
 
   move_group_->setPlanningTime(request.allowed_planning_time);
-  move_group_->setPlanningPipelineId(request.pipeline_id);
   move_group_->setPlannerId(request.planner_id);
+
+#if MOVEIT_VERSION_ID >= MOVEIT_VERSION_CHECK(1, 1, 2)
+  move_group_->setPlanningPipelineId(request.pipeline_id);
+#endif
 
   // BUG https://github.com/ros-planning/moveit/pull/3008
   // setStartState from a 'RobotState' instead of 'RobotStateMsg' to support older releases
