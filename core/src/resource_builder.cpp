@@ -439,9 +439,28 @@ bool SceneBuilder::buildClutteredSceneFromYAML(ScenePtr& scene,
   CollisionObjectType collision_type = CollisionObjectType::INVALID;
 
   if (type_str.compare("MESH") == 0)
+  {
     collision_type = CollisionObjectType::MESH;
+    if (bounds.size() != 1)
+    {
+      ROS_WARN("Mesh object type must have a bounds' size of 1, got '%zu'", bounds.size());
+      return false;
+    }
+  }
   else if (type_str.compare("BOX") == 0)
+  {
     collision_type = CollisionObjectType::BOX;
+    if (bounds.size() != 3)
+    {
+      ROS_WARN("Primitive BOX object type must have a 'bounds' size of 3, got '%zu'", bounds.size());
+      return false;
+    }
+  }
+  else
+  {
+    ROS_WARN("Undefined object type '%s'", type_str.c_str());
+    return false;
+  }
 
   auto it = state_map.find(robot_state);
   if (it == state_map.end())
