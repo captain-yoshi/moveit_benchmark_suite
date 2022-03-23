@@ -620,8 +620,14 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
     else
       layout.terminal = std::make_shared<QtTerminal>();
 
-    layout.terminal->size.x = node["gnuplot_config"]["options"]["size"]["x"].as<int>(640);
-    layout.terminal->size.y = node["gnuplot_config"]["options"]["size"]["y"].as<int>(480);
+    if (node["gnuplot_config"]["options"]["size"])
+    {
+      if (node["gnuplot_config"]["options"]["size"]["x"])
+        layout.terminal->size.x = node["gnuplot_config"]["options"]["size"]["x"].as<int>(640);
+
+      if (node["gnuplot_config"]["options"]["size"]["y"])
+        layout.terminal->size.y = node["gnuplot_config"]["options"]["size"]["y"].as<int>(480);
+    }
   }
   else
   {
