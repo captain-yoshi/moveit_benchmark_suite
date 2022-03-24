@@ -700,6 +700,7 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
       {
         plot.type = PlotType::BarGraph;
         plot.options = std::make_shared<GNUPlotHelper::BarGraphOptions>();
+        plot.options->y.min = 0.0;
       }
 
       plot.options->title = title;
