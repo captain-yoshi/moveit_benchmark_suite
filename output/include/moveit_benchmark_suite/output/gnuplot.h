@@ -365,7 +365,7 @@ public:
 private:
   // Filtered dataset
   void plot(const GNUPlotLayout& layout);
-  void plot(const MultiPlotLayout& layout, const YAML::Node& dataset);
+  void plot(const MultiPlotLayout& layout, const DatasetFilter::DatasetMap& dataset_map);
 
   std::string combineTokenNodeValue(const Token& token, const YAML::Node& node, const std::string& tag, bool keep_ns);
 

@@ -772,14 +772,13 @@ void GNUPlotDataset::plot(const GNUPlotLayout& layout)
     dataset_.filter(id, mp_layout.filters);
     const auto& dataset_map = dataset_.getFilteredDataset(id);
 
-    for (const auto& dataset : dataset_map)
-      plot(mp_layout, dataset.second);
+    plot(mp_layout, dataset_map);
 
     ++i;
   }
 }
 
-void GNUPlotDataset::plot(const MultiPlotLayout& layout, const YAML::Node& dataset)
+void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::DatasetMap& dataset_map)
 {
   const std::string TAG_SPLIT = " : ";
   const std::string TAG_LABEL_END = "\\n";
@@ -795,147 +794,152 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const YAML::Node& datas
     container.emplace_back(std::make_pair(plot, GNUPlotData()));
   }
 
-  if (!dataset["data"])
+  for (const auto& dataset_pair : dataset_map)
   {
-    ROS_WARN("Malformed dataset, root 'data' node not found");
-    return;
-  }
+    const auto& dataset = dataset_pair.second;
 
-  // Build legend and label names from dataset -> absolute
-  std::string abs_label;
-  std::string abs_legend;
-  bool addMetricToLabel = false;
-  bool addMetricToLegend = false;
-
-  for (const auto& token : layout.legends)
-  {
-    if (token.isRelative())
+    if (!dataset["data"])
     {
-      if (token.getNode()["metrics"])
-        addMetricToLegend = true;
-      continue;
+      ROS_WARN("Malformed dataset, root 'data' node not found");
+      return;
     }
 
-    auto legend = combineTokenNodeValue(token, dataset, TAG_SPLIT, keep_ns);
-    abs_legend += (legend.empty()) ? "" : legend + TAG_LEGEND_END;
-  }
+    // Build legend and label names from dataset -> absolute
+    std::string abs_label;
+    std::string abs_legend;
+    bool addMetricToLabel = false;
+    bool addMetricToLegend = false;
 
-  for (const auto& token : layout.labels)
-  {
-    if (token.isRelative())
-    {
-      if (token.getNode()["metrics"])
-        addMetricToLabel = true;
-      continue;
-    }
-
-    auto label = combineTokenNodeValue(token, dataset, TAG_SPLIT, keep_ns);
-    abs_label += (label.empty()) ? "" : label + TAG_LABEL_END;
-  }
-
-  // Loop through each queries
-  auto queries = dataset["data"];
-  for (std::size_t i = 0; i < queries.size(); ++i)
-  {
-    std::string rel_legend;
-    std::string rel_label;
-
-    auto query = queries[i];
-
-    // Build legend and label names from queries -> realtive
     for (const auto& token : layout.legends)
     {
-      if (token.isAbsolute() || token.getNode()["metrics"])
+      if (token.isRelative())
+      {
+        if (token.getNode()["metrics"])
+          addMetricToLegend = true;
         continue;
+      }
 
-      auto legend = combineTokenNodeValue(token, query, TAG_SPLIT, keep_ns);
-      rel_legend += (legend.empty()) ? "" : legend + TAG_LEGEND_END;
+      auto legend = combineTokenNodeValue(token, dataset, TAG_SPLIT, keep_ns);
+      abs_legend += (legend.empty()) ? "" : legend + TAG_LEGEND_END;
     }
 
     for (const auto& token : layout.labels)
     {
-      if (token.isAbsolute() || token.getNode()["metrics"])
+      if (token.isRelative())
+      {
+        if (token.getNode()["metrics"])
+          addMetricToLabel = true;
         continue;
+      }
 
-      auto label = combineTokenNodeValue(token, query, TAG_SPLIT, keep_ns);
-      rel_label += (label.empty()) ? "" : label + TAG_LABEL_END;
+      auto label = combineTokenNodeValue(token, dataset, TAG_SPLIT, keep_ns);
+      abs_label += (label.empty()) ? "" : label + TAG_LABEL_END;
     }
 
-    if (!query["metrics"])
-      continue;
-
-    auto metric_node = query["metrics"];
-
-    // Lopp through each plot
-    for (std::size_t j = 0; j < layout.plots.size(); ++j)
+    // Loop through each queries
+    auto queries = dataset["data"];
+    for (std::size_t i = 0; i < queries.size(); ++i)
     {
-      const auto& plot = layout.plots[j];
+      std::string rel_legend;
+      std::string rel_label;
 
-      // Loop through each metric in plot
-      for (const auto& metric : plot.metric_names)
+      auto query = queries[i];
+
+      // Build legend and label names from queries -> realtive
+      for (const auto& token : layout.legends)
       {
-        if (!metric_node[metric])
-        {
-          ROS_WARN("Metric '%s' not found in query #%s", metric.c_str(), std::to_string(j + 1).c_str());
+        if (token.isAbsolute() || token.getNode()["metrics"])
           continue;
-        }
 
-        std::string legend = abs_legend + rel_legend;
-        std::string label = abs_label + rel_label;
+        auto legend = combineTokenNodeValue(token, query, TAG_SPLIT, keep_ns);
+        rel_legend += (legend.empty()) ? "" : legend + TAG_LEGEND_END;
+      }
 
-        std::string token_tag;
-        if (keep_ns)
-          token_tag = "metrics/" + TAG_SPLIT;
-
-        if (addMetricToLegend)
-          legend += token_tag + metric + TAG_LEGEND_END;
-        if (addMetricToLabel)
-          label += token_tag + metric + TAG_LABEL_END;
-
-        // Remove trailing delimiter
-        if (legend.size() >= TAG_LEGEND_END.size())
-          for (int k = 0; k < TAG_LEGEND_END.size(); ++k)
-            legend.pop_back();
-        if (label.size() >= TAG_LABEL_END.size())
-          for (int k = 0; k < TAG_LABEL_END.size(); ++k)
-            label.pop_back();
-
-        // Try decoding metric as
-        //   - double
-        //   - vector<double>
-        //   - vector<vector<double>>
-        try
-        {
-          auto value = metric_node[metric].as<double>();
-          container[j].second.add(value, label, legend);
+      for (const auto& token : layout.labels)
+      {
+        if (token.isAbsolute() || token.getNode()["metrics"])
           continue;
-        }
-        catch (YAML::BadConversion& e)
-        {
-        }
-        try
-        {
-          auto values = metric_node[metric].as<std::vector<double>>();
-          container[j].second.add(values, label, legend);
-          continue;
-        }
-        catch (YAML::BadConversion& e)
-        {
-        }
-        try
-        {
-          auto values = metric_node[metric].as<std::vector<std::vector<double>>>();
 
-          for (const auto& value : values)
+        auto label = combineTokenNodeValue(token, query, TAG_SPLIT, keep_ns);
+        rel_label += (label.empty()) ? "" : label + TAG_LABEL_END;
+      }
+
+      if (!query["metrics"])
+        continue;
+
+      auto metric_node = query["metrics"];
+
+      // Lopp through each plot
+      for (std::size_t j = 0; j < layout.plots.size(); ++j)
+      {
+        const auto& plot = layout.plots[j];
+
+        // Loop through each metric in plot
+        for (const auto& metric : plot.metric_names)
+        {
+          if (!metric_node[metric])
+          {
+            ROS_WARN("Metric '%s' not found in query #%s", metric.c_str(), std::to_string(j + 1).c_str());
+            continue;
+          }
+
+          std::string legend = abs_legend + rel_legend;
+          std::string label = abs_label + rel_label;
+
+          std::string token_tag;
+          if (keep_ns)
+            token_tag = "metrics/" + TAG_SPLIT;
+
+          if (addMetricToLegend)
+            legend += token_tag + metric + TAG_LEGEND_END;
+          if (addMetricToLabel)
+            label += token_tag + metric + TAG_LABEL_END;
+
+          // Remove trailing delimiter
+          if (legend.size() >= TAG_LEGEND_END.size())
+            for (int k = 0; k < TAG_LEGEND_END.size(); ++k)
+              legend.pop_back();
+          if (label.size() >= TAG_LABEL_END.size())
+            for (int k = 0; k < TAG_LABEL_END.size(); ++k)
+              label.pop_back();
+
+          // Try decoding metric as
+          //   - double
+          //   - vector<double>
+          //   - vector<vector<double>>
+          try
+          {
+            auto value = metric_node[metric].as<double>();
             container[j].second.add(value, label, legend);
-          continue;
-        }
-        catch (YAML::BadConversion& e)
-        {
-        }
+            continue;
+          }
+          catch (YAML::BadConversion& e)
+          {
+          }
+          try
+          {
+            auto values = metric_node[metric].as<std::vector<double>>();
+            container[j].second.add(values, label, legend);
+            continue;
+          }
+          catch (YAML::BadConversion& e)
+          {
+          }
+          try
+          {
+            auto values = metric_node[metric].as<std::vector<std::vector<double>>>();
 
-        // Should not
-        ROS_WARN("Metric can be a double or 1d or 2d vector");
+            for (const auto& value : values)
+              container[j].second.add(value, label, legend);
+            continue;
+          }
+          catch (YAML::BadConversion& e)
+          {
+          }
+
+          // Should not
+          ROS_WARN("Metric can be a double or 1d or 2d vector");
+        }
       }
     }
   }
