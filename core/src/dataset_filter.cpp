@@ -120,57 +120,69 @@ void DatasetFilter::filter(const std::string& id, const std::vector<Filter>& fil
       const auto& token = filter.token;
       const auto& predicate = filter.predicate;
 
-      // Dataset metadata
-      if (token.isAbsolute())
+      // Skip relative tokens
+      if (token.isRelative())
+        continue;
+
+      if (!filterMetadata(it_dataset->second, token, predicate))
       {
-        if (!filterMetadata(it_dataset->second, token, predicate))
-        {
-          filter_success = false;
-          break;
-        }
-      }
-      // Dataset Queries
-      else
-      {
-        std::set<std::size_t> query_indexes;
-        auto queries = it_dataset->second["data"];
-
-        // Loop through each queries
-        for (std::size_t i = 0; i < queries.size(); ++i)
-        {
-          bool rc;
-          const auto& query = queries[i];
-
-          if (token.getNode()["metrics"])
-            rc = filterMetric(query, token, predicate);
-          else
-            rc = filterMetadata(query, token, predicate);
-
-          if (!rc)
-            query_indexes.insert(i);
-        }
-        // Remove filtered queries
-        // use reverse iterator, removing a YAML sequence changes the index order
-        std::set<std::size_t>::const_reverse_iterator revIt = query_indexes.rbegin();
-        while (revIt != query_indexes.rend())
-        {
-          queries.remove(*revIt);
-          ++revIt;
-        }
-
-        // Remove queries node if empty
-        if (queries.size() == 0)
-        {
-          filter_success = false;
-          break;
-        }
+        filter_success = false;
+        break;
       }
     }
 
-    if (filter_success)
-      ++it_dataset;
-    else
+    if (!filter_success)
+    {
       it_dataset = dataset_map.erase(it_dataset);
+      continue;
+    }
+
+    // Parse query sequence which affects relative token
+    std::set<std::size_t> query_indexes;
+    auto queries = it_dataset->second["data"];
+
+    // Loop through each queries
+    for (std::size_t i = 0; i < queries.size(); ++i)
+    {
+      const auto& query = queries[i];
+      bool rc = true;
+
+      for (const auto& filter : filters)
+      {
+        const auto& token = filter.token;
+        const auto& predicate = filter.predicate;
+
+        // Skip absolute tokens
+        if (token.isAbsolute())
+          continue;
+
+        if (token.getNode()["metrics"])
+          rc = filterMetric(query, token, predicate);
+        else
+          rc = filterMetadata(query, token, predicate);
+
+        if (!rc)
+          break;
+      }
+
+      if (!rc)
+        query_indexes.insert(i);
+    }
+
+    // Remove filtered queries
+    // use reverse iterator, removing a YAML sequence changes the index order
+    std::set<std::size_t>::const_reverse_iterator revIt = query_indexes.rbegin();
+    while (revIt != query_indexes.rend())
+    {
+      queries.remove(*revIt);
+      ++revIt;
+    }
+
+    // erase dataset if no queries
+    if (queries.size() == 0)
+      it_dataset = dataset_map.erase(it_dataset);
+    else
+      ++it_dataset;
   }
 }
 
