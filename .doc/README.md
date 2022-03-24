@@ -257,19 +257,19 @@ Minimalist dataset used for reference:
 
 A filtering mechanism has been implemented for a dataset and is based on 3 concepts: namespace, value and a predicate. This makes it possible to query the dataset like this:
 
-| Namespace        | Predicate | Value     |
-|------------------|:---------:|-----------|
-| /trials          |     >=    | 6         |
-| /os/distribution |     ==    | Ubuntu    |
-| query/scene      |     !=    | cluttered |
-| query/scene      |     ==    |           |
+| Namespace        | Predicate | Value                                      |
+|------------------|:---------:|--------------------------------------------|
+| /trials          |     >=    | 6                                          |
+| /os/distribution |     ==    | Ubuntu                                     |
+| query/scene      |     !=    | cluttered                                  |
+| /gpus            |     >=    | "{vendor: Intel Corporation, version: 04}" |
 
 
 The namespace concept has similarities with [ROS names](http://wiki.ros.org/Names). It has 2 types of name resolving:
 - relative/name
 - /global/name
 
-**Global** namespaces starts within the `dataset` node. Querying the `/os/distribution` would return `Ubuntu`. **Relative** namespaces will search within each `data` node sequences, e.g. the namespace `query/robot` would return the value `panda` for the first sequence. It is currently not possible to query a sequence, e.g. query the namespace `gpus/vendor`...
+**Global** namespaces starts within the `dataset` node. Querying the `/os/distribution` would return `Ubuntu`. **Relative** namespaces will search within each `data` node sequences, e.g. the namespace `query/robot` would return the value `panda` for the first sequence. You can query a sequence, but their are certain rules. The namespace must match the parent sequence. The value must be a YAML or JSON map. The predicate will only be computed against the last element value of the map. The other elements will be compared against the subset comparator. Current limitiation: you can't filter nested sequences and cannot filter out specific queries from the data node, e.g. `ns="/data"` and `value="{query: {robot: panda}}"`. Instead, use a relative namespace to filter queries.
 
 The last concepts uses predicates to compare values: `==`, `!=`, `>`, `>=`, `<` and `<=`. A namespace without a value can only be compared with the predicates `==` and `!=`. This will check if the namespace is a subset of the dataset. The filter behavior only **filters out** when a **predicate is false**. If the namespace is relative, only the data sequence is filtered. For a global namespace, the whole dataset is filtered. You can currently only chain filters as an **AND** operator.
 
