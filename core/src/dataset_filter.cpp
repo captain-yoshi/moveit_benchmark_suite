@@ -189,7 +189,7 @@ void DatasetFilter::filter(const std::string& id, const std::vector<Filter>& fil
 bool DatasetFilter::filterMetadata(const YAML::Node& node, const Token& token, Predicate predicate)
 {
   YAML::Node dataset_value;
-  YAML::Node token_value = YAML::toNode(token.getValue());
+  YAML::Node token_value = YAML::Load(token.getValue());
 
   // Compare values between token and dataset
   if (token.hasValue())
@@ -201,23 +201,98 @@ bool DatasetFilter::filterMetadata(const YAML::Node& node, const Token& token, P
       return true;
     }
 
-    // Compute predicate
-    YAML::scalar_compare<bool, int, double, std::string> cmp;
-
-    switch (predicate)
+    if (dataset_value.IsSequence())
     {
-      case Predicate::EQ:
-        return cmp.equality(token_value, dataset_value);
-      case Predicate::NEQ:
-        return cmp.non_equality(token_value, dataset_value);
-      case Predicate::GT:
-        return cmp.greater_then(token_value, dataset_value);
-      case Predicate::GE:
-        return cmp.greater_equal(token_value, dataset_value);
-      case Predicate::LT:
-        return cmp.lower_then(token_value, dataset_value);
-      case Predicate::LE:
-        return cmp.lower_equal(token_value, dataset_value);
+      if (!token_value.IsMap())
+      {
+        ROS_WARN_STREAM("Filter skipped, token value must be a map when targeting a sequence '" << token_value << "'");
+        return true;
+      }
+
+      bool rc = true;
+      YAML::scalar_compare<bool, int, double, std::string> cmp;
+      for (YAML::const_iterator it = dataset_value.begin(); it != dataset_value.end(); ++it)
+      {
+        rc = true;
+        if (token_value.size() != 0)
+        {
+          // Loop through map except the last element and check if is a subset
+          auto first = token_value.begin();
+
+          for (int i = 0; i < token_value.size() - 1; ++i)
+          {
+            // HACK cannot pass the token map iterator directly
+            // Recreate key/val node
+            YAML::Node temp;
+            temp[first->first] = first->second;
+
+            rc &= YAML::isSubset(temp, *it);
+            ++first;
+          }
+
+          // Last map element will be checked against predicate
+          YAML::Node temp;
+          temp[first->first] = first->second;
+
+          if (!rc)
+            continue;
+
+          // Get values
+          YAML::Node final_dataset_value;
+          YAML::Node final_token_value;
+          if (!YAML::getSubsetScalar(temp, *it, final_dataset_value))
+            continue;
+          if (!YAML::getSubsetScalar(temp, temp, final_token_value))
+            continue;
+
+          switch (predicate)
+          {
+            case Predicate::EQ:
+              rc &= cmp.equality(final_token_value, final_dataset_value);
+              break;
+            case Predicate::NEQ:
+              rc &= cmp.non_equality(final_token_value, final_dataset_value);
+              break;
+            case Predicate::GT:
+              rc &= cmp.greater_then(final_token_value, final_dataset_value);
+              break;
+            case Predicate::GE:
+              rc &= cmp.greater_equal(final_token_value, final_dataset_value);
+              break;
+            case Predicate::LT:
+              rc &= cmp.lower_then(final_token_value, final_dataset_value);
+              break;
+            case Predicate::LE:
+              rc &= cmp.lower_equal(final_token_value, final_dataset_value);
+              break;
+          }
+
+          if (rc)
+            return true;
+        }
+      }
+      return false;
+    }
+    else
+    {
+      // Compute predicate
+      YAML::scalar_compare<bool, int, double, std::string> cmp;
+
+      switch (predicate)
+      {
+        case Predicate::EQ:
+          return cmp.equality(token_value, dataset_value);
+        case Predicate::NEQ:
+          return cmp.non_equality(token_value, dataset_value);
+        case Predicate::GT:
+          return cmp.greater_then(token_value, dataset_value);
+        case Predicate::GE:
+          return cmp.greater_equal(token_value, dataset_value);
+        case Predicate::LT:
+          return cmp.lower_then(token_value, dataset_value);
+        case Predicate::LE:
+          return cmp.lower_equal(token_value, dataset_value);
+      }
     }
   }
   // Compare keys between token and dataset
