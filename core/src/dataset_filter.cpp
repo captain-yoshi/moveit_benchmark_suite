@@ -186,6 +186,31 @@ void DatasetFilter::filter(const std::string& id, const std::vector<Filter>& fil
   }
 }
 
+bool computePredicate(const YAML::Node& source, const YAML::Node& target, Predicate predicate)
+{
+  YAML::scalar_compare<bool, int, double, std::string> cmp;
+
+  switch (predicate)
+  {
+    case Predicate::EQ:
+      return cmp.equality(source, target);
+    case Predicate::NEQ:
+      return cmp.non_equality(source, target);
+    case Predicate::GT:
+      return cmp.greater_then(source, target);
+    case Predicate::GE:
+      return cmp.greater_equal(source, target);
+    case Predicate::LT:
+      return cmp.lower_then(source, target);
+    case Predicate::LE:
+      return cmp.lower_equal(source, target);
+    case Predicate::INVALID:
+      break;
+  }
+  ROS_WARN("Filter skipped, invalid predicate");
+  return true;
+}
+
 bool DatasetFilter::filterMetadata(const YAML::Node& node, const Token& token, Predicate predicate)
 {
   YAML::Node dataset_value;
@@ -209,11 +234,9 @@ bool DatasetFilter::filterMetadata(const YAML::Node& node, const Token& token, P
         return true;
       }
 
-      bool rc = true;
-      YAML::scalar_compare<bool, int, double, std::string> cmp;
       for (YAML::const_iterator it = dataset_value.begin(); it != dataset_value.end(); ++it)
       {
-        rc = true;
+        bool rc = true;
         if (token_value.size() != 0)
         {
           // Loop through map except the last element and check if is a subset
@@ -245,27 +268,7 @@ bool DatasetFilter::filterMetadata(const YAML::Node& node, const Token& token, P
           if (!YAML::getSubsetScalar(temp, temp, final_token_value))
             continue;
 
-          switch (predicate)
-          {
-            case Predicate::EQ:
-              rc &= cmp.equality(final_token_value, final_dataset_value);
-              break;
-            case Predicate::NEQ:
-              rc &= cmp.non_equality(final_token_value, final_dataset_value);
-              break;
-            case Predicate::GT:
-              rc &= cmp.greater_then(final_token_value, final_dataset_value);
-              break;
-            case Predicate::GE:
-              rc &= cmp.greater_equal(final_token_value, final_dataset_value);
-              break;
-            case Predicate::LT:
-              rc &= cmp.lower_then(final_token_value, final_dataset_value);
-              break;
-            case Predicate::LE:
-              rc &= cmp.lower_equal(final_token_value, final_dataset_value);
-              break;
-          }
+          rc = computePredicate(final_token_value, final_dataset_value, predicate);
 
           if (rc)
             return true;
@@ -273,26 +276,10 @@ bool DatasetFilter::filterMetadata(const YAML::Node& node, const Token& token, P
       }
       return false;
     }
+    // Token value is a scalar
     else
     {
-      // Compute predicate
-      YAML::scalar_compare<bool, int, double, std::string> cmp;
-
-      switch (predicate)
-      {
-        case Predicate::EQ:
-          return cmp.equality(token_value, dataset_value);
-        case Predicate::NEQ:
-          return cmp.non_equality(token_value, dataset_value);
-        case Predicate::GT:
-          return cmp.greater_then(token_value, dataset_value);
-        case Predicate::GE:
-          return cmp.greater_equal(token_value, dataset_value);
-        case Predicate::LT:
-          return cmp.lower_then(token_value, dataset_value);
-        case Predicate::LE:
-          return cmp.lower_equal(token_value, dataset_value);
-      }
+      return computePredicate(token_value, dataset_value, predicate);
     }
   }
   // Compare keys between token and dataset
@@ -311,6 +298,8 @@ bool DatasetFilter::filterMetadata(const YAML::Node& node, const Token& token, P
       case Predicate::LE:
         ROS_WARN("Filter skipped, token without value only supports predicates EQ and NEQ");
         return true;
+      case Predicate::INVALID:
+        break;
     }
   }
 
