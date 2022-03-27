@@ -1,8 +1,8 @@
-###################
-# Collision Check #
-###################
+###################################
+# Collision Check (PlanningScene) #
+###################################
 
-# Describes benchmark parameters (independant of profilers)
+# Benchmark configuration (independant of profilers)
 benchmark_config:
   parameters:
     runs: 10000                     # Number of trials for each query
@@ -12,65 +12,163 @@ benchmark_config:
     verbose_status_trial: False     # Print status before each trial of all queries
     verbose_status_query: True      # Print status before each query
 
-# Describes config for building collision check pair-wise queries
+# Collision check pair-wise queries
 profiler_config:
-  # Resource moveit_config (robot)
+  # MSA (urdf, srdf, kinematics, joint limits)
   robot:
-    name: panda
+  - name: panda
     resources:
       urdf: package://moveit_benchmark_suite_resources/robots/panda/urdf/panda.urdf
       srdf: package://moveit_benchmark_suite_resources/robots/panda/config/panda.srdf
       kinematics: package://moveit_benchmark_suite_resources/robots/panda/config/kinematics.yaml
       joint_limits: package://moveit_benchmark_suite_resources/robots/panda/config/joint_limits.yaml
-
-  # moveit_msgs/PlanningScene | custom building cluttering scene
-  scenes:
-    - name: empty_scene
-      resource: package://moveit_benchmark_suite_resources/scenes/empty/empty.urdf.xacro
-    - name: primitive_scene
-      resource: package://moveit_benchmark_suite_resources/scenes/bbt/panda/primitive.urdf.xacro
-
-    # Special resource for building cluterred scene free of contacts
-    - name: cluttered_scene
-      resource:
-        cluttered_scene:
-          robot_state: ready-state
-          n_objects: 100
-          rng: 123                    # Random number generator
-          object_type: MESH           # MESH, BOX
-          resource: package://moveit_resources_panda_description/meshes/collision/link5.stl
-          bounds:
-            - [0.3, 1.0]       # [Lower bound, Upper bound]
-
-  collision_detectors:
-    - FCL
-    - Bullet
-
-  # Resource moveit_msgs/RobotState
+  # moveit_msgs/RobotState
   robot_states:
-    - name: ready-state
-      resource:
-        joint_state:
-          header:
-            frame_id: panda_link0
-          name: [panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7]
-          position: [0, -0.785, 0, -2.356, 0, 1.571, 0.785]
-    - name: extended-state
-      resource:
-        joint_state:
-          header:
-            frame_id: panda_link0
-          name: [panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7]
-          position: [0, 1.5, 0, 0, 0, 0, 0]
-
-  # Resource collision_detection::CollisionRequest
+  - name: extended
+    resource:
+      joint_state:
+        header:
+          frame_id: panda_link0
+        name: [panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7]
+        position: [0, 1.5, 0, 0, 0, 1.571, 0.785]
+  # moveit_msgs/PlanningScene
+  scenes:
+  - name: empty
+    resource: package://moveit_benchmark_suite_resources/scenes/empty/empty.urdf.xacro
+  - name: box-1c
+    resource:
+      cluttered_scene:
+        robot_state: extended
+        object_in_collision: 1
+        object_type: BOX
+        bounds:
+        - [0.05, 0.2] # [Lower, Upper]
+        - [0.05, 0.2]
+        - [0.05, 0.2]
+        rng_in_collision: 123
+  - name: box-1nc
+    resource:
+      cluttered_scene:
+        robot_state: extended
+        object_no_collision: 1
+        object_type: BOX
+        bounds:
+        - [0.05, 0.2] # [Lower, Upper]
+        - [0.05, 0.2]
+        - [0.05, 0.2]
+        rng_no_collision: 123
+  - name: box-100-4c
+    resource:
+      cluttered_scene:
+        robot_state: extended
+        object_in_collision: 4
+        object_no_collision: 96
+        object_type: BOX
+        bounds:
+        - [0.05, 0.2] # [Lower, Upper]
+        - [0.05, 0.2]
+        - [0.05, 0.2]
+        rng_in_collision: 123
+        rng_no_collision: 123
+  - name: box-100-nc
+    resource:
+      cluttered_scene:
+        robot_state: extended
+        object_no_collision: 100
+        object_type: BOX
+        bounds:
+        - [0.05, 0.2]
+        - [0.05, 0.2]
+        - [0.05, 0.2]
+        rng_no_collision: 123
+  - name: mesh-100-4c
+    resource:
+      cluttered_scene:
+        robot_state: extended
+        object_in_collision: 4
+        object_no_collision: 96
+        object_type: MESH
+        resource: package://moveit_benchmark_suite_resources/robots/panda/meshes/collision/link5.stl
+        bounds:
+        - [0.3, 1.0]
+        rng_in_collision: 123
+        rng_no_collision: 123
+  - name: mesh-100-nc
+    resource:
+      cluttered_scene:
+        robot_state: extended
+        object_no_collision: 100
+        object_type: MESH
+        resource: package://moveit_benchmark_suite_resources/robots/panda/meshes/collision/link5.stl
+        bounds:
+        - [0.3, 1.0]
+        rng_no_collision: 123
+  # collision_detection::CollisionPlugin class name
+  collision_detectors:
+  - FCL
+  - Bullet
+  # collision_detection::CollisionRequest
   collision_requests:
-    - name: default
-      resource:
-        distance: False             # Compute proximity distance (Slow)
-        cost: False                 # Compute collision cost
-        contacts: True              # Compute contacts
-        max_contacts: 99            # Maximum number of contacts
-        max_contacts_per_pair: 10   # Maximum numbe of contacts per pair of bodies
-        max_cost_sources: 1         # Defines how many of the top cost sources should be returned
-        verbose: False              # Report information about collision
+  - name: First (Binary)
+    resource:
+      distance: False             # Compute proximity distance (Slow)
+      cost: False                 # Compute collision cost
+      contacts: False             # Compute contacts, otherwise only a binary collision yes/no is reported
+      max_contacts: 1             # Maximum number of contacts
+      max_contacts_per_pair: 1    # Maximum numbe of contacts per pair of bodies
+      max_cost_sources: 1         # Defines how many of the top cost sources should be returned
+      verbose: False              # Report information about collision
+  - name: First (Contact Only)
+    resource:
+      distance: False
+      cost: False
+      contacts: True
+      max_contacts: 1
+      max_contacts_per_pair: 1
+      max_cost_sources: 1
+      verbose: False
+  - name: First (Cost)
+    resource:
+      distance: False
+      cost: True
+      contacts: True
+      max_contacts: 1
+      max_contacts_per_pair: 1
+      max_cost_sources: 1
+      verbose: False
+  # - name: First (Distance)
+  #   resource:
+  #     distance: True
+  #     cost: False
+  #     contacts: True
+  #     max_contacts: 1
+  #     max_contacts_per_pair: 1
+  #     max_cost_sources: 1
+  #     verbose: False
+  - name: ALL (Contact Only)
+    resource:
+      distance: False
+      cost: False
+      contacts: True
+      max_contacts: 99
+      max_contacts_per_pair: 1
+      max_cost_sources: 1
+      verbose: False
+  - name: ALL (Cost)
+    resource:
+      distance: False
+      cost: True
+      contacts: True
+      max_contacts: 99
+      max_contacts_per_pair: 1
+      max_cost_sources: 99
+      verbose: False
+  # - name: ALL (Distance)
+  #   resource:
+  #     distance: True
+  #     cost: False
+  #     contacts: True
+  #     max_contacts: 99
+  #     max_contacts_per_pair: 1
+  #     max_cost_sources: 1
+  #     verbose: False

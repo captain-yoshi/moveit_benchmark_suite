@@ -299,18 +299,7 @@ std::map<std::string, RobotPtr> RobotBuilder::generateResources() const
 
 namespace {
 /** \brief Factor to compute the maximum number of trials random clutter generation. */
-static const int MAX_SEARCH_FACTOR_CLUTTER = 3;
-
-/** \brief Factor to compute the maximum number of trials for random state generation. */
-static const int MAX_SEARCH_FACTOR_STATES = 30;
-
-/** \brief Defines a random robot state. */
-enum class RobotStateSelector
-{
-  IN_COLLISION,
-  NOT_IN_COLLISION,
-  RANDOM,
-};
+static const int MAX_SEARCH_FACTOR_CLUTTER = 100;
 
 enum class CollisionObjectType : int
 {
@@ -326,94 +315,122 @@ enum class CollisionObjectType : int
  *   \param num_objects The number of objects to be cluttered
  *   \param CollisionObjectType Type of object to clutter (mesh or box) */
 bool buildClutteredWorld(const planning_scene::PlanningScenePtr& planning_scene,
-                         const moveit_msgs::RobotState& robot_state, const size_t num_objects, CollisionObjectType type,
-                         const std::string& resource, const std::vector<std::pair<double, double>>& bound,
-                         const uint32_t rng)
+                         const moveit_msgs::RobotState& robot_state, const size_t free_collision_objects,
+                         const std::size_t in_collision_objects, const uint32_t free_collision_rng,
+                         const uint32_t in_collision_rng, CollisionObjectType type, const std::string& resource,
+                         const std::vector<std::pair<double, double>>& bound)
 {
-  random_numbers::RandomNumberGenerator num_generator = random_numbers::RandomNumberGenerator(rng);
+  struct Helper
+  {
+    uint32_t rng;
+    std::size_t object_number;
+    bool in_collision_build;
+  };
+
+  // Loop helper
+  std::vector<Helper> helpers;
+  helpers.emplace_back();
+  helpers.back().rng = free_collision_rng;
+  helpers.back().object_number = free_collision_objects;
+  helpers.back().in_collision_build = false;
+
+  helpers.emplace_back();
+  helpers.back().rng = in_collision_rng;
+  helpers.back().object_number = in_collision_objects;
+  helpers.back().in_collision_build = true;
+
+  std::string name;
+  shapes::ShapeConstPtr shape;
+  size_t added_objects{ 0 };
+  size_t i{ 0 };
+  std::size_t object_count_loop{ 0 };
 
   collision_detection::CollisionRequest req;
   req.contacts = true;
   req.verbose = true;
-  planning_scene->setCurrentState(robot_state);
-
-  std::string name;
-  shapes::ShapeConstPtr shape;
+  req.max_contacts = 2;
 
   Eigen::Quaterniond quat;
-  Eigen::Isometry3d pos{ Eigen::Isometry3d::Identity() };
+  Eigen::Isometry3d pose{ Eigen::Isometry3d::Identity() };
 
-  size_t added_objects{ 0 };
-  size_t i{ 0 };
+  // allow all robot links to be in collision for world check
+  collision_detection::AllowedCollisionMatrix acm{ collision_detection::AllowedCollisionMatrix(
+      planning_scene->getRobotModel()->getLinkModelNames(), true) };
 
-  // create random objects until as many added as desired or quit if too many attempts
-  while (added_objects < num_objects && i < num_objects * MAX_SEARCH_FACTOR_CLUTTER)
+  // set robot state
+  planning_scene->setCurrentState(robot_state);
+
+  planning_scene::PlanningScene test_scene(planning_scene->getRobotModel());
+
+  for (const auto& helper : helpers)
   {
-    // add with random size and random position
-    pos.translation().x() = num_generator.uniformReal(-1.0, 1.0);
-    pos.translation().y() = num_generator.uniformReal(-1.0, 1.0);
-    pos.translation().z() = num_generator.uniformReal(0.0, 1.0);
+    random_numbers::RandomNumberGenerator num_generator = random_numbers::RandomNumberGenerator(helper.rng);
+    object_count_loop += helper.object_number;
 
-    quat.x() = num_generator.uniformReal(-1.0, 1.0);
-    quat.y() = num_generator.uniformReal(-1.0, 1.0);
-    quat.z() = num_generator.uniformReal(-1.0, 1.0);
-    quat.w() = num_generator.uniformReal(-1.0, 1.0);
-    quat.normalize();
-    pos.rotate(quat);
-
-    switch (type)
+    // create random objects until as many added as desired or quit if too many attempts
+    while (added_objects < object_count_loop && i < object_count_loop * MAX_SEARCH_FACTOR_CLUTTER)
     {
-      case CollisionObjectType::MESH:
+      // add with random size and random position
+      pose.translation().x() = num_generator.uniformReal(-1.0, 1.0);
+      pose.translation().y() = num_generator.uniformReal(-1.0, 1.0);
+      pose.translation().z() = num_generator.uniformReal(0.0, 1.0);
+
+      quat.x() = num_generator.uniformReal(-1.0, 1.0);
+      quat.y() = num_generator.uniformReal(-1.0, 1.0);
+      quat.z() = num_generator.uniformReal(-1.0, 1.0);
+      quat.w() = num_generator.uniformReal(-1.0, 1.0);
+      quat.normalize();
+      pose.rotate(quat);
+
+      switch (type)
       {
-        shapes::Mesh* mesh = shapes::createMeshFromResource(resource);
-        mesh->scale(num_generator.uniformReal(bound[0].first, bound[0].second));
-        shape.reset(mesh);
-        name = "mesh";
-        break;
+        case CollisionObjectType::MESH:
+        {
+          shapes::Mesh* mesh = shapes::createMeshFromResource(resource);
+          mesh->scale(num_generator.uniformReal(bound[0].first, bound[0].second));
+          shape.reset(mesh);
+          name = "mesh";
+          break;
+        }
+        case CollisionObjectType::BOX:
+        {
+          shape = std::make_shared<shapes::Box>(num_generator.uniformReal(bound[0].first, bound[0].second),
+                                                num_generator.uniformReal(bound[1].first, bound[1].second),
+                                                num_generator.uniformReal(bound[2].first, bound[2].second));
+          name = "box";
+          break;
+        }
+
+        default:
+          ROS_ERROR("Collision object type does not exist.");
+          return false;
       }
-      case CollisionObjectType::BOX:
+
+      name.append(std::to_string(i));
+      test_scene.getWorldNonConst()->addToObject(name, shape, pose);
+
+      collision_detection::CollisionResult res;
+      test_scene.checkCollision(req, res, planning_scene->getCurrentState(), acm);
+
+      // In collision build -> Add if collision againt ONLY one robot link
+      // No collision build -> Add if no collision
+      if ((helper.in_collision_build && res.contact_count == 1) ||  //
+          (!helper.in_collision_build && !res.collision))
       {
-        shape = std::make_shared<shapes::Box>(num_generator.uniformReal(bound[0].first, bound[0].second),
-                                              num_generator.uniformReal(bound[1].first, bound[1].second),
-                                              num_generator.uniformReal(bound[2].first, bound[2].second));
-        name = "box";
-        break;
+        planning_scene->getWorldNonConst()->addToObject(name, shape, pose);
+        added_objects++;
       }
+      // Remove object from test scene
+      test_scene.getWorldNonConst()->removeObject(name);
 
-      default:
-        ROS_ERROR("Collision object type does not exist.");
-        return false;
+      i++;
     }
-
-    name.append(std::to_string(i));
-    planning_scene->getWorldNonConst()->addToObject(name, shape, pos);
-
-    // try if it isn't in collision if yes, ok, if no remove.
-    collision_detection::CollisionResult res;
-    planning_scene->checkCollision(req, res, planning_scene->getCurrentState(),
-                                   planning_scene->getAllowedCollisionMatrix());
-
-    if (!res.collision)
+    if (added_objects != object_count_loop)
     {
-      added_objects++;
+      ROS_ERROR("Not able to add required objects in the planning scene");
+      return false;
     }
-    else
-    {
-      ROS_DEBUG_STREAM("Object was in collision, remove");
-      planning_scene->getWorldNonConst()->removeObject(name);
-    }
-
-    i++;
   }
-
-  if (added_objects != num_objects)
-  {
-    ROS_ERROR("Not able to add objects not in collision with %s %s", std::to_string(added_objects).c_str(),
-              std::to_string(num_objects).c_str());
-    return false;
-  }
-
-  ROS_DEBUG_STREAM("Cluttered the planning scene with " << added_objects << " objects");
 
   return true;
 }
@@ -424,15 +441,24 @@ bool SceneBuilder::buildClutteredSceneFromYAML(ScenePtr& scene,
                                                const std::map<std::string, moveit_msgs::RobotState>& state_map,
                                                const YAML::Node& node) const
 {
-  std::size_t object_size = node["n_objects"].as<std::size_t>();
+  std::size_t in_object_size = node["object_in_collision"].as<std::size_t>(0);
+  std::size_t free_object_size = node["object_no_collision"].as<std::size_t>(0);
 
   // Empty scene
-  if (object_size == 0)
+  if (in_object_size + free_object_size == 0)
     return true;
 
-  auto rng = node["rng"].as<uint32_t>();
+  if ((in_object_size && !node["rng_in_collision"]) ||  //
+      (free_object_size && !node["rng_no_collision"]))
+  {
+    ROS_WARN("Missing 'rng_<in/no>_collision' parameter");
+    return false;
+  }
+
+  auto in_rng = node["rng_in_collision"].as<uint32_t>(0);
+  auto free_rng = node["rng_no_collision"].as<uint32_t>(0);
   auto bounds = node["bounds"].as<std::vector<std::pair<double, double>>>();
-  auto resource = node["resource"].as<std::string>();
+  auto resource = node["resource"].as<std::string>("");
   auto robot_state = node["robot_state"].as<std::string>();
   auto type_str = node["object_type"].as<std::string>();
 
@@ -444,6 +470,11 @@ bool SceneBuilder::buildClutteredSceneFromYAML(ScenePtr& scene,
     if (bounds.size() != 1)
     {
       ROS_WARN("Mesh object type must have a bounds' size of 1, got '%zu'", bounds.size());
+      return false;
+    }
+    if (resource.empty())
+    {
+      ROS_WARN("Mesh object 'resource' parameter must be defined");
       return false;
     }
   }
@@ -469,7 +500,8 @@ bool SceneBuilder::buildClutteredSceneFromYAML(ScenePtr& scene,
     return false;
   }
 
-  return buildClutteredWorld(scene->getScene(), it->second, object_size, collision_type, resource, bounds, rng);
+  return buildClutteredWorld(scene->getScene(), it->second, free_object_size, in_object_size, free_rng, in_rng,
+                             collision_type, resource, bounds);
 }
 
 std::map<std::string, ScenePtr>
