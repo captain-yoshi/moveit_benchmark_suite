@@ -88,8 +88,9 @@ public:
    */
   enum Metrics
   {
-    DISTANCE = 1 << 0,  //
-    CONTACTS = 1 << 1,  //
+    COLLISION = 1 << 0,      // True if collision was found
+    CONTACT_COUNT = 1 << 1,  //
+    DISTANCE = 1 << 2,       //
   };
 
   void buildQueriesFromYAML(const std::string& filename) override;

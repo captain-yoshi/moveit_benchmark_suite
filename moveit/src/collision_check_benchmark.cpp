@@ -60,8 +60,9 @@ int main(int argc, char** argv)
   CollisionCheckProfiler profiler;
   profiler.buildQueriesFromYAML(filename);
 
-  profiler.options.metrics = CollisionCheckProfiler::CONTACTS |  //
-                             CollisionCheckProfiler::DISTANCE;   //
+  profiler.options.metrics = CollisionCheckProfiler::COLLISION |      //
+                             CollisionCheckProfiler::CONTACT_COUNT |  //
+                             CollisionCheckProfiler::DISTANCE;        //
 
   // Setup benchmark
   Benchmark benchmark;

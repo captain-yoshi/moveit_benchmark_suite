@@ -114,7 +114,9 @@ void CollisionCheckProfiler::postRunQuery(const CollisionCheckQuery& query, Coll
 {
   data.metrics["time"] = data.time;
 
-  if (this->options.metrics & Metrics::CONTACTS && query.request.contacts)
+  if (this->options.metrics & Metrics::COLLISION)
+    data.metrics["collision"] = result.collision_result.collision;
+  if (this->options.metrics & Metrics::CONTACT_COUNT && query.request.contacts)
     data.metrics["contact_count"] = result.collision_result.contact_count;
   if (this->options.metrics & Metrics::DISTANCE && query.request.distance)
     data.metrics["closest_distance"] = result.collision_result.distance;
