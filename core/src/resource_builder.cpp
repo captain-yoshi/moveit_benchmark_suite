@@ -31,6 +31,11 @@ void ResourceBuilder::insertResource(const std::string name, const YAML::Node& n
     ROS_WARN("Resource name `%s` already in map.", name.c_str());
 }
 
+void ResourceBuilder::clearResources()
+{
+  node_map_.clear();
+}
+
 bool ResourceBuilder::validateResource(const YAML::Node& node)
 {
   return true;

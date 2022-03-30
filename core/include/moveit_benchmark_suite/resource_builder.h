@@ -89,6 +89,7 @@ protected:
 
   const std::map<std::string, YAML::Node>& getResources() const;
   void insertResource(const std::string, const YAML::Node& node);
+  void clearResources();
 
   // Decode a node with the template type and encode to a node and check if the original is a subset
   template <typename T>
