@@ -87,6 +87,10 @@ bool Robot::initialize(const std::string& urdf_file, const std::string& srdf_fil
 }
 bool Robot::initializeFromYAML(const YAML::Node& node)
 {
+  // Strict config keys
+  if (!IO::validateNodeKeys(node, { "urdf", "srdf", "kinematics", "joint_limits" }))
+    return false;
+
   if (loader_)
   {
     ROS_ERROR("Already initialized!");

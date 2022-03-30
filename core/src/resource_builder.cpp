@@ -483,6 +483,10 @@ bool SceneBuilder::buildClutteredSceneFromYAML(ScenePtr& scene,
                                                const std::map<std::string, moveit_msgs::RobotState>& state_map,
                                                const YAML::Node& node) const
 {
+  if (!IO::validateNodeKeys(node, { "object_in_collision", "object_no_collision", "rng_in_collision",
+                                    "rng_no_collision", "bounds", "resource", "robot_state", "object_type" }))
+    return false;
+
   std::size_t in_object_size = node["object_in_collision"].as<std::size_t>(0);
   std::size_t free_object_size = node["object_no_collision"].as<std::size_t>(0);
 
