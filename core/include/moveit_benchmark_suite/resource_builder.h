@@ -142,8 +142,18 @@ public:
 
     // Decode nodes
     for (const auto& resource : node_map)
-      requests.insert({ resource.first, resource.second["resource"].template as<T>() });
-
+    {
+      try
+      {
+        requests.insert({ resource.first, resource.second["resource"].template as<T>() });
+      }
+      catch (YAML::BadConversion& e)
+      {
+        ROS_WARN("Resource '%s' bad YAML conversion\n%s", resource.first.c_str(), e.what());
+        requests.clear();
+        return requests;
+      }
+    }
     return requests;
   };
 

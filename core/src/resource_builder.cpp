@@ -276,18 +276,25 @@ std::map<std::string, RobotPtr> RobotBuilder::generateResources() const
 
   for (const auto& pair : node_map)
   {
+    bool success = true;
     auto robot = std::make_shared<Robot>(pair.first);
 
     // initialize but don't load kinematics
-    if (robot->initializeFromYAML(pair.second["resources"]))
+    success = robot->initializeFromYAML(pair.second["resources"]);
+    if (success && pair.second["parameters"] && pair.second["parameters"]["robot_state"])
     {
-      if (pair.second["parameters"] && pair.second["parameters"]["robot_state"])
-      {
-        auto state = pair.second["parameters"]["robot_state"].as<moveit_msgs::RobotState>();
-        robot->setState(state);
-      }
-      results.insert({ pair.first, robot });
+      auto state = pair.second["parameters"]["robot_state"].as<moveit_msgs::RobotState>();
+      robot->setState(state);
     }
+
+    // Strict resource build (all or nothing)
+    if (!success)
+    {
+      results.clear();
+      break;
+    }
+
+    results.insert({ pair.first, robot });
   }
 
   return results;
@@ -529,8 +536,14 @@ SceneBuilder::generateResources(const RobotPtr& robot, const std::string& collis
     else
       success &= scene->fromYAMLNode(pair.second["resource"]);
 
-    if (success)
-      results.insert({ pair.first, scene });
+    // Strict resource build (all or nothing)
+    if (!success)
+    {
+      results.clear();
+      break;
+    }
+
+    results.insert({ pair.first, scene });
   }
 
   return results;
@@ -547,6 +560,7 @@ std::map<std::string, PlanningPipelineEmitterPtr> PlanningPipelineEmitterBuilder
 
   for (const auto& pair : node_map)
   {
+    bool success = true;
     auto pipeline = std::make_shared<PlanningPipelineEmitter>(pair.first, "planning_pipelines/" + pair.first);
 
     if (!pair.second["resource"])
@@ -558,14 +572,19 @@ std::map<std::string, PlanningPipelineEmitterPtr> PlanningPipelineEmitterBuilder
     if (pair.second["parameters"])
     {
       const auto& planners = pair.second["parameters"]["planners"].as<std::vector<std::string>>();
-      if (pipeline->initializeFromYAML(pair.second["resource"], planners))
-        results.insert({ pair.first, pipeline });
+      success = pipeline->initializeFromYAML(pair.second["resource"], planners);
     }
     else
+      success = pipeline->initializeFromYAML(pair.second["resource"]);
+
+    // Strict resource build (all or nothing)
+    if (!success)
     {
-      if (pipeline->initializeFromYAML(pair.second["resource"]))
-        results.insert({ pair.first, pipeline });
+      results.clear();
+      break;
     }
+
+    results.insert({ pair.first, pipeline });
   }
   return results;
 }
