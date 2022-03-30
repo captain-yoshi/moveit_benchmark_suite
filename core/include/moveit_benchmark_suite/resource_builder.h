@@ -106,14 +106,18 @@ protected:
       // Compare nodes to find if everything has been converted correctly
       if (YAML::isSubset(source, target))
         return true;
+      const std::string del = "------";
+      ROS_WARN_STREAM("Source node is not a subset of target node"
+                      << "\n------\nSource\n------\n"
+                      << source << "\n------\nTarget\n------\n"
+                      << target << "\n------");
+      return false;
     }
     catch (const YAML::Exception& e)
     {
       ROS_ERROR("YAML decode exception: %s", e.what());
       return false;
     }
-
-    return false;
   }
 
 private:
