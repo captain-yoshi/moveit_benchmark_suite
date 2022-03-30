@@ -67,7 +67,7 @@ public:
   //   - File (YAML, XML, XACRO)
   //   - ROS Parameter namespace
   //   - YAML node
-  void decodeResourceTag(const YAML::Node& source, YAML::Node& target);
+  bool decodeResourceTag(const YAML::Node& source, YAML::Node& target);
 
   // Merge supplied node to specific/all resources in the map
   void mergeResource(const std::string& name, const YAML::Node& node);
@@ -84,8 +84,8 @@ public:
   virtual bool validateResource(const YAML::Node& node);  // defaults to true
 
 protected:
-  void loadResource(const YAML::Node& node);
-  void extendResource(const YAML::Node& node, std::vector<std::string>& resource_names);
+  bool loadResource(const YAML::Node& node);
+  bool extendResource(const YAML::Node& node, std::vector<std::string>& resource_names);
 
   const std::map<std::string, YAML::Node>& getResources() const;
   void insertResource(const std::string, const YAML::Node& node);
