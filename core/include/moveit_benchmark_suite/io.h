@@ -227,6 +227,13 @@ void threadSleep(double seconds);
 template <typename T>
 std::vector<T> tokenize(const std::string& string, const std::string& separators = " ");
 
+/** \brief Compare valid keys against node keys
+ *  \param[in] node Node to comapre.
+ *  \param[in] keys List of keys used to compare.
+ *  \return True if keys matches node keys, false otherwise.
+ */
+bool validateNodeKeys(const YAML::Node& node, const std::vector<std::string>& keys);
+
 /** \brief Write the contents of a YAML node out to a potentially new file.
  *  \param[in] node Node to write.
  *  \param[in] file Filename to open.

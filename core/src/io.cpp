@@ -537,6 +537,45 @@ const bool IO::loadFileToYAML(const std::string& path, YAML::Node& node, bool ve
   return true;
 }
 
+bool IO::validateNodeKeys(const YAML::Node& node, const std::vector<std::string>& keys)
+{
+  std::size_t match_key_count = 0;
+  std::vector<std::size_t> unmatch_indexes;
+
+  std::size_t loop_ctr = 0;
+  for (const auto& key : keys)
+  {
+    if (node[key])
+      match_key_count++;
+    else
+      unmatch_indexes.push_back(loop_ctr);
+    loop_ctr++;
+  }
+
+  if (node.size() != match_key_count)
+  {
+    std::string unmatch_keys;
+    std::string del = ", ";
+
+    for (const auto& idx : unmatch_indexes)
+      unmatch_keys += "'" + keys[idx] + "'" + del;
+
+    if (!unmatch_keys.empty())
+    {
+      for (const auto& c : del)
+        unmatch_keys.pop_back();
+    }
+    const std::string KEY_STR = (unmatch_keys.size() == 1) ? "key" : "keys";
+
+    ROS_ERROR("Invalid node %s found in configuration.", KEY_STR.c_str());
+    ROS_ERROR("Unmatched valid %s: [%s]", KEY_STR.c_str(), unmatch_keys.c_str());
+    ROS_ERROR_STREAM("Node output:\n" << node);
+    return false;
+  }
+
+  return true;
+}
+
 bool IO::YAMLToFile(const YAML::Node& node, const std::string& file)
 {
   YAML::Emitter out;
