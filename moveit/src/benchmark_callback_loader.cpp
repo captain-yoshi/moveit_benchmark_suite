@@ -28,6 +28,7 @@ BenchmarkCallbackLoader::BenchmarkCallbackLoader(Benchmark& benchmark) : benchma
       // Catch all errors to output the dataset later on
       try
       {
+        ROS_INFO("Computing statistics...");
         dataset = aggregate.aggregate(operations, *dataset, filters);
       }
       catch (...)
