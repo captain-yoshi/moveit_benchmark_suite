@@ -1,10 +1,10 @@
 <?xml version="1.0" ?>
 <robot name="scene" xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:include filename="$(find urdf_to_scene)/config/utils.xacro" />
-  <xacro:include filename="$(find urdf_to_scene)/config/shelf.urdf.xacro" />
+  <xacro:include filename="$(find urdf_to_scene)/xacro/planning_scene.xacro" />
+  <xacro:include filename="$(find urdf_to_scene)/xacro/collision_objects/shelf.urdf.xacro" />
   <xacro:include filename="$(find moveit_benchmark_suite_resources)/objects/metadata.xacro" />
 
-  <!-- Transform World to Robot -->
+  <!-- Planning frame -->
   <link name="world"/>
   <planning_fft name="panda_link0"
                 parent="world"
@@ -21,9 +21,9 @@
                v_board_thickness="0.02"
                back_board="false"/>
 
-  <xacro:framemesh name="soupcan"
-                       frame_id="shelf_board2"
-                       xyz="0 0 0" rpy="0 0 0"
-                       metadata="${soupcan}"/>
+  <xacro:collision_mesh name="soupcan"
+                        frame_id="shelf_board2/top"
+                        resource="${soupcan.resource}"
+                        metadata="${soupcan}"/>
 
 </robot>
