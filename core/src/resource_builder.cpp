@@ -354,7 +354,7 @@ bool buildClutteredWorld(const planning_scene::PlanningScenePtr& planning_scene,
 
   collision_detection::CollisionRequest req;
   req.contacts = true;
-  req.verbose = true;
+  req.verbose = false;
   req.max_contacts = 2;
 
   Eigen::Quaterniond quat;
@@ -368,6 +368,8 @@ bool buildClutteredWorld(const planning_scene::PlanningScenePtr& planning_scene,
   planning_scene->setCurrentState(robot_state);
 
   planning_scene::PlanningScene test_scene(planning_scene->getRobotModel());
+
+  ROS_INFO("Building cluttred scene...");
 
   for (const auto& helper : helpers)
   {
