@@ -28,14 +28,14 @@ DataSetPtr AggregateDataset::aggregate(const std::vector<Operation>& operations,
       // Metric to apply equation is not found
       if (!query["metrics"][operation.raw_metric])
       {
-        ROS_WARN("Metric '%s' not found in filtered dataset", operation.new_metric.c_str());
+        ROS_WARN("Metric '%s' not found in filtered dataset for query #%zu", operation.raw_metric.c_str(), i + 1);
         continue;
       }
       // Metric to store already exists
       if (query["metrics"][operation.new_metric])
       {
-        ROS_WARN("Metric '%s' already exists in filtered dataset, choose a different name",
-                 operation.new_metric.c_str());
+        ROS_WARN("Metric '%s' already exists in filtered dataset for query #%zu, choose a different name",
+                 operation.new_metric.c_str(), i + 1);
         continue;
       }
 
