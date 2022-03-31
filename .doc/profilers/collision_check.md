@@ -33,7 +33,7 @@ benchmark_config:
 
 profiler_config:
   # MSA (urdf, srdf, kinematics, joint limits)
-  robot:
+  robots:
   - name: panda
     resources:
       urdf: package://moveit_benchmark_suite_resources/robots/panda/urdf/panda.urdf

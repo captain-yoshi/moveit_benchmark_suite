@@ -69,8 +69,8 @@ void CollisionCheckBuilder::buildQueries(const std::string& filename)
   {
     // Build robots
     RobotBuilder builder;
-    builder.loadResources(node["profiler_config"]["robot"]);
-    builder.extendResources(node["extend_resource_config"]["robot"]);
+    builder.loadResources(node["profiler_config"]["robots"]);
+    builder.extendResources(node["extend_resource_config"]["robots"]);
     robot_map = builder.generateResources();
   }
   {  // Build scenes
