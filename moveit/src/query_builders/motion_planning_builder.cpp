@@ -68,6 +68,12 @@ void MotionPlanningBuilder::buildQueries(const std::string& filename, const std:
   if (!IO::loadFileToYAML(filename, node, true))
     return;
 
+  if (!node["profiler_config"])
+  {
+    ROS_WARN("Missing root node 'profiler_config'");
+    return;
+  }
+
   std::map<std::string, RobotPtr> robot_map;
   std::map<std::string, ScenePtr> scene_map;
   SceneBuilder scene_builder;
@@ -80,12 +86,14 @@ void MotionPlanningBuilder::buildQueries(const std::string& filename, const std:
     // Build robots
     RobotBuilder builder;
     builder.loadResources(node["profiler_config"][robot_key]);
-    builder.extendResources(node["extend_resource_config"][robot_key]);
+    if (node["extend_resource_config"] && node["extend_resource_config"][robot_key])
+      builder.extendResources(node["extend_resource_config"][robot_key]);
     robot_map = builder.generateResources();
   }
   {  // Build scenes
     scene_builder.loadResources(node["profiler_config"]["scenes"]);
-    scene_builder.extendResources(node["extend_resource_config"]["scenes"]);
+    if (node["extend_resource_config"] && node["extend_resource_config"]["scenes"])
+      scene_builder.extendResources(node["extend_resource_config"]["scenes"]);
     // Don't generate results yet because depends on Robot and Collision detector
   }
   {
@@ -94,7 +102,8 @@ void MotionPlanningBuilder::buildQueries(const std::string& filename, const std:
     builder.loadResources(node["profiler_config"]["requests"]);
     // Merge global request
     builder.mergeResources(node["profiler_config"]["requests_override"]);
-    builder.extendResources(node["extend_resource_config"]["requests"]);
+    if (node["extend_resource_config"] && node["extend_resource_config"]["requests"])
+      builder.extendResources(node["extend_resource_config"]["requests"]);
     request_map = builder.generateResources();
   }
   {
@@ -102,13 +111,30 @@ void MotionPlanningBuilder::buildQueries(const std::string& filename, const std:
     PlanningPipelineEmitterBuilder builder;
 
     builder.loadResources(node["profiler_config"]["planning_pipelines"]);
-    builder.extendResources(node["extend_resource_config"]["planning_pipelines"]);
+    if (node["extend_resource_config"] && node["extend_resource_config"]["planning_pipelines"])
+      builder.extendResources(node["extend_resource_config"]["planning_pipelines"]);
     pipeline_map = builder.generateResources();
   }
 
   {
     // Build collision detectors
-    collision_detectors = node["profiler_config"]["collision_detectors"].as<std::vector<std::string>>();
+    try
+    {
+      if (!node["profiler_config"]["collision_detectors"])
+      {
+        ROS_WARN("Missing node 'collision_detectors'");
+        return;
+      }
+
+      collision_detectors = node["profiler_config"]["collision_detectors"].as<std::vector<std::string>>();
+    }
+    catch (YAML::BadConversion& e)
+    {
+      ROS_ERROR_STREAM("Bad conversion in node 'collision_detectors'"
+                       << "\n-----------\nFaulty Node\n-----------\n"
+                       << node["profiler_config"]["collision_detectors"] << "\n-----------");
+      return;
+    }
   }
 
   // Loop through pair wise parameters
@@ -127,7 +153,8 @@ void MotionPlanningBuilder::buildQueries(const std::string& filename, const std:
             if (planners.empty() && request.second.planner_id.empty())
             {
               ROS_WARN("Dropping query, empty 'planner_id'");
-              continue;
+              queries_.clear();
+              return;
             }
 
             for (const auto& planner :
