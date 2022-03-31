@@ -373,6 +373,12 @@ void PickPlaceBuilder::buildQueries(const std::string& filename)
   if (!IO::loadFileToYAML(filename, node, true))
     return;
 
+  if (!node["profiler_config"])
+  {
+    ROS_WARN("Missing root node 'profiler_config'");
+    return;
+  }
+
   std::map<std::string, RobotPtr> robot_map;
   std::map<std::string, ScenePtr> scene_map;
   std::vector<std::string> collision_detectors;
@@ -383,25 +389,44 @@ void PickPlaceBuilder::buildQueries(const std::string& filename)
     // Build robots
     RobotBuilder builder;
     builder.loadResources(node["profiler_config"]["robot"]);
-    builder.extendResources(node["extend_resource_config"]["robot"]);
+    if (node["extend_resource_config"] && node["extend_resource_config"]["robot"])
+      builder.extendResources(node["extend_resource_config"]["robot"]);
     robot_map = builder.generateResources();
   }
   {  // Build scenes
     scene_builder.loadResources(node["profiler_config"]["scene"]);
-    scene_builder.extendResources(node["extend_resource_config"]["scene"]);
+    if (node["extend_resource_config"] && node["extend_resource_config"]["scene"])
+      scene_builder.extendResources(node["extend_resource_config"]["scene"]);
     // Don't generate results yet because depends on Robot and Collision detector
-  }
-  {
-    // Build collision detectors
-    collision_detectors = node["profiler_config"]["collision_detectors"].as<std::vector<std::string>>();
   }
   {
     // Build pipelines (Optional) does not count as a pair-wise
     PlanningPipelineEmitterBuilder builder;
 
     builder.loadResources(node["profiler_config"]["planning_pipelines"]);
-    builder.extendResources(node["extend_resource_config"]["planning_pipelines"]);
+    if (node["extend_resource_config"] && node["extend_resource_config"]["planning_pipelines"])
+      builder.extendResources(node["extend_resource_config"]["planning_pipelines"]);
     pipeline_emitter_map = builder.generateResources();
+  }
+  {
+    // Build collision detectors
+    try
+    {
+      if (!node["profiler_config"]["collision_detectors"])
+      {
+        ROS_WARN("Missing node 'collision_detectors'");
+        return;
+      }
+
+      collision_detectors = node["profiler_config"]["collision_detectors"].as<std::vector<std::string>>();
+    }
+    catch (YAML::BadConversion& e)
+    {
+      ROS_ERROR_STREAM("Bad conversion in node 'collision_detectors'"
+                       << "\n-----------\nFaulty Node\n-----------\n"
+                       << node["profiler_config"]["collision_detectors"] << "\n-----------");
+      return;
+    }
   }
 
   // Build parameters

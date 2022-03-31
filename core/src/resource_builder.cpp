@@ -31,6 +31,11 @@ void ResourceBuilder::insertResource(const std::string name, const YAML::Node& n
     ROS_WARN("Resource name `%s` already in map.", name.c_str());
 }
 
+void ResourceBuilder::clearResources()
+{
+  node_map_.clear();
+}
+
 bool ResourceBuilder::validateResource(const YAML::Node& node)
 {
   return true;
@@ -62,7 +67,7 @@ bool ResourceBuilder::deleteResource(const std::string& name)
   return true;
 }
 
-void ResourceBuilder::decodeResourceTag(const YAML::Node& source, YAML::Node& target)
+bool ResourceBuilder::decodeResourceTag(const YAML::Node& source, YAML::Node& target)
 {
   // resource is a filename or a namespace
   if (source.IsScalar())
@@ -78,7 +83,10 @@ void ResourceBuilder::decodeResourceTag(const YAML::Node& source, YAML::Node& ta
       handler.loadROStoYAML(filename, target);
 
       if (target.IsNull())
+      {
         ROS_WARN("Cannot resolve PATH or ROS NAMESPACE from resource `%s`.", filename.c_str());
+        return false;
+      }
     }
     // resource is either a YAML or XML file
     else
@@ -92,7 +100,10 @@ void ResourceBuilder::decodeResourceTag(const YAML::Node& source, YAML::Node& ta
         // try XML or XACRO (cannot check extension)
         std::string xml_str = IO::loadXMLToString(filename);
         if (xml_str.empty())
+        {
           ROS_WARN("Cannot load YAML, XML or XACRO from resource `%s`.", filename.c_str());
+          return false;
+        }
         else
           target = xml_str;
       }
@@ -101,6 +112,7 @@ void ResourceBuilder::decodeResourceTag(const YAML::Node& source, YAML::Node& ta
   // keep resource as a YAML node
   else
     target = source;
+  return true;
 }
 void ResourceBuilder::loadResources(const YAML::Node& node)
 {
@@ -108,12 +120,18 @@ void ResourceBuilder::loadResources(const YAML::Node& node)
     loadResource(node);
   else if (node.IsSequence())
     for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
-      loadResource(*it);
+    {
+      if (!loadResource(*it))
+      {
+        clearResources();
+        break;
+      }
+    }
   else
     ROS_WARN("YAML node MUST be a sequence or a map");
 }
 
-void ResourceBuilder::loadResource(const YAML::Node& node)
+bool ResourceBuilder::loadResource(const YAML::Node& node)
 {
   YAML::Node n;
   std::string name;
@@ -121,15 +139,18 @@ void ResourceBuilder::loadResource(const YAML::Node& node)
   if (node["name"])
     name = node["name"].as<std::string>();
   else
-    return;
-
+  {
+    ROS_WARN("A resource MUST have a 'name' node key, stopping builder.");
+    return false;
+  }
   // Load resource/s key
   if (node["resource"])
   {
     YAML::Node temp;
-    decodeResourceTag(node["resource"], temp);
-    if (!temp.IsNull())
-      n["resource"] = temp;
+    if (!decodeResourceTag(node["resource"], temp))
+      return false;
+
+    n["resource"] = temp;
   }
   else if (node["resources"])
   {
@@ -138,9 +159,10 @@ void ResourceBuilder::loadResource(const YAML::Node& node)
       YAML::Node temp;
 
       const auto& key = it2->first.as<std::string>();
-      decodeResourceTag(it2->second, temp);
-      if (!temp.IsNull())
-        n["resources"][key] = temp;
+      if (!decodeResourceTag(it2->second, temp))
+        return false;
+
+      n["resources"][key] = temp;
     }
   }
 
@@ -150,12 +172,12 @@ void ResourceBuilder::loadResource(const YAML::Node& node)
 
   if (!validateResource(n))
   {
-    ROS_WARN("Resource name `%s` did not pass validation", name.c_str());
-    return;
+    ROS_WARN("Resource name `%s` did not pass validation, stopping builder", name.c_str());
+    return false;
   }
 
-  if (!n.IsNull())
-    insertResource(name, n);
+  insertResource(name, n);
+  return true;
 }
 
 void ResourceBuilder::mergeResources(const YAML::Node& node)
@@ -187,10 +209,24 @@ void ResourceBuilder::extendResources(const YAML::Node& node)
   std::vector<std::string> resource_names;
 
   if (node.IsMap())
-    extendResource(node, resource_names);
+  {
+    if (!extendResource(node, resource_names))
+    {
+      clearResources();
+      resource_names.clear();
+    }
+  }
   else if (node.IsSequence())
+  {
     for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
-      extendResource(*it, resource_names);
+    {
+      if (!extendResource(*it, resource_names))
+      {
+        clearResources();
+        resource_names.clear();
+      }
+    }
+  }
   else if (node.IsDefined())
     ROS_WARN("Resource extension failed, YAML node MUST be a sequence or a map");
 
@@ -199,12 +235,12 @@ void ResourceBuilder::extendResources(const YAML::Node& node)
     node_map_.erase(name);
 }
 
-void ResourceBuilder::extendResource(const YAML::Node& node, std::vector<std::string>& resource_names)
+bool ResourceBuilder::extendResource(const YAML::Node& node, std::vector<std::string>& resource_names)
 {
   if (!node["name"] || !node["resources"] || !node["resources"].IsSequence())
   {
     ROS_ERROR("Invalid extend config. Needs `name` and `resources` keys and the later MUST be a YAML sequence.");
-    return;
+    return false;
   }
 
   std::size_t seq_idx = 0;
@@ -215,7 +251,7 @@ void ResourceBuilder::extendResource(const YAML::Node& node, std::vector<std::st
   if (it1 == node_map_.end())
   {
     ROS_ERROR("Cannot extend missing resource name `%s`", name.c_str());
-    return;
+    return false;
   }
 
   resource_names.push_back(name);
@@ -236,33 +272,30 @@ void ResourceBuilder::extendResource(const YAML::Node& node, std::vector<std::st
     else
     {
       ROS_WARN("Resource has no resource/s key");
-      continue;
+      return false;
     }
 
     if (source.IsNull())
-      return;
+      return false;
 
-    if (!source.IsNull())
+    if (!validateResource(target))
     {
-      if (!validateResource(target))
-      {
-        ROS_ERROR("Failed to extend resource name `%s` (sequence number %zu). Check config file.", name.c_str(),
-                  seq_idx);
-        return;
-      }
-
-      // insert with new name
-      std::string extended_name = name + "_" + std::to_string(seq_idx);
-
-      if (node_map_.find(extended_name) != node_map_.end())
-      {
-        ROS_ERROR("Cannot extend resource name `%s`. Name already.", extended_name.c_str());
-        return;
-      }
-
-      insertResource(extended_name, target);
+      ROS_ERROR("Failed to extend resource name `%s` (sequence number %zu). Check config file.", name.c_str(), seq_idx);
+      return false;
     }
+
+    // insert with new name
+    std::string extended_name = name + "_" + std::to_string(seq_idx);
+
+    if (node_map_.find(extended_name) != node_map_.end())
+    {
+      ROS_ERROR("Cannot extend resource name `%s`. Name already.", extended_name.c_str());
+      return false;
+    }
+
+    insertResource(extended_name, target);
   }
+  return true;
 }
 
 //
@@ -276,18 +309,25 @@ std::map<std::string, RobotPtr> RobotBuilder::generateResources() const
 
   for (const auto& pair : node_map)
   {
+    bool success = true;
     auto robot = std::make_shared<Robot>(pair.first);
 
     // initialize but don't load kinematics
-    if (robot->initializeFromYAML(pair.second["resources"]))
+    success = robot->initializeFromYAML(pair.second["resources"]);
+    if (success && pair.second["parameters"] && pair.second["parameters"]["robot_state"])
     {
-      if (pair.second["parameters"] && pair.second["parameters"]["robot_state"])
-      {
-        auto state = pair.second["parameters"]["robot_state"].as<moveit_msgs::RobotState>();
-        robot->setState(state);
-      }
-      results.insert({ pair.first, robot });
+      auto state = pair.second["parameters"]["robot_state"].as<moveit_msgs::RobotState>();
+      robot->setState(state);
     }
+
+    // Strict resource build (all or nothing)
+    if (!success)
+    {
+      results.clear();
+      break;
+    }
+
+    results.insert({ pair.first, robot });
   }
 
   return results;
@@ -347,7 +387,7 @@ bool buildClutteredWorld(const planning_scene::PlanningScenePtr& planning_scene,
 
   collision_detection::CollisionRequest req;
   req.contacts = true;
-  req.verbose = true;
+  req.verbose = false;
   req.max_contacts = 2;
 
   Eigen::Quaterniond quat;
@@ -361,6 +401,8 @@ bool buildClutteredWorld(const planning_scene::PlanningScenePtr& planning_scene,
   planning_scene->setCurrentState(robot_state);
 
   planning_scene::PlanningScene test_scene(planning_scene->getRobotModel());
+
+  ROS_INFO("Building cluttred scene...");
 
   for (const auto& helper : helpers)
   {
@@ -441,6 +483,10 @@ bool SceneBuilder::buildClutteredSceneFromYAML(ScenePtr& scene,
                                                const std::map<std::string, moveit_msgs::RobotState>& state_map,
                                                const YAML::Node& node) const
 {
+  if (!IO::validateNodeKeys(node, { "object_in_collision", "object_no_collision", "rng_in_collision",
+                                    "rng_no_collision", "bounds", "resource", "robot_state", "object_type" }))
+    return false;
+
   std::size_t in_object_size = node["object_in_collision"].as<std::size_t>(0);
   std::size_t free_object_size = node["object_no_collision"].as<std::size_t>(0);
 
@@ -529,8 +575,14 @@ SceneBuilder::generateResources(const RobotPtr& robot, const std::string& collis
     else
       success &= scene->fromYAMLNode(pair.second["resource"]);
 
-    if (success)
-      results.insert({ pair.first, scene });
+    // Strict resource build (all or nothing)
+    if (!success)
+    {
+      results.clear();
+      break;
+    }
+
+    results.insert({ pair.first, scene });
   }
 
   return results;
@@ -547,6 +599,7 @@ std::map<std::string, PlanningPipelineEmitterPtr> PlanningPipelineEmitterBuilder
 
   for (const auto& pair : node_map)
   {
+    bool success = true;
     auto pipeline = std::make_shared<PlanningPipelineEmitter>(pair.first, "planning_pipelines/" + pair.first);
 
     if (!pair.second["resource"])
@@ -558,14 +611,19 @@ std::map<std::string, PlanningPipelineEmitterPtr> PlanningPipelineEmitterBuilder
     if (pair.second["parameters"])
     {
       const auto& planners = pair.second["parameters"]["planners"].as<std::vector<std::string>>();
-      if (pipeline->initializeFromYAML(pair.second["resource"], planners))
-        results.insert({ pair.first, pipeline });
+      success = pipeline->initializeFromYAML(pair.second["resource"], planners);
     }
     else
+      success = pipeline->initializeFromYAML(pair.second["resource"]);
+
+    // Strict resource build (all or nothing)
+    if (!success)
     {
-      if (pipeline->initializeFromYAML(pair.second["resource"]))
-        results.insert({ pair.first, pipeline });
+      results.clear();
+      break;
     }
+
+    results.insert({ pair.first, pipeline });
   }
   return results;
 }

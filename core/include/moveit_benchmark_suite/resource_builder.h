@@ -67,7 +67,7 @@ public:
   //   - File (YAML, XML, XACRO)
   //   - ROS Parameter namespace
   //   - YAML node
-  void decodeResourceTag(const YAML::Node& source, YAML::Node& target);
+  bool decodeResourceTag(const YAML::Node& source, YAML::Node& target);
 
   // Merge supplied node to specific/all resources in the map
   void mergeResource(const std::string& name, const YAML::Node& node);
@@ -84,11 +84,12 @@ public:
   virtual bool validateResource(const YAML::Node& node);  // defaults to true
 
 protected:
-  void loadResource(const YAML::Node& node);
-  void extendResource(const YAML::Node& node, std::vector<std::string>& resource_names);
+  bool loadResource(const YAML::Node& node);
+  bool extendResource(const YAML::Node& node, std::vector<std::string>& resource_names);
 
   const std::map<std::string, YAML::Node>& getResources() const;
   void insertResource(const std::string, const YAML::Node& node);
+  void clearResources();
 
   // Decode a node with the template type and encode to a node and check if the original is a subset
   template <typename T>
@@ -106,14 +107,18 @@ protected:
       // Compare nodes to find if everything has been converted correctly
       if (YAML::isSubset(source, target))
         return true;
+      const std::string del = "------";
+      ROS_WARN_STREAM("Source node is not a subset of target node"
+                      << "\n------\nSource\n------\n"
+                      << source << "\n------\nTarget\n------\n"
+                      << target << "\n------");
+      return false;
     }
     catch (const YAML::Exception& e)
     {
       ROS_ERROR("YAML decode exception: %s", e.what());
       return false;
     }
-
-    return false;
   }
 
 private:
@@ -142,8 +147,18 @@ public:
 
     // Decode nodes
     for (const auto& resource : node_map)
-      requests.insert({ resource.first, resource.second["resource"].template as<T>() });
-
+    {
+      try
+      {
+        requests.insert({ resource.first, resource.second["resource"].template as<T>() });
+      }
+      catch (YAML::BadConversion& e)
+      {
+        ROS_WARN("Resource '%s' bad YAML conversion\n%s", resource.first.c_str(), e.what());
+        requests.clear();
+        return requests;
+      }
+    }
     return requests;
   };
 

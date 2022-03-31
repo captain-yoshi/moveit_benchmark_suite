@@ -58,6 +58,12 @@ void CollisionCheckBuilder::buildQueries(const std::string& filename)
   if (!IO::loadFileToYAML(filename, node, true))
     return;
 
+  if (!node["profiler_config"])
+  {
+    ROS_WARN("Missing root node 'profiler_config'");
+    return;
+  }
+
   std::map<std::string, RobotPtr> robot_map;
   std::map<std::string, ScenePtr> scene_map;
   SceneBuilder scene_builder;
@@ -70,32 +76,52 @@ void CollisionCheckBuilder::buildQueries(const std::string& filename)
     // Build robots
     RobotBuilder builder;
     builder.loadResources(node["profiler_config"]["robots"]);
-    builder.extendResources(node["extend_resource_config"]["robots"]);
+    if (node["extend_resource_config"] && node["extend_resource_config"]["robots"])
+      builder.extendResources(node["extend_resource_config"]["robots"]);
     robot_map = builder.generateResources();
   }
   {  // Build scenes
     scene_builder.loadResources(node["profiler_config"]["scenes"]);
-    scene_builder.extendResources(node["extend_resource_config"]["scenes"]);
+    if (node["extend_resource_config"] && node["extend_resource_config"]["scenes"])
+      scene_builder.extendResources(node["extend_resource_config"]["scenes"]);
     // Don't generate results yet because it depends on Robot and Collision detector
   }
   {
     // Build CollisionRequest
     YAMLDeserializerBuilder<collision_detection::CollisionRequest> builder;
     builder.loadResources(node["profiler_config"]["collision_requests"]);
-    builder.extendResources(node["extend_resource_config"]["collision_requests"]);
+    if (node["extend_resource_config"] && node["extend_resource_config"]["collision_requests"])
+      builder.extendResources(node["extend_resource_config"]["collision_requests"]);
     request_map = builder.generateResources();
   }
   {
     // Build RobotState
     YAMLDeserializerBuilder<moveit_msgs::RobotState> builder;
     builder.loadResources(node["profiler_config"]["robot_states"]);
-    builder.extendResources(node["extend_resource_config"]["robot_states"]);
+    if (node["extend_resource_config"] && node["extend_resource_config"]["robot_states"])
+      builder.extendResources(node["extend_resource_config"]["robot_states"]);
     state_map = builder.generateResources();
   }
 
   {
     // Build collision detectors
-    collision_detectors = node["profiler_config"]["collision_detectors"].as<std::vector<std::string>>();
+    try
+    {
+      if (!node["profiler_config"]["collision_detectors"])
+      {
+        ROS_WARN("Missing node 'collision_detectors'");
+        return;
+      }
+
+      collision_detectors = node["profiler_config"]["collision_detectors"].as<std::vector<std::string>>();
+    }
+    catch (YAML::BadConversion& e)
+    {
+      ROS_ERROR_STREAM("Bad conversion in node 'collision_detectors'"
+                       << "\n-----------\nFaulty Node\n-----------\n"
+                       << node["profiler_config"]["collision_detectors"] << "\n-----------");
+      return;
+    }
   }
 
   // Loop through pair wise parameters
