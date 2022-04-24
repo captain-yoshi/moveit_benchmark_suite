@@ -6,6 +6,7 @@ find_package(Boost REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   moveit_benchmark_suite_core
   moveit_benchmark_suite_output
+  rviz
 )
 
 catkin_package(
