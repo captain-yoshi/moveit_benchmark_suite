@@ -1,10 +1,10 @@
 #include <moveit_benchmark_suite/benchmark_callback_loader.h>
 
-#include <moveit_benchmark_suite/output/dataset_log.h>
-#include <moveit_benchmark_suite/output/aggregate.h>
+#include <moveit_benchmark_suite/tools/dataset_log.h>
+#include <moveit_benchmark_suite/tools/aggregate.h>
 
 using namespace moveit_benchmark_suite;
-using namespace moveit_benchmark_suite::output;
+using namespace moveit_benchmark_suite::tools;
 
 //
 // BenchmarkCallbackLoader

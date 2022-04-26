@@ -33,33 +33,55 @@
  *********************************************************************/
 
 /* Author: Captain Yoshi
-   Desc: HTML format for outputing multiple SVG images
+   Desc: Generate log files from a DataSet
+
+   Comment: Heavily inspired by robowflex_library
 */
 
 #pragma once
 
-#include <string>
-#include <fstream>
+#include <moveit_benchmark_suite/dataset.h>
 
 namespace moveit_benchmark_suite {
-namespace output {
+namespace tools {
 
-class HTMLPlot
+/** \brief An abstract class for outputting benchmark results.
+ */
+class DataSetOutputter
 {
 public:
-  HTMLPlot();
+  /** \brief Virtual destructor for cleaning up resources.
+   */
+  virtual ~DataSetOutputter() = default;
 
-  void write(const std::string& line);
-  void writeline(const std::string& line);
-  void flush();
-
-  void dump();
-
-private:
-  std::ofstream output_;
-  std::string out_filepath;
-  std::string out_filename;
+  /** \brief Write the \a results of a benchmarking query out.
+   *  Must be implemented by child classes.
+   *  \param[in] results The results of one query of benchmarking.
+   */
+  virtual void dump(const DataSet& results, const std::string& pathname) = 0;
 };
 
-}  // namespace output
+/** \brief Generates/Edit a log file from a YAML conversion
+ */
+class BenchmarkSuiteOutputter : public DataSetOutputter
+{
+public:
+  /** \brief Constructor.
+   *  \param[in] prefix Prefix to place in front of all log files generated.
+   *  \param[in] dumpScene If true, will output scene into log file.
+   */
+  BenchmarkSuiteOutputter();
+
+  /** \brief Destructor, runs `ompl_benchmark_statistics.py` to generate benchmarking database.
+   */
+  ~BenchmarkSuiteOutputter() override;
+
+  /** \brief Dumps \a results into a OMPL benchmarking log file in \a prefix_ named after the request \a
+   *  name_.
+   *  \param[in] results Results to dump to file.
+   */
+  void dump(const DataSet& dataset, const std::string& pathname) override;
+};
+
+}  // namespace tools
 }  // namespace moveit_benchmark_suite

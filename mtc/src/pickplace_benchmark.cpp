@@ -37,15 +37,15 @@
 #include <ros/ros.h>
 
 #include <moveit_benchmark_suite/benchmark.h>
-#include <moveit_benchmark_suite/output/dataset_log.h>
-#include <moveit_benchmark_suite/output/rviz_visualization.h>
+#include <moveit_benchmark_suite/tools/dataset_log.h>
+#include <moveit_benchmark_suite/tools/rviz_visualization.h>
 
 #include <moveit_benchmark_suite/mtc/pickplace_profiler.h>
 #include <moveit_benchmark_suite/mtc/pickplace_builder.h>
 
 using namespace moveit_benchmark_suite;
 using namespace moveit_benchmark_suite::mtc;
-using namespace moveit_benchmark_suite::output;
+using namespace moveit_benchmark_suite::tools;
 
 int main(int argc, char** argv)
 {

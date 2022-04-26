@@ -32,7 +32,7 @@ benchmark_suite_mtc
 benchmark_suite_core
   Core library used to create profilers and benchmarks |--| profiler interface, dataset and wrappers around *moveit_core* library.
 
-benchmark_suite_output
+benchmark_suite_tools
   Log, aggregate and plot statistics from datasets. Visualize queries and results from a profiler with RViz (robot agnostic).
 
 benchmark_suite_resources

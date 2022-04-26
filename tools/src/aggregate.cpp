@@ -1,8 +1,8 @@
-#include <moveit_benchmark_suite/output/aggregate.h>
+#include <moveit_benchmark_suite/tools/aggregate.h>
 #include <moveit_benchmark_suite/io.h>
 
 using namespace moveit_benchmark_suite;
-using namespace moveit_benchmark_suite::output;
+using namespace moveit_benchmark_suite::tools;
 
 //
 // AggregateDataset

@@ -4,7 +4,7 @@ project(moveit_benchmark_suite_mtc)
 find_package(catkin REQUIRED COMPONENTS
   actionlib
   moveit_benchmark_suite_core
-  moveit_benchmark_suite_output
+  moveit_benchmark_suite_tools
   moveit_task_constructor_core
   moveit_task_constructor_msgs
   rosparam_shortcuts

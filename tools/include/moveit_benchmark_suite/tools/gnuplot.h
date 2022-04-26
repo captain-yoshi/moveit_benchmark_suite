@@ -55,7 +55,7 @@
 #endif
 
 namespace moveit_benchmark_suite {
-namespace output {
+namespace tools {
 
 MOVEIT_CLASS_FORWARD(GNUPlotTerminal);
 
@@ -377,5 +377,5 @@ private:
   GNUPlotHelper helper_;
 };
 
-}  // namespace output
+}  // namespace tools
 }  // namespace moveit_benchmark_suite
