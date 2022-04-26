@@ -2,6 +2,7 @@
 
 #include <moveit_benchmark_suite/tools/dataset_log.h>
 #include <moveit_benchmark_suite/tools/aggregate.h>
+#include <moveit_benchmark_suite/utils.h>
 
 using namespace moveit_benchmark_suite;
 using namespace moveit_benchmark_suite::tools;
@@ -52,8 +53,8 @@ BenchmarkCallbackLoader::BenchmarkCallbackLoader(Benchmark& benchmark) : benchma
     benchmark_.addPostBenchmarkCallback([&](DataSetPtr& dataset) {
       gnuplot_.plot(*dataset);
 
-      ROS_WARN("Press CTL-C to close GNUPlot");
-      ros::waitForShutdown();
+      ROS_WARN("Press `enter` to close GNUPlot");
+      waitForKeyPress();
     });
   }
 
@@ -81,7 +82,7 @@ void BenchmarkCallbackLoader::addCallbacks(PlanningPipelineProfiler& profiler)
         rviz_->updateTrajectory(result.mp_response);
 
       ROS_INFO("Press `enter` to view next query");
-      std::cin.ignore();
+      waitForKeyPress();
 
       rviz_->removeAllMarkers();
       rviz_->removeScene();
@@ -107,7 +108,7 @@ void BenchmarkCallbackLoader::addCallbacks(MoveGroupInterfaceProfiler& profiler)
         rviz_->updateTrajectory(result.mp_response);
 
       ROS_INFO("Press `enter` to view next query");
-      std::cin.ignore();
+      waitForKeyPress();
 
       rviz_->removeAllMarkers();
       rviz_->removeScene();
@@ -146,7 +147,7 @@ void BenchmarkCallbackLoader::addCallbacks(CollisionCheckProfiler& profiler)
       rviz_->updateMarkers();
 
       ROS_INFO("Press `enter` to view next query");
-      std::cin.ignore();
+      waitForKeyPress();
 
       scene->setPlanningSceneMsg(original_scene);
       rviz_->removeAllMarkers();
