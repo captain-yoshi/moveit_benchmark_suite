@@ -9,7 +9,7 @@
 	<buildtool_depend>catkin</buildtool_depend>
 
 	<depend>moveit_benchmark_suite_core</depend>
-	<depend>moveit_benchmark_suite_output</depend>
+	<depend>moveit_benchmark_suite_tools</depend>
 	<depend>moveit_task_constructor_core</depend>
 	<depend>moveit_task_constructor_msgs</depend>
 	<depend>rosparam_shortcuts</depend>

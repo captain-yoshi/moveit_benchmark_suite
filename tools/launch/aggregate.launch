@@ -12,9 +12,9 @@
 
 
 
-  <node name="aggregate" pkg="moveit_benchmark_suite_output" type="aggregate" respawn="false" clear_params="true" required="true" output="screen" launch-prefix="$(arg launch_prefix)">
+  <node name="aggregate" pkg="moveit_benchmark_suite_tools" type="aggregate" respawn="false" clear_params="true" required="true" output="screen" launch-prefix="$(arg launch_prefix)">
 
-    <param name="config_file" value="$(find moveit_benchmark_suite_output)/config/aggregate.yaml"/>
+    <param name="config_file" value="$(find moveit_benchmark_suite_tools)/config/aggregate.yaml"/>
     <rosparam param="input_files" subst_value="True">$(arg input_files)</rosparam>
     <param name="output_file" value="$(arg output_file)"/>
   </node>

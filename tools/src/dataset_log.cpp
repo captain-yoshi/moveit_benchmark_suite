@@ -1,9 +1,9 @@
 #include <moveit_benchmark_suite/io.h>
 #include <moveit_benchmark_suite/log.h>
-#include <moveit_benchmark_suite/output/dataset_log.h>
+#include <moveit_benchmark_suite/tools/dataset_log.h>
 
 using namespace moveit_benchmark_suite;
-using namespace moveit_benchmark_suite::output;
+using namespace moveit_benchmark_suite::tools;
 
 ///
 /// BenchmarkSuiteOutputter

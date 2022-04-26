@@ -59,7 +59,7 @@
 #include <rviz/SendFilePath.h>
 
 namespace moveit_benchmark_suite {
-namespace output {
+namespace tools {
 
 MOVEIT_CLASS_FORWARD(RVIZVisualization);
 
@@ -280,5 +280,5 @@ private:
   std::multimap<std::string, visualization_msgs::Marker> markers_;  ///< Markers to publish.
 };
 
-}  // namespace output
+}  // namespace tools
 }  // namespace moveit_benchmark_suite

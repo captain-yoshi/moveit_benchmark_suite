@@ -17,7 +17,7 @@
 #include <moveit_benchmark_suite/constants.h>
 #include <moveit_benchmark_suite/geometry.h>
 #include <moveit_benchmark_suite/colormap.h>
-#include <moveit_benchmark_suite/output/rviz_visualization.h>
+#include <moveit_benchmark_suite/tools/rviz_visualization.h>
 #include <moveit_benchmark_suite/log.h>
 #include <moveit_benchmark_suite/planning.h>
 #include <moveit_benchmark_suite/random.h>
@@ -27,7 +27,7 @@
 #include <moveit_benchmark_suite/trajectory.h>
 #include <moveit_benchmark_suite/io.h>
 
-using namespace moveit_benchmark_suite::output;
+using namespace moveit_benchmark_suite::tools;
 
 namespace {
 Eigen::Vector4d getRandomColor()

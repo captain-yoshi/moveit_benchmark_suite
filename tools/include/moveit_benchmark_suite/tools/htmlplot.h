@@ -33,56 +33,33 @@
  *********************************************************************/
 
 /* Author: Captain Yoshi
-   Desc: Statistics and aggregators for dataset metrics
+   Desc: HTML format for outputing multiple SVG images
 */
 
 #pragma once
 
-#include <moveit_benchmark_suite/dataset_filter.h>
-#include <moveit_benchmark_suite/statistics.h>
+#include <string>
+#include <fstream>
 
 namespace moveit_benchmark_suite {
-namespace output {
+namespace tools {
 
-/** \brief Plot from datasets using GNUPlot
- */
-class AggregateDataset
+class HTMLPlot
 {
 public:
-  using DataSets = std::vector<DataSet>;
-  struct Operation
-  {
-    std::string raw_metric;  // Dataste metric name to aggregate
-    std::string new_metric;  // Dataset metric name for storing the statistic
-    statistics::EquationType eq_type = statistics::EquationType::INVALID;
-    double postmultiply = 1;
-  };
+  HTMLPlot();
 
-  /** \brief Constructor.
-   */
-  AggregateDataset() = default;
+  void write(const std::string& line);
+  void writeline(const std::string& line);
+  void flush();
 
-  /** \brief Destructor.
-   */
-  ~AggregateDataset() = default;
-
-  /// Aggregate a Dataset object with optional filtering. Returns a new dataset
-  DataSetPtr aggregate(const std::vector<Operation>& operations, const DataSet& dataset,
-                       std::vector<Filter> filters = {});
-
-  /// Aggregate multiple Dataset, as files, with optional filtering. Returns a new dataset
-  std::vector<DataSetPtr> aggregate(const std::vector<Operation>& operations,
-                                    const std::vector<std::string>& dataset_files, std::vector<Filter> filters = {});
-
-  static bool buildParamsFromYAML(const std::string& filename, std::vector<Operation>& operations,
-                                  std::vector<Filter>& filters);
+  void dump();
 
 private:
-  // Dataset already dfiltered
-  DataSetPtr aggregate(const std::vector<Operation>& operations, const YAML::Node& dataset);
-
-  DatasetFilter ds_filter_;
+  std::ofstream output_;
+  std::string out_filepath;
+  std::string out_filename;
 };
 
-}  // namespace output
+}  // namespace tools
 }  // namespace moveit_benchmark_suite

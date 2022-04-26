@@ -57,10 +57,10 @@ gnuplot_config:
 A `gnuplot_config` can be added in the benchmark node config file. The benchmark will plot the dataset automatically at the end of the benchmark! More information is given [here](./README.md#tool-configuration).
 
 ### Plot using dedicated node
-The [plot_dataset](../output/launch/plot_dataset.launch) node can also be used to plot datasets. Modify the [configuration](../output/config/gnuplot.yaml) file accordingly and then fire the node:
+The [plot_dataset](../tools/launch/plot_dataset.launch) node can also be used to plot datasets. Modify the [configuration](../tools/config/gnuplot.yaml) file accordingly and then fire the node:
 ``` bash
 # Multiple datasets can be plotted.
-$ roslaunch moveit_benchmark_suite_output plot_dataset.launch input_files:="[path/to/dataset1.yaml]"
+$ roslaunch moveit_benchmark_suite_tools plot_dataset.launch input_files:="[path/to/dataset1.yaml]"
 
 # Multiple files can be added, e.g. for regression
 ```

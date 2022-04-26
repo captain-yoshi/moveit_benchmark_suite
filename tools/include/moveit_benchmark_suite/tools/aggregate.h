@@ -33,34 +33,56 @@
  *********************************************************************/
 
 /* Author: Captain Yoshi
-   Desc: Default collection of callbacks for Benchmark and Profilers
+   Desc: Statistics and aggregators for dataset metrics
 */
 
 #pragma once
 
-#include <moveit_benchmark_suite/benchmark.h>
-#include <moveit_benchmark_suite/profilers/motion_planning_profiler.h>
-#include <moveit_benchmark_suite/profilers/collision_check_profiler.h>
-
-#include <moveit_benchmark_suite/tools/rviz_visualization.h>
-#include <moveit_benchmark_suite/tools/gnuplot.h>
+#include <moveit_benchmark_suite/dataset_filter.h>
+#include <moveit_benchmark_suite/statistics.h>
 
 namespace moveit_benchmark_suite {
+namespace tools {
 
-class BenchmarkCallbackLoader
+/** \brief Plot from datasets using GNUPlot
+ */
+class AggregateDataset
 {
 public:
-  BenchmarkCallbackLoader(Benchmark& benchmark);
+  using DataSets = std::vector<DataSet>;
+  struct Operation
+  {
+    std::string raw_metric;  // Dataste metric name to aggregate
+    std::string new_metric;  // Dataset metric name for storing the statistic
+    statistics::EquationType eq_type = statistics::EquationType::INVALID;
+    double postmultiply = 1;
+  };
 
-  void addCallbacks(PlanningPipelineProfiler& profiler);
-  void addCallbacks(MoveGroupInterfaceProfiler& profiler);
-  void addCallbacks(CollisionCheckProfiler& profiler);
+  /** \brief Constructor.
+   */
+  AggregateDataset() = default;
+
+  /** \brief Destructor.
+   */
+  ~AggregateDataset() = default;
+
+  /// Aggregate a Dataset object with optional filtering. Returns a new dataset
+  DataSetPtr aggregate(const std::vector<Operation>& operations, const DataSet& dataset,
+                       std::vector<Filter> filters = {});
+
+  /// Aggregate multiple Dataset, as files, with optional filtering. Returns a new dataset
+  std::vector<DataSetPtr> aggregate(const std::vector<Operation>& operations,
+                                    const std::vector<std::string>& dataset_files, std::vector<Filter> filters = {});
+
+  static bool buildParamsFromYAML(const std::string& filename, std::vector<Operation>& operations,
+                                  std::vector<Filter>& filters);
 
 private:
-  Benchmark& benchmark_;
+  // Dataset already dfiltered
+  DataSetPtr aggregate(const std::vector<Operation>& operations, const YAML::Node& dataset);
 
-  tools::GNUPlotDataset gnuplot_;
-  std::unique_ptr<tools::RVIZVisualization> rviz_;  ///< Robot used for the query.
+  DatasetFilter ds_filter_;
 };
 
+}  // namespace tools
 }  // namespace moveit_benchmark_suite
