@@ -60,6 +60,7 @@ add_library(${PROJECT_NAME}
   src/log.cpp
   src/planning.cpp
   src/trajectory.cpp
+  src/utils.cpp
   src/serialization.cpp
 )
 
