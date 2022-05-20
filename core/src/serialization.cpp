@@ -237,10 +237,15 @@ Node convert<moveit_benchmark_suite::DataContainer>::encode(const moveit_benchma
 
   node["query"] = rhs.query_id;
 
-  for (const auto& pair : rhs.metrics)
+  for (const auto& pair : rhs.metric_vec_map)
   {
     node["metrics"][pair.first] = pair.second;
     node["metrics"][pair.first].SetStyle(YAML::EmitterStyle::Flow);
+  }
+  for (const auto& pair : rhs.metric_mat_map)
+  {
+    node["metrics_seq"][pair.first] = pair.second;
+    node["metrics_seq"][pair.first].SetStyle(YAML::EmitterStyle::Flow);
   }
 
   return node;
@@ -254,7 +259,15 @@ bool convert<moveit_benchmark_suite::DataContainer>::decode(const Node& node, mo
   {
     const auto& metric = *it;
 
-    rhs.metrics.emplace(metric.first.as<std::string>(), metric.second.as<std::vector<moveit_benchmark_suite::Metric>>());
+    rhs.metric_vec_map.emplace(metric.first.as<std::string>(),
+                               metric.second.as<std::vector<moveit_benchmark_suite::Metric>>());
+  }
+  for (YAML::const_iterator it = node["metrics_seq"].begin(); it != node["metrics_seq"].end(); ++it)
+  {
+    const auto& metric = *it;
+
+    rhs.metric_mat_map.emplace(metric.first.as<std::string>(),
+                               metric.second.as<std::vector<std::vector<moveit_benchmark_suite::Metric>>>());
   }
   return true;
 }
@@ -338,8 +351,7 @@ Node convert<moveit_benchmark_suite::Metric>::encode(const moveit_benchmark_suit
 
 bool convert<moveit_benchmark_suite::Metric>::decode(const Node& n, moveit_benchmark_suite::Metric& rhs)
 {
-  auto metric = decodeMetricVariant<bool, double, int, std::string, std::vector<bool>, std::vector<double>,
-                                    std::vector<int>, std::vector<std::string>>(n);
+  auto metric = decodeMetricVariant<bool, std::size_t, double, int, std::string>(n);
   if (!metric)
     return false;
 

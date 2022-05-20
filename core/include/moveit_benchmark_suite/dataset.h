@@ -64,8 +64,7 @@ namespace moveit_benchmark_suite {
 MOVEIT_CLASS_FORWARD(Data);
 MOVEIT_CLASS_FORWARD(DataSet);
 
-using Metric = boost::variant<bool, int, double, std::size_t, std::string, std::vector<bool>, std::vector<int>,
-                              std::vector<double>, std::vector<std::size_t>, std::vector<std::string>>;
+using Metric = boost::variant<bool, int, double, std::size_t, std::string>;
 
 using MetricPtr = std::shared_ptr<Metric>;
 
@@ -86,8 +85,25 @@ public:
   QueryPtr query;    ///< Query evaluated to create this data.
   ResultPtr result;  ///< Planner response.
 
+  std::map<std::string, Metric> moveMetricMap();
+  std::map<std::string, std::vector<Metric>> moveMetricSequenceMap();
+
+  void addMetric(const std::string& name, bool metric);
+  void addMetric(const std::string& name, int metric);
+  void addMetric(const std::string& name, double metric);
+  void addMetric(const std::string& name, std::size_t metric);
+  void addMetric(const std::string& name, const std::string& metric);
+
+  void addMetric(const std::string& name, const std::vector<bool>& metric);
+  void addMetric(const std::string& name, const std::vector<int>& metric);
+  void addMetric(const std::string& name, const std::vector<double>& metric);
+  void addMetric(const std::string& name, const std::vector<std::size_t>& metric);
+  void addMetric(const std::string& name, const std::vector<std::string>& metric);
+
+private:
   /** Metrics */
-  std::map<std::string, Metric> metrics;  ///< Map of metric name to value.
+  std::map<std::string, Metric> metric_map;                   ///< Map of metric name to value.
+  std::map<std::string, std::vector<Metric>> metric_seq_map;  ///< Map of metric name to value.
 };
 
 /// Detailed sequence of statistics and metrics computed by multiple trials of the same query
@@ -96,7 +112,10 @@ struct DataContainer
   QueryID query_id;
 
   // Map of metric name to a sequence of metrics
-  std::map<std::string, std::vector<Metric>> metrics;
+  std::map<std::string, std::vector<Metric>> metric_vec_map;
+
+  // Map of metric name to a sequence of metrics
+  std::map<std::string, std::vector<std::vector<Metric>>> metric_mat_map;
 };
 
 /// Detailed data collection about a benchmark from multiple queries
@@ -138,7 +157,7 @@ public:
    *  \param[in] query_name Name of query to store point under.
    *  \param[in] run Run data to add to query.
    */
-  void addDataPoint(const std::string& query_name, const DataPtr& run);
+  void addDataPoint(const std::string& query_name, Data&& run);
 
   void eraseMetric(const std::string& metric);
 

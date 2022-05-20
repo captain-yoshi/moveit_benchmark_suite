@@ -111,8 +111,8 @@ PickPlaceResult PickPlaceProfiler::runQuery(const PickPlaceQuery& query, Data& d
 void PickPlaceProfiler::postRunQuery(const PickPlaceQuery& query, PickPlaceResult& result, Data& data)
 {
   // Compute metrics
-  data.metrics["time"] = data.time;
-  data.metrics["success"] = result.success;
+  data.addMetric("time", data.time);
+  data.addMetric("success", result.success);
 
   // Compute task metrics
   const auto& task = pick_place_task->getTask();
@@ -130,13 +130,13 @@ void PickPlaceProfiler::postRunQuery(const PickPlaceQuery& query, PickPlaceResul
     task_failures_cost.push_back(failure->cost());
 
   if (options.metrics & Metrics::TASK_SUCCESS_COUNT)
-    data.metrics[task_success_key] = task->solutions().size();
+    data.addMetric(task_success_key, task->solutions().size());
   if (options.metrics & Metrics::TASK_FAILURE_COUNT)
-    data.metrics[task_failure_key] = task->failures().size();
+    data.addMetric(task_failure_key, task->failures().size());
   if (options.metrics & Metrics::TASK_SOLUTIONS_COST)
-    data.metrics[task_solutions_cost_key] = task_solutions_cost;
+    data.addMetric(task_solutions_cost_key, task_solutions_cost);
   if (options.metrics & Metrics::TASK_FAILURES_COST)
-    data.metrics[task_failures_cost_key] = task_failures_cost;
+    data.addMetric(task_failures_cost_key, task_failures_cost);
 
   // Compute stage metrics
   const auto* stages = task->stages();
@@ -156,15 +156,15 @@ void PickPlaceProfiler::postRunQuery(const PickPlaceQuery& query, PickPlaceResul
       stage_failures_cost.push_back(failure->cost());
 
     if (options.metrics & Metrics::STAGE_TOTAL_TIME)
-      data.metrics[stage_time_key] = stage.getTotalComputeTime();
+      data.addMetric(stage_time_key, stage.getTotalComputeTime());
     if (options.metrics & Metrics::STAGE_SUCCESS_COUNT)
-      data.metrics[stage_success_key] = stage.solutions().size();
+      data.addMetric(stage_success_key, stage.solutions().size());
     if (options.metrics & Metrics::STAGE_FAILURE_COUNT)
-      data.metrics[stage_failure_key] = stage.failures().size();
+      data.addMetric(stage_failure_key, stage.failures().size());
     if (options.metrics & Metrics::STAGE_SOLUTIONS_COST)
-      data.metrics[stage_solutions_cost_key] = stage_solutions_cost;
+      data.addMetric(stage_solutions_cost_key, stage_solutions_cost);
     if (options.metrics & Metrics::STAGE_FAILURES_COST)
-      data.metrics[stage_failures_cost_key] = stage_failures_cost;
+      data.addMetric(stage_failures_cost_key, stage_failures_cost);
 
     return true;
   };

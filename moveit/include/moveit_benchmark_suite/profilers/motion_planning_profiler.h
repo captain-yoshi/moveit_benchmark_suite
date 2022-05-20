@@ -110,24 +110,37 @@ public:
   virtual void postRunQuery(const DerivedQuery& query, DerivedResult& result, Data& data) override
   {
     // Compute metrics
-    data.metrics["time"] = data.time;
-    data.metrics["success"] = result.success;
+    data.addMetric("time", data.time);
+    data.addMetric("success", result.success);
 
     if (this->options.metrics & Metrics::WAYPOINTS)
-      data.metrics["waypoints"] = result.success ? int(result.trajectory->getNumWaypoints()) : int(0);
-
+    {
+      auto waypoints = result.success ? int(result.trajectory->getNumWaypoints()) : int(0);
+      data.addMetric("waypoints", waypoints);
+    }
     if (this->options.metrics & Metrics::LENGTH)
-      data.metrics["length"] = result.success ? result.trajectory->getLength() : 0.0;
+    {
+      auto length = result.success ? result.trajectory->getLength() : 0.0;
+      data.addMetric("length", length);
+    }
 
     if (this->options.metrics & Metrics::CORRECT)
-      data.metrics["correct"] = result.success ? result.trajectory->isCollisionFree(query.scene->getScene()) : false;
+    {
+      auto correct = result.success ? result.trajectory->isCollisionFree(query.scene->getScene()) : false;
+      data.addMetric("correct", correct);
+    }
 
     if (this->options.metrics & Metrics::CLEARANCE)
-      data.metrics["clearance"] =
-          result.success ? std::get<0>(result.trajectory->getClearance(query.scene->getScene())) : 0.0;
+    {
+      auto clearance = result.success ? std::get<0>(result.trajectory->getClearance(query.scene->getScene())) : 0.0;
+      data.addMetric("clearance", clearance);
+    }
 
     if (this->options.metrics & Metrics::SMOOTHNESS)
-      data.metrics["smoothness"] = result.success ? result.trajectory->getSmoothness() : 0.0;
+    {
+      auto smoothness = result.success ? result.trajectory->getSmoothness() : 0.0;
+      data.addMetric("smoothness", smoothness);
+    }
   }
 
   std::vector<metadata::SW> collectMetadata() override

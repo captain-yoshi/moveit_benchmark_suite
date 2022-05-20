@@ -156,21 +156,21 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
           ROS_INFO_STREAM("\t" + combination);
       }
 
-      auto data = std::make_shared<Data>();
+      auto data = Data();
 
-      if (!profiler.profileQuery(query_index, *data))
+      if (!profiler.profileQuery(query_index, data))
       {
         ROS_ERROR("Error in Profiler, no work was done with query");
         continue;
       }
 
-      data->query = profiler.getBaseQuery(query_index);
-      data->process_id = IO::getProcessID();
-      data->thread_id = IO::getThreadID();
-      data->metrics["thread_id"] = data->thread_id;
-      data->metrics["process_id"] = data->process_id;
+      data.query = profiler.getBaseQuery(query_index);
+      data.process_id = IO::getProcessID();
+      data.thread_id = IO::getThreadID();
+      data.addMetric("thread_id", data.thread_id);
+      data.addMetric("process_id", data.process_id);
 
-      dataset->addDataPoint(std::to_string(query_index), data);
+      dataset->addDataPoint(std::to_string(query_index), std::move(data));
 
       for (const auto& post_trial_cb : post_trial_callbacks_)
         post_trial_cb(dataset);
