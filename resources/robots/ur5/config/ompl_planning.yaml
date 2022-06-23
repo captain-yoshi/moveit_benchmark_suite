@@ -90,7 +90,7 @@ planner_configs:
     type: geometric::FMT
     num_samples: 1000  # number of states that the planner should sample. default: 1000
     radius_multiplier: 1.1  # multiplier used for the nearest neighbors search radius. default: 1.1
-    nearest_k: 1  # use Kneareststrategy. default: 1
+    nearest_k: 1  # use Knearest strategy. default: 1
     cache_cc: 1  # use collision checking cache. default: 1
     heuristics: 0  # activate cost to go heuristics. default: 0
     extended_fmt: 1  # activate the extended FMT*: adding new samples if planner does not finish successfully. default: 1
@@ -156,11 +156,10 @@ planner_configs:
     max_failures: 5000  # maximum consecutive failure limit. default: 5000
 
 #################################################
-# Kinematic chains
+# Panda Kinematic chains
 #################################################
-
 manipulator:
-  planner_configs: &planner_configs
+  planner_configs: &planners
     - AnytimePathShortening
     - SBL
     - EST
@@ -189,7 +188,6 @@ manipulator:
   enforce_constrained_state_space: false
   projection_evaluator: joints(shoulder_pan_joint, shoulder_lift_joint)
   longest_valid_segment_fraction: 0.005
-
 endeffector:
   planner_configs: *planners
   enforce_joint_model_state_space: false
