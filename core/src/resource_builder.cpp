@@ -262,7 +262,16 @@ bool ResourceBuilder::extendResource(const YAML::Node& node, std::vector<std::st
     YAML::Node target = YAML::Clone(it1->second);
     ++seq_idx;
 
-    decodeResourceTag(*it2, source);
+    // try decoding every key value as a resource
+    for (YAML::const_iterator it3 = (*it2).begin(); it3 != (*it2).end(); ++it3)
+    {
+      YAML::Node temp;
+
+      const auto& key = it3->first.as<std::string>();
+      decodeResourceTag(it3->second, temp);
+
+      source[key] = temp;
+    }
 
     // merge
     if (target["resource"])
