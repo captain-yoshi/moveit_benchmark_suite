@@ -41,6 +41,9 @@ target_link_libraries(aggregate ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_executable(generate_plots src/generate_plots.cpp)
 target_link_libraries(generate_plots ${PROJECT_NAME} ${catkin_LIBRARIES})
 
+add_executable(ik_generator src/ik_generator.cpp)
+target_link_libraries(ik_generator ${PROJECT_NAME} ${catkin_LIBRARIES})
+
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 
@@ -49,6 +52,7 @@ install(TARGETS
   plot_dataset
   generate_plots
   aggregate
+  ik_generator
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

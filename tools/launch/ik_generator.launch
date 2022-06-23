@@ -1,0 +1,12 @@
+<?xml version="1.0" ?>
+<launch>
+
+  <!-- By default, we are not in debug mode -->
+  <arg name="debug" default="false" />
+  <arg unless="$(arg debug)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --args" />
+
+  <node name="ik_generator" pkg="moveit_benchmark_suite_tools" type="ik_generator" respawn="false" clear_params="true" required="true" output="screen" launch-prefix="$(arg launch_prefix)">
+    <param name="config_file" value="$(find moveit_benchmark_suite_tools)/config/ik_generator.yaml"/>
+  </node>
+</launch>
