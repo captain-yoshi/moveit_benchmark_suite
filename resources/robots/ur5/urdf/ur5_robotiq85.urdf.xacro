@@ -9,7 +9,7 @@
   <xacro:include filename="$(find moveit_benchmark_suite_resources)/robots/ur5/urdf/ur5.urdf.xacro" />
 
   <!-- arm -->
-  <xacro:ur5_robot prefix=""/>
+  <xacro:ur5_robot prefix="" joint_limited="false" />
 
   <link name="world" />
 
