@@ -23,7 +23,9 @@
                 <geometry>
                     <mesh filename="package://moveit_benchmark_suite_resources/robots/robotiq/force_torque_sensor/meshes/visual/robotiq_fts300.stl"/>
                 </geometry>
-                <material name="black"/>
+                <material name="black">
+                    <color rgba="0 0 0 1.0"/>
+                </material>
             </visual>
 
             <collision>
