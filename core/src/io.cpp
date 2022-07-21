@@ -495,29 +495,33 @@ double IO::getSeconds(std::chrono::high_resolution_clock::time_point start,
   return duration_seconds.count();
 }
 
-const std::pair<bool, YAML::Node> IO::loadFileToYAML(const std::string& path)
+const std::pair<bool, ryml::Tree> IO::loadFileToYAML(const std::string& path)
 {
-  YAML::Node file;
+  ryml::Tree tree;
   const std::string full_path = resolvePath(path);
+
   if (full_path.empty())
-    return std::make_pair(false, file);
+    return std::make_pair(false, tree);
 
   if (!isExtension(full_path, "yml") && !isExtension(full_path, "yaml"))
-    return std::make_pair(false, file);
+    return std::make_pair(false, tree);
 
   try
   {
-    return std::make_pair(true, YAML::LoadFile(full_path));
+    std::string buf = loadFileToString(full_path);
+
+    ryml::Tree tree = ryml::parse_in_arena(ryml::to_csubstr(buf));
+    return std::make_pair(true, tree);
   }
-  catch (std::exception& e)
+  catch (moveit_serialization::yaml_error& e)
   {
-    return std::make_pair(false, file);
+    std::cout << e.what() << std::endl;
+    return std::make_pair(false, tree);
   }
 }
 
-const bool IO::loadFileToYAML(const std::string& path, YAML::Node& node, bool verbose)
+const bool IO::loadFileToYAML(const std::string& path, ryml::Tree& tree, bool verbose)
 {
-  YAML::Node file;
   const std::string full_path = resolvePath(path);
   if (full_path.empty())
   {
@@ -535,18 +539,21 @@ const bool IO::loadFileToYAML(const std::string& path, YAML::Node& node, bool ve
 
   try
   {
-    node = YAML::LoadFile(full_path);
+    std::string buf = loadFileToString(full_path);
+
+    tree = ryml::parse_in_arena(ryml::to_csubstr(buf));
   }
-  catch (std::exception& e)
+  catch (moveit_serialization::yaml_error& e)
   {
     if (verbose)
-      ROS_ERROR("Failed to load YAML file `%s`.", full_path.c_str());
+      std::cout << e.what() << std::endl;
+
     return false;
   }
   return true;
 }
 
-bool IO::validateNodeKeys(const YAML::Node& node, const std::vector<std::string>& keys)
+bool IO::validateNodeKeys(const ryml::NodeRef& node, const std::vector<std::string>& keys)
 {
   std::size_t match_key_count = 0;
   std::vector<std::size_t> unmatch_indexes;
@@ -554,14 +561,14 @@ bool IO::validateNodeKeys(const YAML::Node& node, const std::vector<std::string>
   std::size_t loop_ctr = 0;
   for (const auto& key : keys)
   {
-    if (node[key])
+    if (node.has_child(ryml::to_csubstr(key)))
       match_key_count++;
     else
       unmatch_indexes.push_back(loop_ctr);
     loop_ctr++;
   }
 
-  if (node.size() != match_key_count)
+  if (node.num_children() != match_key_count)
   {
     std::string unmatch_keys;
     std::string del = ", ";
@@ -585,15 +592,16 @@ bool IO::validateNodeKeys(const YAML::Node& node, const std::vector<std::string>
   return true;
 }
 
-bool IO::YAMLToFile(const YAML::Node& node, const std::string& file)
+bool IO::YAMLToFile(const ryml::NodeRef& node, const std::string& file)
 {
-  YAML::Emitter out;
-  out << node;
+  // emit to a stream
+  std::stringstream ss;
+  ss << node.tree();
 
   std::ofstream fout;
   IO::createFile(fout, file);
 
-  fout << out.c_str();
+  fout << ss.str();
   fout.close();
 
   return true;
