@@ -344,7 +344,7 @@ public:
    *  \return True on success, false on failure.
    */
   bool fromYAMLFile(const std::string& file);
-  bool fromYAMLNode(const YAML::Node& node);
+  bool fromYAMLNode(const ryml::NodeRef& node);
   bool fromOpenRAVEXMLFile(const std::string& file, std::string models_dir = "");
 
   /** \brief Load a planning scene from a URDF or XACRO file using the urdf_to_scene pkg.

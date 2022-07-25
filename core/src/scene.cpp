@@ -581,31 +581,31 @@ bool Scene::toYAMLFile(const std::string& file) const
   moveit_msgs::PlanningScene msg;
   scene_->getPlanningSceneMsg(msg);
 
-  YAML::Node node = YAML::toNode(msg);
+  ryml::NodeRef node;
+  node << msg;
 
   // Replace mesh soup with filename resource if it exists
-  if (node["world"] && node["world"]["collision_objects"])
+  if (node.has_child("world") && node.find_child("world").has_child("collision_objects"))
   {
-    auto n = node["world"]["collision_objects"];
-
+    ryml::NodeRef n = node.find_child("world").find_child("collision_objects");
     for (const auto& resource : mesh_resources_)
     {
-      if (n[resource.first])
+      if (n.has_child(ryml::to_csubstr(resource.first)))
         continue;
 
-      auto object = n[resource.first];
-      if (object["meshes"] && object["meshes"].size() > 0)
+      auto object = n.find_child(ryml::to_csubstr(resource.first));
+      if (object.has_child("meshes") && object.find_child("meshes").num_children() > 0)
       {
-        auto mesh = object["meshes"][0];
+        auto mesh = object.find_child("meshes")[0];
 
-        mesh["resource"] = resource.second;
+        mesh.append_child() << ryml::key("resource") << resource.second;
 
-        if (mesh["triangles"])
-          mesh.remove("triangles");
-        if (mesh["vertices"])
-          mesh.remove("vertices");
+        if (mesh.has_child("triangles"))
+          mesh.remove_child("triangles");
+        if (mesh.has_child("vertices"))
+          mesh.remove_child("vertices");
 
-        if (object["meshes"].size() > 1)
+        if (object.find_child("meshes").num_children() > 1)
           ROS_WARN("Encoding resources of multiple meshes per collision object is not supported");
       }
     }
@@ -682,11 +682,10 @@ bool Scene::fromYAMLFile(const std::string& file)
   return true;
 }
 
-bool Scene::fromYAMLNode(const YAML::Node& node)
+bool Scene::fromYAMLNode(const ryml::NodeRef& node)
 {
   moveit_msgs::PlanningScene msg;
-
-  msg = node.as<moveit_msgs::PlanningScene>();
+  node >> msg;
 
   // Add robot_state if loaded scene does not contain one.
   if (msg.robot_state.joint_state.position.empty())
