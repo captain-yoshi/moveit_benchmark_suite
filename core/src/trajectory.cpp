@@ -43,7 +43,10 @@ bool Trajectory::toYAMLFile(const std::string& filename) const
   moveit_msgs::RobotTrajectory msg;
   trajectory_->getRobotTrajectoryMsg(msg);
 
-  YAML::Node node = YAML::toNode(msg);
+  ryml::Tree t;
+  auto node = t.rootref();
+
+  node << msg;
   return IO::YAMLToFile(node, filename);
 }
 
