@@ -49,6 +49,7 @@ add_library(${PROJECT_NAME}
   src/colormap.cpp
   src/io.cpp
   src/geometry.cpp
+  src/handler.cpp
   src/statistics.cpp
   src/token.cpp
   src/dataset.cpp
