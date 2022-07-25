@@ -12,6 +12,8 @@
 #include <boost/iostreams/stream_buffer.hpp>
 #include <boost/variant/apply_visitor.hpp>
 
+#include <moveit_benchmark_suite/serialization/ryml.h>
+
 using namespace moveit_benchmark_suite::tools;
 
 #if IS_BOOST_164
@@ -595,21 +597,31 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
     return false;
   }
 
-  const auto& node = yaml.second;
+  const auto& node = yaml.second.rootref();
 
   // Check global options
   GNUPlotLayout layout;
 
-  if (!node["gnuplot_config"])
+  if (!node.has_child("gnuplot_config"))
     return false;
 
-  if (node["gnuplot_config"]["options"])
-  {
-    layout.mpo = GNUPlotHelper::MultiPlotOptions();
-    layout.mpo.layout.row = node["gnuplot_config"]["options"]["n_row"].as<int>(1);
-    layout.mpo.layout.col = node["gnuplot_config"]["options"]["n_col"].as<int>(1);
+  auto n_config = node.find_child("gnuplot_config");
 
-    auto terminal_type = node["gnuplot_config"]["options"]["terminal"].as<std::string>();
+  if (n_config.has_child("options"))
+  {
+    auto n_options = n_config.find_child("options");
+
+    std::string terminal_type;
+    layout.mpo = GNUPlotHelper::MultiPlotOptions();
+    layout.mpo.layout.row = 1;
+    layout.mpo.layout.col = 1;
+
+    if (n_options.has_child("n_row"))
+      n_options["n_row"] >> layout.mpo.layout.row;
+    if (n_options.has_child("n_col"))
+      n_options["n_col"] >> layout.mpo.layout.col;
+
+    n_options["terminal"] >> terminal_type;
 
     if (terminal_type.compare("QT") == 0)
       layout.terminal = std::make_shared<QtTerminal>();
@@ -618,13 +630,18 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
     else
       layout.terminal = std::make_shared<QtTerminal>();
 
-    if (node["gnuplot_config"]["options"]["size"])
-    {
-      if (node["gnuplot_config"]["options"]["size"]["x"])
-        layout.terminal->size.x = node["gnuplot_config"]["options"]["size"]["x"].as<int>(640);
+    layout.terminal->size.x = 640;
+    layout.terminal->size.y = 480;
 
-      if (node["gnuplot_config"]["options"]["size"]["y"])
-        layout.terminal->size.y = node["gnuplot_config"]["options"]["size"]["y"].as<int>(480);
+    if (n_options.has_child("size"))
+    {
+      auto n_size = n_options.find_child("size");
+
+      if (n_size.has_child("x"))
+        n_size["x"] >> layout.terminal->size.x;
+
+      if (n_size.has_child("y"))
+        n_size["y"] >> layout.terminal->size.y;
     }
   }
   else
@@ -640,47 +657,68 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
 
   std::size_t ctr = 0;  // counter for multiple instances
 
-  const auto& plots = node["gnuplot_config"]["plots"];
+  auto n_plots = node["gnuplot_config"]["plots"];
 
-  for (std::size_t i = 0; i < plots.size(); ++i)
+  for (std::size_t i = 0; i < n_plots.num_children(); ++i)
   {
-    const auto& plot = plots[i];
+    auto n_plot = n_plots[i];
 
     MultiPlotLayout mplots;
 
     // Get filters
-    for (YAML::const_iterator it = plot["filters"].begin(); it != plot["filters"].end(); ++it)
+    if (n_plot.has_child("filters"))
     {
-      const auto& filter = *it;
+      auto n_filters = n_plot.find_child("filters");
 
-      std::string ns = filter["ns"].as<std::string>();
-      std::string val = filter["val"].as<std::string>("");  // Optional
-      std::string predicate = filter["predicate"].as<std::string>();
+      for (ryml::NodeRef const& child : n_filters.children())
+      {
+        std::string ns;
+        std::string val;
+        std::string predicate;
 
-      Filter f = { .token = Token(ns, val), .predicate = stringToPredicate(predicate) };
+        child["ns"] >> ns;
+        child["predicate"] >> predicate;
 
-      mplots.filters.push_back(f);
+        if (child.has_child("val"))
+          child["val"] >> val;
+
+        Filter f = { .token = Token(ns, val), .predicate = stringToPredicate(predicate) };
+
+        mplots.filters.push_back(f);
+      }
     }
 
     // Get legends (OPTIONAL)
-    auto legends = plot["legends"].as<std::vector<std::string>>(std::vector<std::string>());
+    std::vector<std::string> legends;
+    n_plot["legends"] >> legends;
+
     for (const auto& legend : legends)
       mplots.legends.push_back(Token(legend));
 
     // Get labels
-    auto labels = plot["labels"].as<std::vector<std::string>>();
+    std::vector<std::string> labels;
+    n_plot["labels"] >> labels;
+
     for (const auto& label : labels)
       mplots.labels.push_back(Token(label));
 
     // Get metrics
-    for (YAML::const_iterator it = plot["metrics"].begin(); it != plot["metrics"].end(); ++it)
-    {
-      const auto& filter = *it;
+    auto n_metrics = n_plot["metrics"];
 
-      std::string title = filter["title"].as<std::string>("");
-      std::string type = filter["type"].as<std::string>();
-      std::string name = filter["name"].as<std::string>("");
-      auto names = filter["names"].as<std::vector<std::string>>(std::vector<std::string>());
+    for (ryml::NodeRef const& child : n_metrics.children())
+    {
+      std::string title;
+      std::string type;
+      std::string name;
+      std::vector<std::string> names;
+
+      if (child.has_child("title"))
+        child["title"] >> title;
+      child["type"] >> type;
+      if (child.has_child("name"))
+        child["name"] >> name;
+      if (child.has_child("names"))
+        child["names"] >> names;
 
       PlotLayout plot;
 
@@ -717,20 +755,40 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
   return initialize(layout);
 }
 
-std::string GNUPlotDataset::combineTokenNodeValue(const Token& token, const YAML::Node& node, const std::string& tag,
+std::string GNUPlotDataset::combineTokenNodeValue(const Token& token, const ryml::NodeRef& node, const std::string& tag,
                                                   bool keep_ns)
 {
   std::string token_tag;
   if (keep_ns)
     token_tag = token.getNamespace() + tag;
 
-  YAML::Node scalar;
-  bool rc = YAML::getSubsetScalar(token.getNode(), node, scalar);
+  ryml::Tree t;
+  ryml::NodeRef scalar = t.rootref();
 
-  if (scalar.IsMap())
-    return token_tag + scalar.begin()->first.as<std::string>();
-  else if (scalar.IsScalar())
-    return token_tag + scalar.as<std::string>();
+  // add dataset keymap
+  ryml::Tree t1;
+  ryml::NodeRef token_node = t1.rootref();
+
+  if (token.isAbsolute())
+  {
+    token_node |= ryml::MAP;
+    token_node.append_child() << ryml::key("dataset") |= ryml::KEYMAP;
+    auto lc = token_node.last_child();
+
+    t1.merge_with(token.getNode().tree(), 0, lc.id());
+    bool rc = c4::yml::getNodeFromKeyChainVal(token_node.first_child(), node, scalar);
+  }
+  else
+    bool rc = c4::yml::getNodeFromKeyChainVal(token.getNode(), node, scalar);
+
+  if (scalar.type() == ryml::VAL || scalar.type() == ryml::KEYVAL)
+  {
+    std::string val;
+    ryml::from_chars(scalar.val(), &val);
+
+    // scalar >> val;
+    return token_tag + val;
+  }
 
   ROS_WARN("Node type not handeled");
   return "";
@@ -795,9 +853,11 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
 
   for (const auto& dataset_pair : dataset_map)
   {
-    const auto& dataset = dataset_pair.second;
+    auto it = dataset_pair.second;
 
-    if (!dataset["data"])
+    auto dataset = it;
+
+    if (!dataset.has_child("data"))
     {
       ROS_WARN("Malformed dataset, root 'data' node not found");
       return;
@@ -813,7 +873,7 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
     {
       if (token.isRelative())
       {
-        if (token.getNode()["metrics"])
+        if (token.getNode().has_child("metrics"))
           addMetricToLegend = true;
         continue;
       }
@@ -826,7 +886,7 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
     {
       if (token.isRelative())
       {
-        if (token.getNode()["metrics"])
+        if (token.getNode().has_child("metrics"))
           addMetricToLabel = true;
         continue;
       }
@@ -837,7 +897,7 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
 
     // Loop through each queries
     auto queries = dataset["data"];
-    for (std::size_t i = 0; i < queries.size(); ++i)
+    for (std::size_t i = 0; i < queries.num_children(); ++i)
     {
       std::string rel_legend;
       std::string rel_label;
@@ -847,7 +907,7 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
       // Build legend and label names from queries -> realtive
       for (const auto& token : layout.legends)
       {
-        if (token.isAbsolute() || token.getNode()["metrics"])
+        if (token.isAbsolute() || token.getNode().has_child("metrics"))
           continue;
 
         auto legend = combineTokenNodeValue(token, query, TAG_SPLIT, keep_ns);
@@ -856,14 +916,14 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
 
       for (const auto& token : layout.labels)
       {
-        if (token.isAbsolute() || token.getNode()["metrics"])
+        if (token.isAbsolute() || token.getNode().has_child("metrics"))
           continue;
 
         auto label = combineTokenNodeValue(token, query, TAG_SPLIT, keep_ns);
         rel_label += (label.empty()) ? "" : label + TAG_LABEL_END;
       }
 
-      if (!query["metrics"])
+      if (!query.has_child("metrics"))
         continue;
 
       auto metric_node = query["metrics"];
@@ -876,7 +936,7 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
         // Loop through each metric in plot
         for (const auto& metric : plot.metric_names)
         {
-          if (!metric_node[metric])
+          if (!metric_node.has_child(ryml::to_csubstr(metric)))
           {
             ROS_WARN("Metric '%s' not found in query #%s", metric.c_str(), std::to_string(j + 1).c_str());
             continue;
@@ -906,33 +966,40 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
           //   - double
           //   - vector<double>
           //   - vector<vector<double>>
+
+          auto n_metric = metric_node[ryml::to_csubstr(metric)];
+
           try
           {
-            auto value = metric_node[metric].as<double>();
+            double value;
+            n_metric >> value;
             container[j].second.add(value, label, legend);
             continue;
           }
-          catch (YAML::BadConversion& e)
+          catch (moveit_serialization::yaml_error& e)
           {
           }
           try
           {
-            auto values = metric_node[metric].as<std::vector<double>>();
+            std::vector<double> values;
+            n_metric >> values;
+
             container[j].second.add(values, label, legend);
             continue;
           }
-          catch (YAML::BadConversion& e)
+          catch (moveit_serialization::yaml_error& e)
           {
           }
           try
           {
-            auto values = metric_node[metric].as<std::vector<std::vector<double>>>();
+            std::vector<std::vector<double>> values;
+            n_metric >> values;
 
             for (const auto& value : values)
               container[j].second.add(value, label, legend);
             continue;
           }
-          catch (YAML::BadConversion& e)
+          catch (moveit_serialization::yaml_error& e)
           {
           }
 
