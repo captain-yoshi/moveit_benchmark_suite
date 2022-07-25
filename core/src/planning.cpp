@@ -34,16 +34,18 @@ const std::string& PlanningPipelineEmitter::getPipelineId() const
   return pipeline_id_;
 }
 
-bool PlanningPipelineEmitter::initializeFromYAML(const YAML::Node& node, const std::vector<std::string>& planners)
+bool PlanningPipelineEmitter::initializeFromYAML(const ryml::NodeRef& node, const std::vector<std::string>& planners)
 {
   handler_.loadYAMLtoROS(node);
   planners_.insert(planners_.end(), planners.begin(), planners.end());
 
   // Get pipeline id from param
-  if (!node["planning_plugin"])
+  if (!node.has_child("planning_plugin"))
     return false;
 
-  auto plugin_name = node["planning_plugin"].as<std::string>();
+  std::string plugin_name;
+  node.find_child("planning_plugin") >> plugin_name;
+
   pipeline_id_ = plugin_name.substr(0, plugin_name.find("_"));
 
   return true;
