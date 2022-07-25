@@ -8,31 +8,37 @@ using namespace moveit_benchmark_suite::tools;
 // AggregateDataset
 //
 
-DataSetPtr AggregateDataset::aggregate(const std::vector<Operation>& operations, const YAML::Node& dataset)
+DataSetPtr AggregateDataset::aggregate(const std::vector<Operation>& operations, const ryml::NodeRef& dataset)
 {
-  auto node = YAML::Clone(dataset);
+  ryml::Tree t;
+  auto node = t.rootref();
+  node |= ryml::MAP;
+
+  node.tree()->merge_with(dataset.tree(), dataset.id(), node.append_child().id());
 
   // Loop through data
-  if (!node["data"])
+  if (!node.has_child("dataset") || !node["dataset"].has_child("data"))
     return nullptr;
 
-  auto queries = node["data"];
-  for (std::size_t i = 0; i < queries.size(); ++i)
+  auto queries = node["dataset"]["data"];
+  for (std::size_t i = 0; i < queries.num_children(); ++i)
   {
     auto query = queries[i];
-    if (!query["metrics"])
+    if (!query.has_child("metrics"))
       continue;
+
+    auto n_metrics = query.find_child("metrics");
 
     for (const auto& operation : operations)
     {
       // Metric to apply equation is not found
-      if (!query["metrics"][operation.raw_metric])
+      if (!n_metrics.has_child(ryml::to_csubstr(operation.raw_metric)))
       {
         ROS_WARN("Metric '%s' not found in filtered dataset for query #%zu", operation.raw_metric.c_str(), i + 1);
         continue;
       }
       // Metric to store already exists
-      if (query["metrics"][operation.new_metric])
+      if (n_metrics.has_child(ryml::to_csubstr(operation.new_metric)))
       {
         ROS_WARN("Metric '%s' already exists in filtered dataset for query #%zu, choose a different name",
                  operation.new_metric.c_str(), i + 1);
@@ -46,18 +52,22 @@ DataSetPtr AggregateDataset::aggregate(const std::vector<Operation>& operations,
       // Decode metric and add to Datablock
       try
       {
-        auto values = query["metrics"][operation.raw_metric].as<std::vector<double>>();
+        std::vector<double> values;
+        n_metrics.find_child(ryml::to_csubstr(operation.raw_metric)) >> values;
+
         double result = eq_fn(values);
         result *= operation.postmultiply;
 
         // store
-        query["metrics"][operation.new_metric] = std::vector<double>{ result };
+        n_metrics.append_child() << ryml::key(operation.new_metric) << std::vector<double>{ result };
       }
-      catch (YAML::BadConversion& e)
+      catch (moveit_serialization::yaml_error& e)
       {
         try
         {
-          auto values2d = query["metrics"][operation.raw_metric].as<std::vector<std::vector<double>>>();
+          std::vector<std::vector<double>> values2d;
+          n_metrics.find_child(ryml::to_csubstr(operation.raw_metric)) >> values2d;
+
           std::vector<double> results;
           for (const auto& values : values2d)
           {
@@ -68,9 +78,9 @@ DataSetPtr AggregateDataset::aggregate(const std::vector<Operation>& operations,
           }
 
           // store
-          query["metrics"][operation.new_metric] = results;
+          n_metrics.append_child() << ryml::key(operation.new_metric) << results;
         }
-        catch (YAML::BadConversion& e)
+        catch (moveit_serialization::yaml_error& e)
         {
           ROS_WARN("Metric must be convertible to a 1d or 2d vector of double");
           continue;
@@ -78,8 +88,9 @@ DataSetPtr AggregateDataset::aggregate(const std::vector<Operation>& operations,
       }
     }
   }
+  DataSet ds;
+  node["dataset"] >> ds;
 
-  auto ds = node.as<DataSet>();
   return std::make_shared<DataSet>(ds);
 }
 
@@ -135,9 +146,9 @@ bool AggregateDataset::buildParamsFromYAML(const std::string& filename, std::vec
     return false;
   }
 
-  const auto& node = yaml.second;
+  const auto& node = yaml.second.rootref();
 
-  if (!node["aggregate_config"])
+  if (!node.has_child("aggregate_config"))
     return false;
 
   auto root = node["aggregate_config"];
@@ -145,41 +156,56 @@ bool AggregateDataset::buildParamsFromYAML(const std::string& filename, std::vec
   try
   {
     // Build filters (optional)
-    if (root["filters"])
+    if (root.has_child("filters"))
     {
-      for (YAML::const_iterator it = root["filters"].begin(); it != root["filters"].end(); ++it)
-      {
-        const auto& filter = *it;
+      auto n_filters = root.find_child("filters");
 
-        std::string ns = filter["ns"].as<std::string>();
-        std::string val = filter["val"].as<std::string>("");  // Optional
-        std::string predicate = filter["predicate"].as<std::string>();
+      for (ryml::NodeRef const& child : n_filters.children())
+      {
+        std::string ns;
+        std::string val;
+        std::string predicate;
+
+        child["ns"] >> ns;
+        child["predicate"] >> predicate;
+
+        if (child.has_child("val"))
+          child["val"] >> val;
 
         filters.push_back({ .token = Token(ns, val), .predicate = stringToPredicate(predicate) });
       }
     }
 
     // Build operations
-    for (YAML::const_iterator it = root["statistics"].begin(); it != root["statistics"].end(); ++it)
+    if (root.has_child("statistics"))
     {
-      const auto& filter = *it;
+      auto n_statistics = root.find_child("statistics");
 
-      std::string raw_metric = filter["raw_metric"].as<std::string>();
-      std::string new_metric = filter["new_metric"].as<std::string>();
-      std::string type = filter["type"].as<std::string>();
-      bool percentage = filter["percentage"].as<bool>(false);
+      for (ryml::NodeRef const& child : n_statistics.children())
+      {
+        std::string raw_metric;
+        std::string new_metric;
+        std::string type;
+        bool percentage = false;
 
-      double postmultiply = 1;
-      if (percentage)
-        postmultiply = 100;
+        child["raw_metric"] >> raw_metric;
+        child["new_metric"] >> new_metric;
+        child["type"] >> type;
+        if (child.has_child("percentage"))
+          child["percentage"] >> percentage;
 
-      operations.push_back({ .raw_metric = raw_metric,
-                             .new_metric = new_metric,
-                             .eq_type = statistics::getEquationTypeFromString(type),
-                             .postmultiply = postmultiply });
+        double postmultiply = 1;
+        if (percentage)
+          postmultiply = 100;
+
+        operations.push_back({ .raw_metric = raw_metric,
+                               .new_metric = new_metric,
+                               .eq_type = statistics::getEquationTypeFromString(type),
+                               .postmultiply = postmultiply });
+      }
     }
   }
-  catch (YAML::BadConversion& e)
+  catch (moveit_serialization::yaml_error& e)
   {
     ROS_WARN("Malformed 'aggregate_config' node");
     return false;
