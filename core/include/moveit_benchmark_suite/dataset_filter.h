@@ -70,7 +70,7 @@ public:
   using UUID = std::string;
   using ContainerID = std::string;
 
-  using DatasetMap = std::multimap<UUID, YAML::Node>;
+  using DatasetMap = std::multimap<UUID, ryml::Tree>;
   using ContainerMap = std::map<ContainerID, DatasetMap>;
 
   DatasetFilter();
@@ -78,7 +78,7 @@ public:
 
   // Dataset from filename | object
   void loadDataset(const DataSet& dataset);
-  void loadDataset(const YAML::Node& dataset);
+  void loadDataset(const ryml::NodeRef& dataset);
   void loadDataset(const std::string& filename);
   void loadDatasets(const std::vector<DataSet>& datasets);
   void loadDatasets(const std::vector<std::string>& filenames);
@@ -95,9 +95,9 @@ private:
    *  \param[in] node Either a dataset node or a data sequence
    *  \return True if predicate is respected, False otherwise.
    */
-  bool filterMetadata(const YAML::Node& node, const Token& token, Predicate predicate);
+  bool filterMetadata(const ryml::NodeRef& node, const Token& token, Predicate predicate);
   /// Queries that contain the metrcis node, for dealing with a variant
-  bool filterMetric(const YAML::Node& node, const Token& token, Predicate predicate);
+  bool filterMetric(const ryml::NodeRef& node, const Token& token, Predicate predicate);
 
   DatasetMap dataset_map_;  // Original datasets
   ContainerMap container_;  // Output of filters
