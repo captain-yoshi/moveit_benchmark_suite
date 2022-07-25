@@ -52,14 +52,27 @@ using namespace moveit_benchmark_suite;
 
 void CollisionCheckBuilder::buildQueries(const std::string& filename)
 {
-  YAML::Node node;
-  if (!IO::loadFileToYAML(filename, node, true))
+  ryml::Tree tree;
+  if (!IO::loadFileToYAML(filename, tree, true))
     return;
 
-  if (!node["profiler_config"])
+  ryml::NodeRef node = tree.rootref();
+
+  if (!node.has_child("profiler_config"))
   {
     ROS_WARN("Missing root node 'profiler_config'");
     return;
+  }
+
+  auto n_config = node["profiler_config"];
+
+  ryml::Tree t;
+  auto n_extend = t.rootref();
+  bool extend_resource = false;
+  if (node.has_child("extend_resource_config"))
+  {
+    n_extend.find_child("extend_resource_config");
+    extend_resource = true;
   }
 
   std::map<std::string, RobotPtr> robot_map;
@@ -73,53 +86,53 @@ void CollisionCheckBuilder::buildQueries(const std::string& filename)
   {
     // Build robots
     RobotBuilder builder;
-    builder.loadResources(node["profiler_config"]["robots"]);
-    if (node["extend_resource_config"] && node["extend_resource_config"]["robots"])
-      builder.extendResources(node["extend_resource_config"]["robots"]);
+    builder.loadResources(n_config["robots"]);
+    if (extend_resource && n_extend.has_child("robots"))
+      builder.extendResources(n_extend["robots"]);
+
     robot_map = builder.generateResources();
   }
   {  // Build scenes
-    scene_builder.loadResources(node["profiler_config"]["scenes"]);
-    if (node["extend_resource_config"] && node["extend_resource_config"]["scenes"])
-      scene_builder.extendResources(node["extend_resource_config"]["scenes"]);
+    scene_builder.loadResources(n_config["scenes"]);
+    if (extend_resource && n_extend.has_child("scenes"))
+      scene_builder.extendResources(n_extend["scenes"]);
     // Don't generate results yet because it depends on Robot and Collision detector
   }
   {
     // Build CollisionRequest
     YAMLDeserializerBuilder<collision_detection::CollisionRequest> builder;
-    builder.loadResources(node["profiler_config"]["collision_requests"]);
-    if (node["extend_resource_config"] && node["extend_resource_config"]["collision_requests"])
-      builder.extendResources(node["extend_resource_config"]["collision_requests"]);
+    builder.loadResources(n_config["collision_requests"]);
+    if (extend_resource && n_extend.has_child("collision_requests"))
+      builder.extendResources(n_extend["collision_requests"]);
+
     request_map = builder.generateResources();
   }
   {
     // Build RobotState
     YAMLDeserializerBuilder<moveit_msgs::RobotState> builder;
-    builder.loadResources(node["profiler_config"]["robot_states"]);
-    if (node["extend_resource_config"] && node["extend_resource_config"]["robot_states"])
-      builder.extendResources(node["extend_resource_config"]["robot_states"]);
+    builder.loadResources(n_config["robot_states"]);
+    if (extend_resource && n_extend.has_child("robot_states"))
+      builder.extendResources(n_extend["robot_states"]);
+
     state_map = builder.generateResources();
   }
 
+  // Build collision detectors
+  try
   {
-    // Build collision detectors
-    try
+    if (!n_config.has_child("collision_detectors"))
     {
-      if (!node["profiler_config"]["collision_detectors"])
-      {
-        ROS_WARN("Missing node 'collision_detectors'");
-        return;
-      }
-
-      collision_detectors = node["profiler_config"]["collision_detectors"].as<std::vector<std::string>>();
-    }
-    catch (YAML::BadConversion& e)
-    {
-      ROS_ERROR_STREAM("Bad conversion in node 'collision_detectors'"
-                       << "\n-----------\nFaulty Node\n-----------\n"
-                       << node["profiler_config"]["collision_detectors"] << "\n-----------");
+      ROS_WARN("Missing node 'collision_detectors'");
       return;
     }
+    n_config.find_child("collision_detectors") >> collision_detectors;
+  }
+  catch (moveit_serialization::yaml_error& e)
+  {
+    ROS_ERROR_STREAM("Bad conversion in node 'collision_detectors'"
+                     << "\n-----------\nFaulty Node\n-----------\n"
+                     << node["profiler_config"]["collision_detectors"] << "\n-----------");
+    return;
   }
 
   // Loop through pair wise parameters
