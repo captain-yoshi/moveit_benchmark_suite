@@ -83,7 +83,7 @@ bool Robot::initialize(const std::string& urdf_file, const std::string& srdf_fil
   initializeInternal();
   return true;
 }
-bool Robot::initializeFromYAML(const YAML::Node& node)
+bool Robot::initializeFromYAML(const ryml::NodeRef& node)
 {
   // Strict config keys
   if (!IO::validateNodeKeys(node, { "urdf", "srdf", "kinematics", "joint_limits" }))
@@ -95,23 +95,24 @@ bool Robot::initializeFromYAML(const YAML::Node& node)
     return false;
   }
 
-  if (not node["urdf"])
+  if (not node.has_child("urdf"))
   {
     ROS_ERROR("Failed to load URDF!");
     return false;
   }
-  urdf_ = node["urdf"].as<std::string>();
 
-  if (not node["srdf"])
+  node.find_child("urdf") >> urdf_;
+
+  if (not node.has_child("srdf"))
   {
     ROS_ERROR("Failed to load SRDF!");
     return false;
   }
-  srdf_ = node["srdf"].as<std::string>();
+  node.find_child("srdf") >> srdf_;
 
-  if (node["joint_limits"])
+  if (node.has_child("joint_limits"))
 
-    if (not loadYAMLNode(ROBOT_PLANNING, node["joint_limits"], limits_function_))
+    if (not loadYAMLNode(ROBOT_PLANNING, node.find_child("joint_limits"), limits_function_))
     {
       ROS_ERROR("Failed to load joint limits!");
       return false;
@@ -123,9 +124,9 @@ bool Robot::initializeFromYAML(const YAML::Node& node)
     return false;
   }
 
-  if (node["kinematics"])
+  if (node.has_child("kinematics"))
   {
-    if (!loadYAMLNode(ROBOT_KINEMATICS, node["kinematics"], kinematics_function_))
+    if (!loadYAMLNode(ROBOT_KINEMATICS, node.find_child("kinematics"), kinematics_function_))
     {
       ROS_ERROR("Failed to load kinematics!");
       return false;
@@ -151,12 +152,12 @@ bool Robot::initializeFromYAML(const std::string& config_file)
     return false;
   }
 
-  const auto& node = yaml.second;
+  const auto& node = yaml.second.rootref();
 
   // URDF
   std::string urdf_file;
-  if (node["urdf"])
-    urdf_file = node["urdf"].as<std::string>();
+  if (node.has_child("urdf"))
+    node.find_child("urdf") >> urdf_file;
   else
   {
     ROS_ERROR("No URDF entry in YAML file `%s`!", config_file.c_str());
@@ -165,14 +166,14 @@ bool Robot::initializeFromYAML(const std::string& config_file)
 
   // SRDF
   std::string srdf_file;
-  if (node["srdf"])
-    srdf_file = node["srdf"].as<std::string>();
+  if (node.has_child("srdf"))
+    node.find_child("srdf") >> srdf_file;
   else
     ROS_WARN("No SRDF entry in YAML!");
 
   // Joint limits
   std::string limits_file;
-  if (node["limits"])
+  if (node.has_child("limits"))
   {
     if (srdf_file.empty())
     {
@@ -180,14 +181,14 @@ bool Robot::initializeFromYAML(const std::string& config_file)
       return false;
     }
 
-    limits_file = node["limits"].as<std::string>();
+    node.find_child("limits") >> limits_file;
   }
   else
     ROS_WARN("No joint limits provided!");
 
   // Kinematics plugins
   std::string kinematics_file;
-  if (node["kinematics"])
+  if (node.has_child("kinematics"))
   {
     if (srdf_file.empty())
     {
@@ -195,7 +196,7 @@ bool Robot::initializeFromYAML(const std::string& config_file)
       return false;
     }
 
-    kinematics_file = node["kinematics"].as<std::string>();
+    node.find_child("kinematics") >> kinematics_file;
   }
   else
     ROS_WARN("No kinematics plugins provided!");
@@ -210,9 +211,11 @@ bool Robot::initializeFromYAML(const std::string& config_file)
   // Set default state if provided in file.
   if (r)
   {
-    if (node["robot_state"])
+    if (node.has_child("robot_state"))
     {
-      const auto& robot_state = node["robot_state"].as<moveit_msgs::RobotState>();
+      moveit_msgs::RobotState robot_state;
+      node.find_child("robot_state") >> robot_state;
+
       setState(robot_state);
     }
     else
@@ -305,40 +308,43 @@ bool Robot::loadYAMLFile(const std::string& name, const std::string& file, const
     return false;
   }
 
+  ryml::NodeRef node = yaml.second.rootref();
+
   if (function)
   {
-    YAML::Node copy = yaml.second;
-    if (!function(copy))
+    if (!function(node))
     {
       ROS_ERROR("Failed to process YAML file `%s`.", file.c_str());
       return false;
     }
 
-    handler_.loadYAMLtoROS(copy, name);
+    handler_.loadYAMLtoROS(node, name);
   }
   else
-    handler_.loadYAMLtoROS(yaml.second, name);
+    handler_.loadYAMLtoROS(node, name);
 
   return true;
 }
-bool Robot::loadYAMLNode(const std::string& name, const YAML::Node& node)
+bool Robot::loadYAMLNode(const std::string& name, const ryml::NodeRef& node)
 {
   PostProcessYAMLFunction function;
   return loadYAMLNode(name, node, function);
 }
 
-bool Robot::loadYAMLNode(const std::string& name, const YAML::Node& node, const PostProcessYAMLFunction& function)
+bool Robot::loadYAMLNode(const std::string& name, const ryml::NodeRef& node, const PostProcessYAMLFunction& function)
 {
   if (function)
   {
-    YAML::Node copy = node;
-    if (!function(copy))
+    ryml::NodeRef clone;
+    clone.tree()->merge_with(node.tree());
+
+    if (!function(clone))
     {
-      ROS_ERROR("Failed to process YAML node.");
+      ROS_ERROR("Failed to post-process YAML node.");
       return false;
     }
 
-    handler_.loadYAMLtoROS(copy, name);
+    handler_.loadYAMLtoROS(clone, name);
   }
   else
     handler_.loadYAMLtoROS(node, name);
@@ -681,8 +687,9 @@ bool Robot::toYAMLFile(const std::string& file) const
   moveit_msgs::RobotState msg;
   moveit::core::robotStateToRobotStateMsg(*state_, msg);
 
-  const auto& yaml = YAML::toNode(msg);
-  return IO::YAMLToFile(yaml, file);
+  ryml::NodeRef node;
+  node << msg;
+  return IO::YAMLToFile(node, file);
 }
 
 robot_model::RobotStatePtr Robot::allocState() const
@@ -716,122 +723,121 @@ std::string Robot::getSolverBaseFrame(const std::string& group) const
 }
 
 namespace {
-YAML::Node addLinkGeometry(const urdf::GeometrySharedPtr& geometry, bool resolve = true)
-{
-  YAML::Node node;
-  switch (geometry->type)
-  {
-    case urdf::Geometry::MESH:
-    {
-      const auto& mesh = static_cast<urdf::Mesh*>(geometry.get());
-      node["type"] = "mesh";
+// YAML::Node addLinkGeometry(const urdf::GeometrySharedPtr& geometry, bool resolve = true)
+// {
+//   YAML::Node node;
+//   switch (geometry->type)
+//   {
+//     case urdf::Geometry::MESH:
+//     {
+//       const auto& mesh = static_cast<urdf::Mesh*>(geometry.get());
+//       node["type"] = "mesh";
 
-      if (resolve)
-        node["resource"] = IO::resolvePath(mesh->filename);
-      else
-        node["resource"] = mesh->filename;
+//       if (resolve)
+//         node["resource"] = IO::resolvePath(mesh->filename);
+//       else
+//         node["resource"] = mesh->filename;
 
-      if (mesh->scale.x != 1 || mesh->scale.y != 1 || mesh->scale.z != 1)
-      {
-        node["dimensions"] = std::vector<double>({ mesh->scale.x, mesh->scale.y, mesh->scale.z });
-        node["dimensions"].SetStyle(YAML::EmitterStyle::Flow);
-      }
-      break;
-    }
-    case urdf::Geometry::BOX:
-    {
-      const auto& box = static_cast<urdf::Box*>(geometry.get());
-      node["type"] = "box";
-      node["dimensions"] = std::vector<double>({ box->dim.x, box->dim.y, box->dim.z });
-      node["dimensions"].SetStyle(YAML::EmitterStyle::Flow);
-      break;
-    }
-    case urdf::Geometry::SPHERE:
-    {
-      const auto& sphere = static_cast<urdf::Sphere*>(geometry.get());
-      node["type"] = "sphere";
-      node["dimensions"] = std::vector<double>({ sphere->radius });
-      node["dimensions"].SetStyle(YAML::EmitterStyle::Flow);
-      break;
-    }
-    case urdf::Geometry::CYLINDER:
-    {
-      const auto& cylinder = static_cast<urdf::Cylinder*>(geometry.get());
-      node["type"] = "cylinder";
-      node["dimensions"] = std::vector<double>({ cylinder->length, cylinder->radius });
-      node["dimensions"].SetStyle(YAML::EmitterStyle::Flow);
-      break;
-    }
-    default:
-      break;
-  }
+//       if (mesh->scale.x != 1 || mesh->scale.y != 1 || mesh->scale.z != 1)
+//       {
+//         node["dimensions"] = std::vector<double>({ mesh->scale.x, mesh->scale.y, mesh->scale.z });
+//         node["dimensions"].SetStyle(YAML::EmitterStyle::Flow);
+//       }
+//       break;
+//     }
+//     case urdf::Geometry::BOX:
+//     {
+//       const auto& box = static_cast<urdf::Box*>(geometry.get());
+//       node["type"] = "box";
+//       node["dimensions"] = std::vector<double>({ box->dim.x, box->dim.y, box->dim.z });
+//       node["dimensions"].SetStyle(YAML::EmitterStyle::Flow);
+//       break;
+//     }
+//     case urdf::Geometry::SPHERE:
+//     {
+//       const auto& sphere = static_cast<urdf::Sphere*>(geometry.get());
+//       node["type"] = "sphere";
+//       node["dimensions"] = std::vector<double>({ sphere->radius });
+//       node["dimensions"].SetStyle(YAML::EmitterStyle::Flow);
+//       break;
+//     }
+//     case urdf::Geometry::CYLINDER:
+//     {
+//       const auto& cylinder = static_cast<urdf::Cylinder*>(geometry.get());
+//       node["type"] = "cylinder";
+//       node["dimensions"] = std::vector<double>({ cylinder->length, cylinder->radius });
+//       node["dimensions"].SetStyle(YAML::EmitterStyle::Flow);
+//       break;
+//     }
+//     default:
+//       break;
+//   }
 
-  return node;
-}
+//   return node;
+// }
 
-void addLinkMaterial(YAML::Node& node, const urdf::MaterialSharedPtr& material)
-{
-  node["color"] = std::vector<double>({ material->color.r, material->color.g, material->color.b, material->color.a });
+// void addLinkMaterial(YAML::Node& node, const urdf::MaterialSharedPtr& material)
+// {
+//   node["color"] = std::vector<double>({ material->color.r, material->color.g, material->color.b, material->color.a });
 
-  node["color"].SetStyle(YAML::EmitterStyle::Flow);
-  // node["texture"] = visual->texture_filename;
-}
+//   node["color"].SetStyle(YAML::EmitterStyle::Flow);
+//   // node["texture"] = visual->texture_filename;
+// }
 
-void addLinkOrigin(YAML::Node& node, const urdf::Pose& pose)
-{
-  YAML::Node origin;
-  origin["position"] = std::vector<double>({ pose.position.x, pose.position.y, pose.position.z });
-  origin["orientation"] = std::vector<double>({ pose.rotation.x, pose.rotation.y, pose.rotation.z, pose.rotation.w });
-  node["origin"] = origin;
-  node["origin"].SetStyle(YAML::EmitterStyle::Flow);
-}
+// void addLinkOrigin(YAML::Node& node, const urdf::Pose& pose)
+// {
+//   YAML::Node origin;
+//   origin["position"] = std::vector<double>({ pose.position.x, pose.position.y, pose.position.z });
+//   origin["orientation"] = std::vector<double>({ pose.rotation.x, pose.rotation.y, pose.rotation.z, pose.rotation.w
+//   }); node["origin"] = origin; node["origin"].SetStyle(YAML::EmitterStyle::Flow);
+// }
 
-YAML::Node addLinkVisual(const urdf::VisualSharedPtr& visual, bool resolve = true)
-{
-  YAML::Node node;
-  if (visual)
-  {
-    if (visual->geometry)
-    {
-      const auto& geometry = visual->geometry;
-      node = addLinkGeometry(geometry, resolve);
+// YAML::Node addLinkVisual(const urdf::VisualSharedPtr& visual, bool resolve = true)
+// {
+//   YAML::Node node;
+//   if (visual)
+//   {
+//     if (visual->geometry)
+//     {
+//       const auto& geometry = visual->geometry;
+//       node = addLinkGeometry(geometry, resolve);
 
-      if (visual->material)
-      {
-        const auto& material = visual->material;
-        addLinkMaterial(node, material);
-      }
+//       if (visual->material)
+//       {
+//         const auto& material = visual->material;
+//         addLinkMaterial(node, material);
+//       }
 
-      const auto& pose = visual->origin;
+//       const auto& pose = visual->origin;
 
-      Eigen::Vector3d position(pose.position.x, pose.position.y, pose.position.z);
-      Eigen::Quaterniond rotation(pose.rotation.w,  //
-                                  pose.rotation.x, pose.rotation.y, pose.rotation.z);
-      Eigen::Quaterniond identity = Eigen::Quaterniond::Identity();
+//       Eigen::Vector3d position(pose.position.x, pose.position.y, pose.position.z);
+//       Eigen::Quaterniond rotation(pose.rotation.w,  //
+//                                   pose.rotation.x, pose.rotation.y, pose.rotation.z);
+//       Eigen::Quaterniond identity = Eigen::Quaterniond::Identity();
 
-      // TODO: Also check if rotation is not zero.
-      if (position.norm() > 0 || rotation.angularDistance(identity) > 0)
-        addLinkOrigin(node, pose);
-    }
-  }
+//       // TODO: Also check if rotation is not zero.
+//       if (position.norm() > 0 || rotation.angularDistance(identity) > 0)
+//         addLinkOrigin(node, pose);
+//     }
+//   }
 
-  return node;
-}
+//   return node;
+// }
 
-YAML::Node addLinkCollision(const urdf::CollisionSharedPtr& collision)
-{
-  YAML::Node node;
-  if (collision)
-  {
-    if (collision->geometry)
-    {
-      const auto& geometry = collision->geometry;
-      node = addLinkGeometry(geometry);
-    }
-  }
+// YAML::Node addLinkCollision(const urdf::CollisionSharedPtr& collision)
+// {
+//   YAML::Node node;
+//   if (collision)
+//   {
+//     if (collision->geometry)
+//     {
+//       const auto& geometry = collision->geometry;
+//       node = addLinkGeometry(geometry);
+//     }
+//   }
 
-  return node;
-}
+//   return node;
+// }
 
 Eigen::Isometry3d urdfPoseToEigen(const urdf::Pose& pose)
 {
@@ -851,52 +857,52 @@ Eigen::Isometry3d urdfPoseToEigen(const urdf::Pose& pose)
 
 bool Robot::dumpGeometry(const std::string& filename) const
 {
-  YAML::Node link_geometry;
-  const auto& urdf = model_->getURDF();
+  //   YAML::Node link_geometry;
+  //   const auto& urdf = model_->getURDF();
 
-  std::vector<urdf::LinkSharedPtr> links;
-  urdf->getLinks(links);
+  //   std::vector<urdf::LinkSharedPtr> links;
+  //   urdf->getLinks(links);
 
-  for (const auto& link : links)
-  {
-    YAML::Node node;
+  //   for (const auto& link : links)
+  //   {
+  //     YAML::Node node;
 
-    YAML::Node visual;
-#if ROBOWFLEX_AT_LEAST_KINETIC
-    for (const auto& element : link->visual_array)
-      if (element)
-        visual["elements"].push_back(addLinkVisual(element));
-#else
-    if (link->visual)
-      visual["elements"].push_back(addLinkVisual(link->visual));
-#endif
+  //     YAML::Node visual;
+  // #if ROBOWFLEX_AT_LEAST_KINETIC
+  //     for (const auto& element : link->visual_array)
+  //       if (element)
+  //         visual["elements"].push_back(addLinkVisual(element));
+  // #else
+  //     if (link->visual)
+  //       visual["elements"].push_back(addLinkVisual(link->visual));
+  // #endif
 
-    YAML::Node collision;
-#if ROBOWFLEX_AT_LEAST_KINETIC
-    for (const auto& element : link->collision_array)
-      if (element)
-        collision["elements"].push_back(addLinkCollision(element));
-#else
-    if (link->collision)
-      collision["elements"].push_back(addLinkCollision(link->collision));
-#endif
+  //     YAML::Node collision;
+  // #if ROBOWFLEX_AT_LEAST_KINETIC
+  //     for (const auto& element : link->collision_array)
+  //       if (element)
+  //         collision["elements"].push_back(addLinkCollision(element));
+  // #else
+  //     if (link->collision)
+  //       collision["elements"].push_back(addLinkCollision(link->collision));
+  // #endif
 
-    if (!visual.IsNull() || !collision.IsNull())
-    {
-      YAML::Node add;
-      add["name"] = link->name;
+  //     if (!visual.IsNull() || !collision.IsNull())
+  //     {
+  //       YAML::Node add;
+  //       add["name"] = link->name;
 
-      if (!visual.IsNull())
-        add["visual"] = visual;
+  //       if (!visual.IsNull())
+  //         add["visual"] = visual;
 
-      if (!collision.IsNull())
-        add["collision"] = collision;
+  //       if (!collision.IsNull())
+  //         add["collision"] = collision;
 
-      link_geometry.push_back(add);
-    }
-  }
+  //       link_geometry.push_back(add);
+  //     }
+  //   }
 
-  return IO::YAMLToFile(link_geometry, filename);
+  //   return IO::YAMLToFile(link_geometry, filename);
 }
 
 bool Robot::dumpTransforms(const std::string& filename) const
@@ -910,144 +916,144 @@ bool Robot::dumpTransforms(const std::string& filename) const
 bool Robot::dumpPathTransforms(const robot_trajectory::RobotTrajectory& path, const std::string& filename, double fps,
                                double threshold) const
 {
-  YAML::Node node, values;
-  const double rate = 1.0 / fps;
+  // YAML::Node node, values;
+  // const double rate = 1.0 / fps;
 
-  // Find the total duration of the path.
-  const std::deque<double>& durations = path.getWayPointDurations();
-  double total_duration = std::accumulate(durations.begin(), durations.end(), 0.0);
+  // // Find the total duration of the path.
+  // const std::deque<double>& durations = path.getWayPointDurations();
+  // double total_duration = std::accumulate(durations.begin(), durations.end(), 0.0);
 
-  const auto& urdf = model_->getURDF();
+  // const auto& urdf = model_->getURDF();
 
-  robot_state::RobotStatePtr previous, state(new robot_state::RobotState(model_));
+  // robot_state::RobotStatePtr previous, state(new robot_state::RobotState(model_));
 
-  for (double duration = 0.0, delay = 0.0; duration <= total_duration; duration += rate, delay += rate)
-  {
-    YAML::Node point;
+  // for (double duration = 0.0, delay = 0.0; duration <= total_duration; duration += rate, delay += rate)
+  // {
+  //   YAML::Node point;
 
-    path.getStateAtDurationFromStart(duration, state);
-    if (previous && state->distance(*previous) < threshold)
-      continue;
+  //   path.getStateAtDurationFromStart(duration, state);
+  //   if (previous && state->distance(*previous) < threshold)
+  //     continue;
 
-    state->update();
-    for (const auto& link_name : model_->getLinkModelNames())
-    {
-      const auto& urdf_link = urdf->getLink(link_name);
-      if (urdf_link->visual)
-      {
-        const auto& link = model_->getLinkModel(link_name);
-        Eigen::Isometry3d tf = state->getGlobalLinkTransform(link);  // * urdfPoseToEigen(urdf_link->visual->origin);
-        point[link->getName()] = YAML::toNode(TF::poseEigenToMsg(tf));
-      }
-    }
+  //   state->update();
+  //   for (const auto& link_name : model_->getLinkModelNames())
+  //   {
+  //     const auto& urdf_link = urdf->getLink(link_name);
+  //     if (urdf_link->visual)
+  //     {
+  //       const auto& link = model_->getLinkModel(link_name);
+  //       Eigen::Isometry3d tf = state->getGlobalLinkTransform(link);  // * urdfPoseToEigen(urdf_link->visual->origin);
+  //       point[link->getName()] = YAML::toNode(TF::poseEigenToMsg(tf));
+  //     }
+  //   }
 
-    YAML::Node value;
-    value["point"] = point;
-    value["duration"] = delay;
-    values.push_back(value);
+  //   YAML::Node value;
+  //   value["point"] = point;
+  //   value["duration"] = delay;
+  //   values.push_back(value);
 
-    delay = 0;
+  //   delay = 0;
 
-    if (!previous)
-      previous.reset(new robot_state::RobotState(model_));
+  //   if (!previous)
+  //     previous.reset(new robot_state::RobotState(model_));
 
-    *previous = *state;
-  }
+  //   *previous = *state;
+  // }
 
-  node["transforms"] = values;
-  node["fps"] = fps;
+  // node["transforms"] = values;
+  // node["fps"] = fps;
 
-  return IO::YAMLToFile(node, filename);
+  // return IO::YAMLToFile(node, filename);
 }
 
 bool Robot::dumpToScene(const std::string& filename) const
 {
-  YAML::Node node;
+  //   YAML::Node node;
 
-  const auto& urdf = model_->getURDF();
-  for (const auto& link_name : model_->getLinkModelNames())
-  {
-    const auto& urdf_link = urdf->getLink(link_name);
-    if (urdf_link->visual)
-    {
-      const auto& link = model_->getLinkModel(link_name);
+  //   const auto& urdf = model_->getURDF();
+  //   for (const auto& link_name : model_->getLinkModelNames())
+  //   {
+  //     const auto& urdf_link = urdf->getLink(link_name);
+  //     if (urdf_link->visual)
+  //     {
+  //       const auto& link = model_->getLinkModel(link_name);
 
-      std::vector<YAML::Node> visuals;
-#if ROBOWFLEX_AT_LEAST_KINETIC
-      for (const auto& element : urdf_link->visual_array)
-        if (element)
-          visuals.emplace_back(addLinkVisual(element, false));
-#else
-      if (urdf_link->visual)
-        visuals.push_back(addLinkVisual(urdf_link->visual, false));
-#endif
+  //       std::vector<YAML::Node> visuals;
+  // #if ROBOWFLEX_AT_LEAST_KINETIC
+  //       for (const auto& element : urdf_link->visual_array)
+  //         if (element)
+  //           visuals.emplace_back(addLinkVisual(element, false));
+  // #else
+  //       if (urdf_link->visual)
+  //         visuals.push_back(addLinkVisual(urdf_link->visual, false));
+  // #endif
 
-      YAML::Node object;
-      object["id"] = link->getName();
+  //       YAML::Node object;
+  //       object["id"] = link->getName();
 
-      YAML::Node meshes;
-      YAML::Node mesh_poses;
-      YAML::Node primitives;
-      YAML::Node primitive_poses;
+  //       YAML::Node meshes;
+  //       YAML::Node mesh_poses;
+  //       YAML::Node primitives;
+  //       YAML::Node primitive_poses;
 
-      Eigen::Isometry3d tf = state_->getGlobalLinkTransform(link);
-      for (const auto& visual : visuals)
-      {
-        Eigen::Isometry3d pose = tf;
-        if (visual["origin"])
-        {
-          Eigen::Isometry3d offset = TF::poseMsgToEigen(visual["origin"].as<geometry_msgs::Pose>());
-          pose = pose * offset;
-        }
+  //       Eigen::Isometry3d tf = state_->getGlobalLinkTransform(link);
+  //       for (const auto& visual : visuals)
+  //       {
+  //         Eigen::Isometry3d pose = tf;
+  //         if (visual["origin"])
+  //         {
+  //           Eigen::Isometry3d offset = TF::poseMsgToEigen(visual["origin"].as<geometry_msgs::Pose>());
+  //           pose = pose * offset;
+  //         }
 
-        const auto& posey = YAML::toNode(TF::poseEigenToMsg(pose));
+  //         const auto& posey = YAML::toNode(TF::poseEigenToMsg(pose));
 
-        const auto& type = visual["type"].as<std::string>();
-        if (type == "mesh")
-        {
-          YAML::Node mesh;
-          mesh["resource"] = visual["resource"];
-          if (visual["dimensions"])
-            mesh["dimensions"] = visual["dimensions"];
-          else
-          {
-            mesh["dimensions"].push_back(1.);
-            mesh["dimensions"].push_back(1.);
-            mesh["dimensions"].push_back(1.);
-          }
+  //         const auto& type = visual["type"].as<std::string>();
+  //         if (type == "mesh")
+  //         {
+  //           YAML::Node mesh;
+  //           mesh["resource"] = visual["resource"];
+  //           if (visual["dimensions"])
+  //             mesh["dimensions"] = visual["dimensions"];
+  //           else
+  //           {
+  //             mesh["dimensions"].push_back(1.);
+  //             mesh["dimensions"].push_back(1.);
+  //             mesh["dimensions"].push_back(1.);
+  //           }
 
-          mesh["dimensions"].SetStyle(YAML::EmitterStyle::Flow);
+  //           mesh["dimensions"].SetStyle(YAML::EmitterStyle::Flow);
 
-          meshes.push_back(mesh);
-          mesh_poses.push_back(posey);
-        }
-        else
-        {
-          YAML::Node primitive;
-          primitive["type"] = type;
-          primitive["dimensions"] = visual["dimensions"];
-          primitive_poses.push_back(posey);
-        }
-      }
+  //           meshes.push_back(mesh);
+  //           mesh_poses.push_back(posey);
+  //         }
+  //         else
+  //         {
+  //           YAML::Node primitive;
+  //           primitive["type"] = type;
+  //           primitive["dimensions"] = visual["dimensions"];
+  //           primitive_poses.push_back(posey);
+  //         }
+  //       }
 
-      if (meshes.size())
-      {
-        object["meshes"] = meshes;
-        object["mesh_poses"] = mesh_poses;
-      }
+  //       if (meshes.size())
+  //       {
+  //         object["meshes"] = meshes;
+  //         object["mesh_poses"] = mesh_poses;
+  //       }
 
-      if (primitives.size())
-      {
-        object["primitives"] = primitives;
-        object["primitive_poses"] = primitive_poses;
-      }
+  //       if (primitives.size())
+  //       {
+  //         object["primitives"] = primitives;
+  //         object["primitive_poses"] = primitive_poses;
+  //       }
 
-      node["collision_objects"].push_back(object);
-    }
-  }
+  //       node["collision_objects"].push_back(object);
+  //     }
+  //   }
 
-  YAML::Node scene;
-  scene["world"] = node;
+  //   YAML::Node scene;
+  //   scene["world"] = node;
 
-  return IO::YAMLToFile(scene, filename);
+  //   return IO::YAMLToFile(scene, filename);
 }

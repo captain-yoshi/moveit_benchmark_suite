@@ -64,7 +64,7 @@ public:
   /** \brief A function that runs after loading a YAML file and can modify its contents. Returns true on
    * success, false on failure.
    */
-  typedef std::function<bool(YAML::Node&)> PostProcessYAMLFunction;
+  typedef std::function<bool(ryml::NodeRef&)> PostProcessYAMLFunction;
 
   /** \brief A function that runs after loading a XML file and can modify its contents. Returns true on
    * success, false on failure.
@@ -119,7 +119,7 @@ public:
    * \return True on success, false on failure.
    */
   bool initializeFromYAML(const std::string& config_file);
-  bool initializeFromYAML(const YAML::Node& node);
+  bool initializeFromYAML(const ryml::NodeRef& node);
 
   /** \brief Loads a YAML file into the robot's namespace under \a name.
    *  \param[in] name Name to load file under.
@@ -136,8 +136,8 @@ public:
    */
   bool loadYAMLFile(const std::string& name, const std::string& file, const PostProcessYAMLFunction& function);
 
-  bool loadYAMLNode(const std::string& name, const YAML::Node& node);
-  bool loadYAMLNode(const std::string& name, const YAML::Node& node, const PostProcessYAMLFunction& function);
+  bool loadYAMLNode(const std::string& name, const ryml::NodeRef& node);
+  bool loadYAMLNode(const std::string& name, const ryml::NodeRef& node, const PostProcessYAMLFunction& function);
 
   /** \brief Loads an XML or .xacro file into a string.
    *  \param[in] file File to load.
