@@ -4,8 +4,6 @@
 
 #include <moveit_benchmark_suite/io.h>
 #include <moveit_benchmark_suite/tools/gnuplot.h>
-#include <moveit_serialization/yaml-cpp/yaml.h>
-#include <moveit_serialization/yaml-cpp/node_manipulation.h>
 #include <moveit_benchmark_suite/token.h>
 
 #include <cmath>

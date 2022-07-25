@@ -10,7 +10,7 @@
 #include <moveit_benchmark_suite/log.h>
 #include <moveit_benchmark_suite/io.h>
 #include <moveit_benchmark_suite/scene.h>
-#include <moveit_serialization/yaml-cpp/yaml.h>
+#include <moveit_benchmark_suite/serialization/ryml.h>
 
 #include <urdf_to_scene/scene_parser.h>
 

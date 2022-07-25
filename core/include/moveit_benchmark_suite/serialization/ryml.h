@@ -33,51 +33,21 @@
  *********************************************************************/
 
 /* Author: Captain Yoshi
-   Desc: Token for handling namespaces
+   Desc: yaml serializer for moveit_benchmark_suite objects
 */
 
 #pragma once
 
-#include <string>
-#include <vector>
-#include <map>
+#include <moveit_serialization/ryml/conversions.h>
+#include <moveit_serialization/ryml/utils.h>
 
-#include <moveit_benchmark_suite/serialization/ryml.h>
+#include <moveit_benchmark_suite/serialization/conversions.h>
 
-namespace moveit_benchmark_suite {
-std::vector<std::string> splitStr(std::string s, std::string delimiter);
+// WARNING: Do NOT include headers below this line
+// Please take note of the following pitfall when using serialization
+// functions: you have to include the header with the serialization
+// before any other headers that use functions from it.
 
-std::string replaceStr(std::string subject, const std::string& search, const std::string& replace);
+#include <ryml.hpp>
 
-///
-class Token
-{
-public:
-  Token() = default;
-
-  Token(const std::string& ns, const std::string& value = "", const std::string& del = "/");
-
-  void reset();
-
-  const std::string& getValue() const;
-  const std::string& getDelimiter() const;
-  const std::string& getNamespace() const;
-
-  const YAML::Node& getNode() const;
-
-  bool hasValue() const;
-  bool isRelative() const;
-  bool isAbsolute() const;
-
-private:
-  void createNode(std::size_t ctr, const std::vector<std::string>& keys, YAML::Node& n);
-
-  std::string ns_;
-  std::string value_;
-  std::string del_;
-
-  bool ns_rel_ = true;  // namespace is relative or absolute
-  YAML::Node node_;
-};
-
-}  // namespace moveit_benchmark_suite
+#include <moveit_serialization/ryml/error_handler.h>  // includes ryml.hpp in the header

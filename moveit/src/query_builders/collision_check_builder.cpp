@@ -44,8 +44,6 @@
 
 #include <moveit_benchmark_suite/io.h>
 
-#include <moveit_benchmark_suite/serialization.h>
-
 using namespace moveit_benchmark_suite;
 
 ///

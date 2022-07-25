@@ -1,7 +1,6 @@
 /* Author: Zachary Kingston */
 
 #include <moveit_benchmark_suite/handler.h>
-#include <moveit_benchmark_suite/io.h>
 
 using namespace moveit_benchmark_suite;
 

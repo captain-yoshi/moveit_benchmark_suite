@@ -46,9 +46,9 @@
 #include <moveit_benchmark_suite/planning.h>
 #include <moveit_benchmark_suite/robot.h>
 #include <moveit_benchmark_suite/scene.h>
-#include <moveit_serialization/yaml-cpp/node_manipulation.h>
-#include <moveit_benchmark_suite/serialization.h>
 #include <moveit_benchmark_suite/io.h>
+
+#include <moveit_benchmark_suite/serialization/ryml.h>
 
 namespace moveit_benchmark_suite {
 

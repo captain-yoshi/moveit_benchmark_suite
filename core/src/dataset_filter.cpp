@@ -1,8 +1,5 @@
-#include <moveit_serialization/yaml-cpp/node_manipulation.h>
-
 #include <moveit_benchmark_suite/dataset_filter.h>
 #include <moveit_benchmark_suite/io.h>
-#include <moveit_benchmark_suite/serialization.h>
 
 using namespace moveit_benchmark_suite;
 

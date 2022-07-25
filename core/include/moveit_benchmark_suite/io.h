@@ -47,7 +47,7 @@
 
 #include <moveit_benchmark_suite/dataset.h>
 #include <moveit_benchmark_suite/metadata.h>
-#include <moveit_benchmark_suite/serialization.h>
+#include <moveit_benchmark_suite/serialization/ryml.h>
 
 namespace moveit_benchmark_suite {
 /** \brief File and ROS Input / Output operations.

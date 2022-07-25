@@ -44,6 +44,7 @@
 #include <urdf/model.h>
 #include <srdfdom/model.h>
 #include <tinyxml2.h>
+#include <moveit_benchmark_suite/serialization/ryml.h>
 
 #include <moveit_msgs/RobotState.h>
 

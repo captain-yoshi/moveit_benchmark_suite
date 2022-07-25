@@ -14,8 +14,6 @@
 #include <moveit_benchmark_suite/scene.h>
 #include <moveit_benchmark_suite/tf.h>
 
-#include <moveit_serialization/yaml-cpp/yaml.h>
-
 using namespace moveit_benchmark_suite;
 
 const std::string Robot::ROBOT_DESCRIPTION = "robot_description";

@@ -61,7 +61,7 @@ add_library(${PROJECT_NAME}
   src/planning.cpp
   src/trajectory.cpp
   src/utils.cpp
-  src/serialization.cpp
+  src/serialization/conversions.cpp
 )
 
 install(DIRECTORY include/${PROJECT_NAME}/

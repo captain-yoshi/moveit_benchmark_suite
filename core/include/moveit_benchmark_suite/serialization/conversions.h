@@ -33,51 +33,44 @@
  *********************************************************************/
 
 /* Author: Captain Yoshi
-   Desc: Token for handling namespaces
+   Desc: yaml serializer for moveit_benchmark_suite objects
 */
 
 #pragma once
 
-#include <string>
-#include <vector>
-#include <map>
+#include <c4/yml/node.hpp>
 
-#include <moveit_benchmark_suite/serialization/ryml.h>
+#include <moveit_benchmark_suite/dataset.h>
 
-namespace moveit_benchmark_suite {
-std::vector<std::string> splitStr(std::string s, std::string delimiter);
+namespace c4 {
+namespace yml {
 
-std::string replaceStr(std::string subject, const std::string& search, const std::string& replace);
+void write(c4::yml::NodeRef* n, moveit_benchmark_suite::QueryID const& rhs);
+bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::QueryID* rhs);
 
-///
-class Token
-{
-public:
-  Token() = default;
+void write(c4::yml::NodeRef* n, moveit_benchmark_suite::QueryCollection const& rhs);
+bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::QueryCollection* rhs);
 
-  Token(const std::string& ns, const std::string& value = "", const std::string& del = "/");
+void write(c4::yml::NodeRef* n, moveit_benchmark_suite::metadata::CPU const& rhs);
+bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::metadata::CPU* rhs);
 
-  void reset();
+void write(c4::yml::NodeRef* n, moveit_benchmark_suite::metadata::GPU const& rhs);
+bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::metadata::GPU* rhs);
 
-  const std::string& getValue() const;
-  const std::string& getDelimiter() const;
-  const std::string& getNamespace() const;
+void write(c4::yml::NodeRef* n, moveit_benchmark_suite::metadata::OS const& rhs);
+bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::metadata::OS* rhs);
 
-  const YAML::Node& getNode() const;
+void write(c4::yml::NodeRef* n, moveit_benchmark_suite::metadata::SW const& rhs);
+bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::metadata::SW* rhs);
 
-  bool hasValue() const;
-  bool isRelative() const;
-  bool isAbsolute() const;
+void write(c4::yml::NodeRef* n, moveit_benchmark_suite::DataContainer const& rhs);
+bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::DataContainer* rhs);
 
-private:
-  void createNode(std::size_t ctr, const std::vector<std::string>& keys, YAML::Node& n);
+void write(c4::yml::NodeRef* n, moveit_benchmark_suite::DataSet const& rhs);
+bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::DataSet* rhs);
 
-  std::string ns_;
-  std::string value_;
-  std::string del_;
+void write(c4::yml::NodeRef* n, moveit_benchmark_suite::Metric const& rhs);
+bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::Metric* rhs);
 
-  bool ns_rel_ = true;  // namespace is relative or absolute
-  YAML::Node node_;
-};
-
-}  // namespace moveit_benchmark_suite
+}  // namespace yml
+}  // namespace c4

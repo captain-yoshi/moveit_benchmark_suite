@@ -40,7 +40,7 @@
 
 #include <string>  // for std::string
 
-#include <moveit_serialization/yaml-cpp/yaml.h>  // for YAML::Node
+#include <moveit_benchmark_suite/serialization/ryml.h>
 
 #include <ros/node_handle.h>  // for ros::NodeHandle
 

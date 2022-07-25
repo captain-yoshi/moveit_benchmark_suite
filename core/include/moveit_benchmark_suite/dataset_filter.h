@@ -40,7 +40,7 @@
 
 #include <moveit_benchmark_suite/dataset.h>
 #include <moveit_benchmark_suite/token.h>  // DatasetFilter
-#include <moveit_benchmark_suite/serialization.h>
+#include <moveit_benchmark_suite/serialization/ryml.h>
 
 namespace moveit_benchmark_suite {
 enum class Predicate

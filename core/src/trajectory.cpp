@@ -9,7 +9,7 @@
 #include <moveit_benchmark_suite/scene.h>
 #include <moveit_benchmark_suite/trajectory.h>
 //#include <moveit_benchmark_suite_core/util.h>
-#include <moveit_serialization/yaml-cpp/conversion/trajectory_msgs.h>
+#include <moveit_benchmark_suite/serialization/ryml.h>
 
 using namespace moveit_benchmark_suite;
 
