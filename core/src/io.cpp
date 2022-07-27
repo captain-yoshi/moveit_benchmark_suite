@@ -495,31 +495,6 @@ double IO::getSeconds(std::chrono::high_resolution_clock::time_point start,
   return duration_seconds.count();
 }
 
-const std::pair<bool, ryml::Tree> IO::loadFileToYAML(const std::string& path)
-{
-  ryml::Tree tree;
-  const std::string full_path = resolvePath(path);
-
-  if (full_path.empty())
-    return std::make_pair(false, tree);
-
-  if (!isExtension(full_path, "yml") && !isExtension(full_path, "yaml"))
-    return std::make_pair(false, tree);
-
-  try
-  {
-    std::string buf = loadFileToString(full_path);
-
-    ryml::Tree tree = ryml::parse_in_arena(ryml::to_csubstr(full_path), ryml::to_csubstr(buf));
-    return std::make_pair(true, tree);
-  }
-  catch (moveit_serialization::yaml_error& e)
-  {
-    std::cout << e.what() << std::endl;
-    return std::make_pair(false, tree);
-  }
-}
-
 const bool IO::loadFileToYAML(const std::string& path, ryml::NodeRef& node, bool verbose)
 {
   const std::string full_path = resolvePath(path);

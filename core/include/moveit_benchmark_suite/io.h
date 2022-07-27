@@ -113,7 +113,6 @@ const std::string runCommand(const std::string& cmd);
  *  \param[in] path File to load.
  *  \return A pair, where the first is true on success false on failure, and second is the YAML node.
  */
-const std::pair<bool, ryml::Tree> loadFileToYAML(const std::string& path);
 const bool loadFileToYAML(const std::string& path, ryml::NodeRef& node, bool verbose = true);
 
 std::string getFilePath(const std::string& file);
