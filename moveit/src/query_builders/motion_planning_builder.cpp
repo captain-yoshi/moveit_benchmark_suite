@@ -65,10 +65,9 @@ void MotionPlanningBuilder::buildQueries(const std::string& filename, const std:
 
 {
   ryml::Tree tree;
-  if (!IO::loadFileToYAML(filename, tree, true))
-    return;
-
   ryml::NodeRef node = tree.rootref();
+  if (!IO::loadFileToYAML(filename, node))
+    return;
 
   if (!node.has_child("profiler_config"))
   {

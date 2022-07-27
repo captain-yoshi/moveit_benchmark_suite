@@ -60,7 +60,8 @@ void BenchmarkSuiteOutputter::dump(const DataSet& dataset, const std::string& pa
     return;
   }
 
-  ryml::NodeRef node;
+  ryml::Tree tree;
+  ryml::NodeRef node = tree.rootref();
 
   node |= ryml::SEQ;
   node.append_child() |= ryml::MAP;

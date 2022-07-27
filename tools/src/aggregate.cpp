@@ -137,16 +137,16 @@ std::vector<DataSetPtr> AggregateDataset::aggregate(const std::vector<Operation>
 bool AggregateDataset::buildParamsFromYAML(const std::string& filename, std::vector<Operation>& operations,
                                            std::vector<Filter>& filters)
 {
+  ryml::Tree tree;
+  ryml::NodeRef node = tree.rootref();
   std::string abs_file = IO::getAbsDataSetFile(filename);
 
-  const auto& yaml = IO::loadFileToYAML(abs_file);
-  if (not yaml.first)
+  bool success = IO::loadFileToYAML(abs_file, node);
+  if (not success)
   {
     ROS_ERROR("Failed to load YAML file `%s`.", abs_file.c_str());
     return false;
   }
-
-  const auto& node = yaml.second.rootref();
 
   if (!node.has_child("aggregate_config"))
     return false;

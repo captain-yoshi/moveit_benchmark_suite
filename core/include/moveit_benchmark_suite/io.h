@@ -114,7 +114,7 @@ const std::string runCommand(const std::string& cmd);
  *  \return A pair, where the first is true on success false on failure, and second is the YAML node.
  */
 const std::pair<bool, ryml::Tree> loadFileToYAML(const std::string& path);
-const bool loadFileToYAML(const std::string& path, ryml::Tree& tree, bool verbose = false);
+const bool loadFileToYAML(const std::string& path, ryml::NodeRef& node, bool verbose = true);
 
 std::string getFilePath(const std::string& file);
 std::string getFileName(const std::string& file);
@@ -264,11 +264,13 @@ bool messageToYAMLFile(T& msg, const std::string& file)
 template <typename T>
 bool YAMLFileToMessage(T& msg, const std::string& file)
 {
-  const auto& result = IO::loadFileToYAML(file);
-  if (result.first)
-    result.second.rootref() >> msg;
+  ryml::Tree tree;
+  ryml::NodeRef node = tree.rootref();
+  bool rc = IO::loadFileToYAML(file, node);
+  if (rc)
+    node >> msg;
 
-  return result.first;
+  return rc;
 }
 
 }  // namespace IO

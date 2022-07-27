@@ -45,14 +45,13 @@ void DatasetFilter::loadDataset(const ryml::NodeRef& node)
 void DatasetFilter::loadDataset(const std::string& filename)
 {
   ryml::Tree tree;
+  ryml::NodeRef node = tree.rootref();
 
-  if (!IO::loadFileToYAML(filename, tree))
+  if (!IO::loadFileToYAML(filename, node))
   {
     ROS_WARN("Failed to load Dataset from file: '%s'", filename.c_str());
     return;
   }
-
-  ryml::NodeRef node = tree.rootref();
 
   // A file may contain multiple datasets as a sequence
   for (ryml::NodeRef const& child : node.children())

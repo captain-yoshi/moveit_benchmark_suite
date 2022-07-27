@@ -520,7 +520,7 @@ const std::pair<bool, ryml::Tree> IO::loadFileToYAML(const std::string& path)
   }
 }
 
-const bool IO::loadFileToYAML(const std::string& path, ryml::Tree& tree, bool verbose)
+const bool IO::loadFileToYAML(const std::string& path, ryml::NodeRef& node, bool verbose)
 {
   const std::string full_path = resolvePath(path);
   if (full_path.empty())
@@ -541,7 +541,7 @@ const bool IO::loadFileToYAML(const std::string& path, ryml::Tree& tree, bool ve
   {
     std::string buf = loadFileToString(full_path);
 
-    tree = ryml::parse_in_arena(ryml::to_csubstr(full_path), ryml::to_csubstr(buf));
+    ryml::parse_in_arena(ryml::to_csubstr(full_path), ryml::to_csubstr(buf), node);
   }
   catch (moveit_serialization::yaml_error& e)
   {

@@ -75,10 +75,10 @@ bool getParamsFromConfig(const std::string& filename, std::string& group_name, s
                          geometry_msgs::Pose& pose, RobotPtr& robot)
 {
   ryml::Tree tree;
-  if (!IO::loadFileToYAML(filename, tree, true))
-    return false;
-
   ryml::NodeRef node = tree.rootref();
+
+  if (!IO::loadFileToYAML(filename, node))
+    return false;
 
   if (!node.has_child("ik_generator"))
   {

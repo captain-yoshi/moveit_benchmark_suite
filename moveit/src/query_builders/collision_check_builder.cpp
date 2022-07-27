@@ -53,10 +53,10 @@ using namespace moveit_benchmark_suite;
 void CollisionCheckBuilder::buildQueries(const std::string& filename)
 {
   ryml::Tree tree;
-  if (!IO::loadFileToYAML(filename, tree, true))
-    return;
-
   ryml::NodeRef node = tree.rootref();
+
+  if (!IO::loadFileToYAML(filename, node))
+    return;
 
   if (!node.has_child("profiler_config"))
   {
@@ -65,9 +65,8 @@ void CollisionCheckBuilder::buildQueries(const std::string& filename)
   }
 
   auto n_config = node["profiler_config"];
+  auto n_extend = tree.rootref();
 
-  ryml::Tree t;
-  auto n_extend = t.rootref();
   bool extend_resource = false;
   if (node.has_child("extend_resource_config"))
   {

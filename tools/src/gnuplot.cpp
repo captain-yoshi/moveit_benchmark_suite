@@ -588,16 +588,16 @@ bool GNUPlotDataset::initialize(const GNUPlotLayout& layout)
 
 bool GNUPlotDataset::initializeFromYAML(const std::string& file)
 {
+  ryml::Tree tree;
+  ryml::NodeRef node = tree.rootref();
   std::string abs_file = IO::getAbsDataSetFile(file);
 
-  const auto& yaml = IO::loadFileToYAML(abs_file);
-  if (not yaml.first)
+  bool success = IO::loadFileToYAML(abs_file, node);
+  if (not success)
   {
     ROS_ERROR("Failed to load YAML file `%s`.", abs_file.c_str());
     return false;
   }
-
-  const auto& node = yaml.second.rootref();
 
   // Check global options
   GNUPlotLayout layout;
