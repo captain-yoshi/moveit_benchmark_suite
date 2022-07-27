@@ -517,6 +517,9 @@ const bool IO::loadFileToYAML(const std::string& path, ryml::NodeRef& node, bool
     std::string buf = loadFileToString(full_path);
 
     ryml::parse_in_arena(ryml::to_csubstr(full_path), ryml::to_csubstr(buf), node);
+
+    // resolve yaml references
+    node.tree()->resolve();
   }
   catch (moveit_serialization::yaml_error& e)
   {
