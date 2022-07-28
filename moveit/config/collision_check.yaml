@@ -2,7 +2,7 @@
 # Collision Check (PlanningScene) #
 ###################################
 
-# Benchmark configuration (independant of profilers)
+# Benchmark configuration (independent of profilers)
 benchmark_config:
   parameters:
     runs: 10000                     # Number of trials for each query

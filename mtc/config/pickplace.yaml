@@ -2,7 +2,7 @@
 # Pick and Place (MTC) #
 ########################
 
-# Describes benchmark parameters (independant of profilers)
+# Describes benchmark parameters (independent of profilers)
 benchmark_config:
   parameters:
     runs: 5                         # Number of trials for each query
