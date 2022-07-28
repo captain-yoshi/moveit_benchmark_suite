@@ -62,14 +62,16 @@ public:
 
   void operator()(const std::vector<float>& metrics) const
   {
-    node |= ryml::SEQ;
+    node |= c4::yml::SEQ;
+    node |= c4::yml::_WIP_STYLE_FLOW_SL;
     for (const auto& metric : metrics)
       node.append_child() << freal(static_cast<float>(metric));
   }
 
   void operator()(const std::vector<double>& metrics) const
   {
-    node |= ryml::SEQ;
+    node |= c4::yml::SEQ;
+    node |= c4::yml::_WIP_STYLE_FLOW_SL;
     for (const auto& metric : metrics)
       node.append_child() << freal(static_cast<double>(metric));
   }
@@ -248,7 +250,7 @@ void write(c4::yml::NodeRef* n, moveit_benchmark_suite::DataContainer const& rhs
   auto n_metrics = n->last_child();
 
   for (const auto& pair : rhs.metrics)
-    n_metrics.append_child() << key(pair.first) << pair.second;
+    n_metrics.append_child() << key(pair.first) << pair.second |= c4::yml::_WIP_STYLE_FLOW_SL;
 }
 
 bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::DataContainer* rhs)
