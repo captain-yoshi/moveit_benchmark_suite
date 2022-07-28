@@ -213,7 +213,7 @@ The config is identical to the PlanningPipeline config but the ``robot`` and ``p
 .. _Shadow Robot Company: https://github.com/shadow-robot/sr_benchmarking/blob/kinetic-devel/docs/user_guide/3_benchmark_description.md#benchmark-metrics
 .. _motion_planning_pp.launch: /moveit/benchmarks/motion_planning_pp.launch
 .. _motion_planning_mgi.launch: /moveit/benchmarks/motion_planning_mgi.launch
-.. _benchmark: /.doc/README.md#benchmark
+.. _benchmark: /doc/README.md#benchmark
 .. _motion_planning_pp.yaml: /moveit/config/motion_planning_pp.yaml
 .. _motion_planning_mgi.yaml: /moveit/config/motion_planning_mgi.yaml
 
