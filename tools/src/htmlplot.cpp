@@ -1,4 +1,4 @@
-/* Author: Zachary Kingston */
+/* Author: Captain Yoshi */
 
 #include <moveit_benchmark_suite/tools/htmlplot.h>
 
