@@ -5,7 +5,7 @@ MoveIt Benchmark Suite
 
 The benchmark suite is primarily a tool for benchmarking different components of `MoveIt`_. It includes a profiler interface for collecting metrics, a dataset for storing benchmarked data as well as tools to aggregate and plot statistics from datasets.
 
-.. image:: .doc/images/spiderplot.svg
+.. image:: doc/images/spiderplot.svg
    :width: 350px
    :align: right
 
@@ -59,7 +59,7 @@ Attribution
 A lot of concepts and code were taken from the `robowflex_library`_ created by Zachary Kingston.
 
 .. Declaration of hyperlinks
-.. _documentation: .doc/README.md
+.. _documentation: doc/README.md
 .. _urdf_to_scene: https://github.com/captain-yoshi/urdf_to_scene
 .. _moveit_serialization: https://github.com/captain-yoshi/moveit_serialization
 .. _robowflex_library: https://github.com/KavrakiLab/robowflex

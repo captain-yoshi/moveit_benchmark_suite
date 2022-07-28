@@ -65,9 +65,9 @@ Each of the profilers have their own [configuration](./profilers/README.md).
 
 The benchmark goal is to build a [dataset](#dataset) from multiple runs of queries, built for a specific [profiler](#profiler). Multiple callbacks can be added to manipulate a dataset. By default, [benchmark nodes](../moveit/src) uses a pre-defined set of [callbacks](../moveit/include/moveit_benchmark_suite/benchmark_callback_loader.h#L50) to add version control metadata, create a dataset log and to aggregate/plot statistics. These callbacks will be triggered based on the benchmark configuration (some callbacks are always triggered).
 
-The benchmark config is independant from the profiler config.
+The benchmark config is independent from the profiler config.
 ``` yaml
-# The benchmark config is independant from the profiler config
+# The benchmark config is independent from the profiler config
 benchmark_config:
   parameters:
     runs: 10000                     # Number of trials for each query

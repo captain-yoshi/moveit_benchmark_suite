@@ -113,7 +113,8 @@ const std::string IO::resolvePackage(const std::string& path)
     const std::string package = ros::package::getPath(package_name);
     if (package.empty())
     {
-      ROS_WARN("Package `%s` does not exist.", package_name.c_str());
+      // rospack above already complains on the command line
+      //ROS_WARN("Package `%s` does not exist.", package_name.c_str());
       return "";
     }
 
@@ -373,10 +374,18 @@ metadata::SW IO::getROSPkgMetadata(const std::string& name)
   std::string pathname = resolvePackage("package://" + name);
 
   sw.name = name;
-  sw.version = IO::runCommand(log::format("(rosversion %1% | tr -d '\n')", name));
-  sw.git_branch = IO::runCommand(log::format("(cd %1% && git rev-parse --abbrev-ref HEAD | tr -d '\n')", pathname));
-  sw.git_commit = IO::runCommand(log::format("(cd %1% && git rev-parse HEAD | tr -d '\n')", pathname));
-  sw.pkg_manager = "ROS Package";
+
+  if(pathname.empty())
+  {
+    sw.version = "unknown";
+  }
+  else
+  {
+    sw.version = IO::runCommand(log::format("(rosversion %1% | tr -d '\n')", name));
+    sw.git_branch = IO::runCommand(log::format("(cd %1% && git rev-parse --abbrev-ref HEAD | tr -d '\n')", pathname));
+    sw.git_commit = IO::runCommand(log::format("(cd %1% && git rev-parse HEAD | tr -d '\n')", pathname));
+    sw.pkg_manager = "ROS Package";
+  }
 
   return sw;
 }
@@ -441,7 +450,7 @@ metadata::SW IO::getDebianPkgMetadata(const std::string& name)
 
   sw.name = name;
   sw.version =
-      IO::runCommand(log::format("dpkg -s %1% | grep '^Version:' | sed -n 's/.*Version: //p' | tr -d '\n'", name));
+      IO::runCommand(log::format("dpkg -s %1% 2>&- | grep '^Version:' | sed -n 's/.*Version: //p' | tr -d '\n'", name));
   sw.pkg_manager = "DPKG";
 
   return sw;

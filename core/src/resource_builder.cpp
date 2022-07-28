@@ -411,7 +411,7 @@ bool buildClutteredWorld(const planning_scene::PlanningScenePtr& planning_scene,
 
   planning_scene::PlanningScene test_scene(planning_scene->getRobotModel());
 
-  ROS_INFO("Building cluttred scene...");
+  ROS_INFO("Building cluttered scene...");
 
   for (const auto& helper : helpers)
   {

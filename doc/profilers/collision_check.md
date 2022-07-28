@@ -13,7 +13,7 @@ The collision check benchmark runs against the PlanningScene `checkCollision` me
 **Depends on the [CollisionRequest](http://docs.ros.org/en/noetic/api/moveit_core/html/cpp/structcollision__detection_1_1CollisionRequest.html) Struct flags.*
 
 ### Launch file
-Launch the [collision_check.launch](/moveit/benchmarks/collision_check.launch) benchmark node. Check the [benchmark](/.doc/README.md#benchmark) section for a list of available parameters.
+Launch the [collision_check.launch](/moveit/benchmarks/collision_check.launch) benchmark node. Check the [benchmark](/doc/README.md#benchmark) section for a list of available parameters.
 ```Bash
 $ roslaunch moveit_benchmark_suite collision_check.launch
 ```
