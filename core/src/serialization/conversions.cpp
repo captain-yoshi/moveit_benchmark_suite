@@ -257,7 +257,7 @@ bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::DataContainer* rhs)
 {
   n["query"] >> rhs->query_id;
 
-  for (c4::yml::NodeRef const& child : n.children())
+  for (c4::yml::NodeRef const& child : n["metrics"].children())
   {
     std::string key;
     std::vector<moveit_benchmark_suite::Metric> metric_seq;
@@ -318,7 +318,7 @@ bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::DataSet* rhs)
   n["queries"] >> rhs->query_collection;
 
   std::size_t ctr = 0;
-  for (c4::yml::NodeRef const& child : n.children())
+  for (c4::yml::NodeRef const& child : n["data"].children())
   {
     moveit_benchmark_suite::DataContainer data;
     child >> data;
@@ -341,7 +341,7 @@ bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::Metric* rhs)
   if (!metric)
     return false;
 
-  rhs = metric.get();
+  *rhs = *metric;
 
   return true;
 }
