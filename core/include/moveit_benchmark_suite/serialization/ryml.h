@@ -47,7 +47,6 @@
 // Please take note of the following pitfall when using serialization
 // functions: you have to include the header with the serialization
 // before any other headers that use functions from it.
+#include <moveit_serialization/ryml/error_handler.h>  // includes ryml.hpp in the header
 
 #include <ryml.hpp>
-
-#include <moveit_serialization/ryml/error_handler.h>  // includes ryml.hpp in the header
