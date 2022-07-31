@@ -1,6 +1,8 @@
 #include <moveit_benchmark_suite/dataset_filter.h>
 #include <moveit_benchmark_suite/io.h>
 
+#include <moveit_benchmark_suite/serialization/ryml.h>
+
 using namespace moveit_benchmark_suite;
 
 Predicate moveit_benchmark_suite::stringToPredicate(const std::string& str)
@@ -25,39 +27,63 @@ Predicate moveit_benchmark_suite::stringToPredicate(const std::string& str)
 /// DatasetFilter
 ///
 
-DatasetFilter::DatasetFilter(){};
+DatasetFilter::DatasetFilter()
+{
+  // tree_.reserve(100000);
+  // tree_.reserve_arena(36000000);
+
+  auto root = tree_.rootref();
+
+  // tree is empty
+  if (root.num_children() == 0)
+    root |= ryml::SEQ;
+};
 
 DatasetFilter::~DatasetFilter(){};
 
-void DatasetFilter::loadDataset(const ryml::NodeRef& node)
-{
-  // Dataset root Node
-  std::string uuid;
-  node["uuid"] >> uuid;
-  dataset_map_.insert({ uuid, *(node.tree()) });
+// void DatasetFilter::loadDataset(const ryml::NodeRef& node)
+// {
+//   // Dataset root Node
+//   std::string uuid;
+//   node["uuid"] >> uuid;
+//   dataset_map_.insert({ uuid, std::move(*(node.tree())) });
 
-  // Warn if duplicate keys
-  std::size_t duplicate_keys = dataset_map_.count(uuid);
-  if (duplicate_keys > 1)
-    ROS_WARN("Loaded %s datasets with duplicate uuid '%s'", std::to_string(duplicate_keys).c_str(), uuid.c_str());
-}
+//   // Warn if duplicate keys
+//   std::size_t duplicate_keys = dataset_map_.count(uuid);
+//   if (duplicate_keys > 1)
+//     ROS_WARN("Loaded %s datasets with duplicate uuid '%s'", std::to_string(duplicate_keys).c_str(), uuid.c_str());
+// }
 
 void DatasetFilter::loadDataset(const std::string& filename)
 {
-  ryml::Tree tree;
-  ryml::NodeRef node = tree.rootref();
+  auto root = tree_.rootref();
 
-  if (!IO::loadFileToYAML(filename, node))
+  // append file to tree
+  if (!IO::loadFileToYAML(filename, root))
   {
     ROS_WARN("Failed to load Dataset from file: '%s'", filename.c_str());
     return;
   }
 
   // A file may contain multiple datasets as a sequence
-  for (ryml::NodeRef const& child : node.children())
+  std::size_t num_file = 0;
+  for (ryml::NodeRef const& seq : root.children())
   {
-    if (child.has_child("dataset") && child.find_child("dataset").has_child("uuid"))
-      loadDataset(child.find_child("dataset"));
+    num_file++;
+
+    // partial validation of dataset
+    if (not(seq.has_child("dataset") && seq["dataset"].has_child("uuid")))
+    {
+      ROS_WARN("Dataset malformed in file ''%s' for sequence #%zu", filename.c_str(), num_file);
+      continue;
+    }
+
+    auto dataset = seq["dataset"];
+
+    std::string uuid;
+    dataset["uuid"] >> uuid;
+
+    dataset_map_.insert({ uuid, dataset });
   }
 }
 
@@ -69,11 +95,28 @@ void DatasetFilter::loadDatasets(const std::vector<std::string>& filenames)
 
 void DatasetFilter::loadDataset(const DataSet& dataset)
 {
-  ryml::Tree t;
-  auto node = t.rootref();
-  node << dataset;
+  auto root = tree_.rootref();
 
-  loadDataset(node);
+  // serialize the dataset
+  auto child = root.append_child({ ryml::MAP });
+  std::cout << "before encode" << std::endl;
+  child["dataset"] << dataset;
+  std::cout << "after encode" << std::endl;
+
+  auto n_dataset = child["dataset"];
+
+  // partial validation of dataset
+  if (!n_dataset.has_child("uuid"))
+  {
+    ROS_WARN("Dataset malformed with uuid '%s'", dataset.uuid.c_str());
+    return;
+  }
+
+  // add node to map
+  std::string uuid;
+  n_dataset["uuid"] >> uuid;
+
+  dataset_map_.insert({ uuid, n_dataset });
 }
 
 void DatasetFilter::loadDatasets(const std::vector<DataSet>& datasets)
@@ -93,16 +136,17 @@ const DatasetFilter::DatasetMap& DatasetFilter::getFilteredDataset(const Contain
 
 void DatasetFilter::filter(const std::string& id, const std::vector<Filter>& filters)
 {
+  // std::cout << dataset_map_.find("b4a50ea7_569c_423c_b19f_0fb9a6b4b153")->second.rootref() << std::endl;
+  // std::cout << dataset_map_.find("c5a0c92b_e626_4679_b06a_ffc0e2229fba")->second.rootref() << std::endl;
+
   // Add datasets if no container id found
   {
     auto it = container_.find(id);
     if (it == container_.end())
       for (const auto& dataset : dataset_map_)
       {
-        ryml::Tree clone;
-        clone.merge_with(&dataset.second);
-
-        container_[id].insert({ dataset.first, clone });
+        // TODO clone dataset second
+        container_[id].insert({ dataset.first, dataset.second });
       }
   }
 
@@ -143,8 +187,30 @@ void DatasetFilter::filter(const std::string& id, const std::vector<Filter>& fil
     }
 
     // Parse query sequence which affects relative token
+    auto root = it_dataset->second;
+    // if (root.has_child("name"))
+    // {
+    //   std::cout << root << std::endl;
+    // }
+
+    // if (!root.has_child("dataset"))
+    // {
+    //   std::cout << root << std::endl;
+    //   ROS_WARN("Malformed dataset");
+    //   return;
+    // }
+
+    if (!root.has_child("data"))
+    {
+      std::cout << root << std::endl;
+      ROS_WARN("Malformed dataset");
+      return;
+    }
+
     std::set<std::size_t> query_indexes;
-    auto queries = it_dataset->second["data"];
+    auto queries = root["data"];
+
+    // std::cout << it_dataset->second.rootref() << std::endl;
 
     // Loop through each queries
     for (std::size_t i = 0; i < queries.num_children(); ++i)
@@ -171,7 +237,7 @@ void DatasetFilter::filter(const std::string& id, const std::vector<Filter>& fil
       }
 
       if (!rc)
-        query_indexes.insert(i + 1);
+        query_indexes.insert(i);
     }
 
     // Remove filtered queries
@@ -218,115 +284,115 @@ bool computePredicate(const ryml::NodeRef& source, const ryml::NodeRef& target, 
 
 bool DatasetFilter::filterMetadata(const ryml::NodeRef& node, const Token& token, Predicate predicate)
 {
-  // ryml::Tree t;
-  // ryml::NodeRef dataset_value = t.rootref();
+  ryml::Tree t;
+  ryml::NodeRef dataset_value = t.rootref();
 
-  // ryml::Tree t1;
-  // ryml::NodeRef token_value = t1.rootref();
-  // token_value << token.getValue();
+  ryml::Tree t1;
+  ryml::NodeRef token_value = t1.rootref();
+  token_value << token.getValue();
 
-  // // Compare values between token and dataset
-  // if (token.hasValue())
-  // {
-  //   // Token MUST be a subset of the dataset
-  //   if (!ryml::getValFromKeyChain(token.getNode(), node, dataset_value))
-  //   {
-  //     ROS_WARN("Filter skipped, namespace '%s' is not a subset of dataset", token.getNamespace().c_str());
-  //     return true;
-  //   }
+  // Compare values between token and dataset
+  if (token.hasValue())
+  {
+    // Token MUST be a subset of the dataset
+    if (!ryml::getNodeFromKeyChainVal(token.getNode(), node, dataset_value))
+    {
+      ROS_WARN("Filter skipped, namespace '%s' is not a subset of dataset", token.getNamespace().c_str());
+      return true;
+    }
 
-  //   if (dataset_value.is_seq())
-  //   {
-  //     if (!token_value.is_map())
-  //     {
-  //       ROS_WARN_STREAM("Filter skipped, token value must be a map when targeting a sequence '" << token_value <<
-  //       "'"); return true;
-  //     }
+    if (dataset_value.is_seq())
+    {
+      if (!token_value.is_map())
+      {
+        ROS_WARN_STREAM("Filter skipped, token value must be a map when targeting a sequence '" << token_value << "'");
+        return true;
+      }
 
-  //     for (ryml::NodeRef const& child : dataset_value.children())
-  //     // for (YAML::const_iterator it = dataset_value.begin(); it != dataset_value.end(); ++it)
-  //     {
-  //       bool rc = true;
-  //       if (token_value.num_children() != 0)
-  //       {
-  //         // Loop through map except the last element and check if is a subset
-  //         // auto first = token_value.begin();
+      for (ryml::NodeRef const& child : dataset_value.children())
+      // for (YAML::const_iterator it = dataset_value.begin(); it != dataset_value.end(); ++it)
+      {
+        // bool rc = true;
+        // if (token_value.num_children() != 0)
+        // {
+        //   // Loop through map except the last element and check if is a subset
+        //   // auto first = token_value.begin();
 
-  //         std::size_t i = 0;
-  //         for (ryml::NodeRef const& token_child : token_value.children())
-  //         // for (std::size_t i = 0; i < token_value.num_children() - 1; ++i)
-  //         {
-  //           // auto token_keyval = (*first);
+        //   std::size_t i = 0;
+        //   for (ryml::NodeRef const& token_child : token_value.children())
+        //   // for (std::size_t i = 0; i < token_value.num_children() - 1; ++i)
+        //   {
+        //     // auto token_keyval = (*first);
 
-  //           // HACK cannot pass the token map iterator directly
-  //           // Recreate key/val node
-  //           ryml::Tree t_temp;
-  //           ryml::NodeRef temp = t_temp.rootref();
+        //     // HACK cannot pass the token map iterator directly
+        //     // Recreate key/val node
+        //     ryml::Tree t_temp;
+        //     ryml::NodeRef temp = t_temp.rootref();
 
-  //           temp |= ryml::MAP;
+        //     temp |= ryml::MAP;
 
-  //           std::string key;
-  //           // c4::yml::to_chars(token_keyval.key(), &key);
+        //     std::string key;
+        //     c4::from_chars(token_child.key(), &key);
 
-  //           temp.append_child() << ryml::key(ryml::to_csubstr(token_child.key())) << token_child.val();
+        //     temp.append_child() << ryml::key(key) << token_child.val();
 
-  //           temp[first->first] = first->second;
+        //     temp[first->first] = first->second;
 
-  //           rc &= YAML::isSubset(temp, *it);
-  //           ++first;
-  //         }
+        //     rc &= YAML::isSubset(temp, *it);
+        //     ++first;
+        //   }
 
-  //         // Last map element will be checked against predicate
-  //         ryml::NodeRef temp;
-  //         temp[first->first] = first->second;
+        //   // Last map element will be checked against predicate
+        //   ryml::NodeRef temp;
+        //   temp[first->first] = first->second;
 
-  //         if (!rc)
-  //           continue;
+        //   if (!rc)
+        //     continue;
 
-  //         // Get values
-  //         ryml::NodeRef final_dataset_value;
-  //         ryml::NodeRef final_token_value;
-  //         if (!YAML::getSubsetScalar(temp, *it, final_dataset_value))
-  //           continue;
-  //         if (!YAML::getSubsetScalar(temp, temp, final_token_value))
-  //           continue;
+        //   // Get values
+        //   ryml::NodeRef final_dataset_value;
+        //   ryml::NodeRef final_token_value;
+        //   if (!YAML::getSubsetScalar(temp, *it, final_dataset_value))
+        //     continue;
+        //   if (!YAML::getSubsetScalar(temp, temp, final_token_value))
+        //     continue;
 
-  //         rc = computePredicate(final_token_value, final_dataset_value, predicate);
+        //   rc = computePredicate(final_token_value, final_dataset_value, predicate);
 
-  //         if (rc)
-  //           return true;
-  //       }
-  //     }
-  //     return false;
-  //   }
-  //   // Token value is a scalar
-  //   else
-  //   {
-  //     return computePredicate(token_value, dataset_value, predicate);
-  //   }
-  // }
-  // // Compare keys between token and dataset
-  // else
-  // {
-  //   switch (predicate)
-  //   {
-  //     // It only makes sense to filter for equality and non-equality
-  //     case Predicate::EQ:
-  //       return YAML::isSubset(token.getNode(), node, false);
-  //     case Predicate::NEQ:
-  //       return !YAML::isSubset(token.getNode(), node, false);
-  //     case Predicate::GT:
-  //     case Predicate::GE:
-  //     case Predicate::LT:
-  //     case Predicate::LE:
-  //       ROS_WARN("Filter skipped, token without value only supports predicates EQ and NEQ");
-  //       return true;
-  //     case Predicate::INVALID:
-  //       break;
-  //   }
-  // }
+        //   if (rc)
+        //     return true;
+        // }
+      }
+      return false;
+    }
+    // Token value is a scalar
+    else
+    {
+      return computePredicate(token_value, dataset_value, predicate);
+    }
+  }
+  // Compare keys between token and dataset
+  else
+  {
+    switch (predicate)
+    {
+      // It only makes sense to filter for equality and non-equality
+      case Predicate::EQ:
+        return token.getNode().tree()->has_all(node.tree());
+      case Predicate::NEQ:
+        return !token.getNode().tree()->has_all(node.tree());
+      case Predicate::GT:
+      case Predicate::GE:
+      case Predicate::LT:
+      case Predicate::LE:
+        ROS_WARN("Filter skipped, token without value only supports predicates EQ and NEQ");
+        return true;
+      case Predicate::INVALID:
+        break;
+    }
+  }
 
-  // ROS_WARN("Filter skipped, invalid predicate");
+  ROS_WARN("Filter skipped, invalid predicate");
   return true;
 }
 
