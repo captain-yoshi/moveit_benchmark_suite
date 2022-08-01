@@ -781,7 +781,7 @@ std::string GNUPlotDataset::combineTokenNodeValue(const Token& token, const ryml
   else
     bool rc = c4::yml::getNodeFromKeyChainVal(token.getNode(), node, scalar);
 
-  if (scalar.type() == ryml::VAL || scalar.type() == ryml::KEYVAL)
+  if (scalar.is_val() || scalar.is_keyval())
   {
     std::string val;
     ryml::from_chars(scalar.val(), &val);
