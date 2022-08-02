@@ -495,40 +495,59 @@ double IO::getSeconds(std::chrono::high_resolution_clock::time_point start,
   return duration_seconds.count();
 }
 
-const bool IO::loadFileToYAML(const std::string& path, ryml::NodeRef& node, bool verbose)
+namespace {
+
+ryml::substr loadFileToString(const std::string& path, ryml::Tree& tree)
 {
+  std::ifstream ifs(path.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
+
+  std::ifstream::pos_type size = ifs.tellg();
+  ryml::substr bytes = tree.alloc_arena(size);
+
+  ifs.seekg(0, std::ios::beg);
+  ifs.read(bytes.data(), bytes.size());
+
+  return bytes;
+}
+
+}  // namespace
+
+ryml::substr IO::loadFileToYAML(const std::string& path, ryml::NodeRef& node)
+{
+  ryml::substr substr;
   const std::string full_path = resolvePath(path);
   if (full_path.empty())
   {
-    if (verbose)
-      ROS_ERROR("Failed to resolve file path `%s`.", path.c_str());
-    return false;
+    ROS_ERROR("Failed to resolve file path `%s`.", path.c_str());
+    return substr;
   }
 
   if (!isExtension(full_path, "yml") && !isExtension(full_path, "yaml"))
   {
-    if (verbose)
-      ROS_ERROR("YAML wrong extension for path `%s`.", full_path.c_str());
-    return false;
+    ROS_ERROR("YAML wrong extension for path `%s`.", full_path.c_str());
+    return substr;
   }
 
   try
   {
-    std::string buf = loadFileToString(full_path);
+    std::cout << full_path << std::endl;
+    substr = ::loadFileToString(full_path, *node.tree());
 
-    ryml::parse_in_arena(ryml::to_csubstr(full_path), ryml::to_csubstr(buf), node);
+    std::cout << "crounching" << std::endl;
+    ryml::parse_in_place(ryml::to_csubstr(full_path), substr, node);
+    std::cout << "yolo" << std::endl;
 
     // resolve yaml references
     node.tree()->resolve();
+    std::cout << "test" << std::endl;
   }
   catch (moveit_serialization::yaml_error& e)
   {
-    if (verbose)
-      std::cout << e.what() << std::endl;
+    std::cout << e.what() << std::endl;
 
-    return false;
+    return substr;
   }
-  return true;
+  return substr;
 }
 
 bool IO::validateNodeKeys(const ryml::NodeRef& node, const std::vector<std::string>& keys)
