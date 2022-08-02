@@ -796,23 +796,23 @@ std::string GNUPlotDataset::combineTokenNodeValue(const Token& token, const ryml
 
 void GNUPlotDataset::plot(const std::vector<std::string>& dataset_files)
 {
-  dataset_.loadDatasets(dataset_files);
-  plot(layout_);
+  auto id = dataset_.loadDatasets(dataset_files);
+  plot(layout_, id);
 }
 
 void GNUPlotDataset::plot(const std::vector<DataSet>& datasets)
 {
-  dataset_.loadDatasets(datasets);
-  plot(layout_);
+  auto id = dataset_.loadDatasets(datasets);
+  plot(layout_, id);
 }
 
 void GNUPlotDataset::plot(const DataSet& dataset)
 {
-  dataset_.loadDataset(dataset);
-  plot(layout_);
+  auto id = dataset_.loadDataset(dataset);
+  plot(layout_, id);
 }
 
-void GNUPlotDataset::plot(const GNUPlotLayout& layout)
+void GNUPlotDataset::plot(const GNUPlotLayout& layout, std::size_t id)
 {
   if (single_instance_)
   {
@@ -821,21 +821,16 @@ void GNUPlotDataset::plot(const GNUPlotLayout& layout)
   }
 
   // Plot filtered datasets
-  std::size_t i = 0;
   for (const auto& mp_layout : layout.mplots)
   {
-    std::string id = std::to_string(i);
+    ryml::Tree tree;
+    auto ds_mmap = dataset_.filter(id, tree, mp_layout.filters);
 
-    dataset_.filter(id, mp_layout.filters);
-    const auto& dataset_map = dataset_.getFilteredDataset(id);
-
-    plot(mp_layout, dataset_map);
-
-    ++i;
+    plot(mp_layout, ds_mmap);
   }
 }
 
-void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::DatasetMap& dataset_map)
+void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::DatasetMultiMap& dataset_map)
 {
   const std::string TAG_SPLIT = " : ";
   const std::string TAG_LABEL_END = "\\n";

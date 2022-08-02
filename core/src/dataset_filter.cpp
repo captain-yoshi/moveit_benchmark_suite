@@ -23,85 +23,44 @@ Predicate moveit_benchmark_suite::stringToPredicate(const std::string& str)
   return Predicate::INVALID;
 }
 
-///
-/// DatasetFilter
-///
-
-DatasetFilter::DatasetFilter()
+namespace {
+ryml::substr loadDataset(const std::string& filename, ryml::NodeRef& root, DatasetFilter::DatasetMultiMap& ds_mmap)
 {
-  // tree_.reserve(100000);
-  // tree_.reserve_arena(36000000);
+  // get start index for future children additions
+  std::size_t child_offset = root.num_children();
 
-  auto root = tree_.rootref();
+  auto substr = IO::loadFileToYAML(filename, root);
 
-  // tree is empty
-  if (root.num_children() == 0)
-    root |= ryml::SEQ;
-};
-
-DatasetFilter::~DatasetFilter(){};
-
-// void DatasetFilter::loadDataset(const ryml::NodeRef& node)
-// {
-//   // Dataset root Node
-//   std::string uuid;
-//   node["uuid"] >> uuid;
-//   dataset_map_.insert({ uuid, std::move(*(node.tree())) });
-
-//   // Warn if duplicate keys
-//   std::size_t duplicate_keys = dataset_map_.count(uuid);
-//   if (duplicate_keys > 1)
-//     ROS_WARN("Loaded %s datasets with duplicate uuid '%s'", std::to_string(duplicate_keys).c_str(), uuid.c_str());
-// }
-
-void DatasetFilter::loadDataset(const std::string& filename)
-{
-  auto root = tree_.rootref();
-
-  // append file to tree
-  if (!IO::loadFileToYAML(filename, root))
-  {
-    ROS_WARN("Failed to load Dataset from file: '%s'", filename.c_str());
-    return;
-  }
-
-  // A file may contain multiple datasets as a sequence
+  // loop only through newest childrens
   std::size_t num_file = 0;
-  for (ryml::NodeRef const& seq : root.children())
+
+  for (std::size_t i = child_offset; i < root.num_children(); ++i)
   {
     num_file++;
 
-    // partial validation of dataset
-    if (not(seq.has_child("dataset") && seq["dataset"].has_child("uuid")))
+    // partial validation of nodes
+    if (not(root[i].has_child("dataset") && root[i]["dataset"].has_child("uuid")))
     {
       ROS_WARN("Dataset malformed in file ''%s' for sequence #%zu", filename.c_str(), num_file);
       continue;
     }
 
-    auto dataset = seq["dataset"];
+    auto dataset = root[i]["dataset"];
 
     std::string uuid;
     dataset["uuid"] >> uuid;
 
-    dataset_map_.insert({ uuid, dataset });
+    ds_mmap.emplace(uuid, dataset);
   }
+
+  return substr;
 }
 
-void DatasetFilter::loadDatasets(const std::vector<std::string>& filenames)
+void loadDataset(const DataSet& dataset, ryml::NodeRef& root, DatasetFilter::DatasetMultiMap& ds_mmap)
 {
-  for (const auto& filename : filenames)
-    loadDataset(filename);
-}
-
-void DatasetFilter::loadDataset(const DataSet& dataset)
-{
-  auto root = tree_.rootref();
-
   // serialize the dataset
   auto child = root.append_child({ ryml::MAP });
-  std::cout << "before encode" << std::endl;
   child["dataset"] << dataset;
-  std::cout << "after encode" << std::endl;
 
   auto n_dataset = child["dataset"];
 
@@ -116,52 +75,123 @@ void DatasetFilter::loadDataset(const DataSet& dataset)
   std::string uuid;
   n_dataset["uuid"] >> uuid;
 
-  dataset_map_.insert({ uuid, n_dataset });
+  ds_mmap.emplace(uuid, n_dataset);
 }
 
-void DatasetFilter::loadDatasets(const std::vector<DataSet>& datasets)
+}  // namespace
+
+///
+/// DatasetFilter
+///
+
+DatasetFilter::DatasetFilter(){};
+
+DatasetFilter::~DatasetFilter(){};
+
+std::size_t DatasetFilter::loadDataset(const std::string& filename)
 {
+  std::size_t id = tree_list_.size();
+
+  ryml::Tree tree;
+  auto root = tree.rootref();
+  root |= ryml::SEQ;
+  DatasetMultiMap ds_mmap;
+
+  auto substr = ::loadDataset(filename, root, ds_mmap);
+
+  // store into containers: substr, tree and dataset mmap
+  substr_2dlist_.emplace_back(std::vector<ryml::substr>{ std::move(substr) });
+  tree_list_.emplace_back(std::move(tree));
+  dataset_mmap_list_.emplace_back(std::move(ds_mmap));
+
+  return id;
+}
+
+std::size_t DatasetFilter::loadDatasets(const std::vector<std::string>& filenames)
+{
+  std::size_t id = tree_list_.size();
+
+  ryml::Tree tree;
+  auto root = tree.rootref();
+  root |= ryml::SEQ;
+  DatasetMultiMap ds_mmap;
+  std::vector<ryml::substr> substrings;
+
+  for (const auto& filename : filenames)
+  {
+    auto substr = ::loadDataset(filename, root, ds_mmap);
+    substrings.emplace_back(std::move(substr));
+  }
+
+  // store into containers: substr, tree and dataset mmap
+  substr_2dlist_.emplace_back(std::move(substrings));
+  tree_list_.emplace_back(std::move(tree));
+  dataset_mmap_list_.emplace_back(std::move(ds_mmap));
+
+  return id;
+}
+
+std::size_t DatasetFilter::loadDataset(const DataSet& dataset)
+{
+  std::size_t id = tree_list_.size();
+
+  ryml::Tree tree;
+  auto root = tree.rootref();
+  DatasetMultiMap ds_mmap;
+
+  ::loadDataset(dataset, root, ds_mmap);
+
+  // store into containers: substr, tree and dataset mmap
+  substr_2dlist_.emplace_back(std::vector<ryml::substr>{ ryml::substr() });
+  tree_list_.emplace_back(std::move(tree));
+  dataset_mmap_list_.emplace_back(std::move(ds_mmap));
+
+  return id;
+}
+
+std::size_t DatasetFilter::loadDatasets(const std::vector<DataSet>& datasets)
+{
+  std::size_t id = tree_list_.size();
+
+  ryml::Tree tree;
+  auto root = tree.rootref();
+  DatasetMultiMap ds_mmap;
+
   for (const auto& dataset : datasets)
-    loadDataset(dataset);
-}
-
-const DatasetFilter::DatasetMap& DatasetFilter::getFilteredDataset(const ContainerID& id) const
-{
-  auto it = container_.find(id);
-  if (it != container_.end())
-    return it->second;
-  else
-    return empty_dataset_map_;
-}
-
-void DatasetFilter::filter(const std::string& id, const std::vector<Filter>& filters)
-{
-  // std::cout << dataset_map_.find("b4a50ea7_569c_423c_b19f_0fb9a6b4b153")->second.rootref() << std::endl;
-  // std::cout << dataset_map_.find("c5a0c92b_e626_4679_b06a_ffc0e2229fba")->second.rootref() << std::endl;
-
-  // Add datasets if no container id found
   {
-    auto it = container_.find(id);
-    if (it == container_.end())
-      for (const auto& dataset : dataset_map_)
-      {
-        // TODO clone dataset second
-        container_[id].insert({ dataset.first, dataset.second });
-      }
+    ::loadDataset(dataset, root, ds_mmap);
   }
 
-  // Load dataset from container id
-  auto it = container_.find(id);
-  if (it == container_.end())
+  // store into containers: substr, tree and dataset mmap
+  substr_2dlist_.emplace_back(std::vector<ryml::substr>{ ryml::substr() });
+  tree_list_.emplace_back(std::move(tree));
+  dataset_mmap_list_.emplace_back(std::move(ds_mmap));
+
+  return id;
+}
+
+DatasetFilter::DatasetMultiMap DatasetFilter::filter(std::size_t id, ryml::Tree& tree,
+                                                     const std::vector<Filter>& filters)
+{
+  DatasetMultiMap ds_mmap;
+
+  if (id >= dataset_mmap_list_.size())
   {
-    ROS_WARN("Empty datasets, did you forget to load them ?");
-    return;
+    ROS_WARN("Invalid id");
+    return ds_mmap;
   }
 
-  auto& dataset_map = it->second;
+  // clone
+  tree.reserve(tree_list_[id].size());
+  tree.merge_with(&tree_list_[id], 0, 0);
+
+  for (const auto& ds : dataset_mmap_list_[id])
+  {
+    ds_mmap.emplace(ds.first, tree.ref(ds.second.id()));
+  }
 
   // Loop through each dataset
-  for (auto it_dataset = dataset_map.begin(); it_dataset != dataset_map.end(); /* no increment */)
+  for (auto it_dataset = ds_mmap.begin(); it_dataset != ds_mmap.end(); /* no increment */)
   {
     bool filter_success = true;
     for (const auto& filter : filters)
@@ -182,29 +212,17 @@ void DatasetFilter::filter(const std::string& id, const std::vector<Filter>& fil
 
     if (!filter_success)
     {
-      it_dataset = dataset_map.erase(it_dataset);
+      it_dataset = ds_mmap.erase(it_dataset);
       continue;
     }
 
     // Parse query sequence which affects relative token
     auto root = it_dataset->second;
-    // if (root.has_child("name"))
-    // {
-    //   std::cout << root << std::endl;
-    // }
-
-    // if (!root.has_child("dataset"))
-    // {
-    //   std::cout << root << std::endl;
-    //   ROS_WARN("Malformed dataset");
-    //   return;
-    // }
 
     if (!root.has_child("data"))
     {
-      std::cout << root << std::endl;
       ROS_WARN("Malformed dataset");
-      return;
+      return {};
     }
 
     std::set<std::size_t> query_indexes;
@@ -251,10 +269,11 @@ void DatasetFilter::filter(const std::string& id, const std::vector<Filter>& fil
 
     // erase dataset if no queries
     if (queries.num_children() == 0)
-      it_dataset = dataset_map.erase(it_dataset);
+      it_dataset = ds_mmap.erase(it_dataset);
     else
       ++it_dataset;
   }
+  return ds_mmap;
 }
 
 bool computePredicate(const ryml::NodeRef& source, const ryml::NodeRef& target, Predicate predicate)

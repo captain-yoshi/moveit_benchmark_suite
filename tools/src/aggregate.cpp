@@ -97,18 +97,18 @@ DataSetPtr AggregateDataset::aggregate(const std::vector<Operation>& operations,
 DataSetPtr AggregateDataset::aggregate(const std::vector<Operation>& operations, const DataSet& dataset,
                                        std::vector<Filter> filters)
 {
-  ds_filter_.loadDataset(dataset);
-  ds_filter_.filter("", filters);
+  ryml::Tree tree;
 
-  auto& f_datasets = ds_filter_.getFilteredDataset("");
+  auto id = ds_filter_.loadDataset(dataset);
+  auto ds_mmap = ds_filter_.filter(id, tree, filters);
 
-  if (f_datasets.size() != 1)
+  if (ds_mmap.empty())
   {
     ROS_WARN("Cannot aggregate empty dataset, check filters");
     return nullptr;
   }
 
-  return aggregate(operations, f_datasets.begin()->second);
+  return aggregate(operations, ds_mmap.begin()->second);
 }
 
 std::vector<DataSetPtr> AggregateDataset::aggregate(const std::vector<Operation>& operations,
@@ -118,13 +118,12 @@ std::vector<DataSetPtr> AggregateDataset::aggregate(const std::vector<Operation>
   std::vector<DataSetPtr> datasets;
 
   // Apply filters
-  ds_filter_.loadDatasets(dataset_files);
-  ds_filter_.filter("", filters);
-
-  auto& f_datasets = ds_filter_.getFilteredDataset("");
+  ryml::Tree tree;
+  auto id = ds_filter_.loadDatasets(dataset_files);
+  auto ds_mmap = ds_filter_.filter(id, tree, filters);
 
   // Aggregate
-  for (const auto& f_dataset : f_datasets)
+  for (const auto& f_dataset : ds_mmap)
   {
     auto dataset = aggregate(operations, f_dataset.second);
     if (dataset)
