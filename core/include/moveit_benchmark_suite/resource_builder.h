@@ -89,6 +89,7 @@ protected:
 
   const std::map<std::string, ryml::Tree>& getResources() const;
   void insertResource(const std::string name, ryml::Tree&& node);
+  void insertBuffer(ryml::substr&& substr);
   void clearResources();
 
   // Decode a node with the template type and encode to a node and check if the original is a subset
@@ -131,6 +132,7 @@ protected:
 
 private:
   std::map<std::string, ryml::Tree> node_map_;
+  std::vector<ryml::substr> buf_list_;
 };
 
 /// Builds any object that can be deserialized with YAML

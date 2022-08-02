@@ -148,12 +148,7 @@ bool Robot::initializeFromYAML(const std::string& config_file)
   ryml::Tree tree;
   ryml::NodeRef node = tree.rootref();
 
-  bool success = IO::loadFileToYAML(config_file, node);
-  if (!success)
-  {
-    ROS_ERROR("Failed to load YAML file `%s`.", config_file.c_str());
-    return false;
-  }
+  auto substr = IO::loadFileToYAML(config_file, node);
 
   // URDF
   std::string urdf_file;
@@ -305,8 +300,8 @@ bool Robot::loadYAMLFile(const std::string& name, const std::string& file, const
   ryml::Tree tree;
   ryml::NodeRef node = tree.rootref();
 
-  bool success = IO::loadFileToYAML(file, node);
-  if (!success)
+  auto substr = IO::loadFileToYAML(file, node);
+  if (substr.empty())
   {
     ROS_ERROR("Failed to load YAML file `%s`.", file.c_str());
     return false;

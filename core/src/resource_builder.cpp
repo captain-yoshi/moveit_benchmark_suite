@@ -31,6 +31,11 @@ void ResourceBuilder::insertResource(const std::string name, ryml::Tree&& node)
     ROS_WARN("Resource name `%s` already in map.", name.c_str());
 }
 
+void ResourceBuilder::insertBuffer(ryml::substr&& substr)
+{
+  buf_list_.emplace_back(substr);
+}
+
 void ResourceBuilder::clearResources()
 {
   node_map_.clear();
@@ -102,9 +107,11 @@ bool ResourceBuilder::decodeResourceTag(const ryml::NodeRef& source, ryml::NodeR
       // try YAML first (check extension)
       if (IO::isExtension(filename, "yaml") || IO::isExtension(filename, "yml"))
       {
-        bool success = IO::loadFileToYAML(filename, target);
-        if (!success)
+        auto substr = IO::loadFileToYAML(filename, target);
+        if (substr.empty())
           return false;
+
+        insertBuffer(std::move(substr));
       }
       else
       {

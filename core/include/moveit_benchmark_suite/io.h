@@ -265,11 +265,11 @@ bool YAMLFileToMessage(T& msg, const std::string& file)
 {
   ryml::Tree tree;
   ryml::NodeRef node = tree.rootref();
-  bool rc = IO::loadFileToYAML(file, node);
-  if (rc)
+  auto substr = IO::loadFileToYAML(file, node);
+  if (substr.not_empty())
     node >> msg;
 
-  return rc;
+  return substr.not_empty();
 }
 
 }  // namespace IO

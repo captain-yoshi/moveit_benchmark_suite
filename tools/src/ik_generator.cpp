@@ -77,7 +77,9 @@ bool getParamsFromConfig(const std::string& filename, std::string& group_name, s
   ryml::Tree tree;
   ryml::NodeRef node = tree.rootref();
 
-  if (!IO::loadFileToYAML(filename, node))
+  auto substr = IO::loadFileToYAML(filename, node);
+
+  if (substr.empty())
     return false;
 
   if (!node.has_child("ik_generator"))
