@@ -43,7 +43,7 @@
 #include <moveit_benchmark_suite/scene.h>
 #include <moveit_benchmark_suite/query_builders/motion_planning_builder.h>
 #include <moveit_benchmark_suite/profilers/motion_planning_profiler.h>
-#include <moveit_benchmark_suite/serialization.h>
+#include <moveit_benchmark_suite/serialization/ryml.h>
 
 using namespace moveit_benchmark_suite;
 
@@ -64,14 +64,27 @@ void MotionPlanningBuilder::buildMoveGroupInterfaceQueries(const std::string& fi
 void MotionPlanningBuilder::buildQueries(const std::string& filename, const std::string& robot_key)
 
 {
-  YAML::Node node;
-  if (!IO::loadFileToYAML(filename, node, true))
+  ryml::Tree tree;
+  ryml::NodeRef node = tree.rootref();
+
+  auto substr = IO::loadFileToYAML(filename, node);
+  if (substr.empty())
     return;
 
-  if (!node["profiler_config"])
+  if (!node.has_child("profiler_config"))
   {
     ROS_WARN("Missing root node 'profiler_config'");
     return;
+  }
+  auto n_config = node["profiler_config"];
+
+  ryml::Tree t;
+  auto n_extend = t.rootref();
+  bool extend_resource = false;
+  if (node.has_child("extend_resource_config"))
+  {
+    n_extend.find_child("extend_resource_config");
+    extend_resource = true;
   }
 
   std::map<std::string, RobotPtr> robot_map;
@@ -85,34 +98,36 @@ void MotionPlanningBuilder::buildQueries(const std::string& filename, const std:
   {
     // Build robots
     RobotBuilder builder;
-    builder.loadResources(node["profiler_config"][robot_key]);
-    if (node["extend_resource_config"] && node["extend_resource_config"][robot_key])
-      builder.extendResources(node["extend_resource_config"][robot_key]);
+    builder.loadResources(n_config[ryml::to_csubstr(robot_key)]);
+    if (extend_resource && n_extend.has_child(ryml::to_csubstr(robot_key)))
+      builder.extendResources(n_extend[ryml::to_csubstr(robot_key)]);
+
     robot_map = builder.generateResources();
   }
   {  // Build scenes
-    scene_builder.loadResources(node["profiler_config"]["scenes"]);
-    if (node["extend_resource_config"] && node["extend_resource_config"]["scenes"])
-      scene_builder.extendResources(node["extend_resource_config"]["scenes"]);
+    scene_builder.loadResources(n_config["scenes"]);
+    if (extend_resource && n_extend.has_child("scenes"))
+      scene_builder.extendResources(n_extend["scenes"]);
     // Don't generate results yet because depends on Robot and Collision detector
   }
   {
     // Build MotionPlanRequest
     YAMLDeserializerBuilder<moveit_msgs::MotionPlanRequest> builder;
-    builder.loadResources(node["profiler_config"]["requests"]);
+    builder.loadResources(n_config["requests"]);
     // Merge global request
-    builder.mergeResources(node["profiler_config"]["requests_override"]);
-    if (node["extend_resource_config"] && node["extend_resource_config"]["requests"])
-      builder.extendResources(node["extend_resource_config"]["requests"]);
+    builder.mergeResources(n_config["requests_override"]);
+    if (extend_resource && n_extend.has_child("requests_override"))
+      builder.extendResources(n_extend["requests_override"]);
+
     request_map = builder.generateResources();
   }
   {
     // Build pipelines
     PlanningPipelineEmitterBuilder builder;
 
-    builder.loadResources(node["profiler_config"]["planning_pipelines"]);
-    if (node["extend_resource_config"] && node["extend_resource_config"]["planning_pipelines"])
-      builder.extendResources(node["extend_resource_config"]["planning_pipelines"]);
+    builder.loadResources(n_config["planning_pipelines"]);
+    if (extend_resource && n_extend.has_child("planning_pipelines"))
+      builder.extendResources(n_extend["planning_pipelines"]);
     pipeline_map = builder.generateResources();
   }
 
@@ -120,15 +135,14 @@ void MotionPlanningBuilder::buildQueries(const std::string& filename, const std:
     // Build collision detectors
     try
     {
-      if (!node["profiler_config"]["collision_detectors"])
+      if (!n_config.has_child("collision_detectors"))
       {
         ROS_WARN("Missing node 'collision_detectors'");
         return;
       }
-
-      collision_detectors = node["profiler_config"]["collision_detectors"].as<std::vector<std::string>>();
+      n_config.find_child("collision_detectors") >> collision_detectors;
     }
-    catch (YAML::BadConversion& e)
+    catch (moveit_serialization::yaml_error& e)
     {
       ROS_ERROR_STREAM("Bad conversion in node 'collision_detectors'"
                        << "\n-----------\nFaulty Node\n-----------\n"

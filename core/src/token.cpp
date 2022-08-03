@@ -80,8 +80,20 @@ Token::Token(const std::string& ns, const std::string& value, const std::string&
   : ns_(ns), value_(value), del_(del)
 {
   // create Node from Token
-  const auto& keys = splitStr(ns, del);
-  createNode(0, keys, node_);
+  auto node = tree_.rootref();
+  node |= ryml::MAP;
+
+  auto keys = splitStr(ns, del);
+
+  // remove first and last key if empty
+  if (!keys.empty())
+    if (keys[0].empty())
+      keys.erase(keys.begin());
+  if (keys.size() >= 2)
+    if (keys[keys.size() - 1].empty())
+      keys.erase(keys.end() - 1);
+
+  createNode(0, keys, node);
 
   // Check if namespace is absolute or relative
   if (!del.empty() && ns.size() >= del.size() && ns.compare(0, del.size(), del) == 0)
@@ -90,23 +102,37 @@ Token::Token(const std::string& ns, const std::string& value, const std::string&
     ns_rel_ = true;
 }
 
-void Token::createNode(std::size_t ctr, const std::vector<std::string>& keys, YAML::Node& n)
+void Token::createNode(std::size_t ctr, const std::vector<std::string>& keys, ryml::NodeRef& n)
 {
-  YAML::Node temp;
-  if (ctr == keys.size() - 1)
+  if (keys.empty())
+    return;
+
+  else if (keys.size() == 1)
   {
-    if (keys[ctr].empty())
-      n = value_;
-    else
-      n[keys[ctr]] = value_;
+    n.append_child() << ryml::key(keys[0]) |= ryml::KEYMAP;
   }
   else
   {
-    createNode(ctr + 1, keys, temp);
-    if (keys[ctr].empty())
-      n = temp;
-    else
-      n[keys[ctr]] = temp;
+    auto c = n.append_child();
+
+    for (std::size_t i = 0; i < keys.size(); ++i)
+    {
+      if (i == keys.size() - 1)
+        break;
+      if (i == keys.size() - 2)
+      {
+        c |= ryml::KEYVAL;
+        c << ryml::key(keys[i]);
+      }
+      else
+      {
+        c |= ryml::KEYMAP;
+        c << ryml::key(keys[i]);
+        c = c.append_child();
+      }
+    }
+
+    c << keys.back();
   }
 };
 
@@ -117,7 +143,7 @@ void Token::reset()
   del_ = "/";
 
   ns_rel_ = true;
-  node_ = YAML::Node();
+  tree_.clear();
 };
 
 const std::string& Token::getValue() const
@@ -132,9 +158,9 @@ const std::string& Token::getNamespace() const
 {
   return ns_;
 }
-const YAML::Node& Token::getNode() const
+const ryml::NodeRef Token::getNode() const
 {
-  return node_;
+  return tree_.rootref();
 }
 
 bool Token::hasValue() const

@@ -74,31 +74,37 @@ int main(int argc, char** argv)
 bool getParamsFromConfig(const std::string& filename, std::string& group_name, std::vector<double>& ik_seed_state,
                          geometry_msgs::Pose& pose, RobotPtr& robot)
 {
-  YAML::Node node;
-  if (!IO::loadFileToYAML(filename, node, true))
+  ryml::Tree tree;
+  ryml::NodeRef node = tree.rootref();
+
+  auto substr = IO::loadFileToYAML(filename, node);
+
+  if (substr.empty())
     return false;
 
-  if (!node["ik_generator"])
+  if (!node.has_child("ik_generator"))
   {
     ROS_WARN("Missing root node 'ik_generator'");
     return false;
   }
 
+  auto n_config = node.find_child("ik_generator");
+
   // Get jmg name
-  if (!node["ik_generator"]["jmg"])
+  if (!n_config.has_child("jmg"))
   {
     ROS_WARN("Missing 'jmg' key");
     return false;
   }
-  group_name = node["ik_generator"]["jmg"].as<std::string>("");
+  n_config["jmg"] >> group_name;
 
   // Get ik seed state
-  if (!node["ik_generator"]["ik_seed_state"])
+  if (!n_config.has_child("ik_seed_state"))
   {
     ROS_WARN("Missing 'ik_seed_state' key");
     return false;
   }
-  ik_seed_state = node["ik_generator"]["ik_seed_state"].as<std::vector<double>>(std::vector<double>());
+  n_config["ik_seed_state"] >> group_name;
 
   // Build robot from YAML
   {

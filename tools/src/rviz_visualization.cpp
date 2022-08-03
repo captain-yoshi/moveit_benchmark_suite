@@ -81,7 +81,9 @@ void RVIZVisualization::initialize(const RobotConstPtr& robot, const SceneConstP
 
   std::string description;
   std::string semantic;
-  YAML::Node kinematics_node;
+
+  ryml::Tree t;
+  ryml::NodeRef kinematics_node = t.rootref();
   robot_->getHandlerConst().getParam(Robot::ROBOT_DESCRIPTION, description);
   robot_->getHandlerConst().getParam(Robot::ROBOT_SEMANTIC, semantic);
   robot_->getHandlerConst().loadROStoYAML(Robot::ROBOT_KINEMATICS, kinematics_node);

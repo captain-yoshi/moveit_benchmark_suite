@@ -364,10 +364,10 @@ public:
 
 private:
   // Filtered dataset
-  void plot(const GNUPlotLayout& layout);
-  void plot(const MultiPlotLayout& layout, const DatasetFilter::DatasetMap& dataset_map);
+  void plot(const GNUPlotLayout& layout, std::size_t id);
+  void plot(const MultiPlotLayout& layout, const DatasetFilter::DatasetMultiMap& dataset_map);
 
-  std::string combineTokenNodeValue(const Token& token, const YAML::Node& node, const std::string& tag, bool keep_ns);
+  std::string combineTokenNodeValue(const Token& token, const ryml::NodeRef& node, const std::string& tag, bool keep_ns);
 
   GNUPlotLayout layout_;
   bool init_ = false;

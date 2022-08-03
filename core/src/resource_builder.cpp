@@ -17,18 +17,23 @@ void ResourceBuilder::reset()
   node_map_.clear();
 }
 
-const std::map<std::string, YAML::Node>& ResourceBuilder::getResources() const
+const std::map<std::string, ryml::Tree>& ResourceBuilder::getResources() const
 {
   return node_map_;
 }
 
-void ResourceBuilder::insertResource(const std::string name, const YAML::Node& node)
+void ResourceBuilder::insertResource(const std::string name, ryml::Tree&& node)
 {
   auto it = node_map_.find(name);
   if (it == node_map_.end())
-    node_map_.insert({ name, node });
+    node_map_.emplace(name, node);
   else
     ROS_WARN("Resource name `%s` already in map.", name.c_str());
+}
+
+void ResourceBuilder::insertBuffer(ryml::substr&& substr)
+{
+  buf_list_.emplace_back(substr);
 }
 
 void ResourceBuilder::clearResources()
@@ -36,7 +41,7 @@ void ResourceBuilder::clearResources()
   node_map_.clear();
 }
 
-bool ResourceBuilder::validateResource(const YAML::Node& node)
+bool ResourceBuilder::validateResource(const ryml::NodeRef& node)
 {
   return true;
 }
@@ -57,7 +62,11 @@ bool ResourceBuilder::cloneResource(const std::string& src, const std::string& d
     return false;
   }
 
-  node_map_.insert({ dst, YAML::Clone(it_src->second) });
+  ryml::Tree clone;
+  clone.merge_with(&it_src->second);
+
+  insertResource(dst, std::move(clone));
+
   return true;
 }
 
@@ -67,12 +76,16 @@ bool ResourceBuilder::deleteResource(const std::string& name)
   return true;
 }
 
-bool ResourceBuilder::decodeResourceTag(const YAML::Node& source, YAML::Node& target)
+bool ResourceBuilder::decodeResourceTag(const ryml::NodeRef& source, ryml::NodeRef& target)
 {
+  // target type = KEYMAP, with key already loaded
+  // change accordingly depending on resource
+
   // resource is a filename or a namespace
-  if (source.IsScalar())
+  if (source.is_val() || source.is_keyval())
   {
-    const auto& filename = source.as<std::string>();
+    std::string filename;
+    source >> filename;
 
     std::string path = IO::resolvePath(filename, false);
 
@@ -82,7 +95,7 @@ bool ResourceBuilder::decodeResourceTag(const YAML::Node& source, YAML::Node& ta
       Handler handler("");
       handler.loadROStoYAML(filename, target);
 
-      if (target.IsNull())
+      if (!target.num_children() && target.val_is_null())
       {
         ROS_WARN("Cannot resolve PATH or ROS NAMESPACE from resource `%s`.", filename.c_str());
         return false;
@@ -92,9 +105,14 @@ bool ResourceBuilder::decodeResourceTag(const YAML::Node& source, YAML::Node& ta
     else
     {
       // try YAML first (check extension)
-      auto pair = IO::loadFileToYAML(filename);
-      if (pair.first)
-        target = pair.second;
+      if (IO::isExtension(filename, "yaml") || IO::isExtension(filename, "yml"))
+      {
+        auto substr = IO::loadFileToYAML(filename, target);
+        if (substr.empty())
+          return false;
+
+        insertBuffer(std::move(substr));
+      }
       else
       {
         // try XML or XACRO (cannot check extension)
@@ -105,23 +123,28 @@ bool ResourceBuilder::decodeResourceTag(const YAML::Node& source, YAML::Node& ta
           return false;
         }
         else
-          target = xml_str;
+        {
+          target.set_type(ryml::KEYVAL);
+          target << xml_str;
+        }
       }
     }
   }
   // keep resource as a YAML node
   else
-    target = source;
+    target.tree()->merge_with(source.tree(), source.id(), target.id());
+
   return true;
 }
-void ResourceBuilder::loadResources(const YAML::Node& node)
+
+void ResourceBuilder::loadResources(const ryml::NodeRef& node)
 {
-  if (node.IsMap())
+  if (node.is_map())
     loadResource(node);
-  else if (node.IsSequence())
-    for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
+  else if (node.is_seq())
+    for (ryml::NodeRef const& child : node.children())
     {
-      if (!loadResource(*it))
+      if (!loadResource(child))
       {
         clearResources();
         break;
@@ -131,62 +154,67 @@ void ResourceBuilder::loadResources(const YAML::Node& node)
     ROS_WARN("YAML node MUST be a sequence or a map");
 }
 
-bool ResourceBuilder::loadResource(const YAML::Node& node)
+bool ResourceBuilder::loadResource(const ryml::NodeRef& node)
 {
-  YAML::Node n;
+  ryml::Tree t_resource;
+  ryml::NodeRef n_resource = t_resource.rootref();
   std::string name;
 
-  if (node["name"])
-    name = node["name"].as<std::string>();
+  if (node.has_child("name"))
+    node["name"] >> name;
   else
   {
     ROS_WARN("A resource MUST have a 'name' node key, stopping builder.");
     return false;
   }
   // Load resource/s key
-  if (node["resource"])
+  n_resource |= ryml::MAP;
+
+  if (node.has_child("resource"))
   {
-    YAML::Node temp;
-    if (!decodeResourceTag(node["resource"], temp))
+    auto resource = n_resource.append_child({ ryml::KEYMAP, "resource" });
+
+    if (!decodeResourceTag(node["resource"], resource))
       return false;
-
-    n["resource"] = temp;
   }
-  else if (node["resources"])
+  else if (node.has_child("resources"))
   {
-    for (YAML::const_iterator it2 = node["resources"].begin(); it2 != node["resources"].end(); ++it2)
+    auto child = n_resource.append_child({ ryml::KEYMAP, "resources" });
+
+    for (ryml::NodeRef const& node_child : node["resources"])
     {
-      YAML::Node temp;
+      auto resource = child.append_child({ ryml::KEYMAP, node_child.key() });
 
-      const auto& key = it2->first.as<std::string>();
-      if (!decodeResourceTag(it2->second, temp))
+      if (!decodeResourceTag(node_child, resource))
         return false;
-
-      n["resources"][key] = temp;
     }
   }
 
   // Load parameters key, keep as YAML
-  if (node["parameters"])
-    n["parameters"] = node["parameters"];
+  if (node.has_child("parameters"))
+  {
+    auto child = n_resource.append_child({ ryml::KEYMAP, "parameters" });
+    n_resource.tree()->merge_with(node.tree(), node["parameters"].id(), child.id());
+    // n_resource["parameters"] = node["parameters"];
+  }
 
-  if (!validateResource(n))
+  if (!validateResource(n_resource))
   {
     ROS_WARN("Resource name `%s` did not pass validation, stopping builder", name.c_str());
     return false;
   }
 
-  insertResource(name, n);
+  insertResource(name, std::move(t_resource));
   return true;
 }
 
-void ResourceBuilder::mergeResources(const YAML::Node& node)
+void ResourceBuilder::mergeResources(const ryml::NodeRef& node)
 {
   for (auto& resource : node_map_)
     mergeResource(resource.first, node);
 }
 
-void ResourceBuilder::mergeResource(const std::string& name, const YAML::Node& node)
+void ResourceBuilder::mergeResource(const std::string& name, const ryml::NodeRef& node)
 {
   auto it = node_map_.find(name);
   if (it == node_map_.end())
@@ -195,20 +223,36 @@ void ResourceBuilder::mergeResource(const std::string& name, const YAML::Node& n
     return;
   }
 
-  if (it->second["resource"])
-    YAML::merge_node(it->second["resource"], node);
-  else if (it->second["resources"])
-    YAML::merge_node(it->second["resources"], node);
+  auto& t_resource = it->second;
+  auto n_resource = it->second.rootref();
+  std::size_t pos;  // resource child pos in tree
 
-  if (!validateResource(it->second))
+  // get tree position for resource child 'resource' or 'resources'
+  if (n_resource.has_child("resource"))
+    pos = n_resource["resource"].id();
+  else if (n_resource.has_child("resources"))
+    pos = n_resource["resources"].id();
+  else
+  {
+    ROS_WARN("Merge failed, no resource node found");
+    return;
+  }
+
+  // merge
+  t_resource.merge_with(node.tree(), node.id(), pos);
+
+  if (!validateResource(n_resource))
     ROS_ERROR("Merge failed for resource name `%s`.", name.c_str());
 }
 
-void ResourceBuilder::extendResources(const YAML::Node& node)
+void ResourceBuilder::extendResources(const ryml::NodeRef& node)
 {
   std::vector<std::string> resource_names;
 
-  if (node.IsMap())
+  if (!node.is_container())
+    ROS_WARN("Resource extension failed, YAML node MUST be a sequence or a map");
+
+  if (node.is_map())
   {
     if (!extendResource(node, resource_names))
     {
@@ -216,78 +260,88 @@ void ResourceBuilder::extendResources(const YAML::Node& node)
       resource_names.clear();
     }
   }
-  else if (node.IsSequence())
+  else if (node.is_seq())
   {
-    for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
+    for (ryml::NodeRef const& child : node.children())
     {
-      if (!extendResource(*it, resource_names))
+      if (!extendResource(child, resource_names))
       {
         clearResources();
         resource_names.clear();
       }
     }
   }
-  else if (node.IsDefined())
-    ROS_WARN("Resource extension failed, YAML node MUST be a sequence or a map");
 
   // Remove original resource used for extension
   for (const auto& name : resource_names)
     node_map_.erase(name);
 }
 
-bool ResourceBuilder::extendResource(const YAML::Node& node, std::vector<std::string>& resource_names)
+bool ResourceBuilder::extendResource(const ryml::NodeRef& node, std::vector<std::string>& resource_names)
 {
-  if (!node["name"] || !node["resources"] || !node["resources"].IsSequence())
+  if (!node.has_child("name") || !node.has_child("resources") || !node.find_child("resources").is_seq())
   {
     ROS_ERROR("Invalid extend config. Needs `name` and `resources` keys and the later MUST be a YAML sequence.");
     return false;
   }
 
+  std::string name;
   std::size_t seq_idx = 0;
-  const auto& name = node["name"].as<std::string>();
+
+  node["name"] >> name;
+  resource_names.push_back(name);
 
   // name must be in the map
-  auto it1 = node_map_.find(name);
-  if (it1 == node_map_.end())
+  auto it = node_map_.find(name);
+  if (it == node_map_.end())
   {
     ROS_ERROR("Cannot extend missing resource name `%s`", name.c_str());
     return false;
   }
 
-  resource_names.push_back(name);
+  auto t_extend = it->second;
+  auto n_resource = node["resources"];
 
-  for (YAML::const_iterator it2 = node["resources"].begin(); it2 != node["resources"].end(); ++it2)
+  for (ryml::NodeRef const& child : n_resource.children())
   {
-    YAML::Node source;
-    YAML::Node target = YAML::Clone(it1->second);
     ++seq_idx;
+    ryml::Tree t_src;
+    ryml::Tree t_target;
+    ryml::NodeRef n_src = t_src.rootref();
+    ryml::NodeRef n_target = t_target.rootref();
+
+    // clone extend into target
+    t_target.merge_with(&t_extend);
 
     // try decoding every key value as a resource
-    for (YAML::const_iterator it3 = (*it2).begin(); it3 != (*it2).end(); ++it3)
+    for (ryml::NodeRef const& c : child.children())
     {
-      YAML::Node temp;
+      ryml::Tree t_temp;
+      ryml::NodeRef n_temp = t_temp.rootref();
 
-      const auto& key = it3->first.as<std::string>();
-      decodeResourceTag(it3->second, temp);
+      // const auto& key = it3->first.as<std::string>();
+      decodeResourceTag(c, n_temp);
 
-      source[key] = temp;
+      n_src[c.key()] = n_temp;
     }
 
-    // merge
-    if (target["resource"])
-      YAML::merge_node(target["resource"], source);
-    else if (target["resources"])
-      YAML::merge_node(target["resources"], source);
+    std::size_t pos;  // resource child pos in tree
+
+    // get tree position for target child 'resource' or 'resources'
+    if (n_target.has_child("resource"))
+      pos = n_resource["resource"].id();
+    else if (n_target.has_child("resources"))
+      pos = n_resource["resources"].id();
     else
     {
-      ROS_WARN("Resource has no resource/s key");
+      ROS_WARN("Extend failed, no resource node found");
       return false;
     }
 
-    if (source.IsNull())
-      return false;
+    // merge to appropriate
+    t_target.merge_with(&t_src, ryml::NONE, pos);
 
-    if (!validateResource(target))
+    if (!validateResource(n_target))
     {
       ROS_ERROR("Failed to extend resource name `%s` (sequence number %zu). Check config file.", name.c_str(), seq_idx);
       return false;
@@ -302,7 +356,7 @@ bool ResourceBuilder::extendResource(const YAML::Node& node, std::vector<std::st
       return false;
     }
 
-    insertResource(extended_name, target);
+    insertResource(extended_name, std::move(t_target));
   }
   return true;
 }
@@ -319,13 +373,17 @@ std::map<std::string, RobotPtr> RobotBuilder::generateResources() const
   for (const auto& pair : node_map)
   {
     bool success = true;
+    auto node = pair.second.rootref();
+
     auto robot = std::make_shared<Robot>(pair.first);
 
     // initialize but don't load kinematics
-    success = robot->initializeFromYAML(pair.second["resources"]);
-    if (success && pair.second["parameters"] && pair.second["parameters"]["robot_state"])
+    success = robot->initializeFromYAML(node["resources"]);
+    if (success && node.has_child("parameters") && node["parameters"].has_child("robot_state"))
     {
-      auto state = pair.second["parameters"]["robot_state"].as<moveit_msgs::RobotState>();
+      moveit_msgs::RobotState state;
+      pair.second["parameters"]["robot_state"] >> state;
+
       robot->setState(state);
     }
 
@@ -490,32 +548,48 @@ bool buildClutteredWorld(const planning_scene::PlanningScenePtr& planning_scene,
 
 bool SceneBuilder::buildClutteredSceneFromYAML(ScenePtr& scene,
                                                const std::map<std::string, moveit_msgs::RobotState>& state_map,
-                                               const YAML::Node& node) const
+                                               const ryml::NodeRef& node) const
 {
   if (!IO::validateNodeKeys(node, { "object_in_collision", "object_no_collision", "rng_in_collision",
                                     "rng_no_collision", "bounds", "resource", "robot_state", "object_type" }))
     return false;
 
-  std::size_t in_object_size = node["object_in_collision"].as<std::size_t>(0);
-  std::size_t free_object_size = node["object_no_collision"].as<std::size_t>(0);
+  std::size_t in_object_size = 0;
+  std::size_t free_object_size = 0;
+
+  if (node.has_child("object_in_collision"))
+    node["object_in_collision"] >> in_object_size;
+  if (node.has_child("object_no_collision"))
+    node["object_no_collision"] >> free_object_size;
 
   // Empty scene
   if (in_object_size + free_object_size == 0)
     return true;
 
-  if ((in_object_size && !node["rng_in_collision"]) ||  //
-      (free_object_size && !node["rng_no_collision"]))
+  if ((in_object_size && !node.has_child("rng_in_collision")) ||  //
+      (free_object_size && !node.has_child("rng_no_collision")))
   {
     ROS_WARN("Missing 'rng_<in/no>_collision' parameter");
     return false;
   }
 
-  auto in_rng = node["rng_in_collision"].as<uint32_t>(0);
-  auto free_rng = node["rng_no_collision"].as<uint32_t>(0);
-  auto bounds = node["bounds"].as<std::vector<std::pair<double, double>>>();
-  auto resource = node["resource"].as<std::string>("");
-  auto robot_state = node["robot_state"].as<std::string>();
-  auto type_str = node["object_type"].as<std::string>();
+  uint32_t in_rng = 0;
+  uint32_t free_rng = 0;
+  std::string resource = "";
+  std::string type_str = "";
+  std::string robot_state_str = "";
+  std::vector<std::pair<double, double>> bounds;
+
+  if (node.has_child("in_rng"))
+    node["in_rng"] >> in_rng;
+  if (node.has_child("free_rng"))
+    node["free_rng"] >> free_rng;
+  if (node.has_child("resource"))
+    node["resource"] >> resource;
+
+  node["bounds"] >> bounds;
+  node["object_type"] >> type_str;
+  node["robot_state"] >> robot_state_str;
 
   CollisionObjectType collision_type = CollisionObjectType::INVALID;
 
@@ -548,10 +622,10 @@ bool SceneBuilder::buildClutteredSceneFromYAML(ScenePtr& scene,
     return false;
   }
 
-  auto it = state_map.find(robot_state);
+  auto it = state_map.find(robot_state_str);
   if (it == state_map.end())
   {
-    ROS_WARN("RobotState name '%s' not found when building cluttered scene", robot_state.c_str());
+    ROS_WARN("RobotState name '%s' not found when building cluttered scene", robot_state_str.c_str());
     return false;
   }
 
@@ -569,6 +643,7 @@ SceneBuilder::generateResources(const RobotPtr& robot, const std::string& collis
   for (const auto& pair : node_map)
   {
     bool success = true;
+    auto node = pair.second.rootref();
 
     auto scene = std::make_shared<Scene>(robot->getModelConst());
     scene->setName(pair.first);
@@ -577,12 +652,16 @@ SceneBuilder::generateResources(const RobotPtr& robot, const std::string& collis
     scene->getScene()->setCurrentState(*robot->getState());
     success &= scene->setCollisionDetector(collision_detector);
 
-    if (pair.second["resource"] && !pair.second["resource"].IsScalar() && pair.second["resource"]["cluttered_scene"])
-      success &= buildClutteredSceneFromYAML(scene, state_map, pair.second["resource"]["cluttered_scene"]);
-    else if (pair.second["resource"].IsScalar())
-      success &= scene->fromURDFString(pair.second["resource"].as<std::string>());
+    if (node.has_child("resource") && !node["resource"].is_keyval() && node["resource"].has_child("cluttered_scene"))
+      success &= buildClutteredSceneFromYAML(scene, state_map, node["resource"]["cluttered_scene"]);
+    else if (pair.second["resource"].is_keyval())
+    {
+      std::string urdf;
+      node["resource"] >> urdf;
+      success &= scene->fromURDFString(urdf);
+    }
     else
-      success &= scene->fromYAMLNode(pair.second["resource"]);
+      success &= scene->fromYAMLNode(node["resource"]);
 
     // Strict resource build (all or nothing)
     if (!success)
@@ -609,21 +688,24 @@ std::map<std::string, PlanningPipelineEmitterPtr> PlanningPipelineEmitterBuilder
   for (const auto& pair : node_map)
   {
     bool success = true;
+    auto node = pair.second.rootref();
+
     auto pipeline = std::make_shared<PlanningPipelineEmitter>(pair.first, "planning_pipelines/" + pair.first);
 
-    if (!pair.second["resource"])
+    if (!node.has_child("resource"))
     {
       ROS_ERROR("Empty resource for '%s' name", pair.first.c_str());
       return std::map<std::string, PlanningPipelineEmitterPtr>();
     }
 
-    if (pair.second["parameters"])
+    if (node.has_child("parameters"))
     {
-      const auto& planners = pair.second["parameters"]["planners"].as<std::vector<std::string>>();
-      success = pipeline->initializeFromYAML(pair.second["resource"], planners);
+      std::vector<std::string> planners;
+      node["parameters"]["planners"] >> planners;
+      success = pipeline->initializeFromYAML(node["resource"], planners);
     }
     else
-      success = pipeline->initializeFromYAML(pair.second["resource"]);
+      success = pipeline->initializeFromYAML(node["resource"]);
 
     // Strict resource build (all or nothing)
     if (!success)

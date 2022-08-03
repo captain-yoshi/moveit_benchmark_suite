@@ -40,7 +40,7 @@
 
 #include <string>  // for std::string
 
-#include <moveit_serialization/yaml-cpp/yaml.h>  // for YAML::Node
+#include <moveit_benchmark_suite/serialization/ryml.h>
 
 #include <ros/node_handle.h>  // for ros::NodeHandle
 
@@ -74,8 +74,8 @@ public:
    *  \param[in] node YAML node to load.
    *  \param[in] prefix Prefix to put YAML node under.
    */
-  void loadYAMLtoROS(const YAML::Node& node, const std::string& prefix = "");
-  void loadROStoYAML(const std::string& ns, YAML::Node& node) const;
+  void loadYAMLtoROS(const ryml::NodeRef& node, const std::string& prefix = "");
+  void loadROStoYAML(const std::string& ns, ryml::NodeRef& node) const;
 
   /** \brief Sets a parameter on the parameter server.
    *  \param[in] key Key to store parameter under.

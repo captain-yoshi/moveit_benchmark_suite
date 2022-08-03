@@ -40,7 +40,7 @@
 
 #include <moveit_benchmark_suite/dataset.h>
 #include <moveit_benchmark_suite/token.h>  // DatasetFilter
-#include <moveit_benchmark_suite/serialization.h>
+#include <moveit_benchmark_suite/serialization/ryml.h>
 
 namespace moveit_benchmark_suite {
 enum class Predicate
@@ -70,39 +70,40 @@ public:
   using UUID = std::string;
   using ContainerID = std::string;
 
-  using DatasetMap = std::multimap<UUID, YAML::Node>;
-  using ContainerMap = std::map<ContainerID, DatasetMap>;
+  using DatasetMultiMap = std::multimap<UUID, ryml::NodeRef>;
+  // using ContainerMap = std::map<ContainerID, DatasetMap>;
 
   DatasetFilter();
   ~DatasetFilter();
 
   // Dataset from filename | object
-  void loadDataset(const DataSet& dataset);
-  void loadDataset(const YAML::Node& dataset);
-  void loadDataset(const std::string& filename);
-  void loadDatasets(const std::vector<DataSet>& datasets);
-  void loadDatasets(const std::vector<std::string>& filenames);
+  std::size_t loadDataset(const DataSet& dataset);
+  std::size_t loadDatasets(const std::vector<DataSet>& datasets);
+  // void loadDataset(const ryml::NodeRef& dataset);
+  std::size_t loadDataset(const std::string& filename);
+  std::size_t loadDatasets(const std::vector<std::string>& filenames);
 
   /// Except metrics node
-  ///
-  void filter(const std::string& id, const std::vector<Filter>& filters);
+  DatasetMultiMap filter(std::size_t id, ryml::Tree& tree, const std::vector<Filter>& filters);
   // TODO add more
 
-  const DatasetMap& getFilteredDataset(const ContainerID& id) const;
+  // const DatasetMap& getFilteredDataset(std::size_t id) const;
 
 private:
   /** \brief Checks
    *  \param[in] node Either a dataset node or a data sequence
    *  \return True if predicate is respected, False otherwise.
    */
-  bool filterMetadata(const YAML::Node& node, const Token& token, Predicate predicate);
+  bool filterMetadata(const ryml::NodeRef& node, const Token& token, Predicate predicate);
   /// Queries that contain the metrcis node, for dealing with a variant
-  bool filterMetric(const YAML::Node& node, const Token& token, Predicate predicate);
+  bool filterMetric(const ryml::NodeRef& node, const Token& token, Predicate predicate);
 
-  DatasetMap dataset_map_;  // Original datasets
-  ContainerMap container_;  // Output of filters
+  std::vector<DatasetMultiMap> dataset_mmap_list_;  // Original datasets
+  // ContainerMap container_ = {};  // Output of filters
 
-  const DatasetMap empty_dataset_map_;
+  std::vector<std::vector<ryml::substr>> substr_2dlist_;  // yaml list of bytes
+  std::vector<ryml::Tree> tree_list_;                     // single tree referencing every yaml buffers
+  // const DatasetMap empty_dataset_map_;
 };
 
 }  // namespace moveit_benchmark_suite

@@ -47,7 +47,7 @@
 
 #include <moveit_benchmark_suite/dataset.h>
 #include <moveit_benchmark_suite/metadata.h>
-#include <moveit_benchmark_suite/serialization.h>
+#include <moveit_benchmark_suite/serialization/ryml.h>
 
 namespace moveit_benchmark_suite {
 /** \brief File and ROS Input / Output operations.
@@ -113,8 +113,7 @@ const std::string runCommand(const std::string& cmd);
  *  \param[in] path File to load.
  *  \return A pair, where the first is true on success false on failure, and second is the YAML node.
  */
-const std::pair<bool, YAML::Node> loadFileToYAML(const std::string& path);
-const bool loadFileToYAML(const std::string& path, YAML::Node& node, bool verbose = false);
+ryml::substr loadFileToYAML(const std::string& path, ryml::NodeRef& node);
 
 std::string getFilePath(const std::string& file);
 std::string getFileName(const std::string& file);
@@ -232,14 +231,14 @@ std::vector<T> tokenize(const std::string& string, const std::string& separators
  *  \param[in] keys List of keys used to compare.
  *  \return True if keys matches node keys, false otherwise.
  */
-bool validateNodeKeys(const YAML::Node& node, const std::vector<std::string>& keys);
+bool validateNodeKeys(const ryml::NodeRef& node, const std::vector<std::string>& keys);
 
 /** \brief Write the contents of a YAML node out to a potentially new file.
  *  \param[in] node Node to write.
  *  \param[in] file Filename to open.
  *  \return True on success, false otherwise.
  */
-bool YAMLToFile(const YAML::Node& node, const std::string& file);
+bool YAMLToFile(const ryml::NodeRef& node, const std::string& file);
 
 /** \brief Dump a message (or YAML convertable object) to a file.
  *  \param[in] msg Message to dump.
@@ -249,10 +248,11 @@ bool YAMLToFile(const YAML::Node& node, const std::string& file);
 template <typename T>
 bool messageToYAMLFile(T& msg, const std::string& file)
 {
-  YAML::Node yaml;
-  yaml = msg;
+  ryml::Tree t;
+  auto node = t.rootref();
+  node << msg;
 
-  return YAMLToFile(yaml, file);
+  return YAMLToFile(node, file);
 }
 
 /** \brief Load a message (or YAML convertable object) from a file.
@@ -263,11 +263,13 @@ bool messageToYAMLFile(T& msg, const std::string& file)
 template <typename T>
 bool YAMLFileToMessage(T& msg, const std::string& file)
 {
-  const auto& result = IO::loadFileToYAML(file);
-  if (result.first)
-    msg = result.second.as<T>();
+  ryml::Tree tree;
+  ryml::NodeRef node = tree.rootref();
+  auto substr = IO::loadFileToYAML(file, node);
+  if (substr.not_empty())
+    node >> msg;
 
-  return result.first;
+  return substr.not_empty();
 }
 
 }  // namespace IO

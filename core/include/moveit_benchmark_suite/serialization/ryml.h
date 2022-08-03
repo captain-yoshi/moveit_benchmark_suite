@@ -33,56 +33,20 @@
  *********************************************************************/
 
 /* Author: Captain Yoshi
-   Desc: Statistics and aggregators for dataset metrics
+   Desc: yaml serializer for moveit_benchmark_suite objects
 */
 
 #pragma once
 
-#include <moveit_benchmark_suite/dataset_filter.h>
-#include <moveit_benchmark_suite/statistics.h>
+#include <moveit_serialization/ryml/conversions.h>
+#include <moveit_serialization/ryml/utils.h>
 
-namespace moveit_benchmark_suite {
-namespace tools {
+#include <moveit_benchmark_suite/serialization/conversions.h>
 
-/** \brief Plot from datasets using GNUPlot
- */
-class AggregateDataset
-{
-public:
-  using DataSets = std::vector<DataSet>;
-  struct Operation
-  {
-    std::string raw_metric;  // Dataste metric name to aggregate
-    std::string new_metric;  // Dataset metric name for storing the statistic
-    statistics::EquationType eq_type = statistics::EquationType::INVALID;
-    double postmultiply = 1;
-  };
+// WARNING: Do NOT include headers below this line
+// Please take note of the following pitfall when using serialization
+// functions: you have to include the header with the serialization
+// before any other headers that use functions from it.
+#include <moveit_serialization/ryml/error_handler.h>  // includes ryml.hpp in the header
 
-  /** \brief Constructor.
-   */
-  AggregateDataset() = default;
-
-  /** \brief Destructor.
-   */
-  ~AggregateDataset() = default;
-
-  /// Aggregate a Dataset object with optional filtering. Returns a new dataset
-  DataSetPtr aggregate(const std::vector<Operation>& operations, const DataSet& dataset,
-                       std::vector<Filter> filters = {});
-
-  /// Aggregate multiple Dataset, as files, with optional filtering. Returns a new dataset
-  std::vector<DataSetPtr> aggregate(const std::vector<Operation>& operations,
-                                    const std::vector<std::string>& dataset_files, std::vector<Filter> filters = {});
-
-  static bool buildParamsFromYAML(const std::string& filename, std::vector<Operation>& operations,
-                                  std::vector<Filter>& filters);
-
-private:
-  // Dataset already dfiltered
-  DataSetPtr aggregate(const std::vector<Operation>& operations, const ryml::NodeRef& dataset);
-
-  DatasetFilter ds_filter_;
-};
-
-}  // namespace tools
-}  // namespace moveit_benchmark_suite
+#include <ryml.hpp>

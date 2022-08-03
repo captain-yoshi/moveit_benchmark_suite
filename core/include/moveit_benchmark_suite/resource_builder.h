@@ -46,9 +46,9 @@
 #include <moveit_benchmark_suite/planning.h>
 #include <moveit_benchmark_suite/robot.h>
 #include <moveit_benchmark_suite/scene.h>
-#include <moveit_serialization/yaml-cpp/node_manipulation.h>
-#include <moveit_benchmark_suite/serialization.h>
 #include <moveit_benchmark_suite/io.h>
+
+#include <moveit_benchmark_suite/serialization/ryml.h>
 
 namespace moveit_benchmark_suite {
 
@@ -61,60 +61,69 @@ public:
   virtual void reset();
 
   // Load sequence or unique resource/s into a YAML node map
-  void loadResources(const YAML::Node& node);
+  void loadResources(const ryml::NodeRef& node);
 
   //  Decode resource/s tag into a YAML node. A resource tag can be a
   //   - File (YAML, XML, XACRO)
   //   - ROS Parameter namespace
   //   - YAML node
-  bool decodeResourceTag(const YAML::Node& source, YAML::Node& target);
+  bool decodeResourceTag(const ryml::NodeRef& source, ryml::NodeRef& target);
 
   // Merge supplied node to specific/all resources in the map
-  void mergeResource(const std::string& name, const YAML::Node& node);
-  void mergeResources(const YAML::Node& node);
+  void mergeResource(const std::string& name, const ryml::NodeRef& node);
+  void mergeResources(const ryml::NodeRef& node);
 
   // Clone resource and merge given node. A sequence number is added to the cloned resource name.
   // The original resource is deleted.
   //  Ex. 2 extensions targetting resource 'A' will create resource 'A1' and 'A2', resource 'A' is deleted.
-  void extendResources(const YAML::Node& node);
+  void extendResources(const ryml::NodeRef& node);
   bool cloneResource(const std::string& src, const std::string& dst);
   bool deleteResource(const std::string& name);
 
   // In case a validation is needed
-  virtual bool validateResource(const YAML::Node& node);  // defaults to true
+  virtual bool validateResource(const ryml::NodeRef& node);  // defaults to true
 
 protected:
-  bool loadResource(const YAML::Node& node);
-  bool extendResource(const YAML::Node& node, std::vector<std::string>& resource_names);
+  bool loadResource(const ryml::NodeRef& node);
+  bool extendResource(const ryml::NodeRef& node, std::vector<std::string>& resource_names);
 
-  const std::map<std::string, YAML::Node>& getResources() const;
-  void insertResource(const std::string, const YAML::Node& node);
+  const std::map<std::string, ryml::Tree>& getResources() const;
+  void insertResource(const std::string name, ryml::Tree&& node);
+  void insertBuffer(ryml::substr&& substr);
   void clearResources();
 
   // Decode a node with the template type and encode to a node and check if the original is a subset
   template <typename T>
-  bool validateYamlNode(const YAML::Node& source)
+  bool validateYamlNode(const ryml::NodeRef& source)
   {
     try
     {
       // Decode YAML node
-      const auto& t = source.as<T>();
+      T t;
+      source >> t;
 
       // Encode decoded message
-      YAML::Node target;
-      target = t;
+      ryml::Tree t_target;
+      ryml::NodeRef n_target = t_target.rootref();
+      n_target << t;
 
-      // Compare nodes to find if everything has been converted correctly
-      if (YAML::isSubset(source, target))
+      // Check if source is a subset of target
+      if (source.tree()->has_all(&t_target, ryml::NONE, source.id()))
         return true;
+
+      // Only print children (source node may be a KEYMAP | KEYSEQ)
+      std::stringstream src_children_ss;
+      for (const ryml::NodeRef child : source)
+        src_children_ss << child;
+
       const std::string del = "------";
       ROS_WARN_STREAM("Source node is not a subset of target node"
                       << "\n------\nSource\n------\n"
-                      << source << "\n------\nTarget\n------\n"
-                      << target << "\n------");
+                      << src_children_ss.str() << "\n------\nTarget\n------\n"
+                      << n_target << "\n------");
       return false;
     }
-    catch (const YAML::Exception& e)
+    catch (const moveit_serialization::yaml_error& e)
     {
       ROS_ERROR("YAML decode exception: %s", e.what());
       return false;
@@ -122,7 +131,8 @@ protected:
   }
 
 private:
-  std::map<std::string, YAML::Node> node_map_;
+  std::map<std::string, ryml::Tree> node_map_;
+  std::vector<ryml::substr> buf_list_;
 };
 
 /// Builds any object that can be deserialized with YAML
@@ -133,7 +143,7 @@ public:
   YAMLDeserializerBuilder(bool use_validation = true) : use_validation_(use_validation){};
   ~YAMLDeserializerBuilder() override = default;
 
-  virtual bool validateResource(const YAML::Node& node) override
+  virtual bool validateResource(const ryml::NodeRef& node) override
   {
     if (use_validation_)
       return validateYamlNode<T>(node["resource"]);
@@ -150,9 +160,12 @@ public:
     {
       try
       {
-        requests.insert({ resource.first, resource.second["resource"].template as<T>() });
+        T t;
+        resource.second["resource"] >> t;
+
+        requests.insert({ resource.first, t });
       }
-      catch (YAML::BadConversion& e)
+      catch (moveit_serialization::yaml_error& e)
       {
         ROS_WARN("Resource '%s' bad YAML conversion\n%s", resource.first.c_str(), e.what());
         requests.clear();
@@ -189,7 +202,7 @@ public:
 
 private:
   bool buildClutteredSceneFromYAML(ScenePtr& scene, const std::map<std::string, moveit_msgs::RobotState>& state_map,
-                                   const YAML::Node& node) const;
+                                   const ryml::NodeRef& node) const;
 };
 
 // Build moveit_benchmark_suite/PlanningPipelineEmitter with complex initializations

@@ -49,6 +49,7 @@ add_library(${PROJECT_NAME}
   src/colormap.cpp
   src/io.cpp
   src/geometry.cpp
+  src/handler.cpp
   src/statistics.cpp
   src/token.cpp
   src/dataset.cpp
@@ -61,7 +62,7 @@ add_library(${PROJECT_NAME}
   src/planning.cpp
   src/trajectory.cpp
   src/utils.cpp
-  src/serialization.cpp
+  src/serialization/conversions.cpp
 )
 
 install(DIRECTORY include/${PROJECT_NAME}/

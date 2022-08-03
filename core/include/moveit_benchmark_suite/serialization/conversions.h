@@ -33,56 +33,44 @@
  *********************************************************************/
 
 /* Author: Captain Yoshi
-   Desc: Statistics and aggregators for dataset metrics
+   Desc: yaml serializer for moveit_benchmark_suite objects
 */
 
 #pragma once
 
-#include <moveit_benchmark_suite/dataset_filter.h>
-#include <moveit_benchmark_suite/statistics.h>
+#include <c4/yml/node.hpp>
 
-namespace moveit_benchmark_suite {
-namespace tools {
+#include <moveit_benchmark_suite/dataset.h>
 
-/** \brief Plot from datasets using GNUPlot
- */
-class AggregateDataset
-{
-public:
-  using DataSets = std::vector<DataSet>;
-  struct Operation
-  {
-    std::string raw_metric;  // Dataste metric name to aggregate
-    std::string new_metric;  // Dataset metric name for storing the statistic
-    statistics::EquationType eq_type = statistics::EquationType::INVALID;
-    double postmultiply = 1;
-  };
+namespace c4 {
+namespace yml {
 
-  /** \brief Constructor.
-   */
-  AggregateDataset() = default;
+void write(c4::yml::NodeRef* n, moveit_benchmark_suite::QueryID const& rhs);
+bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::QueryID* rhs);
 
-  /** \brief Destructor.
-   */
-  ~AggregateDataset() = default;
+void write(c4::yml::NodeRef* n, moveit_benchmark_suite::QueryCollection const& rhs);
+bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::QueryCollection* rhs);
 
-  /// Aggregate a Dataset object with optional filtering. Returns a new dataset
-  DataSetPtr aggregate(const std::vector<Operation>& operations, const DataSet& dataset,
-                       std::vector<Filter> filters = {});
+void write(c4::yml::NodeRef* n, moveit_benchmark_suite::metadata::CPU const& rhs);
+bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::metadata::CPU* rhs);
 
-  /// Aggregate multiple Dataset, as files, with optional filtering. Returns a new dataset
-  std::vector<DataSetPtr> aggregate(const std::vector<Operation>& operations,
-                                    const std::vector<std::string>& dataset_files, std::vector<Filter> filters = {});
+void write(c4::yml::NodeRef* n, moveit_benchmark_suite::metadata::GPU const& rhs);
+bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::metadata::GPU* rhs);
 
-  static bool buildParamsFromYAML(const std::string& filename, std::vector<Operation>& operations,
-                                  std::vector<Filter>& filters);
+void write(c4::yml::NodeRef* n, moveit_benchmark_suite::metadata::OS const& rhs);
+bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::metadata::OS* rhs);
 
-private:
-  // Dataset already dfiltered
-  DataSetPtr aggregate(const std::vector<Operation>& operations, const ryml::NodeRef& dataset);
+void write(c4::yml::NodeRef* n, moveit_benchmark_suite::metadata::SW const& rhs);
+bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::metadata::SW* rhs);
 
-  DatasetFilter ds_filter_;
-};
+void write(c4::yml::NodeRef* n, moveit_benchmark_suite::DataContainer const& rhs);
+bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::DataContainer* rhs);
 
-}  // namespace tools
-}  // namespace moveit_benchmark_suite
+void write(c4::yml::NodeRef* n, moveit_benchmark_suite::DataSet const& rhs);
+bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::DataSet* rhs);
+
+void write(c4::yml::NodeRef* n, moveit_benchmark_suite::Metric const& rhs);
+bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::Metric* rhs);
+
+}  // namespace yml
+}  // namespace c4

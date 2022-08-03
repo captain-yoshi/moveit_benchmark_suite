@@ -60,15 +60,17 @@ void BenchmarkSuiteOutputter::dump(const DataSet& dataset, const std::string& pa
     return;
   }
 
-  YAML::Node node;
-  node["dataset"] = dataset;
+  ryml::Tree tree;
+  ryml::NodeRef node = tree.rootref();
 
-  // Add dataset as a sequence
-  YAML::Node root_node;
-  root_node.push_back(node);
+  node |= ryml::SEQ;
+  node.append_child() |= ryml::MAP;
+
+  auto child = node.last_child();
+  child.append_child() << ryml::key("dataset") << dataset;
 
   out << "\n";  // Necessary for appending a dataset with right indentation
-  out << root_node;
+  out << node;
   out.close();
 
   ROS_INFO_STREAM(log::format("Successfully created dataset: '%1%'", out_filepath + out_filename));

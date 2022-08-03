@@ -42,7 +42,7 @@
 #include <vector>
 #include <map>
 
-#include <moveit_serialization/yaml-cpp/yaml.h>
+#include <moveit_benchmark_suite/serialization/ryml.h>
 
 namespace moveit_benchmark_suite {
 std::vector<std::string> splitStr(std::string s, std::string delimiter);
@@ -63,21 +63,21 @@ public:
   const std::string& getDelimiter() const;
   const std::string& getNamespace() const;
 
-  const YAML::Node& getNode() const;
+  const ryml::NodeRef getNode() const;
 
   bool hasValue() const;
   bool isRelative() const;
   bool isAbsolute() const;
 
 private:
-  void createNode(std::size_t ctr, const std::vector<std::string>& keys, YAML::Node& n);
+  void createNode(std::size_t ctr, const std::vector<std::string>& keys, ryml::NodeRef& n);
 
   std::string ns_;
   std::string value_;
   std::string del_;
 
   bool ns_rel_ = true;  // namespace is relative or absolute
-  YAML::Node node_;
+  ryml::Tree tree_;
 };
 
 }  // namespace moveit_benchmark_suite
