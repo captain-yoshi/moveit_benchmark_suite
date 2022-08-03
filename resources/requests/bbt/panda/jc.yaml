@@ -11,16 +11,23 @@ start_state:
 goal_constraints:
   - joint_constraints:
     - joint_name: panda_joint1
-      position: 0.354647  
+      position: 0.354647
+      weight: 1
     - joint_name: panda_joint2
       position: 0.29075
+      weight: 1
     - joint_name: panda_joint3
       position: 0.104866
+      weight: 1
     - joint_name: panda_joint4
       position: -2.38177
+      weight: 1
     - joint_name: panda_joint5
       position: -0.0661164
+      weight: 1
     - joint_name: panda_joint6
       position: 2.67012
+      weight: 1
     - joint_name: panda_joint7
       position: 2.86986
+      weight: 1
