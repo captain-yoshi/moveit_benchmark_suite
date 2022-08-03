@@ -64,6 +64,9 @@ void Handler::loadROStoYAML(const std::string& ns, ryml::NodeRef& node) const
   if (!nh_.getParam(ns, rpc))
     return;
 
+  if (rpc.getType() != rpc.TypeStruct && rpc.getType() != rpc.TypeArray)
+    node.set_type(ryml::KEYVAL);
+
   node << rpc;
 }
 
