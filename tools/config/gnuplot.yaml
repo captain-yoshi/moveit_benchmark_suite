@@ -1,18 +1,25 @@
+# ex. use with the default collision check benchmark
 gnuplot_config:
   plots:
-    - #filters:
-      #  - {key: /hw/cpu/model, val: 158, predicate: '='}
-      legends:
-        - metrics/
+    - filters:
+        - ns: query/request
+          val: All (Contact Only)
+          predicate: "=="
       labels:
-        - config/scene/
-        - metrics/
+        - query/scene
+      legends:
+        - query/collision_detector
       metrics:
         - type: boxplot
-          names:
-            - stage_solution_costs_grasp pose IK
-            - stage_solution_costs_place pose IK
+          name: time
+          title: '{/:Bold Collision (Self + Environment)}\nTime (sec) for request \"All (Contact Only)\" against scenes and collision detectors'
+        - type: boxplot
+          name: contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count for request \"All (Contact Only)\" against scenes and collision detectors'
   options:
     terminal: QT
-    n_row: 1
+    n_row: 2
     n_col: 1
+    size:
+      x: 1280
+      y: 720

@@ -1,106 +1,301 @@
+# create HTML containing multiple SVG pictures
+# ex. use with the default collision check benchmark
 gnuplot_config:
   plots:
-    - legends:
-        - metrics/
+    # individual requests wrt. scenes and collision detectors
+    - filters:
+        - ns: query/request
+          val: First (Binary)
+          predicate: "=="
       labels:
-        - metrics/
+        - query/scene
+      legends:
+        - query/collision_detector
       metrics:
         - type: boxplot
-          names:
-            - stage_solution_costs_grasp pose IK
-            - stage_solution_costs_place pose IK
+          name: time
+          title: '{/:Bold Collision (Self + Environment)}\nTime (sec) for request \"First (Binary)\" against scenes and collision detectors'
+        - type: bargraph
+          name: collision_check
+          title: '{/:Bold Collision (Self + Environment)}\nCollision checks (sec^{-1}) for request \"First (Binary)\" against scenes and collision detectors'
+    - filters:
+        - ns: query/request
+          val: First (Contact Only)
+          predicate: "=="
+      labels:
+        - query/scene
+      legends:
+        - query/collision_detector
+      metrics:
+        - type: boxplot
+          name: time
+          title: '{/:Bold Collision (Self + Environment)}\nTime (sec) for request \"First (Contact Only)\" against scenes and collision detectors'
+        - type: boxplot
+          name: contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count for request \"First (Contact Only)\" against scenes and collision detectors'
+        - type: bargraph
+          name: collision_check
+          title: '{/:Bold Collision (Self + Environment)}\nCollision checks (sec^{-1}) for request \"First (Contact Only)\" against scenes and collision detectors'
+        - type: bargraph
+          name: avg_contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for request \"First (Contact Only)\" against scenes and collision detectors'
+    - filters:
+        - ns: query/request
+          val: First (Cost)
+          predicate: "=="
+      labels:
+        - query/scene
+      legends:
+        - query/collision_detector
+      metrics:
+        - type: boxplot
+          name: time
+          title: '{/:Bold Collision (Self + Environment)}\nTime (sec) for request \"First (Cost)\" against scenes and collision detectors'
+        - type: boxplot
+          name: contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count for request \"First (Cost)\" against scenes and collision detectors'
+        - type: bargraph
+          name: collision_check
+          title: '{/:Bold Collision (Self + Environment)}\nCollision checks (sec^{-1}) for request \"First (Cost)\" against scenes and collision detectors'
+        - type: bargraph
+          name: avg_contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for request \"First (Cost)\" against scenes and collision detectors'
+    - filters:
+        - ns: query/request
+          val: All (Contact Only)
+          predicate: "=="
+      labels:
+        - query/scene
+      legends:
+        - query/collision_detector
+      metrics:
+        - type: boxplot
+          name: time
+          title: '{/:Bold Collision (Self + Environment)}\nTime (sec) for request \"All (Contact Only)\" against scenes and collision detectors'
+        - type: boxplot
+          name: contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count for request \"All (Contact Only)\" against scenes and collision detectors'
+        - type: bargraph
+          name: collision_check
+          title: '{/:Bold Collision (Self + Environment)}\nCollision checks (sec^{-1}) for request \"All (Contact Only)\" against scenes and collision detectors'
+        - type: bargraph
+          name: avg_contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for request \"All (Contact Only)\" against scenes and collision detectors'
+    - filters:
+        - ns: query/request
+          val: All (Cost)
+          predicate: "=="
+      labels:
+        - query/scene
+      legends:
+        - query/collision_detector
+      metrics:
+        - type: boxplot
+          name: time
+          title: '{/:Bold Collision (Self + Environment)}\nTime (sec) for request \"All (Cost)\" against scenes and collision detectors'
+        - type: boxplot
+          name: contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count for request \"All (Cost)\" against scenes and collision detectors'
+        - type: bargraph
+          name: collision_check
+          title: '{/:Bold Collision (Self + Environment)}\nCollision checks (sec^{-1}) for request \"All (Cost)\" against scenes and collision detectors'
+        - type: bargraph
+          name: avg_contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for request \"All (Cost)\" against scenes and collision detectors'
+    - filters:
+        - ns: query/request
+          val: First (Distance)
+          predicate: "=="
+      labels:
+        - query/scene
+      legends:
+        - query/collision_detector
+      metrics:
+        - type: boxplot
+          name: time
+          title: '{/:Bold Collision (Self + Environment)}\nTime (sec) for request \"First (Distance)\" against scenes and collision detectors'
+        - type: boxplot
+          name: contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count for request \"First (Distance)\" against scenes and collision detectors'
+        - type: bargraph
+          name: collision_check
+          title: '{/:Bold Collision (Self + Environment)}\nCollision checks (sec^{-1}) for request \"First (Distance)\" against scenes and collision detectors'
+        - type: bargraph
+          name: avg_contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for request \"First (Distance)\" against scenes and collision detectors'
+    - filters:
+        - ns: query/request
+          val: All (Distance)
+          predicate: "=="
+      labels:
+        - query/scene
+      legends:
+        - query/collision_detector
+      metrics:
+        - type: boxplot
+          name: time
+          title: '{/:Bold Collision (Self + Environment)}\nTime (sec) for request \"All (Distance)\" against scenes and collision detectors'
+        - type: boxplot
+          name: contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count for request \"All (Distance)\" against scenes and collision detectors'
+        - type: bargraph
+          name: collision_check
+          title: '{/:Bold Collision (Self + Environment)}\nCollision checks (sec^{-1}) for request \"All (Distance)\" against scenes and collision detectors'
+        - type: bargraph
+          name: avg_contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for request \"All (Distance)\" against scenes and collision detectors'
+    # individual scenes wrt. requests and collision detectors
+    - filters:
+        - ns: query/scene
+          val: empty
+          predicate: "=="
+      labels:
+        - query/request
+      legends:
+        - query/collision_detector
+      metrics:
+        - type: boxplot
+          name: time
+          title: '{/:Bold Collision (Self + Environment)}\nTime (sec) for scene \"empty\" against requests and collision detectors'
+        - type: boxplot
+          name: contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count for scene \"empty\" against requests and collision detectors'
+        - type: bargraph
+          name: collision_check
+          title: '{/:Bold Collision (Self + Environment)}\nCollision checks (sec^{-1}) for scene \"empty\" against requests and collision detectors'
+        - type: bargraph
+          name: avg_contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for scene \"empty\" against requests and collision detectors'
+    - filters:
+        - ns: query/scene
+          val: 'box-1n'
+          predicate: "=="
+      labels:
+        - query/request
+      legends:
+        - query/collision_detector
+      metrics:
+        - type: boxplot
+          name: time
+          title: '{/:Bold Collision (Self + Environment)}\nTime (sec) for scene \"box-1n\" against requests and collision detectors'
+        - type: boxplot
+          name: contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count for scene \"box-1n\" against requests and collision detectors'
+        - type: bargraph
+          name: collision_check
+          title: '{/:Bold Collision (Self + Environment)}\nCollision checks (sec^{-1}) for scene \"box-1n\" against requests and collision detectors'
+        - type: bargraph
+          name: avg_contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for scene \"box-1n\" against requests and collision detectors'
+    - filters:
+        - ns: query/scene
+          val: 'box-1c'
+          predicate: "=="
+      labels:
+        - query/request
+      legends:
+        - query/collision_detector
+      metrics:
+        - type: boxplot
+          name: time
+          title: '{/:Bold Collision (Self + Environment)}\nTime (sec) for scene \"box-1c\" against requests and collision detectors'
+        - type: boxplot
+          name: contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count for scene \"box-1c\" against requests and collision detectors'
+        - type: bargraph
+          name: collision_check
+          title: '{/:Bold Collision (Self + Environment)}\nCollision checks (sec^{-1}) for scene \"box-1c\" against requests and collision detectors'
+        - type: bargraph
+          name: avg_contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for scene \"box-1c\" against requests and collision detectors'
+    - filters:
+        - ns: query/scene
+          val: 'box-100-nc'
+          predicate: "=="
+      labels:
+        - query/request
+      legends:
+        - query/collision_detector
+      metrics:
+        - type: boxplot
+          name: time
+          title: '{/:Bold Collision (Self + Environment)}\nTime (sec) for scene \"box-100-nc\" against requests and collision detectors'
+        - type: boxplot
+          name: contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count for scene \"box-100-nc\" against requests and collision detectors'
+        - type: bargraph
+          name: collision_check
+          title: '{/:Bold Collision (Self + Environment)}\nCollision checks (sec^{-1}) for scene \"box-100-nc\" against requests and collision detectors'
+        - type: bargraph
+          name: avg_contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for scene \"box-100-nc\" against requests and collision detectors'
+    - filters:
+        - ns: query/scene
+          val: 'box-100-4c'
+          predicate: "=="
+      labels:
+        - query/request
+      legends:
+        - query/collision_detector
+      metrics:
+        - type: boxplot
+          name: time
+          title: '{/:Bold Collision (Self + Environment)}\nTime (sec) for scene \"box-100-4c\" against requests and collision detectors'
+        - type: boxplot
+          name: contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count for scene \"box-100-4c\" against requests and collision detectors'
+        - type: bargraph
+          name: collision_check
+          title: '{/:Bold Collision (Self + Environment)}\nCollision checks (sec^{-1}) for scene \"box-100-4c\" against requests and collision detectors'
+        - type: bargraph
+          name: avg_contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for scene \"box-100-4c\" against requests and collision detectors'
+    - filters:
+        - ns: query/scene
+          val: 'mesh-100-nc'
+          predicate: "=="
+      labels:
+        - query/request
+      legends:
+        - query/collision_detector
+      metrics:
+        - type: boxplot
+          name: time
+          title: '{/:Bold Collision (Self + Environment)}\nTime (sec) for scene \"mesh-100-nc\" against requests and collision detectors'
+        - type: boxplot
+          name: contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count for scene \"mesh-100-nc\" against requests and collision detectors'
+        - type: bargraph
+          name: collision_check
+          title: '{/:Bold Collision (Self + Environment)}\nCollision checks (sec^{-1}) for scene \"mesh-100-nc\" against requests and collision detectors'
+        - type: bargraph
+          name: avg_contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for scene \"mesh-100-nc\" against requests and collision detectors'
+    - filters:
+        - ns: query/scene
+          val: 'mesh-100-4c'
+          predicate: "=="
+      labels:
+        - query/request
+      legends:
+        - query/collision_detector
+      metrics:
+        - type: boxplot
+          name: time
+          title: '{/:Bold Collision (Self + Environment)}\nTime (sec) for scene \"mesh-100-4c\" against requests and collision detectors'
+        - type: boxplot
+          name: contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count for scene \"mesh-100-4c\" against requests and collision detectors'
+        - type: bargraph
+          name: collision_check
+          title: '{/:Bold Collision (Self + Environment)}\nCollision checks (sec^{-1}) for scene \"mesh-100-4c\" against requests and collision detectors'
+        - type: bargraph
+          name: avg_contact_count
+          title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for scene \"mesh-100-4c\" against requests and collision detectors'
   options:
     terminal: SVG
     n_row: 1
     n_col: 1
-
-
-# html_config:
-#   - title: PlanningPipeline vs MoveGroupInterface
-#     legend_filters:
-#       - type/MOTION PLANNING PP
-#       - type/MOTION PLANNING MGI
-#     xtick_filters:
-#       - config/scene/
-#       - config/planner/RRTConnect
-#       - config/collision_detector/FCL
-#       - config/request/jc-goal
-#     metrics:
-#       - time: boxplot
-
-#   - title: Scenes vs Constraints
-#     legend_filters:
-#       - type/MOTION PLANNING PP
-#       - config/request/
-#     xtick_filters:
-#       - config/planner/RRTConnect
-#       - config/collision_detector/FCL
-#     metrics:
-#       - time: boxplot
-#       - avg_success: bargraph
-#       - avg_correct: bargraph
-
-#   - title: Planners vs Scenes
-#     legend_filters:
-#       - type/MOTION PLANNING PP
-#       - config/scene/
-#     xtick_filters:
-#       - config/planner/
-#       - config/collision_detector/FCL
-#       - config/request/jc-goal
-#       - config/pipeline/ompl
-#     metrics:
-#       - time: boxplot
-#       - avg_success: bargraph
-#       - avg_correct: bargraph
-
-#   - title: Planners vs Collision Detectors (mesh-scene)
-#     legend_filters:
-#       - type/MOTION PLANNING PP
-#       - config/collision_detector/
-#     xtick_filters:
-#       - config/scene/bbt-mesh
-#       - config/planner/
-#       - config/request/jc-goal
-#       - config/pipeline/ompl
-#     metrics:
-#       - time: boxplot
-#       - avg_success: bargraph
-#       - avg_correct: bargraph
-
-#   - title: Planners vs Collision Detectors (primitive-scene)
-#     legend_filters:
-#       - type/MOTION PLANNING PP
-#       - config/collision_detector/
-#     xtick_filters:
-#       - config/scene/bbt-primitive
-#       - config/planner/
-#       - config/request/jc-goal
-#       - config/pipeline/ompl
-#     metrics:
-#       - time: boxplot
-#       - avg_success: bargraph
-#       - avg_correct: bargraph
-
-#   - title: Planners vs Collision Detectors (empty-scene)
-#     legend_filters:
-#       - type/MOTION PLANNING PP
-#       - config/collision_detector/
-#     xtick_filters:
-#       - config/scene/empty-scene
-#       - config/planner/
-#       - config/request/jc-goal
-#       - config/pipeline/ompl
-#     metrics:
-#       - time: boxplot
-#       - avg_success: bargraph
-#       - avg_correct: bargraph
-
-# aggregate_config:
-#   aggregate:
-#     - raw_metric: success
-#       new_metric: avg_success
-#       type: average
-#     - raw_metric: correct
-#       new_metric: avg_correct
-#       type: average
+    size:
+      x: 800
+      y: 480
