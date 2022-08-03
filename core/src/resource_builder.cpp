@@ -95,7 +95,7 @@ bool ResourceBuilder::decodeResourceTag(const ryml::NodeRef& source, ryml::NodeR
       Handler handler("");
       handler.loadROStoYAML(filename, target);
 
-      if (!target.num_children())
+      if (!target.num_children() && target.val_is_null())
       {
         ROS_WARN("Cannot resolve PATH or ROS NAMESPACE from resource `%s`.", filename.c_str());
         return false;
