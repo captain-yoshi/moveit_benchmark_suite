@@ -145,7 +145,7 @@ profiler_config:
   #     max_contacts_per_pair: 1
   #     max_cost_sources: 1
   #     verbose: False
-  - name: ALL (Contact Only)
+  - name: All (Contact Only)
     resource:
       distance: False
       cost: False
@@ -154,7 +154,7 @@ profiler_config:
       max_contacts_per_pair: 1
       max_cost_sources: 1
       verbose: False
-  - name: ALL (Cost)
+  - name: All (Cost)
     resource:
       distance: False
       cost: True
@@ -163,7 +163,7 @@ profiler_config:
       max_contacts_per_pair: 1
       max_cost_sources: 99
       verbose: False
-  # - name: ALL (Distance)
+  # - name: All (Distance)
   #   resource:
   #     distance: True
   #     cost: False
