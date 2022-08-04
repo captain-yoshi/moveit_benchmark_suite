@@ -530,16 +530,12 @@ ryml::substr IO::loadFileToYAML(const std::string& path, ryml::NodeRef& node)
 
   try
   {
-    std::cout << full_path << std::endl;
     substr = ::loadFileToString(full_path, *node.tree());
 
-    std::cout << "crounching" << std::endl;
     ryml::parse_in_place(ryml::to_csubstr(full_path), substr, node);
-    std::cout << "yolo" << std::endl;
 
     // resolve yaml references
     node.tree()->resolve();
-    std::cout << "test" << std::endl;
   }
   catch (moveit_serialization::yaml_error& e)
   {
