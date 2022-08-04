@@ -1007,6 +1007,12 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
 
   for (const auto& c : container)
   {
+    if (c.second.isEmpty())
+    {
+      ROS_WARN("Plot skipped, no plotting data generated.");
+      continue;
+    }
+
     switch (c.first.type)
     {
       case PlotType::BarGraph:
