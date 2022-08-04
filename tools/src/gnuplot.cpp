@@ -854,7 +854,7 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
 
     if (!dataset.has_child("data"))
     {
-      ROS_WARN("Malformed dataset, root 'data' node not found");
+      ROS_WARN("Plot skipped, dataset has no `data` node.");
       return;
     }
 
@@ -999,7 +999,7 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
           }
 
           // Should not
-          ROS_WARN("Metric can be a double or 1d or 2d vector");
+          ROS_WARN("Metric '%s' decoding error in query #%s", metric.c_str(), std::to_string(j + 1).c_str());
         }
       }
     }
