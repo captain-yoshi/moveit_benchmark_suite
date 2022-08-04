@@ -20,8 +20,4 @@
     <depend>tinyxml2</depend>
 	<depend>tf2_ros</depend>
 	<depend>urdf_to_scene</depend>
-
-	<export>
-		<moveit_benchmark_suite benchmarks="${prefix}/benchmarks"/>
-	</export>
 </package>
