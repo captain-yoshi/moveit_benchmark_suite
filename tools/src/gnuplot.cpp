@@ -790,7 +790,7 @@ std::string GNUPlotDataset::combineTokenNodeValue(const Token& token, const ryml
     return token_tag + val;
   }
 
-  ROS_WARN("Node type not handeled");
+  ROS_WARN_STREAM("Node type of " << token << " not handeled");
   return "";
 }
 

@@ -41,6 +41,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <ostream>
 
 #include <moveit_benchmark_suite/serialization/ryml.h>
 
@@ -79,5 +80,7 @@ private:
   bool ns_rel_ = true;  // namespace is relative or absolute
   ryml::Tree tree_;
 };
+
+std::ostream & operator << (std::ostream &out, const Token &t);
 
 }  // namespace moveit_benchmark_suite

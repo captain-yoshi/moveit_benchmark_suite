@@ -180,4 +180,8 @@ bool Token::isAbsolute() const
   return !isRelative();
 }
 
+std::ostream & operator << (std::ostream &out, const Token &t)
+{
+    return out << t.getNamespace() << " (value '" << t.getValue() << "')";
+}
 }  // namespace moveit_benchmark_suite
