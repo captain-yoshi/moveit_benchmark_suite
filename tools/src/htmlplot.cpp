@@ -11,43 +11,41 @@ using namespace moveit_benchmark_suite::tools;
 /// HTMLPlot
 ///
 
-HTMLPlot::HTMLPlot()
+HTMLPlot::HTMLPlot(const std::string& pathname)
 {
-  std::string filepath = "";
-  std::string filename = "test.html";
-
-  std::string out_file;
+  auto filepath = IO::getFilePath(pathname);
+  auto filename = IO::getFileName(pathname);
 
   // Create filename if not specified and add extension
-  out_filename = filename;
-  if (out_filename.empty())
-    out_filename = log::format("%1%_%2%", "", IO::getDateStr() + ".html");
+  out_filename_ = filename;
+  if (out_filename_.empty())
+    out_filename_ = log::format("plot_generation_%1%", IO::getDateStr() + ".html");
 
   // Set filepath as ROS_HOME
-  out_filepath = filepath;
-  if (out_filepath.empty())
-    out_filepath = IO::getEnvironmentPath("ROS_HOME");
+  out_filepath_ = filepath;
+  if (out_filepath_.empty())
+    out_filepath_ = IO::getEnvironmentPath("ROS_HOME");
 
   // Set filepath as default ROS default home path
-  if (out_filepath.empty())
+  if (out_filepath_.empty())
   {
-    out_filepath = IO::getEnvironmentPath("HOME");
-    out_filepath = out_filepath + "/.ros";
+    out_filepath_ = IO::getEnvironmentPath("HOME");
+    out_filepath_ = out_filepath_ + "/.ros";
   }
-  else if (out_filepath[0] != '/')
+  else if (out_filepath_[0] != '/')
   {
-    std::string tmp = out_filepath;
-    out_filepath = IO::getEnvironmentPath("HOME");
-    out_filepath = out_filepath + "/.ros";
-    out_filepath = out_filepath + "/" + tmp;
+    std::string tmp = out_filepath_;
+    out_filepath_ = IO::getEnvironmentPath("HOME");
+    out_filepath_ = out_filepath_ + "/.ros";
+    out_filepath_ = out_filepath_ + "/" + tmp;
   }
 
-  if (!out_filepath.empty() && out_filepath.back() != '/')
-    out_filepath = out_filepath + '/';
+  if (!out_filepath_.empty() && out_filepath_.back() != '/')
+    out_filepath_ = out_filepath_ + '/';
 
-  if (!IO::createFile(output_, out_filepath + out_filename))
+  if (!IO::createFile(output_, out_filepath_ + out_filename_))
   {
-    ROS_ERROR_STREAM(log::format("File creation failed for: '%1%'", out_filepath + out_filename));
+    ROS_ERROR_STREAM(log::format("File creation failed for: '%1%'", out_filepath_ + out_filename_));
     return;
   }
 
@@ -95,5 +93,5 @@ void HTMLPlot::dump()
 
   output_.close();
 
-  ROS_INFO_STREAM(log::format("Successfully created HTML file: '%1%'", out_filepath + out_filename));
+  ROS_INFO_STREAM(log::format("Successfully created HTML file: '%1%'", out_filepath_ + out_filename_));
 }

@@ -1,6 +1,7 @@
 <?xml version="1.0" ?>
 <launch>
   <arg name="input_files" default="[]" />
+  <arg name="output_file" default="" />
   <arg name="config" default="$(find moveit_benchmark_suite_tools)/config/generate_plots.yaml" />
 
   <!-- By default, we are not in debug mode -->
@@ -12,6 +13,7 @@
   <node name="generate_plots" pkg="moveit_benchmark_suite_tools" type="generate_plots" respawn="false" clear_params="true" required="true" output="screen" launch-prefix="$(arg launch_prefix)">
     <param name="config_file" value="$(arg config)"/>
     <rosparam param="input_files" subst_value="True">$(arg input_files)</rosparam>
+    <param name="output_file" value="$(arg output_file)"/>
   </node>
 
 </launch>

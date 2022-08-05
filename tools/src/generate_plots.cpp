@@ -8,6 +8,7 @@ using namespace moveit_benchmark_suite;
 using namespace moveit_benchmark_suite::tools;
 
 constexpr char INPUT_PARAMETER[] = "input_files";
+constexpr char OUTPUT_PARAMETER[] = "output_file";
 
 int main(int argc, char** argv)
 {
@@ -19,8 +20,11 @@ int main(int argc, char** argv)
 
   // Get config
   std::string config_file;
+  std::string output_file;
   std::vector<std::string> dataset_files;
+
   pnh.getParam(INPUT_PARAMETER, dataset_files);
+  pnh.getParam(OUTPUT_PARAMETER, output_file);
   pnh.getParam(CONFIG_PARAMETER, config_file);
 
   // Generate GNUPlot script
@@ -30,7 +34,7 @@ int main(int argc, char** argv)
   gnuplot.plot(dataset_files);
 
   // Add GNUPlot instances into HTML
-  HTMLPlot html;
+  HTMLPlot html(output_file);
   auto names = gnuplot.getInstanceNames();
 
   ROS_INFO("Generating HTML file...");

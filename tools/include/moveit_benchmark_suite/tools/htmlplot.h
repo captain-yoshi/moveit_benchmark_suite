@@ -47,7 +47,7 @@ namespace tools {
 class HTMLPlot
 {
 public:
-  HTMLPlot();
+  HTMLPlot(const std::string& pathname);
 
   void write(const std::string& line);
   void writeline(const std::string& line);
@@ -57,8 +57,8 @@ public:
 
 private:
   std::ofstream output_;
-  std::string out_filepath;
-  std::string out_filename;
+  std::string out_filepath_;
+  std::string out_filename_;
 };
 
 }  // namespace tools
