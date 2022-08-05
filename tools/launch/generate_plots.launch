@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <launch>
   <arg name="input_files" default="[]" />
-  <arg name="config" default="$(find moveit_benchmark_suite_tools)/config/plots.yaml" />
+  <arg name="config" default="$(find moveit_benchmark_suite_tools)/config/generate_plots.yaml" />
 
   <!-- By default, we are not in debug mode -->
   <arg name="debug" default="false" />

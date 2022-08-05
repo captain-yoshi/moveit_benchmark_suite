@@ -1,7 +1,12 @@
+# ex. for the collision check benchmark
 aggregate_config:
-  # filters:
-  #   - {key: /hw/cpu/model, val: 158, predicate: '='}
   statistics:
     - raw_metric: time
-      new_metric: avg_time
+      new_metric: collision_check
       type: frequency
+    - raw_metric: collision
+      new_metric: avg_collision
+      type: average
+    - raw_metric: contact_count
+      new_metric: avg_contact_count
+      type: average

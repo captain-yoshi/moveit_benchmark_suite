@@ -846,6 +846,12 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
     container.emplace_back(std::make_pair(plot, GNUPlotData()));
   }
 
+  if (dataset_map.empty())
+  {
+    ROS_WARN("Plot skipped, dataset is empty after applying filters.");
+    return;
+  }
+
   for (const auto& dataset_pair : dataset_map)
   {
     auto it = dataset_pair.second;
@@ -854,7 +860,7 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
 
     if (!dataset.has_child("data"))
     {
-      ROS_WARN("Malformed dataset, root 'data' node not found");
+      ROS_WARN("Plot skipped, dataset has no `data` node.");
       return;
     }
 
@@ -999,7 +1005,7 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
           }
 
           // Should not
-          ROS_WARN("Metric can be a double or 1d or 2d vector");
+          ROS_WARN("Metric '%s' decoding error in query #%s", metric.c_str(), std::to_string(j + 1).c_str());
         }
       }
     }
@@ -1007,6 +1013,12 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
 
   for (const auto& c : container)
   {
+    if (c.second.isEmpty())
+    {
+      ROS_WARN("Plot skipped, no plotting data generated.");
+      continue;
+    }
+
     switch (c.first.type)
     {
       case PlotType::BarGraph:
