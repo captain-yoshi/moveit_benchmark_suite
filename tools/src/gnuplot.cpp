@@ -846,6 +846,12 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
     container.emplace_back(std::make_pair(plot, GNUPlotData()));
   }
 
+  if (dataset_map.empty())
+  {
+    ROS_WARN("Plot skipped, dataset is empty after applying filters.");
+    return;
+  }
+
   for (const auto& dataset_pair : dataset_map)
   {
     auto it = dataset_pair.second;
