@@ -33,6 +33,8 @@ int main(int argc, char** argv)
   HTMLPlot html;
   auto names = gnuplot.getInstanceNames();
 
+  ROS_INFO("Generating HTML file...");
+
   for (const auto& name : names)
   {
     std::string output;
