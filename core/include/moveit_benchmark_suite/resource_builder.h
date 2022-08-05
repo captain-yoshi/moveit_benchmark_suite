@@ -132,6 +132,7 @@ protected:
 
 private:
   std::map<std::string, ryml::Tree> node_map_;
+  std::map<std::string, ryml::Tree> construction_node_map_;
   std::vector<ryml::substr> buf_list_;
 };
 

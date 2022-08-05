@@ -274,7 +274,14 @@ void ResourceBuilder::extendResources(const ryml::NodeRef& node)
 
   // Remove original resource used for extension
   for (const auto& name : resource_names)
+  {
+    auto it = node_map_.find(name);
+
+    // Move ryml::Tree to construction map
+    construction_node_map_.emplace(name, std::move(it->second));
+
     node_map_.erase(name);
+  }
 }
 
 bool ResourceBuilder::extendResource(const ryml::NodeRef& node, std::vector<std::string>& resource_names)
@@ -299,47 +306,43 @@ bool ResourceBuilder::extendResource(const ryml::NodeRef& node, std::vector<std:
     return false;
   }
 
-  auto t_extend = it->second;
-  auto n_resource = node["resources"];
+  auto& t_extend = it->second;
+  auto n_extend_resources = node["resources"];
 
-  for (ryml::NodeRef const& child : n_resource.children())
+  for (ryml::NodeRef const& child : n_extend_resources.children())
   {
     ++seq_idx;
-    ryml::Tree t_src;
     ryml::Tree t_target;
-    ryml::NodeRef n_src = t_src.rootref();
     ryml::NodeRef n_target = t_target.rootref();
 
     // clone extend into target
     t_target.merge_with(&t_extend);
 
-    // try decoding every key value as a resource
-    for (ryml::NodeRef const& c : child.children())
-    {
-      ryml::Tree t_temp;
-      ryml::NodeRef n_temp = t_temp.rootref();
-
-      // const auto& key = it3->first.as<std::string>();
-      decodeResourceTag(c, n_temp);
-
-      n_src[c.key()] = n_temp;
-    }
-
     std::size_t pos;  // resource child pos in tree
-
-    // get tree position for target child 'resource' or 'resources'
-    if (n_target.has_child("resource"))
-      pos = n_resource["resource"].id();
-    else if (n_target.has_child("resources"))
-      pos = n_resource["resources"].id();
+    ryml::NodeRef n_resource;
+    if (n_target.has_child("resources"))
+    {
+      pos = n_target["resources"].id();
+      n_resource = n_target["resources"];
+    }
+    else if (n_target.has_child("resource"))
+    {
+      pos = n_target["resource"].id();
+      n_resource = n_target["resource"];
+    }
     else
     {
       ROS_WARN("Extend failed, no resource node found");
       return false;
     }
 
-    // merge to appropriate
-    t_target.merge_with(&t_src, ryml::NONE, pos);
+    // try decoding every key value as a resource
+    for (ryml::NodeRef const& c : child.children())
+    {
+      auto n_resource_key = n_resource[c.key()];
+
+      decodeResourceTag(c, n_resource_key);
+    }
 
     if (!validateResource(n_target))
     {
@@ -355,7 +358,6 @@ bool ResourceBuilder::extendResource(const ryml::NodeRef& node, std::vector<std:
       ROS_ERROR("Cannot extend resource name `%s`. Name already.", extended_name.c_str());
       return false;
     }
-
     insertResource(extended_name, std::move(t_target));
   }
   return true;
