@@ -107,6 +107,15 @@ bool isSuffix(const std::string& lhs, const std::string& rhs)
 
 }  // namespace
 
+std::string IO::createTerminalHyperLink(const std::string& uri, const std::string& name)
+{
+  std::string esc_seq = "\e]8";
+  std::string sep = ";;";
+  std::string closing_esc_seq = "\e\\";
+
+  return esc_seq + sep + uri + closing_esc_seq + name + esc_seq + sep + closing_esc_seq;
+}
+
 bool IO::isExtension(const std::string& path_string, const std::string& extension)
 {
   boost::filesystem::path path(path_string);

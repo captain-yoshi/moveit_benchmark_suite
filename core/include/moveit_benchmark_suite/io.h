@@ -58,6 +58,14 @@ namespace IO {
  */
 std::string generateUUID();
 
+/** \brief Create hyperlink clickable from a terminal.
+ *  \param[uri] string Uniform Ressource Identifier (URI).
+ *  \param[name] string Hyperlink name.
+ *  \return The escape sequence to create the link.
+ *  https://askubuntu.com/a/1391072
+ */
+std::string createTerminalHyperLink(const std::string& uri, const std::string& name);
+
 bool isExtension(const std::string& path_string, const std::string& extension);
 
 /** \brief Resolves `package://` URLs to their canonical form.
