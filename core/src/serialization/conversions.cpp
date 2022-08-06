@@ -336,8 +336,18 @@ void write(c4::yml::NodeRef* n, moveit_benchmark_suite::Metric const& rhs)
 
 bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::Metric* rhs)
 {
-  auto metric = decodeMetricVariant<bool, double, int, std::string, std::vector<bool>, std::vector<double>,
-                                    std::vector<int>, std::vector<std::string>>(n);
+  moveit_benchmark_suite::MetricPtr metric;
+
+  if (n.is_val())
+  {
+    // bool is encoded as 1/0, so don't need to decode bool
+    metric = decodeMetricVariant<int, double, std::string>(n);
+  }
+  else if (n.is_seq())
+  {
+    metric = decodeMetricVariant<std::vector<int>, std::vector<double>, std::vector<std::string>>(n);
+  }
+
   if (!metric)
     return false;
 
