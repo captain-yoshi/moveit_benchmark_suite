@@ -55,11 +55,40 @@ boost::filesystem::path expandSymlinks(const boost::filesystem::path& in)
   return in;
 }
 
+boost::filesystem::path expandROSHome(const boost::filesystem::path& in)
+{
+  auto parent = in.parent_path().string();
+
+  //
+  if (parent.empty())
+    parent = IO::getEnvironmentPath("ROS_HOME");
+
+  // Set parent as default ROS default home path
+  if (parent.empty())
+  {
+    parent = IO::getEnvironmentPath("HOME");
+    parent = parent + "/.ros";
+  }
+  else if (parent[0] != '/')
+  {
+    std::string tmp = parent;
+    parent = IO::getEnvironmentPath("HOME");
+    parent = parent + "/.ros";
+    parent = parent + "/" + tmp;
+  }
+
+  if (!parent.empty() && parent.back() != '/')
+    parent = parent + '/';
+
+  return parent + in.filename().string();
+}
+
 boost::filesystem::path expandPath(const boost::filesystem::path& in)
 {
   boost::filesystem::path out = in;
   out = expandHome(out);
   out = expandSymlinks(out);
+  out = expandROSHome(out);
 
   return boost::filesystem::absolute(out);
 }
