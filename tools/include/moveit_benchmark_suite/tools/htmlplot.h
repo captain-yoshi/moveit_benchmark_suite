@@ -57,8 +57,7 @@ public:
 
 private:
   std::ofstream output_;
-  std::string out_filepath_;
-  std::string out_filename_;
+  std::string abs_path_;
 };
 
 }  // namespace tools

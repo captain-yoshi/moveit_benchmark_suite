@@ -2,6 +2,8 @@
 #include <moveit_benchmark_suite/log.h>
 #include <moveit_benchmark_suite/tools/dataset_log.h>
 
+#include <boost/filesystem.hpp>  // for filesystem paths
+
 using namespace moveit_benchmark_suite;
 using namespace moveit_benchmark_suite::tools;
 
@@ -20,45 +22,18 @@ BenchmarkSuiteOutputter::~BenchmarkSuiteOutputter()
 void BenchmarkSuiteOutputter::dump(const DataSet& dataset, const std::string& pathname)
 {
   std::ofstream out;
-  std::string out_file;
-  std::string out_filepath;
-  std::string out_filename;
 
-  auto filepath = IO::getFilePath(pathname);
-  auto filename = IO::getFileName(pathname);
+  boost::filesystem::path path(pathname);
 
-  // Create filename if not specified and add extension
-  out_filename = filename;
-  if (out_filename.empty())
-    out_filename = log::format("%1%_%2%", dataset.name, IO::getDateStr() + ".yaml");
+  // Create random filename if not specified
+  if (path.empty())
+    path = log::format("%1%_%2%", dataset.name, IO::getDateStr() + ".yaml");
+  else if (path.filename_is_dot())
+    path /= log::format("%1%_%2%", dataset.name, IO::getDateStr() + ".yaml");
 
-  // Set filepath as ROS_HOME
-  out_filepath = filepath;
-  if (out_filepath.empty())
-    out_filepath = IO::getEnvironmentPath("ROS_HOME");
-
-  // Set filepath as default ROS default home path
-  if (out_filepath.empty())
-  {
-    out_filepath = IO::getEnvironmentPath("HOME");
-    out_filepath = out_filepath + "/.ros";
-  }
-  else if (out_filepath[0] != '/')
-  {
-    std::string tmp = out_filepath;
-    out_filepath = IO::getEnvironmentPath("HOME");
-    out_filepath = out_filepath + "/.ros";
-    out_filepath = out_filepath + "/" + tmp;
-  }
-
-  if (!out_filepath.empty() && out_filepath.back() != '/')
-    out_filepath = out_filepath + '/';
-
-  if (!IO::createFile(out, out_filepath + out_filename))
-  {
-    ROS_ERROR_STREAM(log::format("File creation failed for: '%1%'", out_filepath + out_filename));
+  auto abs_path = IO::createFile(out, path.string());
+  if (out.fail())
     return;
-  }
 
   ryml::Tree tree;
   ryml::NodeRef node = tree.rootref();
@@ -73,5 +48,5 @@ void BenchmarkSuiteOutputter::dump(const DataSet& dataset, const std::string& pa
   out << node;
   out.close();
 
-  ROS_INFO_STREAM(log::format("Successfully created dataset: '%1%'", out_filepath + out_filename));
+  ROS_INFO_STREAM(log::format("Successfully created dataset: '%1%'", abs_path));
 }

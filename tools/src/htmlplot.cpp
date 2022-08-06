@@ -1,4 +1,5 @@
 /* Author: Captain Yoshi */
+#include <boost/filesystem.hpp>  // for filesystem paths
 
 #include <moveit_benchmark_suite/tools/htmlplot.h>
 
@@ -13,41 +14,17 @@ using namespace moveit_benchmark_suite::tools;
 
 HTMLPlot::HTMLPlot(const std::string& pathname)
 {
-  auto filepath = IO::getFilePath(pathname);
-  auto filename = IO::getFileName(pathname);
+  boost::filesystem::path path(pathname);
 
-  // Create filename if not specified and add extension
-  out_filename_ = filename;
-  if (out_filename_.empty())
-    out_filename_ = log::format("plot_generation_%1%", IO::getDateStr() + ".html");
+  // Create random filename if not specified
+  if (path.empty())
+    path = log::format("plot_generation_%1%", IO::getDateStr() + ".html");
+  else if (path.filename_is_dot())
+    path /= log::format("plot_generation_%1%", IO::getDateStr() + ".html");
 
-  // Set filepath as ROS_HOME
-  out_filepath_ = filepath;
-  if (out_filepath_.empty())
-    out_filepath_ = IO::getEnvironmentPath("ROS_HOME");
-
-  // Set filepath as default ROS default home path
-  if (out_filepath_.empty())
-  {
-    out_filepath_ = IO::getEnvironmentPath("HOME");
-    out_filepath_ = out_filepath_ + "/.ros";
-  }
-  else if (out_filepath_[0] != '/')
-  {
-    std::string tmp = out_filepath_;
-    out_filepath_ = IO::getEnvironmentPath("HOME");
-    out_filepath_ = out_filepath_ + "/.ros";
-    out_filepath_ = out_filepath_ + "/" + tmp;
-  }
-
-  if (!out_filepath_.empty() && out_filepath_.back() != '/')
-    out_filepath_ = out_filepath_ + '/';
-
-  if (!IO::createFile(output_, out_filepath_ + out_filename_))
-  {
-    ROS_ERROR_STREAM(log::format("File creation failed for: '%1%'", out_filepath_ + out_filename_));
+  abs_path_ = IO::createFile(output_, path.string());
+  if (output_.fail())
     return;
-  }
 
   writeline("<!DOCTYPE html>");
   writeline("<html>");
@@ -93,5 +70,5 @@ void HTMLPlot::dump()
 
   output_.close();
 
-  ROS_INFO_STREAM(log::format("Successfully created HTML file: '%1%'", out_filepath_ + out_filename_));
+  ROS_INFO_STREAM(log::format("Successfully created HTML file: '%1%'", abs_path_));
 }

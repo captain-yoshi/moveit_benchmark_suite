@@ -590,12 +590,11 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
 {
   ryml::Tree tree;
   ryml::NodeRef node = tree.rootref();
-  std::string abs_file = IO::getAbsDataSetFile(file);
 
-  auto substr = IO::loadFileToYAML(abs_file, node);
+  auto substr = IO::loadFileToYAML(file, node);
   if (substr.empty())
   {
-    ROS_ERROR("Failed to load YAML file `%s`.", abs_file.c_str());
+    ROS_ERROR("Failed to load YAML file `%s`.", file.c_str());
     return false;
   }
 

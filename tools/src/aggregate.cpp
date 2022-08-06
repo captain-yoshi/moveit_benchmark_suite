@@ -138,12 +138,11 @@ bool AggregateDataset::buildParamsFromYAML(const std::string& filename, std::vec
 {
   ryml::Tree tree;
   ryml::NodeRef node = tree.rootref();
-  std::string abs_file = IO::getAbsDataSetFile(filename);
 
-  auto substr = IO::loadFileToYAML(abs_file, node);
+  auto substr = IO::loadFileToYAML(filename, node);
   if (substr.empty())
   {
-    ROS_ERROR("Failed to load YAML file `%s`.", abs_file.c_str());
+    ROS_ERROR("Failed to load YAML file `%s`.", filename.c_str());
     return false;
   }
 
