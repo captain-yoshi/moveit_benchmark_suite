@@ -167,8 +167,8 @@ DataSetPtr Benchmark::run(Profiler& profiler) const
       data->query = profiler.getBaseQuery(query_index);
       data->process_id = IO::getProcessID();
       data->thread_id = IO::getThreadID();
-      data->metrics["thread_id"] = data->thread_id;
-      data->metrics["process_id"] = data->process_id;
+      // data->metrics["thread_id"] = data->thread_id;
+      // data->metrics["process_id"] = data->process_id;
 
       dataset->addDataPoint(std::to_string(query_index), data);
 
