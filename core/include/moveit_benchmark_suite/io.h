@@ -120,8 +120,9 @@ std::string getEnvironmentPath(const std::string& env);
 /** \brief Creates a file and opens an output stream. Creates directories if they do not exist.
  *  \param[out] out Output stream to initialize.
  *  \param[in] file File to create and open.
+ *  \return Absolute path after expansion.
  */
-bool createFile(std::ofstream& out, const std::string& file);
+std::string createFile(std::ofstream& out, const std::string& file);
 
 /** \brief Creates a temporary file and opens an output stream.
  *  \param[out] out Output stream to initialize.

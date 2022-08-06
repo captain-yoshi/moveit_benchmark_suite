@@ -273,23 +273,21 @@ std::string IO::getEnvironmentPath(const std::string& env)
   return home;
 }
 
-bool IO::createFile(std::ofstream& out, const std::string& file)
+std::string IO::createFile(std::ofstream& out, const std::string& file)
 {
-  boost::filesystem::path path(file);
-  path = expandHome(path);
-  path = expandSymlinks(path);
+  // resolve ros packages + path expansion
+  boost::filesystem::path path = resolvePackage(file);
+  path = expandPath(path);
 
-  const auto parent = path.parent_path().string();
+  // create directories
+  auto parent = path.parent_path().string();
 
   if (!parent.empty())
     boost::filesystem::create_directories(parent);
 
   out.open(path.string(), std::ofstream::out | std::ofstream::app);
 
-  if (out.fail())
-    return false;
-
-  return true;
+  return path.string();
 }
 
 metadata::CPU IO::getCPUMetadata()
