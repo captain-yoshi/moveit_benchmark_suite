@@ -233,62 +233,6 @@ const std::string IO::runCommand(const std::string& cmd)
   return result;
 }
 
-std::string IO::getFilePath(const std::string& file)
-{
-  boost::filesystem::path path(file);
-  path = expandHome(path);
-  path = expandSymlinks(path);
-
-  return path.parent_path().string();
-}
-
-std::string IO::getFileName(const std::string& file)
-{
-  bool is_dot = false;
-  if (!file.empty() && file.back() == '.')
-    is_dot = true;
-
-  boost::filesystem::path path(file);
-  path = expandHome(path);
-  path = expandSymlinks(path);
-
-  if (!is_dot && path.filename().string().compare(".") == 0)
-    return "";
-
-  return path.filename().string();
-}
-
-std::string IO::getAbsDataSetFile(const std::string& file)
-{
-  boost::filesystem::path path(file);
-  path = expandHome(path);
-  path = expandSymlinks(path);
-
-  std::string filepath = path.parent_path().string();
-
-  if (filepath.empty())
-    filepath = IO::getEnvironmentPath("ROS_HOME");
-
-  // Set filepath as default ROS default home path
-  if (filepath.empty())
-  {
-    filepath = IO::getEnvironmentPath("HOME");
-    filepath = filepath + "/.ros";
-  }
-  else if (filepath[0] != '/')
-  {
-    std::string tmp = filepath;
-    filepath = IO::getEnvironmentPath("HOME");
-    filepath = filepath + "/.ros";
-    filepath = filepath + "/" + tmp;
-  }
-
-  if (!filepath.empty() && filepath.back() != '/')
-    filepath = filepath + '/';
-
-  return filepath + path.filename().string();
-}
-
 std::string IO::getEnvironmentPath(const std::string& env)
 {
   const char* home = std::getenv(env.c_str());
