@@ -70,5 +70,7 @@ void HTMLPlot::dump()
 
   output_.close();
 
-  ROS_INFO_STREAM(log::format("Successfully created HTML file: '%1%'", abs_path_));
+  std::string hyperlink = IO::createTerminalHyperLink("file://" + abs_path_, abs_path_);
+
+  ROS_INFO_STREAM(log::format("Successfully created HTML file: '%1%'", hyperlink));
 }
