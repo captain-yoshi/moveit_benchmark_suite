@@ -154,7 +154,7 @@ const std::string IO::resolvePackage(const std::string& path)
   else
     file = path;
 
-  return expandPath(file).string();
+  return file.string();
 }
 
 std::set<std::string> IO::findPackageURIs(const std::string& string)
@@ -179,6 +179,7 @@ std::set<std::string> IO::findPackageURIs(const std::string& string)
 const std::string IO::resolvePath(const std::string& path, bool verbose)
 {
   boost::filesystem::path file = resolvePackage(path);
+  file = expandPath(file);
 
   if (!boost::filesystem::exists(file))
   {
@@ -193,6 +194,7 @@ const std::string IO::resolvePath(const std::string& path, bool verbose)
 const std::string IO::resolveParent(const std::string& path)
 {
   boost::filesystem::path file = resolvePackage(path);
+  file = expandPath(file);
   return file.parent_path().string();
 }
 
@@ -345,6 +347,7 @@ metadata::SW IO::getROSPkgMetadata(const std::string& name)
   metadata::SW sw;
 
   std::string pathname = resolvePackage("package://" + name);
+  pathname = expandPath(pathname).string();
 
   sw.name = name;
 
