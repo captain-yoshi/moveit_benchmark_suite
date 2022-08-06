@@ -143,7 +143,7 @@ const std::string IO::resolvePackage(const std::string& path)
     if (package.empty())
     {
       // rospack above already complains on the command line
-      //ROS_WARN("Package `%s` does not exist.", package_name.c_str());
+      // ROS_WARN("Package `%s` does not exist.", package_name.c_str());
       return "";
     }
 
@@ -349,7 +349,7 @@ metadata::SW IO::getROSPkgMetadata(const std::string& name)
 
   sw.name = name;
 
-  if(pathname.empty())
+  if (pathname.empty())
   {
     sw.version = "unknown";
   }
