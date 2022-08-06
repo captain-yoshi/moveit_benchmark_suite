@@ -17,6 +17,7 @@ catkin_package(
     include
   CATKIN_DEPENDS
     moveit_benchmark_suite_core
+    rviz
 )
 
 set(CMAKE_CXX_STANDARD 14)

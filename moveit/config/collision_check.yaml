@@ -7,8 +7,6 @@ benchmark_config:
   parameters:
     runs: 10000                     # Number of trials for each query
     name: "Collision Check"         # Default ""    | Overridden by ROS Param /benchmark/name
-    visualize: false                # Default false | Overridden by ROS Param /benchmark/visualize
-    output_file: ""                 # Default ""    | Overridden by ROS Param /benchmark/output_file
     verbose_status_trial: False     # Print status before each trial of all queries
     verbose_status_query: True      # Print status before each query
 

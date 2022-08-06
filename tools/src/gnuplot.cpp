@@ -673,10 +673,12 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
       {
         std::string ns;
         std::string val;
-        std::string predicate;
+        std::string predicate{ "=" };
 
         child["ns"] >> ns;
-        child["predicate"] >> predicate;
+
+        if (child.has_child("predicate"))
+          child["predicate"] >> predicate;
 
         if (child.has_child("val"))
           child["val"] >> val;
@@ -789,7 +791,7 @@ std::string GNUPlotDataset::combineTokenNodeValue(const Token& token, const ryml
     return token_tag + val;
   }
 
-  ROS_WARN("Node type not handeled");
+  ROS_WARN_STREAM("Node type of " << token << " not handeled");
   return "";
 }
 

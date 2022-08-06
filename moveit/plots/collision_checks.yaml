@@ -6,7 +6,6 @@ gnuplot_config:
     - filters:
         - ns: query/request
           val: First (Binary)
-          predicate: "=="
       labels:
         - query/scene
       legends:
@@ -21,7 +20,6 @@ gnuplot_config:
     - filters:
         - ns: query/request
           val: First (Contact Only)
-          predicate: "=="
       labels:
         - query/scene
       legends:
@@ -42,7 +40,6 @@ gnuplot_config:
     - filters:
         - ns: query/request
           val: First (Cost)
-          predicate: "=="
       labels:
         - query/scene
       legends:
@@ -63,7 +60,6 @@ gnuplot_config:
     - filters:
         - ns: query/request
           val: All (Contact Only)
-          predicate: "=="
       labels:
         - query/scene
       legends:
@@ -84,7 +80,6 @@ gnuplot_config:
     - filters:
         - ns: query/request
           val: All (Cost)
-          predicate: "=="
       labels:
         - query/scene
       legends:
@@ -105,7 +100,6 @@ gnuplot_config:
     - filters:
         - ns: query/request
           val: First (Distance)
-          predicate: "=="
       labels:
         - query/scene
       legends:
@@ -126,7 +120,6 @@ gnuplot_config:
     - filters:
         - ns: query/request
           val: All (Distance)
-          predicate: "=="
       labels:
         - query/scene
       legends:
@@ -148,7 +141,6 @@ gnuplot_config:
     - filters:
         - ns: query/scene
           val: empty
-          predicate: "=="
       labels:
         - query/request
       legends:
@@ -169,7 +161,6 @@ gnuplot_config:
     - filters:
         - ns: query/scene
           val: 'box-1n'
-          predicate: "=="
       labels:
         - query/request
       legends:
@@ -190,7 +181,6 @@ gnuplot_config:
     - filters:
         - ns: query/scene
           val: 'box-1c'
-          predicate: "=="
       labels:
         - query/request
       legends:
@@ -211,7 +201,6 @@ gnuplot_config:
     - filters:
         - ns: query/scene
           val: 'box-100-nc'
-          predicate: "=="
       labels:
         - query/request
       legends:
@@ -232,7 +221,6 @@ gnuplot_config:
     - filters:
         - ns: query/scene
           val: 'box-100-4c'
-          predicate: "=="
       labels:
         - query/request
       legends:
@@ -253,7 +241,6 @@ gnuplot_config:
     - filters:
         - ns: query/scene
           val: 'mesh-100-nc'
-          predicate: "=="
       labels:
         - query/request
       legends:
@@ -274,7 +261,6 @@ gnuplot_config:
     - filters:
         - ns: query/scene
           val: 'mesh-100-4c'
-          predicate: "=="
       labels:
         - query/request
       legends:

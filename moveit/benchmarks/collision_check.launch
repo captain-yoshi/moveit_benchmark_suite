@@ -1,36 +1,29 @@
 <?xml version="1.0"?>
 <launch>
   <!-- Configuration parameters -->
-  <arg name="name" default=""/>
-  <arg name="output_file" default="" />
-  <!-- Overwrite this param as a bool type -->
-  <arg name="visualize" default="" doc="turns on and off visualization with rviz (bool type)"/>
-
-
-  <include file="$(find moveit_benchmark_suite)/launch/moveit_rviz.launch" if="$(eval bool(visualize) == 1)">
-    <!--<arg name="debug" value="$(arg debug)"/>-->
-  </include>
-
-  <!-- By default, we are not in debug mode -->
-  <arg name="debug" default="false" />
-  <arg unless="$(arg debug)" name="launch_prefix" value="" />
-  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --args" />
+  <arg name="name" default="" />
+  <arg name="output_file" default="" doc="yaml file to store benchmarking data"/>
+  <arg name="visualize" default="false" doc="turns on and off visualization with rviz (bool type)"/>
 
   <!-- Benchmark configuration file -->
   <arg name="config_file" default="$(find moveit_benchmark_suite)/config/collision_check.yaml"/>
 
+  <include file="$(find moveit_benchmark_suite)/launch/moveit_rviz.launch" if="$(arg visualize)"/>
+
+  <!-- By default, we are not in debug mode -->
+  <arg name="debug" default="false"/>
+  <arg unless="$(arg debug)" name="launch_prefix" value=""/>
+  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --args"/>
+
   <!-- Launch benchmark node -->
   <node name="collision_check" pkg="moveit_benchmark_suite" type="collision_check" respawn="false" clear_params="true" output="screen" launch-prefix="$(arg launch_prefix)" required="true">
-
     <rosparam command="load" file="$(arg config_file)"/>
-
 
     <!-- Override config file if not empty -->
     <param name="name" value="$(arg name)"/>
     <param name="config_file" value="$(arg config_file)"/>
     <param name="output_file" value="$(arg output_file)"/>
     <param name="visualize" value="$(arg visualize)"/>
-
   </node>
 
 </launch>
