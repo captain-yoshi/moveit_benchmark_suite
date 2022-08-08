@@ -63,6 +63,9 @@ static std::string TERMINAL_QT_STR = "qt";
 static std::string TERMINAL_SVG_STR = "svg";
 static std::string TERMINAL_PNG_STR = "png";
 
+static std::string TERMINAL_SVG_FILE_EXT = "svg";
+static std::string TERMINAL_PNG_FILE_EXT = "png";
+
 struct TerminalSize
 {
   double x = 640;
@@ -73,7 +76,7 @@ struct TerminalSize
 class GNUPlotTerminal
 {
 public:
-  GNUPlotTerminal(const std::string& mode);
+  GNUPlotTerminal(const std::string& mode, const std::string& file_ext = "");
 
   /** \brief Virtual destructor for cleaning up resources.
    */
@@ -84,6 +87,8 @@ public:
 
   const std::string mode;
   TerminalSize size;
+
+  std::string file_ext;
 };
 
 // Generates output in a separate window with the Qt library
