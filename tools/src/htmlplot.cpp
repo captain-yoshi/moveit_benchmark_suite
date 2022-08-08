@@ -32,7 +32,7 @@ HTMLPlot::HTMLPlot(const std::string& pathname)
 
   // CSS: set SVG stacked and horizontally centered
   writeline("<style>");
-  writeline("svg {");
+  writeline("img {");
   writeline("display: flex;");
   writeline("justify-content: center;");
   writeline("align-items: center;");
@@ -40,6 +40,11 @@ HTMLPlot::HTMLPlot(const std::string& pathname)
   writeline("}");
   writeline("</style>");
 };
+
+void HTMLPlot::writeImageTag(const std::string& src)
+{
+  writeline("<img src=\"" + src + "\">");
+}
 
 void HTMLPlot::write(const std::string& line)
 {
