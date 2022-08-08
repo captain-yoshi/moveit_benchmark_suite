@@ -225,6 +225,16 @@ GNUPlotHelper::Instance::~Instance()
   th_.detach();
 }
 
+void GNUPlotHelper::Instance::setTerminal(std::shared_ptr<GNUPlotTerminal> terminal)
+{
+  terminal_ = terminal;
+}
+
+std::shared_ptr<GNUPlotTerminal> GNUPlotHelper::Instance::getTerminal()
+{
+  return terminal_;
+}
+
 void GNUPlotHelper::Instance::write(const std::string& line)
 {
 #if IS_BOOST_164
@@ -285,6 +295,12 @@ void GNUPlotHelper::getInstanceOutput(const std::string& instance, std::string& 
 
   for (std::string line; std::getline(is, line);)
     output.append(line + "\n");
+}
+
+std::shared_ptr<GNUPlotTerminal> GNUPlotHelper::getInstanceTerminal(const std::string& instance)
+{
+  auto in = getInstance(instance);
+  return in->getTerminal();
 }
 
 void GNUPlotHelper::configureTerminal(const std::string& instance_id, const GNUPlotTerminal& terminal)
@@ -1048,6 +1064,11 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
       case PlotType::BarGraph:
       {
         auto options = std::static_pointer_cast<GNUPlotHelper::BarGraphOptions>(c.first.options);
+
+        // set terminal used by instance
+        auto in = helper_.getInstance(options->instance);
+        in->setTerminal(layout_.terminal);
+
         if (!single_instance_)
           helper_.configureTerminal(options->instance, *layout_.terminal);
         helper_.plot(c.second, *options);
@@ -1056,6 +1077,11 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
       case PlotType::BoxPlot:
       {
         auto options = std::static_pointer_cast<GNUPlotHelper::BoxPlotOptions>(c.first.options);
+
+        // set terminal used by instance
+        auto in = helper_.getInstance(options->instance);
+        in->setTerminal(layout_.terminal);
+
         if (!single_instance_)
           helper_.configureTerminal(options->instance, *layout_.terminal);
         helper_.plot(c.second, *options);
@@ -1073,4 +1099,9 @@ std::set<std::string> GNUPlotDataset::getInstanceNames() const
 void GNUPlotDataset::getInstanceOutput(const std::string& instance_name, std::string& output)
 {
   helper_.getInstanceOutput(instance_name, output);
+}
+
+std::shared_ptr<GNUPlotTerminal> GNUPlotDataset::getInstanceTerminal(const std::string& instance_name)
+{
+  return helper_.getInstanceTerminal(instance_name);
 }
