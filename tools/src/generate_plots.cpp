@@ -45,9 +45,11 @@ int main(int argc, char** argv)
     std::ofstream ofs;
     boost::filesystem::path path(html_filepath);
 
-    // add to html_filepath folder name (without the extension)
+    auto terminal = gnuplot.getInstanceTerminal(name);
+
+    // prepare terminal output filename
     path.replace_extension("");
-    path /= name + ".png";
+    path /= name + "." + terminal->file_ext;
 
     IO::createFile(ofs, path.string());
     std::string output;
