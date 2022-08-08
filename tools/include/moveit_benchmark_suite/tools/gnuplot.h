@@ -117,7 +117,7 @@ public:
   std::string getCmd() const override;
 };
 
-// Produces files in the W3C Scalable Vector Graphics format
+// Produces files in the Portable Network Graphics format
 class PngTerminal : public GNUPlotTerminal
 {
 public:
@@ -188,20 +188,23 @@ public:
   GNUPlotHelper(GNUPlotHelper const&) = delete;
   void operator=(GNUPlotHelper const&) = delete;
 
-  struct InstanceOptions
+  struct GNUPlotOptions
   {
     std::string instance{ "default" };
   };
 
   std::set<std::string> getInstanceNames() const;
+
   void getInstanceOutput(const std::string& instance, std::string& output);
+
+  std::shared_ptr<GNUPlotTerminal> getInstanceTerminal(const std::string& instance);
 
   void configureTerminal(const std::string& instance_id, const GNUPlotTerminal& terminal);
 
   /** \name Plotting
       \{ */
 
-  struct PlottingOptions : InstanceOptions
+  struct PlottingOptions : GNUPlotOptions
   {
     struct Axis
     {
@@ -255,7 +258,7 @@ public:
    */
   void plot(const GNUPlotData& data, const BarGraphOptions& options);
 
-  struct MultiPlotOptions : InstanceOptions
+  struct MultiPlotOptions : GNUPlotOptions
   {
     struct Layout
     {
@@ -283,6 +286,8 @@ private:
 
     ~Instance();
 
+    void setTerminal(std::shared_ptr<GNUPlotTerminal> terminal);
+    std::shared_ptr<GNUPlotTerminal> getTerminal();
     /** \name Raw Input
         \{ */
 
@@ -299,6 +304,8 @@ private:
     // non-copyable
     Instance(Instance const&) = delete;
     void operator=(Instance const&) = delete;
+
+    std::shared_ptr<GNUPlotTerminal> terminal_;
 
     bool debug_{ false };
 
@@ -320,7 +327,10 @@ private:
    *  \param[in] name Name of instance.
    *  \return The instance.
    */
+public:
   std::shared_ptr<Instance> getInstance(const std::string& name);
+
+private:
   std::map<std::string, std::shared_ptr<Instance>> instances_;  ///< Map of open GNUPlot instances
 };
 
@@ -380,6 +390,7 @@ public:
 
   std::set<std::string> getInstanceNames() const;
   void getInstanceOutput(const std::string& instance_name, std::string& output);
+  std::shared_ptr<GNUPlotTerminal> getInstanceTerminal(const std::string& instance_name);
 
 private:
   // Filtered dataset
