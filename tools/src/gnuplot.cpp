@@ -25,7 +25,8 @@ namespace bio = boost::iostreams;
 /// GNUPlotTerminal
 ///
 
-GNUPlotTerminal::GNUPlotTerminal(const std::string& mode) : mode(mode){};
+GNUPlotTerminal::GNUPlotTerminal(const std::string& mode, const std::string& file_ext)
+  : mode(mode), file_ext(file_ext){};
 
 ///
 /// QtTerminal
@@ -48,7 +49,7 @@ std::string QtTerminal::getCmd() const
 /// SvgTerminal
 ///
 
-SvgTerminal::SvgTerminal() : GNUPlotTerminal(TERMINAL_SVG_STR)
+SvgTerminal::SvgTerminal() : GNUPlotTerminal(TERMINAL_SVG_STR, TERMINAL_SVG_FILE_EXT)
 {
 }
 
@@ -65,7 +66,7 @@ std::string SvgTerminal::getCmd() const
 /// PngTerminal
 ///
 
-PngTerminal::PngTerminal() : GNUPlotTerminal(TERMINAL_PNG_STR)
+PngTerminal::PngTerminal() : GNUPlotTerminal(TERMINAL_PNG_STR, TERMINAL_PNG_FILE_EXT)
 {
 }
 
