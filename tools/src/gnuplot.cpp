@@ -656,11 +656,11 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
 
     n_options["terminal"] >> terminal_type;
 
-    if (terminal_type.compare("QT") == 0)
+    if (terminal_type.compare(TERMINAL_QT_STR) == 0)
       layout.terminal = std::make_shared<QtTerminal>();
-    else if (terminal_type.compare("SVG") == 0)
+    else if (terminal_type.compare(TERMINAL_SVG_STR) == 0)
       layout.terminal = std::make_shared<SvgTerminal>();
-    else if (terminal_type.compare("PNG") == 0)
+    else if (terminal_type.compare(TERMINAL_PNG_STR) == 0)
       layout.terminal = std::make_shared<PngTerminal>();
     else
     {
