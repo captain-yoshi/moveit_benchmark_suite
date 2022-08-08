@@ -61,6 +61,7 @@ MOVEIT_CLASS_FORWARD(GNUPlotTerminal);
 
 static std::string TERMINAL_QT_STR = "qt";
 static std::string TERMINAL_SVG_STR = "svg";
+static std::string TERMINAL_PNG_STR = "png";
 
 struct TerminalSize
 {
@@ -106,6 +107,19 @@ public:
   /** \brief Virtual destructor for cleaning up resources.
    */
   ~SvgTerminal() override;
+
+  // Get GNUPlot command as a string
+  std::string getCmd() const override;
+};
+
+// Produces files in the W3C Scalable Vector Graphics format
+class PngTerminal : public GNUPlotTerminal
+{
+public:
+  PngTerminal();
+  /** \brief Virtual destructor for cleaning up resources.
+   */
+  ~PngTerminal() override;
 
   // Get GNUPlot command as a string
   std::string getCmd() const override;
