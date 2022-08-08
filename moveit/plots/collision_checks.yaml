@@ -1,4 +1,4 @@
-# create HTML containing multiple SVG pictures
+# create HTML containing multiple pictures
 # ex. use with the default collision check benchmark
 gnuplot_config:
   plots:
