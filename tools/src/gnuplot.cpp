@@ -655,6 +655,7 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
       n_options["n_col"] >> layout.mpo.layout.col;
 
     n_options["terminal"] >> terminal_type;
+    std::transform(terminal_type.begin(), terminal_type.end(), terminal_type.begin(), ::tolower);
 
     if (terminal_type.compare(TERMINAL_QT_STR) == 0)
       layout.terminal = std::make_shared<QtTerminal>();
