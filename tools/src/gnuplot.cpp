@@ -62,6 +62,23 @@ std::string SvgTerminal::getCmd() const
 }
 
 ///
+/// PngTerminal
+///
+
+PngTerminal::PngTerminal() : GNUPlotTerminal(TERMINAL_PNG_STR)
+{
+}
+
+PngTerminal::~PngTerminal()
+{
+}
+
+std::string PngTerminal::getCmd() const
+{
+  return log::format("set term %1% size %2%,%3%", mode, size.x, size.y);
+}
+
+///
 /// GNUPlotData
 ///
 
@@ -626,6 +643,8 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
       layout.terminal = std::make_shared<QtTerminal>();
     else if (terminal_type.compare("SVG") == 0)
       layout.terminal = std::make_shared<SvgTerminal>();
+    else if (terminal_type.compare("PNG") == 0)
+      layout.terminal = std::make_shared<PngTerminal>();
     else
       layout.terminal = std::make_shared<QtTerminal>();
 
