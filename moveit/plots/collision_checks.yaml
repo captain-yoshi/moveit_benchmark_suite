@@ -279,7 +279,7 @@ gnuplot_config:
           name: avg_contact_count
           title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for scene \"mesh-100-4c\" against requests and collision detectors'
   options:
-    terminal: SVG
+    terminal: PNG
     n_row: 1
     n_col: 1
     size:

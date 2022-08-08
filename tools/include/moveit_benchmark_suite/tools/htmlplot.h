@@ -49,6 +49,13 @@ class HTMLPlot
 public:
   HTMLPlot(const std::string& pathname);
 
+  std::string getFilepath()
+  {
+    return abs_path_;
+  };
+
+  void writeImageTag(const std::string& src);
+
   void write(const std::string& line);
   void writeline(const std::string& line);
   void flush();

@@ -35,15 +35,30 @@ int main(int argc, char** argv)
 
   // Add GNUPlot instances into HTML
   HTMLPlot html(output_file);
-  auto names = gnuplot.getInstanceNames();
+  auto html_filepath = html.getFilepath();
+  auto instance_names = gnuplot.getInstanceNames();
 
   ROS_INFO("Generating HTML file...");
 
-  for (const auto& name : names)
+  for (const auto& name : instance_names)
   {
+    std::ofstream ofs;
+    boost::filesystem::path path(html_filepath);
+
+    auto terminal = gnuplot.getInstanceTerminal(name);
+
+    // prepare terminal output filename
+    path.replace_extension("");
+    path /= name + "." + terminal->file_ext;
+
+    IO::createFile(ofs, path.string());
     std::string output;
     gnuplot.getInstanceOutput(name, output);
-    html.writeline(output);
+    ofs << output;
+    ofs.close();
+
+    // add image source
+    html.writeImageTag(path.string());
   }
 
   html.dump();

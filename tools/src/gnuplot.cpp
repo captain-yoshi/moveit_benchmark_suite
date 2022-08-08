@@ -25,7 +25,8 @@ namespace bio = boost::iostreams;
 /// GNUPlotTerminal
 ///
 
-GNUPlotTerminal::GNUPlotTerminal(const std::string& mode) : mode(mode){};
+GNUPlotTerminal::GNUPlotTerminal(const std::string& mode, const std::string& file_ext)
+  : mode(mode), file_ext(file_ext){};
 
 ///
 /// QtTerminal
@@ -48,7 +49,7 @@ std::string QtTerminal::getCmd() const
 /// SvgTerminal
 ///
 
-SvgTerminal::SvgTerminal() : GNUPlotTerminal(TERMINAL_SVG_STR)
+SvgTerminal::SvgTerminal() : GNUPlotTerminal(TERMINAL_SVG_STR, TERMINAL_SVG_FILE_EXT)
 {
 }
 
@@ -57,6 +58,23 @@ SvgTerminal::~SvgTerminal()
 }
 
 std::string SvgTerminal::getCmd() const
+{
+  return log::format("set term %1% size %2%,%3%", mode, size.x, size.y);
+}
+
+///
+/// PngTerminal
+///
+
+PngTerminal::PngTerminal() : GNUPlotTerminal(TERMINAL_PNG_STR, TERMINAL_PNG_FILE_EXT)
+{
+}
+
+PngTerminal::~PngTerminal()
+{
+}
+
+std::string PngTerminal::getCmd() const
 {
   return log::format("set term %1% size %2%,%3%", mode, size.x, size.y);
 }
@@ -207,6 +225,16 @@ GNUPlotHelper::Instance::~Instance()
   th_.detach();
 }
 
+void GNUPlotHelper::Instance::setTerminal(std::shared_ptr<GNUPlotTerminal> terminal)
+{
+  terminal_ = terminal;
+}
+
+std::shared_ptr<GNUPlotTerminal> GNUPlotHelper::Instance::getTerminal()
+{
+  return terminal_;
+}
+
 void GNUPlotHelper::Instance::write(const std::string& line)
 {
 #if IS_BOOST_164
@@ -267,6 +295,12 @@ void GNUPlotHelper::getInstanceOutput(const std::string& instance, std::string& 
 
   for (std::string line; std::getline(is, line);)
     output.append(line + "\n");
+}
+
+std::shared_ptr<GNUPlotTerminal> GNUPlotHelper::getInstanceTerminal(const std::string& instance)
+{
+  auto in = getInstance(instance);
+  return in->getTerminal();
 }
 
 void GNUPlotHelper::configureTerminal(const std::string& instance_id, const GNUPlotTerminal& terminal)
@@ -626,8 +660,13 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
       layout.terminal = std::make_shared<QtTerminal>();
     else if (terminal_type.compare("SVG") == 0)
       layout.terminal = std::make_shared<SvgTerminal>();
+    else if (terminal_type.compare("PNG") == 0)
+      layout.terminal = std::make_shared<PngTerminal>();
     else
+    {
+      ROS_WARN_STREAM("Invalid GNUPlot terminal '" << terminal_type << "' in config, using default QT terminal.");
       layout.terminal = std::make_shared<QtTerminal>();
+    }
 
     layout.terminal->size.x = 640;
     layout.terminal->size.y = 480;
@@ -1025,6 +1064,11 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
       case PlotType::BarGraph:
       {
         auto options = std::static_pointer_cast<GNUPlotHelper::BarGraphOptions>(c.first.options);
+
+        // set terminal used by instance
+        auto in = helper_.getInstance(options->instance);
+        in->setTerminal(layout_.terminal);
+
         if (!single_instance_)
           helper_.configureTerminal(options->instance, *layout_.terminal);
         helper_.plot(c.second, *options);
@@ -1033,6 +1077,11 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
       case PlotType::BoxPlot:
       {
         auto options = std::static_pointer_cast<GNUPlotHelper::BoxPlotOptions>(c.first.options);
+
+        // set terminal used by instance
+        auto in = helper_.getInstance(options->instance);
+        in->setTerminal(layout_.terminal);
+
         if (!single_instance_)
           helper_.configureTerminal(options->instance, *layout_.terminal);
         helper_.plot(c.second, *options);
@@ -1050,4 +1099,9 @@ std::set<std::string> GNUPlotDataset::getInstanceNames() const
 void GNUPlotDataset::getInstanceOutput(const std::string& instance_name, std::string& output)
 {
   helper_.getInstanceOutput(instance_name, output);
+}
+
+std::shared_ptr<GNUPlotTerminal> GNUPlotDataset::getInstanceTerminal(const std::string& instance_name)
+{
+  return helper_.getInstanceTerminal(instance_name);
 }
