@@ -646,7 +646,10 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
     else if (terminal_type.compare("PNG") == 0)
       layout.terminal = std::make_shared<PngTerminal>();
     else
+    {
+      ROS_WARN_STREAM("Invalid GNUPlot terminal '" << terminal_type << "' in config, using default QT terminal.");
       layout.terminal = std::make_shared<QtTerminal>();
+    }
 
     layout.terminal->size.x = 640;
     layout.terminal->size.y = 480;
