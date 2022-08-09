@@ -16,11 +16,18 @@ DataSetPtr AggregateDataset::aggregate(const std::vector<Operation>& operations,
 
   node.tree()->merge_with(dataset.tree(), dataset.id(), node.append_child().id());
 
-  // Loop through data
-  if (!node.has_child("dataset") || !node["dataset"].has_child("data"))
+  if (!node.has_child("dataset") || !node["dataset"].has_child("data") || !node["dataset"].has_child("type"))
     return nullptr;
 
+  // Add comment that this dataset was aggregated
+  std::string type_str;
+  ryml::from_chars(node["dataset"]["type"].val(), &type_str);
+
+  node["dataset"]["type"] << "[AGGREGATED] " + type_str;
+
+  // Loop through data
   auto queries = node["dataset"]["data"];
+
   for (std::size_t i = 0; i < queries.num_children(); ++i)
   {
     auto query = queries[i];
@@ -28,6 +35,10 @@ DataSetPtr AggregateDataset::aggregate(const std::vector<Operation>& operations,
       continue;
 
     auto n_metrics = query.find_child("metrics");
+
+    // keep node info for removing raw metrics later on
+    std::size_t del_children_size = n_metrics.num_children();
+    auto del_last_node = n_metrics.last_child();
 
     for (const auto& operation : operations)
     {
@@ -86,6 +97,16 @@ DataSetPtr AggregateDataset::aggregate(const std::vector<Operation>& operations,
           continue;
         }
       }
+    }
+
+    // remove original childrens (reverse order)
+    for (std::size_t i = 0; i < del_children_size; ++i)
+    {
+      auto previous = del_last_node.prev_sibling();
+
+      n_metrics.remove_child(del_last_node);
+
+      del_last_node = previous;
     }
   }
   DataSet ds;
