@@ -284,8 +284,45 @@ void write(c4::yml::NodeRef* n, moveit_benchmark_suite::DataSet const& rhs)
 
   n->append_child() << key("os") << rhs.os;
   n->append_child() << key("cpu") << rhs.cpu;
-  n->append_child() << key("gpus") << rhs.gpus;
-  n->append_child() << key("software") << rhs.software;
+
+  // encode gpus as map instead of vectors
+  // n->append_child() << key("gpus") << rhs.gpus;
+  auto c = n->append_child();
+  c |= c4::yml::KEYMAP;
+
+  c << key("gpus");
+  for (const auto& gpu : rhs.gpus)
+  {
+    c.append_child() << key(gpu.product) |= c4::yml::KEYMAP;
+
+    auto gc = c.last_child();
+    gc.append_child() << key("vendor") << gpu.vendor;
+    gc.append_child() << key("version") << gpu.version;
+  }
+
+  // encode software as map instead of vectors
+  // n->append_child() << key("software") << rhs.software;
+  c = n->append_child();
+  c |= c4::yml::KEYMAP;
+
+  c << key("software");
+  for (const auto& sw : rhs.software)
+  {
+    c.append_child() << key(sw.name) |= c4::yml::KEYMAP;
+
+    auto gc = c.last_child();
+
+    gc.append_child() << key("version") << sw.version;
+
+    if (!sw.git_branch.empty())
+    {
+      gc.append_child() << key("git_branch") << sw.git_branch;
+      gc.append_child() << key("git_commit") << sw.git_commit;
+    }
+
+    if (!sw.pkg_manager.empty())
+      gc.append_child() << key("pkg_manager") << sw.pkg_manager;
+  }
 
   n->append_child() << key("queries") << rhs.query_collection;
 
@@ -312,8 +349,43 @@ bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::DataSet* rhs)
 
   n["os"] >> rhs->os;
   n["cpu"] >> rhs->cpu;
-  n["gpus"] >> rhs->gpus;
-  n["software"] >> rhs->software;
+
+  // Decode gpus as map
+  // n["gpus"] >> rhs->gpus;
+  for (c4::yml::NodeRef const& child : n["gpus"].children())
+  {
+    std::string key;
+    c4::from_chars(child.key(), &key);
+
+    std::cout << child.key() << std::endl;
+
+    rhs->gpus.emplace_back();
+    rhs->gpus.back().product = key;
+
+    child["vendor"] >> rhs->gpus.back().vendor;
+    child["version"] >> rhs->gpus.back().version;
+  }
+
+  // Decode software as map
+  // n["software"] >> rhs->software;
+  for (c4::yml::NodeRef const& child : n["software"].children())
+  {
+    std::string key;
+    c4::from_chars(child.key(), &key);
+
+    rhs->software.emplace_back();
+    rhs->software.back().name = key;
+
+    child["version"] >> rhs->software.back().version;
+
+    if (child.has_child("git_branch"))
+    {
+      child["git_branch"] >> rhs->software.back().git_branch;
+      child["git_commit"] >> rhs->software.back().git_commit;
+    }
+    if (child.has_child("pkg_manager"))
+      child["pkg_manager"] >> rhs->software.back().pkg_manager;
+  }
 
   n["queries"] >> rhs->query_collection;
 
