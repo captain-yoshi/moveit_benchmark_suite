@@ -357,8 +357,6 @@ bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::DataSet* rhs)
     std::string key;
     c4::from_chars(child.key(), &key);
 
-    std::cout << child.key() << std::endl;
-
     rhs->gpus.emplace_back();
     rhs->gpus.back().product = key;
 
