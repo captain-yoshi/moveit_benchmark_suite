@@ -83,7 +83,7 @@ void MotionPlanningBuilder::buildQueries(const std::string& filename, const std:
   bool extend_resource = false;
   if (node.has_child("extend_resource_config"))
   {
-    n_extend.find_child("extend_resource_config");
+    n_extend = node.find_child("extend_resource_config");
     extend_resource = true;
   }
 

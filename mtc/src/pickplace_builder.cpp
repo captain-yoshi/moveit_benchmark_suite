@@ -386,7 +386,7 @@ void PickPlaceBuilder::buildQueries(const std::string& filename)
   bool extend_resource = false;
   if (node.has_child("extend_resource_config"))
   {
-    n_extend.find_child("extend_resource_config");
+    n_extend = node.find_child("extend_resource_config");
     extend_resource = true;
   }
   std::map<std::string, RobotPtr> robot_map;
