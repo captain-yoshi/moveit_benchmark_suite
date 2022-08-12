@@ -284,30 +284,44 @@ void ResourceBuilder::extendResources(const ryml::NodeRef& node)
   }
 }
 
-bool ResourceBuilder::extendResource(const ryml::NodeRef& node, std::vector<std::string>& resource_names)
+bool ResourceBuilder::extendResource(const ryml::NodeRef& node, std::vector<std::string>& extend_resource_names)
 {
-  if (!node.has_child("name") || !node.has_child("resources") || !node.find_child("resources").is_seq())
+  if (!node.has_child("extend_resource") || !node.has_child("resources") || !node.find_child("resources").is_seq())
   {
-    ROS_ERROR("Invalid extend config. Needs `name` and `resources` keys and the later MUST be a YAML sequence.");
+    ROS_ERROR(
+        "Invalid extend config. Needs `extend_resource` and `resources` keys and the later MUST be a YAML sequence.");
     return false;
   }
 
-  std::string name;
+  std::string extend_resource_name;
   std::size_t seq_idx = 0;
 
-  node["name"] >> name;
-  resource_names.push_back(name);
+  node["extend_resource"] >> extend_resource_name;
+  extend_resource_names.push_back(extend_resource_name);
 
-  // name must be in the map
-  auto it = node_map_.find(name);
+  // extend_resource_name must be in the map
+  auto it = node_map_.find(extend_resource_name);
   if (it == node_map_.end())
   {
-    ROS_ERROR("Cannot extend missing resource name `%s`", name.c_str());
+    ROS_ERROR("Cannot extend missing resource extend_resource_name `%s`", extend_resource_name.c_str());
     return false;
   }
 
   auto& t_extend = it->second;
   auto n_extend_resources = node["resources"];
+
+  // Get resource names (Optional)
+  std::vector<std::string> resource_names;
+  if (node.has_child("resource_names"))
+  {
+    node["resource_names"] >> resource_names;
+
+    if (n_extend_resources.num_children() != resource_names.size())
+    {
+      ROS_WARN("Invlaid Extend config. Node `resource_names` MUST have the same size of node `resources`");
+      return false;
+    }
+  }
 
   for (ryml::NodeRef const& child : n_extend_resources.children())
   {
@@ -346,12 +360,20 @@ bool ResourceBuilder::extendResource(const ryml::NodeRef& node, std::vector<std:
 
     if (!validateResource(n_target))
     {
-      ROS_ERROR("Failed to extend resource name `%s` (sequence number %zu). Check config file.", name.c_str(), seq_idx);
+      ROS_ERROR("Failed to extend resource extend_resource_name `%s` (sequence number %zu). Check config file.",
+                extend_resource_name.c_str(), seq_idx);
       return false;
     }
 
     // insert with new name
-    std::string extended_name = name + "_" + std::to_string(seq_idx);
+    std::string extended_name;
+
+    // automatic resource naming
+    if (resource_names.empty())
+      extended_name = extend_resource_name + "_" + std::to_string(seq_idx);
+    // manual resource naming
+    else
+      extended_name = resource_names[seq_idx - 1];
 
     if (node_map_.find(extended_name) != node_map_.end())
     {

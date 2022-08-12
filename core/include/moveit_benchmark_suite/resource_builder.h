@@ -85,7 +85,7 @@ public:
 
 protected:
   bool loadResource(const ryml::NodeRef& node);
-  bool extendResource(const ryml::NodeRef& node, std::vector<std::string>& resource_names);
+  bool extendResource(const ryml::NodeRef& node, std::vector<std::string>& extend_resource_names);
 
   const std::map<std::string, ryml::Tree>& getResources() const;
   void insertResource(const std::string name, ryml::Tree&& node);
