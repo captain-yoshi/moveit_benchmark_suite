@@ -278,6 +278,87 @@ gnuplot_config:
         - type: bargraph
           name: avg_contact_count
           title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for scene \"mesh-100-4c\" against requests and collision detectors'
+    # regression between 'moveit_core/version' (ex. with statistics)
+    # - filters:
+    #     - ns: query/request
+    #       val: First (Binary)
+    #     - ns: query/collision_detector
+    #       val: FCL
+    #   labels:
+    #     - query/scene
+    #   legends:
+    #     - /software/moveit_core/version
+    #   metrics:
+    #     - type: bargraph
+    #       name: collision_check
+    #       title: '{/:Bold Collision (Self + Environment)}\nCollision checks (sec^{-1}) for request \"First (Binary)\" against scenes and collision detector \"FCL\"'
+    #     - type: bargraph
+    #       name: avg_contact_count
+    #       title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for request \"First (Binary)\" against scenes and collision detector \"FCL\"'
+    # - filters:
+    #     - ns: query/request
+    #       val: First (Contact Only)
+    #     - ns: query/collision_detector
+    #       val: FCL
+    #   labels:
+    #     - query/scene
+    #   legends:
+    #     - /software/moveit_core/version
+    #   metrics:
+    #     - type: bargraph
+    #       name: collision_check
+    #       title: '{/:Bold Collision (Self + Environment)}\nCollision checks (sec^{-1}) for request \"First (Contact Only)\" against scenes and collision detector \"FCL\"'
+    #     - type: bargraph
+    #       name: avg_contact_count
+    #       title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for request \"First (Contact Only)\" against scenes and collision detector \"FCL\"'
+    # - filters:
+    #     - ns: query/request
+    #       val: First (Cost)
+    #     - ns: query/collision_detector
+    #       val: FCL
+    #   labels:
+    #     - query/scene
+    #   legends:
+    #     - /software/moveit_core/version
+    #   metrics:
+    #     - type: bargraph
+    #       name: collision_check
+    #       title: '{/:Bold Collision (Self + Environment)}\nCollision checks (sec^{-1}) for request \"First (Cost)\" against scenes and collision detector \"FCL\"'
+    #     - type: bargraph
+    #       name: avg_contact_count
+    #       title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for request \"First (Cost)\" against scenes and collision detector \"FCL\"'
+    # - filters:
+    #     - ns: query/request
+    #       val: All (Contact Only)
+    #     - ns: query/collision_detector
+    #       val: FCL
+    #   labels:
+    #     - query/scene
+    #   legends:
+    #     - /software/moveit_core/version
+    #   metrics:
+    #     - type: bargraph
+    #       name: collision_check
+    #       title: '{/:Bold Collision (Self + Environment)}\nCollision checks (sec^{-1}) for request \"All (Contact Only)\" against scenes and collision detector \"FCL\"'
+    #     - type: bargraph
+    #       name: avg_contact_count
+    #       title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for request \"All (Contact Only)\" against scenes and collision detector \"FCL\"'
+    # - filters:
+    #     - ns: query/request
+    #       val: All (Cost)
+    #     - ns: query/collision_detector
+    #       val: FCL
+    #   labels:
+    #     - query/scene
+    #   legends:
+    #     - /software/moveit_core/version
+    #   metrics:
+    #     - type: bargraph
+    #       name: collision_check
+    #       title: '{/:Bold Collision (Self + Environment)}\nCollision checks (sec^{-1}) for request \"All (Cost)\" against scenes and collision detector \"FCL\"'
+    #     - type: bargraph
+    #       name: avg_contact_count
+    #       title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for request \"All (Cost)\" against scenes and collision detector \"FCL\"'
   options:
     terminal: PNG
     n_row: 1
