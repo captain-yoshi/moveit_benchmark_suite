@@ -3,18 +3,16 @@
 
   <arg name="input_files" default="[]" />
   <arg name="output_file" default="" />
+  <arg name="config" />
 
   <!-- By default, we are not in debug mode -->
   <arg name="debug" default="false" />
   <arg unless="$(arg debug)" name="launch_prefix" value="" />
   <arg     if="$(arg debug)" name="launch_prefix" value="gdb --args" />
 
-
-
-
   <node name="aggregate" pkg="moveit_benchmark_suite_tools" type="aggregate" respawn="false" clear_params="true" required="true" output="screen" launch-prefix="$(arg launch_prefix)">
 
-    <param name="config_file" value="$(find moveit_benchmark_suite_tools)/config/aggregate.yaml"/>
+    <param name="config_file" value="$(arg config)"/>
     <rosparam param="input_files" subst_value="True">$(arg input_files)</rosparam>
     <param name="output_file" value="$(arg output_file)"/>
   </node>

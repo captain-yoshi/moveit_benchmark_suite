@@ -1,4 +1,3 @@
-# ex. for the collision check benchmark
 aggregate_config:
   statistics:
     - raw_metric: time
