@@ -1,0 +1,23 @@
+aggregate_config:
+  statistics:
+    - raw_metric: time
+      new_metric: avg_time
+      type: average
+    - raw_metric: waypoints
+      new_metric: avg_waypoints
+      type: average
+    - raw_metric: length
+      new_metric: avg_length
+      type: average
+    - raw_metric: smoothness
+      new_metric: avg_smoothness
+      type: average
+    - raw_metric: clearance
+      new_metric: avg_clearance
+      type: average
+    - raw_metric: success
+      new_metric: avg_success
+      type: average
+    - raw_metric: correct
+      new_metric: avg_correct
+      type: average
