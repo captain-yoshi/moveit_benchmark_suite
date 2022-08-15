@@ -140,7 +140,10 @@ bool ResourceBuilder::decodeResourceTag(const ryml::NodeRef& source, ryml::NodeR
 void ResourceBuilder::loadResources(const ryml::NodeRef& node)
 {
   if (node.is_map())
-    loadResource(node);
+  {
+    if (!loadResource(node))
+      clearResources();
+  }
   else if (node.is_seq())
     for (ryml::NodeRef const& child : node.children())
     {
