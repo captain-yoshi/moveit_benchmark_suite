@@ -1,5 +1,8 @@
 <?xml version="1.0" ?>
 <launch>
+  <arg name="visualize" default="false" doc="turns on and off visualization with rviz (bool type)"/>
+
+  <include file="$(find moveit_benchmark_suite)/launch/moveit_rviz.launch" if="$(arg visualize)"/>
 
   <!-- By default, we are not in debug mode -->
   <arg name="debug" default="false" />
@@ -8,5 +11,6 @@
 
   <node name="ik_generator" pkg="moveit_benchmark_suite_tools" type="ik_generator" respawn="false" clear_params="true" required="true" output="screen" launch-prefix="$(arg launch_prefix)">
     <param name="config_file" value="$(find moveit_benchmark_suite_tools)/config/ik_generator.yaml"/>
+    <param name="visualize" value="$(arg visualize)"/>
   </node>
 </launch>

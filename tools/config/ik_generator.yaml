@@ -1,18 +1,19 @@
 ik_generator:
   jmg: "manipulator"
+  max_ik_solutions: 10
   ik_seed_state: [0, 0, 0, 0, 0, 0]
   pose:
     name: dummy
     resource:
       position:
         x: 0.22435
-        y: 0.44281
+        y: 0.47781
         z: 0.069
       orientation:
         x: 1
         y: 0
         z: 0
-        w: 0.0000383
+        w: 0
   robot:
     name: ur3
     resources:
@@ -20,3 +21,8 @@ ik_generator:
       srdf: package://moveit_benchmark_suite_resources/robots/ur3/config/ur3.srdf
       kinematics: package://moveit_benchmark_suite_resources/robots/ur3/config/kinematics.yaml
       joint_limits: package://moveit_benchmark_suite_resources/robots/ur3/config/joint_limits.yaml
+
+  # OPTIONAL
+  scene:
+    name: my_scene
+    resource: package://moveit_benchmark_suite_resources/scenes/bbt/ur3/primitive.urdf.xacro
