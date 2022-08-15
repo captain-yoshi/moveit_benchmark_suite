@@ -164,7 +164,7 @@ public:
         T t;
         resource.second["resource"] >> t;
 
-        requests.insert({ resource.first, t });
+        requests.emplace(resource.first, t);
       }
       catch (moveit_serialization::yaml_error& e)
       {
