@@ -104,7 +104,7 @@ bool getParamsFromConfig(const std::string& filename, std::string& group_name, s
     ROS_WARN("Missing 'ik_seed_state' key");
     return false;
   }
-  n_config["ik_seed_state"] >> group_name;
+  n_config["ik_seed_state"] >> ik_seed_state;
 
   // Build robot from YAML
   {
