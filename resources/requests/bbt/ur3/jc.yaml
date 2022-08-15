@@ -1,0 +1,29 @@
+group_name: manipulator
+
+start_state:
+  joint_state:
+    header:
+      frame_id: base_link
+    name: [shoulder_pan_joint, shoulder_lift_joint, elbow_joint, wrist_1_joint, wrist_2_joint, wrist_3_joint]
+    position: [0, -1.5707, 0, -1.5707, 0, 0]
+
+goal_constraints:
+  - joint_constraints:
+    - joint_name: shoulder_pan_joint
+      position: -1.795510
+      weight: 1.0
+    - joint_name: shoulder_lift_joint
+      position: -2.824237
+      weight: 1.0
+    - joint_name: elbow_joint
+      position: -0.685676
+      weight: 1.0
+    - joint_name: wrist_1_joint
+      position: -1.201557
+      weight: 1.0
+    - joint_name: wrist_2_joint
+      position: 1.572253
+      weight: 1.0
+    - joint_name: wrist_3_joint
+      position: -0.223820
+      weight: 1.0
