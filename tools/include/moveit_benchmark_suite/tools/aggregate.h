@@ -79,7 +79,7 @@ public:
 
 private:
   // Dataset already dfiltered
-  DataSetPtr aggregate(const std::vector<Operation>& operations, const ryml::NodeRef& dataset);
+  DataSetPtr aggregate(const std::vector<Operation>& operations, const ryml::ConstNodeRef& dataset);
 
   DatasetFilter ds_filter_;
 };

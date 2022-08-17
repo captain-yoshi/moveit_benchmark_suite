@@ -8,7 +8,7 @@ using namespace moveit_benchmark_suite::tools;
 // AggregateDataset
 //
 
-DataSetPtr AggregateDataset::aggregate(const std::vector<Operation>& operations, const ryml::NodeRef& dataset)
+DataSetPtr AggregateDataset::aggregate(const std::vector<Operation>& operations, const ryml::ConstNodeRef& dataset)
 {
   ryml::Tree t;
   auto node = t.rootref();
@@ -179,7 +179,7 @@ bool AggregateDataset::buildParamsFromYAML(const std::string& filename, std::vec
     {
       auto n_filters = root.find_child("filters");
 
-      for (ryml::NodeRef const& child : n_filters.children())
+      for (ryml::ConstNodeRef const& child : n_filters.children())
       {
         std::string ns;
         std::string val;
@@ -200,7 +200,7 @@ bool AggregateDataset::buildParamsFromYAML(const std::string& filename, std::vec
     {
       auto n_statistics = root.find_child("statistics");
 
-      for (ryml::NodeRef const& child : n_statistics.children())
+      for (ryml::ConstNodeRef const& child : n_statistics.children())
       {
         std::string raw_metric;
         std::string new_metric;

@@ -682,7 +682,7 @@ bool Scene::fromYAMLFile(const std::string& file)
   return true;
 }
 
-bool Scene::fromYAMLNode(const ryml::NodeRef& node)
+bool Scene::fromYAMLNode(const ryml::ConstNodeRef& node)
 {
   moveit_msgs::PlanningScene msg;
   node >> msg;

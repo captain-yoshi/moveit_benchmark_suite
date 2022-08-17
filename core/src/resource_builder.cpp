@@ -41,7 +41,7 @@ void ResourceBuilder::clearResources()
   node_map_.clear();
 }
 
-bool ResourceBuilder::validateResource(const ryml::NodeRef& node)
+bool ResourceBuilder::validateResource(const ryml::ConstNodeRef& node)
 {
   return true;
 }
@@ -76,7 +76,7 @@ bool ResourceBuilder::deleteResource(const std::string& name)
   return true;
 }
 
-bool ResourceBuilder::decodeResourceTag(const ryml::NodeRef& source, ryml::NodeRef& target)
+bool ResourceBuilder::decodeResourceTag(const ryml::ConstNodeRef& source, ryml::NodeRef& target)
 {
   // target type = KEYMAP, with key already loaded
   // change accordingly depending on resource
@@ -137,7 +137,7 @@ bool ResourceBuilder::decodeResourceTag(const ryml::NodeRef& source, ryml::NodeR
   return true;
 }
 
-void ResourceBuilder::loadResources(const ryml::NodeRef& node)
+void ResourceBuilder::loadResources(const ryml::ConstNodeRef& node)
 {
   if (node.is_map())
   {
@@ -145,7 +145,7 @@ void ResourceBuilder::loadResources(const ryml::NodeRef& node)
       clearResources();
   }
   else if (node.is_seq())
-    for (ryml::NodeRef const& child : node.children())
+    for (ryml::ConstNodeRef const& child : node.children())
     {
       if (!loadResource(child))
       {
@@ -157,7 +157,7 @@ void ResourceBuilder::loadResources(const ryml::NodeRef& node)
     ROS_WARN("YAML node MUST be a sequence or a map");
 }
 
-bool ResourceBuilder::loadResource(const ryml::NodeRef& node)
+bool ResourceBuilder::loadResource(const ryml::ConstNodeRef& node)
 {
   ryml::Tree t_resource;
   ryml::NodeRef n_resource = t_resource.rootref();
@@ -184,7 +184,7 @@ bool ResourceBuilder::loadResource(const ryml::NodeRef& node)
   {
     auto child = n_resource.append_child({ ryml::KEYMAP, "resources" });
 
-    for (ryml::NodeRef const& node_child : node["resources"])
+    for (ryml::ConstNodeRef const& node_child : node["resources"])
     {
       auto resource = child.append_child({ ryml::KEYMAP, node_child.key() });
 
@@ -211,13 +211,13 @@ bool ResourceBuilder::loadResource(const ryml::NodeRef& node)
   return true;
 }
 
-void ResourceBuilder::mergeResources(const ryml::NodeRef& node)
+void ResourceBuilder::mergeResources(const ryml::ConstNodeRef& node)
 {
   for (auto& resource : node_map_)
     mergeResource(resource.first, node);
 }
 
-void ResourceBuilder::mergeResource(const std::string& name, const ryml::NodeRef& node)
+void ResourceBuilder::mergeResource(const std::string& name, const ryml::ConstNodeRef& node)
 {
   auto it = node_map_.find(name);
   if (it == node_map_.end())
@@ -248,7 +248,7 @@ void ResourceBuilder::mergeResource(const std::string& name, const ryml::NodeRef
     ROS_ERROR("Merge failed for resource name `%s`.", name.c_str());
 }
 
-void ResourceBuilder::extendResources(const ryml::NodeRef& node)
+void ResourceBuilder::extendResources(const ryml::ConstNodeRef& node)
 {
   std::vector<std::string> resource_names;
 
@@ -265,7 +265,7 @@ void ResourceBuilder::extendResources(const ryml::NodeRef& node)
   }
   else if (node.is_seq())
   {
-    for (ryml::NodeRef const& child : node.children())
+    for (ryml::ConstNodeRef const& child : node.children())
     {
       if (!extendResource(child, resource_names))
       {
@@ -287,7 +287,7 @@ void ResourceBuilder::extendResources(const ryml::NodeRef& node)
   }
 }
 
-bool ResourceBuilder::extendResource(const ryml::NodeRef& node, std::vector<std::string>& extend_resource_names)
+bool ResourceBuilder::extendResource(const ryml::ConstNodeRef& node, std::vector<std::string>& extend_resource_names)
 {
   if (!node.has_child("extend_resource") || !node.has_child("resources") || !node.find_child("resources").is_seq())
   {
@@ -326,7 +326,7 @@ bool ResourceBuilder::extendResource(const ryml::NodeRef& node, std::vector<std:
     }
   }
 
-  for (ryml::NodeRef const& child : n_extend_resources.children())
+  for (ryml::ConstNodeRef const& child : n_extend_resources.children())
   {
     ++seq_idx;
     ryml::Tree t_target;
@@ -354,7 +354,7 @@ bool ResourceBuilder::extendResource(const ryml::NodeRef& node, std::vector<std:
     }
 
     // try decoding every key value as a resource
-    for (ryml::NodeRef const& c : child.children())
+    for (ryml::ConstNodeRef const& c : child.children())
     {
       auto n_resource_key = n_resource[c.key()];
 
@@ -575,7 +575,7 @@ bool buildClutteredWorld(const planning_scene::PlanningScenePtr& planning_scene,
 
 bool SceneBuilder::buildClutteredSceneFromYAML(ScenePtr& scene,
                                                const std::map<std::string, moveit_msgs::RobotState>& state_map,
-                                               const ryml::NodeRef& node) const
+                                               const ryml::ConstNodeRef& node) const
 {
   if (!IO::validateNodeKeys(node, { "object_in_collision", "object_no_collision", "rng_in_collision",
                                     "rng_no_collision", "bounds", "resource", "robot_state", "object_type" }))

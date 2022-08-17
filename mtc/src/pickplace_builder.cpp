@@ -281,10 +281,9 @@ void PickPlaceConfig::readConstraints(ros::NodeHandle& nh)
 
   if (node.has_child("profiler_config") && node["profiler_config"].has_child("path_constraints"))
   {
-    const auto& path_constraints = node["profiler_config"]["path_constraints"];
+    ryml::ConstNodeRef const& path_constraints = node["profiler_config"]["path_constraints"];
 
-    for (ryml::NodeRef const& path_constraint : path_constraints.children())
-
+    for (ryml::ConstNodeRef const& path_constraint : path_constraints.children())
     {
       std::string name;
       moveit_msgs::Constraints path_constraint_msg;

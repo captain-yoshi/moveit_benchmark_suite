@@ -74,7 +74,7 @@ public:
    *  \param[in] node YAML node to load.
    *  \param[in] prefix Prefix to put YAML node under.
    */
-  void loadYAMLtoROS(const ryml::NodeRef& node, const std::string& prefix = "");
+  void loadYAMLtoROS(const ryml::ConstNodeRef& node, const std::string& prefix = "");
   void loadROStoYAML(const std::string& ns, ryml::NodeRef& node) const;
 
   /** \brief Sets a parameter on the parameter server.

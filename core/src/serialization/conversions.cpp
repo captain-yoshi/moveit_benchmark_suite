@@ -9,24 +9,24 @@ namespace yml {
 
 namespace {
 template <class T, class... Args>
-moveit_benchmark_suite::MetricPtr decodeMetricVariantHelper(const c4::yml::NodeRef& node);
+moveit_benchmark_suite::MetricPtr decodeMetricVariantHelper(const c4::yml::ConstNodeRef& node);
 
 //   template <class... Args>
 // MetricPtr decodeMetricVariant(const c4::yml::NodeRef&);
 template <class... Args>
-moveit_benchmark_suite::MetricPtr decodeMetricVariant(const c4::yml::NodeRef& node)
+moveit_benchmark_suite::MetricPtr decodeMetricVariant(const c4::yml::ConstNodeRef& node)
 {
   return decodeMetricVariantHelper<Args...>(node);
 }
 
 template <>
-moveit_benchmark_suite::MetricPtr decodeMetricVariant(const c4::yml::NodeRef& node)
+moveit_benchmark_suite::MetricPtr decodeMetricVariant(const c4::yml::ConstNodeRef& node)
 {
   return nullptr;
 }
 
 template <class T, class... Args>
-moveit_benchmark_suite::MetricPtr decodeMetricVariantHelper(const c4::yml::NodeRef& node)
+moveit_benchmark_suite::MetricPtr decodeMetricVariantHelper(const c4::yml::ConstNodeRef& node)
 {
   try
   {
@@ -93,9 +93,9 @@ void write(c4::yml::NodeRef* n, moveit_benchmark_suite::QueryID const& rhs)
     n->append_child() << c4::yml::key(id.first) << id.second;
 }
 
-bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::QueryID* rhs)
+bool read(c4::yml::ConstNodeRef const& n, moveit_benchmark_suite::QueryID* rhs)
 {
-  for (c4::yml::NodeRef const& child : n.children())
+  for (c4::yml::ConstNodeRef const& child : n.children())
   {
     std::string key;
     std::string val;
@@ -124,15 +124,15 @@ void write(c4::yml::NodeRef* n, moveit_benchmark_suite::QueryCollection const& r
   }
 }
 
-bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::QueryCollection* rhs)
+bool read(c4::yml::ConstNodeRef const& n, moveit_benchmark_suite::QueryCollection* rhs)
 {
-  for (c4::yml::NodeRef const& child : n.children())
+  for (c4::yml::ConstNodeRef const& child : n.children())
   {
     std::string key;
     std::string val;
     c4::from_chars(child.key(), &key);
 
-    for (c4::yml::NodeRef const& grandchild : child.children())
+    for (c4::yml::ConstNodeRef const& grandchild : child.children())
     {
       grandchild >> val;
       rhs->addID(key, val);
@@ -156,7 +156,7 @@ void write(c4::yml::NodeRef* n, moveit_benchmark_suite::metadata::CPU const& rhs
   n->append_child() << key("thread_per_core") << rhs.thread_per_core;
 }
 
-bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::metadata::CPU* rhs)
+bool read(c4::yml::ConstNodeRef const& n, moveit_benchmark_suite::metadata::CPU* rhs)
 {
   n["model"] >> rhs->model;
   n["model_name"] >> rhs->model_name;
@@ -179,7 +179,7 @@ void write(c4::yml::NodeRef* n, moveit_benchmark_suite::metadata::GPU const& rhs
   n->append_child() << key("version") << rhs.version;
 }
 
-bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::metadata::GPU* rhs)
+bool read(c4::yml::ConstNodeRef const& n, moveit_benchmark_suite::metadata::GPU* rhs)
 {
   n["product"] >> rhs->product;
   n["vendor"] >> rhs->vendor;
@@ -198,7 +198,7 @@ void write(c4::yml::NodeRef* n, moveit_benchmark_suite::metadata::OS const& rhs)
   n->append_child() << key("version") << rhs.version;
 }
 
-bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::metadata::OS* rhs)
+bool read(c4::yml::ConstNodeRef const& n, moveit_benchmark_suite::metadata::OS* rhs)
 {
   n["kernel_name"] >> rhs->kernel_name;
   n["kernel_release"] >> rhs->kernel_release;
@@ -225,7 +225,7 @@ void write(c4::yml::NodeRef* n, moveit_benchmark_suite::metadata::SW const& rhs)
     n->append_child() << key("pkg_manager") << rhs.pkg_manager;
 }
 
-bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::metadata::SW* rhs)
+bool read(c4::yml::ConstNodeRef const& n, moveit_benchmark_suite::metadata::SW* rhs)
 {
   n["name"] >> rhs->name;
   n["version"] >> rhs->version;
@@ -253,11 +253,11 @@ void write(c4::yml::NodeRef* n, moveit_benchmark_suite::DataContainer const& rhs
     n_metrics.append_child() << key(pair.first) << pair.second;  // |= c4::yml::_WIP_STYLE_FLOW_SL;
 }
 
-bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::DataContainer* rhs)
+bool read(c4::yml::ConstNodeRef const& n, moveit_benchmark_suite::DataContainer* rhs)
 {
   n["query"] >> rhs->query_id;
 
-  for (c4::yml::NodeRef const& child : n["metrics"].children())
+  for (c4::yml::ConstNodeRef const& child : n["metrics"].children())
   {
     std::string key;
     std::vector<moveit_benchmark_suite::Metric> metric_seq;
@@ -333,7 +333,7 @@ void write(c4::yml::NodeRef* n, moveit_benchmark_suite::DataSet const& rhs)
     n_data.append_child() << pair.second;
 }
 
-bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::DataSet* rhs)
+bool read(c4::yml::ConstNodeRef const& n, moveit_benchmark_suite::DataSet* rhs)
 {
   std::string date_str;
 
@@ -352,7 +352,7 @@ bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::DataSet* rhs)
 
   // Decode gpus as map
   // n["gpus"] >> rhs->gpus;
-  for (c4::yml::NodeRef const& child : n["gpus"].children())
+  for (c4::yml::ConstNodeRef const& child : n["gpus"].children())
   {
     std::string key;
     c4::from_chars(child.key(), &key);
@@ -366,7 +366,7 @@ bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::DataSet* rhs)
 
   // Decode software as map
   // n["software"] >> rhs->software;
-  for (c4::yml::NodeRef const& child : n["software"].children())
+  for (c4::yml::ConstNodeRef const& child : n["software"].children())
   {
     std::string key;
     c4::from_chars(child.key(), &key);
@@ -388,7 +388,7 @@ bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::DataSet* rhs)
   n["queries"] >> rhs->query_collection;
 
   std::size_t ctr = 0;
-  for (c4::yml::NodeRef const& child : n["data"].children())
+  for (c4::yml::ConstNodeRef const& child : n["data"].children())
   {
     moveit_benchmark_suite::DataContainer data;
     child >> data;
@@ -404,7 +404,7 @@ void write(c4::yml::NodeRef* n, moveit_benchmark_suite::Metric const& rhs)
   boost::apply_visitor(encodeMetricVariantVisitor(*n), rhs);
 }
 
-bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::Metric* rhs)
+bool read(c4::yml::ConstNodeRef const& n, moveit_benchmark_suite::Metric* rhs)
 {
   moveit_benchmark_suite::MetricPtr metric;
 

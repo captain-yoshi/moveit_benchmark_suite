@@ -25,13 +25,13 @@ Handler::~Handler()
     nh_.deleteParam(key);
 }
 
-void Handler::loadYAMLtoROS(const ryml::NodeRef& node, const std::string& prefix)
+void Handler::loadYAMLtoROS(const ryml::ConstNodeRef& node, const std::string& prefix)
 {
   if (node.is_map())
   {
     const std::string fixed_prefix = (prefix.empty()) ? "" : (prefix + "/");
 
-    for (ryml::NodeRef const& child : node.children())
+    for (ryml::ConstNodeRef const& child : node.children())
     {
       std::string key;
       from_chars(child.key(), &key);

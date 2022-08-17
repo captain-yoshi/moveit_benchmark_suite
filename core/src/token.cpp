@@ -158,9 +158,9 @@ const std::string& Token::getNamespace() const
 {
   return ns_;
 }
-const ryml::NodeRef Token::getNode() const
+const ryml::ConstNodeRef Token::getNode() const
 {
-  return tree_.rootref();
+  return tree_.crootref();
 }
 
 bool Token::hasValue() const
@@ -180,8 +180,8 @@ bool Token::isAbsolute() const
   return !isRelative();
 }
 
-std::ostream & operator << (std::ostream &out, const Token &t)
+std::ostream& operator<<(std::ostream& out, const Token& t)
 {
-    return out << t.getNamespace() << " (value '" << t.getValue() << "')";
+  return out << t.getNamespace() << " (value '" << t.getValue() << "')";
 }
 }  // namespace moveit_benchmark_suite

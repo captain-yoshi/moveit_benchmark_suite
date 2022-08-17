@@ -94,9 +94,9 @@ private:
    *  \param[in] node Either a dataset node or a data sequence
    *  \return True if predicate is respected, False otherwise.
    */
-  bool filterMetadata(const ryml::NodeRef& node, const Token& token, Predicate predicate);
+  bool filterMetadata(const ryml::ConstNodeRef& node, const Token& token, Predicate predicate);
   /// Queries that contain the metrcis node, for dealing with a variant
-  bool filterMetric(const ryml::NodeRef& node, const Token& token, Predicate predicate);
+  bool filterMetric(const ryml::ConstNodeRef& node, const Token& token, Predicate predicate);
 
   std::vector<DatasetMultiMap> dataset_mmap_list_;  // Original datasets
   // ContainerMap container_ = {};  // Output of filters

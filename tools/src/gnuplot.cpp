@@ -709,7 +709,7 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
     {
       auto n_filters = n_plot.find_child("filters");
 
-      for (ryml::NodeRef const& child : n_filters.children())
+      for (ryml::ConstNodeRef const& child : n_filters.children())
       {
         std::string ns;
         std::string val;
@@ -746,7 +746,7 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
     // Get metrics
     auto n_metrics = n_plot["metrics"];
 
-    for (ryml::NodeRef const& child : n_metrics.children())
+    for (ryml::ConstNodeRef const& child : n_metrics.children())
     {
       std::string title;
       std::string type;
@@ -796,8 +796,8 @@ bool GNUPlotDataset::initializeFromYAML(const std::string& file)
   return initialize(layout);
 }
 
-std::string GNUPlotDataset::combineTokenNodeValue(const Token& token, const ryml::NodeRef& node, const std::string& tag,
-                                                  bool keep_ns)
+std::string GNUPlotDataset::combineTokenNodeValue(const Token& token, const ryml::ConstNodeRef& node,
+                                                  const std::string& tag, bool keep_ns)
 {
   std::string token_tag;
   if (keep_ns)

@@ -46,31 +46,31 @@ namespace c4 {
 namespace yml {
 
 void write(c4::yml::NodeRef* n, moveit_benchmark_suite::QueryID const& rhs);
-bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::QueryID* rhs);
+bool read(c4::yml::ConstNodeRef const& n, moveit_benchmark_suite::QueryID* rhs);
 
 void write(c4::yml::NodeRef* n, moveit_benchmark_suite::QueryCollection const& rhs);
-bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::QueryCollection* rhs);
+bool read(c4::yml::ConstNodeRef const& n, moveit_benchmark_suite::QueryCollection* rhs);
 
 void write(c4::yml::NodeRef* n, moveit_benchmark_suite::metadata::CPU const& rhs);
-bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::metadata::CPU* rhs);
+bool read(c4::yml::ConstNodeRef const& n, moveit_benchmark_suite::metadata::CPU* rhs);
 
 void write(c4::yml::NodeRef* n, moveit_benchmark_suite::metadata::GPU const& rhs);
-bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::metadata::GPU* rhs);
+bool read(c4::yml::ConstNodeRef const& n, moveit_benchmark_suite::metadata::GPU* rhs);
 
 void write(c4::yml::NodeRef* n, moveit_benchmark_suite::metadata::OS const& rhs);
-bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::metadata::OS* rhs);
+bool read(c4::yml::ConstNodeRef const& n, moveit_benchmark_suite::metadata::OS* rhs);
 
 void write(c4::yml::NodeRef* n, moveit_benchmark_suite::metadata::SW const& rhs);
-bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::metadata::SW* rhs);
+bool read(c4::yml::ConstNodeRef const& n, moveit_benchmark_suite::metadata::SW* rhs);
 
 void write(c4::yml::NodeRef* n, moveit_benchmark_suite::DataContainer const& rhs);
-bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::DataContainer* rhs);
+bool read(c4::yml::ConstNodeRef const& n, moveit_benchmark_suite::DataContainer* rhs);
 
 void write(c4::yml::NodeRef* n, moveit_benchmark_suite::DataSet const& rhs);
-bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::DataSet* rhs);
+bool read(c4::yml::ConstNodeRef const& n, moveit_benchmark_suite::DataSet* rhs);
 
 void write(c4::yml::NodeRef* n, moveit_benchmark_suite::Metric const& rhs);
-bool read(c4::yml::NodeRef const& n, moveit_benchmark_suite::Metric* rhs);
+bool read(c4::yml::ConstNodeRef const& n, moveit_benchmark_suite::Metric* rhs);
 
 }  // namespace yml
 }  // namespace c4

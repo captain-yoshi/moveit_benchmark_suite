@@ -83,7 +83,7 @@ bool Robot::initialize(const std::string& urdf_file, const std::string& srdf_fil
   initializeInternal();
   return true;
 }
-bool Robot::initializeFromYAML(const ryml::NodeRef& node)
+bool Robot::initializeFromYAML(const ryml::ConstNodeRef& node)
 {
   // Strict config keys
   if (!IO::validateNodeKeys(node, { "urdf", "srdf", "kinematics", "joint_limits" }))
@@ -322,13 +322,14 @@ bool Robot::loadYAMLFile(const std::string& name, const std::string& file, const
 
   return true;
 }
-bool Robot::loadYAMLNode(const std::string& name, const ryml::NodeRef& node)
+bool Robot::loadYAMLNode(const std::string& name, const ryml::ConstNodeRef& node)
 {
   PostProcessYAMLFunction function;
   return loadYAMLNode(name, node, function);
 }
 
-bool Robot::loadYAMLNode(const std::string& name, const ryml::NodeRef& node, const PostProcessYAMLFunction& function)
+bool Robot::loadYAMLNode(const std::string& name, const ryml::ConstNodeRef& node,
+                         const PostProcessYAMLFunction& function)
 {
   if (function)
   {

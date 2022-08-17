@@ -119,7 +119,7 @@ public:
    * \return True on success, false on failure.
    */
   bool initializeFromYAML(const std::string& config_file);
-  bool initializeFromYAML(const ryml::NodeRef& node);
+  bool initializeFromYAML(const ryml::ConstNodeRef& node);
 
   /** \brief Loads a YAML file into the robot's namespace under \a name.
    *  \param[in] name Name to load file under.
@@ -136,8 +136,8 @@ public:
    */
   bool loadYAMLFile(const std::string& name, const std::string& file, const PostProcessYAMLFunction& function);
 
-  bool loadYAMLNode(const std::string& name, const ryml::NodeRef& node);
-  bool loadYAMLNode(const std::string& name, const ryml::NodeRef& node, const PostProcessYAMLFunction& function);
+  bool loadYAMLNode(const std::string& name, const ryml::ConstNodeRef& node);
+  bool loadYAMLNode(const std::string& name, const ryml::ConstNodeRef& node, const PostProcessYAMLFunction& function);
 
   /** \brief Loads an XML or .xacro file into a string.
    *  \param[in] file File to load.

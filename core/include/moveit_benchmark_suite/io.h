@@ -237,14 +237,14 @@ std::vector<T> tokenize(const std::string& string, const std::string& separators
  *  \param[in] keys List of keys used to compare.
  *  \return True if keys matches node keys, false otherwise.
  */
-bool validateNodeKeys(const ryml::NodeRef& node, const std::vector<std::string>& keys);
+bool validateNodeKeys(const ryml::ConstNodeRef& node, const std::vector<std::string>& keys);
 
 /** \brief Write the contents of a YAML node out to a potentially new file.
  *  \param[in] node Node to write.
  *  \param[in] file Filename to open.
  *  \return True on success, false otherwise.
  */
-bool YAMLToFile(const ryml::NodeRef& node, const std::string& file);
+bool YAMLToFile(const ryml::ConstNodeRef& node, const std::string& file);
 
 /** \brief Dump a message (or YAML convertable object) to a file.
  *  \param[in] msg Message to dump.

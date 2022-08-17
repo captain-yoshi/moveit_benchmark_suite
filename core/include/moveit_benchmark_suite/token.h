@@ -64,7 +64,7 @@ public:
   const std::string& getDelimiter() const;
   const std::string& getNamespace() const;
 
-  const ryml::NodeRef getNode() const;
+  const ryml::ConstNodeRef getNode() const;
 
   bool hasValue() const;
   bool isRelative() const;
@@ -81,6 +81,6 @@ private:
   ryml::Tree tree_;
 };
 
-std::ostream & operator << (std::ostream &out, const Token &t);
+std::ostream& operator<<(std::ostream& out, const Token& t);
 
 }  // namespace moveit_benchmark_suite

@@ -61,31 +61,31 @@ public:
   virtual void reset();
 
   // Load sequence or unique resource/s into a YAML node map
-  void loadResources(const ryml::NodeRef& node);
+  void loadResources(const ryml::ConstNodeRef& node);
 
   //  Decode resource/s tag into a YAML node. A resource tag can be a
   //   - File (YAML, XML, XACRO)
   //   - ROS Parameter namespace
   //   - YAML node
-  bool decodeResourceTag(const ryml::NodeRef& source, ryml::NodeRef& target);
+  bool decodeResourceTag(const ryml::ConstNodeRef& source, ryml::NodeRef& target);
 
   // Merge supplied node to specific/all resources in the map
-  void mergeResource(const std::string& name, const ryml::NodeRef& node);
-  void mergeResources(const ryml::NodeRef& node);
+  void mergeResource(const std::string& name, const ryml::ConstNodeRef& node);
+  void mergeResources(const ryml::ConstNodeRef& node);
 
   // Clone resource and merge given node. A sequence number is added to the cloned resource name.
   // The original resource is deleted.
   //  Ex. 2 extensions targetting resource 'A' will create resource 'A1' and 'A2', resource 'A' is deleted.
-  void extendResources(const ryml::NodeRef& node);
+  void extendResources(const ryml::ConstNodeRef& node);
   bool cloneResource(const std::string& src, const std::string& dst);
   bool deleteResource(const std::string& name);
 
   // In case a validation is needed
-  virtual bool validateResource(const ryml::NodeRef& node);  // defaults to true
+  virtual bool validateResource(const ryml::ConstNodeRef& node);  // defaults to true
 
 protected:
-  bool loadResource(const ryml::NodeRef& node);
-  bool extendResource(const ryml::NodeRef& node, std::vector<std::string>& extend_resource_names);
+  bool loadResource(const ryml::ConstNodeRef& node);
+  bool extendResource(const ryml::ConstNodeRef& node, std::vector<std::string>& extend_resource_names);
 
   const std::map<std::string, ryml::Tree>& getResources() const;
   void insertResource(const std::string name, ryml::Tree&& node);
@@ -94,7 +94,7 @@ protected:
 
   // Decode a node with the template type and encode to a node and check if the original is a subset
   template <typename T>
-  bool validateYamlNode(const ryml::NodeRef& source)
+  bool validateYamlNode(const ryml::ConstNodeRef& source)
   {
     try
     {
@@ -113,7 +113,7 @@ protected:
 
       // Only print children (source node may be a KEYMAP | KEYSEQ)
       std::stringstream src_children_ss;
-      for (const ryml::NodeRef child : source)
+      for (const ryml::ConstNodeRef child : source)
         src_children_ss << child;
 
       const std::string del = "------";
@@ -144,7 +144,7 @@ public:
   YAMLDeserializerBuilder(bool use_validation = true) : use_validation_(use_validation){};
   ~YAMLDeserializerBuilder() override = default;
 
-  virtual bool validateResource(const ryml::NodeRef& node) override
+  virtual bool validateResource(const ryml::ConstNodeRef& node) override
   {
     if (use_validation_)
       return validateYamlNode<T>(node["resource"]);
@@ -203,7 +203,7 @@ public:
 
 private:
   bool buildClutteredSceneFromYAML(ScenePtr& scene, const std::map<std::string, moveit_msgs::RobotState>& state_map,
-                                   const ryml::NodeRef& node) const;
+                                   const ryml::ConstNodeRef& node) const;
 };
 
 // Build moveit_benchmark_suite/PlanningPipelineEmitter with complex initializations

@@ -276,7 +276,7 @@ DatasetFilter::DatasetMultiMap DatasetFilter::filter(std::size_t id, ryml::Tree&
   return ds_mmap;
 }
 
-bool computePredicate(const ryml::NodeRef& source, const ryml::NodeRef& target, Predicate predicate)
+bool computePredicate(const ryml::ConstNodeRef& source, const ryml::ConstNodeRef& target, Predicate predicate)
 {
   c4::yml::scalar_compare<bool, int, double, std::string> cmp;
 
@@ -301,7 +301,7 @@ bool computePredicate(const ryml::NodeRef& source, const ryml::NodeRef& target, 
   return true;
 }
 
-bool DatasetFilter::filterMetadata(const ryml::NodeRef& node, const Token& token, Predicate predicate)
+bool DatasetFilter::filterMetadata(const ryml::ConstNodeRef& node, const Token& token, Predicate predicate)
 {
   ryml::Tree t;
   ryml::NodeRef dataset_value = t.rootref();
@@ -415,7 +415,7 @@ bool DatasetFilter::filterMetadata(const ryml::NodeRef& node, const Token& token
   return true;
 }
 
-bool DatasetFilter::filterMetric(const ryml::NodeRef& node, const Token& token, Predicate predicate)
+bool DatasetFilter::filterMetric(const ryml::ConstNodeRef& node, const Token& token, Predicate predicate)
 {
   // Remove
   if (token.hasValue())

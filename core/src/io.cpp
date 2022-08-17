@@ -529,7 +529,7 @@ ryml::substr IO::loadFileToYAML(const std::string& path, ryml::NodeRef& node)
   return substr;
 }
 
-bool IO::validateNodeKeys(const ryml::NodeRef& node, const std::vector<std::string>& keys)
+bool IO::validateNodeKeys(const ryml::ConstNodeRef& node, const std::vector<std::string>& keys)
 {
   std::size_t match_key_count = 0;
   std::vector<std::size_t> unmatch_indexes;
@@ -568,7 +568,7 @@ bool IO::validateNodeKeys(const ryml::NodeRef& node, const std::vector<std::stri
   return true;
 }
 
-bool IO::YAMLToFile(const ryml::NodeRef& node, const std::string& file)
+bool IO::YAMLToFile(const ryml::ConstNodeRef& node, const std::string& file)
 {
   // emit to a stream
   std::stringstream ss;
