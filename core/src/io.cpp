@@ -572,7 +572,7 @@ bool IO::YAMLToFile(const ryml::ConstNodeRef& node, const std::string& file)
 {
   // emit to a stream
   std::stringstream ss;
-  ss << node.tree();
+  ss << node;
 
   std::ofstream fout;
   IO::createFile(fout, file);
