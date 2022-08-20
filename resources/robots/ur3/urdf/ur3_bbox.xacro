@@ -17,7 +17,7 @@
 
     Refer to 'inc/ur_macro.xacro' for more information.
   -->
-  <xacro:property name="visual_parameters_file" value="$(find moveit_benchmark_suite_resources)/robots/ur3/urdf/config/visual_parameters_bb.yaml"/>
+  <xacro:property name="visual_parameters_file" value="$(find moveit_benchmark_suite_resources)/robots/ur3/urdf/config/visual_parameters_bbox.yaml"/>
 
   <xacro:include filename="$(find moveit_benchmark_suite_resources)/robots/ur3/urdf/inc/ur3_macro.xacro"/>
   <xacro:ur3_robot prefix="" visual_parameters_file="${visual_parameters_file}"/>
