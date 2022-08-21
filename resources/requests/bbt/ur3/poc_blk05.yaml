@@ -1,0 +1,50 @@
+group_name: manipulator
+
+start_state:
+  joint_state:
+    header:
+      frame_id: base_link
+    name: [shoulder_pan_joint, shoulder_lift_joint, elbow_joint, wrist_1_joint, wrist_2_joint, wrist_3_joint]
+    position: [0, -1.5707, 0, -1.5707, 0, 0]
+
+goal_constraints:
+  - position_constraints:
+      - header:
+          frame_id: base_link
+        link_name: tool0
+        target_point_offset:
+          x: 0
+          y: 0
+          z: 0
+        constraint_region:
+          primitives:
+            - type: 1
+              dimensions:
+                - 0.01
+                - 0.01
+                - 0.01
+          primitive_poses:
+            - position:
+                x: 0.22702600061893463
+                y: 0.42594200372695923
+                z: 0.04
+              orientation:
+                x: 0
+                y: 0
+                z: 0.70710676908493042
+                w: 0.70710676908493042
+        weight: 1
+    orientation_constraints:
+      - header:
+          frame_id: base_link
+        link_name: tool0
+        orientation:
+          x: 1
+          y: 0
+          z: 0
+          w: 0
+        absolute_x_axis_tolerance: 1e-3
+        absolute_y_axis_tolerance: 1e-3
+        absolute_z_axis_tolerance: 1e-3
+        weight: 1
+
