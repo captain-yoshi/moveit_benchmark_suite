@@ -1,0 +1,67 @@
+mesh_files:
+  base:
+    visual:
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/visual/base.dae"
+      material:
+        name: "LightGrey"
+        color: "0.7 0.7 0.7 1.0"
+    collision:
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h06/base.obj"
+
+  shoulder:
+    visual:
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/visual/shoulder.dae"
+      material:
+        name: "LightGrey"
+        color: "0.7 0.7 0.7 1.0"
+    collision:
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h06/shoulder.obj"
+
+  upper_arm:
+    visual:
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/visual/upperarm.dae"
+      material:
+        name: "LightGrey"
+        color: "0.7 0.7 0.7 1.0"
+    collision:
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h06/upperarm.obj"
+      mesh_files:
+
+  forearm:
+    visual:
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/visual/forearm.dae"
+      material:
+        name: "LightGrey"
+        color: "0.7 0.7 0.7 1.0"
+    collision:
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h06/forearm.obj"
+
+  wrist_1:
+    visual:
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/visual/wrist1.dae"
+      material:
+        name: "LightGrey"
+        color: "0.7 0.7 0.7 1.0"
+    collision:
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h06/wrist1.obj"
+    visual_offset: -0.085
+
+  wrist_2:
+    visual:
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/visual/wrist2.dae"
+      material:
+        name: "LightGrey"
+        color: "0.7 0.7 0.7 1.0"
+    collision:
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h06/wrist2.obj"
+    visual_offset: -0.085
+
+  wrist_3:
+    visual:
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/visual/wrist3.dae"
+      material:
+        name: "LightGrey"
+        color: "0.7 0.7 0.7 1.0"
+    collision:
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h06/wrist3.obj"
+    visual_offset: -0.082
