@@ -1,0 +1,34 @@
+tf_generator:
+  robot:
+    name: ur3
+    resources:
+      urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3.xacro
+      srdf: package://moveit_benchmark_suite_resources/robots/ur3/config/ur3.srdf
+      kinematics: package://moveit_benchmark_suite_resources/robots/ur3/config/kinematics.yaml
+      joint_limits: package://moveit_benchmark_suite_resources/robots/ur3/config/joint_limits.yaml
+
+  scene:
+    name: my_scene
+    resource: package://moveit_benchmark_suite_resources/scenes/bbt/ur3/primitive.urdf.xacro
+
+  # target frames will be givin relative to this frame
+  target_base_frame_name: base_link
+
+  # collision objects or robot link
+  target_frame_names:
+    - woodblock1
+    - woodblock2
+    - woodblock3
+    - woodblock4
+    - woodblock5
+    - woodblock6
+    - woodblock7
+    - woodblock8
+    - woodblock9
+    - woodblock10
+    - woodblock11
+    - woodblock12
+    - woodblock13
+    - woodblock14
+    - woodblock15
+    - woodblock16

@@ -45,6 +45,9 @@ target_link_libraries(generate_plots ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_executable(ik_generator src/ik_generator.cpp)
 target_link_libraries(ik_generator ${PROJECT_NAME} ${catkin_LIBRARIES})
 
+add_executable(tf_generator src/tf_generator.cpp)
+target_link_libraries(tf_generator ${PROJECT_NAME} ${catkin_LIBRARIES})
+
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 
@@ -54,6 +57,7 @@ install(TARGETS
   generate_plots
   aggregate
   ik_generator
+  tf_generator
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
