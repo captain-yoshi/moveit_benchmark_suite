@@ -1,0 +1,67 @@
+# create HTML containing multiple pictures
+# ex. use with the `collision_check_mesh_quality` benchmark
+gnuplot_config:
+  plots:
+    # individual requests wrt. scenes, FCL and robot with mesh qualities
+    - filters:
+        - ns: query/planner
+          val: EST
+        - ns: query/request
+          val: poc
+        - ns: query/collision_detector
+          val: FCL
+      labels:
+        - query/scene
+      legends:
+        - query/robot
+      metrics:
+        - type: boxplot
+          name: time
+          title: '{/:Bold Motion Planning (PlanningPipeline)}\nTime (sec) for planner \"CHOMP\" against scenes and collision detector \"FCL\"'
+        - type: boxplot
+          name: waypoints
+          title: '{/:Bold Motion Planning (PlanningPiepeline)}\nWaypoints (count) for planner \"CHOMP\" against scenes and collision detector \"FCL\"'
+        - type: boxplot
+          name: length
+          title: '{/:Bold Motion Planning (PlanningPiepeline)}\nLength (rad) for planner \"CHOMP\" against scenes and collision detector \"FCL\"'
+        - type: boxplot
+          name: smoothness
+          title: '{/:Bold Motion Planning (PlanningPiepeline)}\nSmoothness for planner \"CHOMP\" against scenes and collision detector \"FCL\"'
+        - type: boxplot
+          name: clearance
+          title: '{/:Bold Motion Planning (PlanningPiepeline)}\nClearance (m) for planner \"CHOMP\" against scenes and collision detector \"FCL\"'
+        - type: boxplot
+          name: success
+          title: '{/:Bold Motion Planning (PlanningPiepeline)}\nSolved (pass/fail) for planner \"CHOMP\" against scenes and collision detector \"FCL\"'
+        - type: boxplot
+          name: correct
+          title: '{/:Bold Motion Planning (PlanningPiepeline)}\nCorrectness (pass/fail) for planner \"CHOMP\" against scenes and collision detector \"FCL\"'
+
+        - type: bargraph
+          name: avg_time
+          title: '{/:Bold Motion Planning (PlanningPipeline)}\nTime average (sec) for planner \"CHOMP\" against scenes and collision detector \"FCL\"'
+        - type: bargraph
+          name: avg_waypoints
+          title: '{/:Bold Motion Planning (PlanningPiepeline)}\nWaypoints average (count) for planner \"CHOMP\" against scenes and collision detector \"FCL\"'
+        - type: bargraph
+          name: avg_length
+          title: '{/:Bold Motion Planning (PlanningPiepeline)}\nLength average (rad) for planner \"CHOMP\" against scenes and collision detector \"FCL\"'
+        - type: bargraph
+          name: avg_smoothness
+          title: '{/:Bold Motion Planning (PlanningPiepeline)}\nSmoothness average for planner \"CHOMP\" against scenes and collision detector \"FCL\"'
+        - type: bargraph
+          name: avg_clearance
+          title: '{/:Bold Motion Planning (PlanningPiepeline)}\nClearance average (m) for planner \"CHOMP\" against scenes and collision detector \"FCL\"'
+        - type: bargraph
+          name: avg_success
+          title: '{/:Bold Motion Planning (PlanningPiepeline)}\nSolved average (pass/fail) for planner \"CHOMP\" against scenes and collision detector \"FCL\"'
+        - type: bargraph
+          name: avg_correct
+          title: '{/:Bold Motion Planning (PlanningPiepeline)}\nCorrectness average (pass/fail) for planner \"CHOMP\" against scenes and collision detector \"FCL\"'
+  options:
+    terminal: PNG
+    n_row: 1
+    n_col: 1
+    size:
+      x: 800
+      y: 480
