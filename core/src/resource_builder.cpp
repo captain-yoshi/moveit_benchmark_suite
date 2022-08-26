@@ -452,7 +452,8 @@ bool buildClutteredWorld(const planning_scene::PlanningScenePtr& planning_scene,
                          const moveit_msgs::RobotState& robot_state, const size_t free_collision_objects,
                          const std::size_t in_collision_objects, const uint32_t free_collision_rng,
                          const uint32_t in_collision_rng, CollisionObjectType type, const std::string& resource,
-                         const std::vector<std::pair<double, double>>& bound)
+                         const std::vector<double>& dimensions, const std::pair<double, double>& scale,
+                         const geometry_msgs::Pose& shape_offset)
 {
   struct Helper
   {
@@ -485,7 +486,10 @@ bool buildClutteredWorld(const planning_scene::PlanningScenePtr& planning_scene,
   req.max_contacts = 2;
 
   Eigen::Quaterniond quat;
-  Eigen::Isometry3d pose{ Eigen::Isometry3d::Identity() };
+  Eigen::Isometry3d shape_pose{ Eigen::Isometry3d::Identity() };  //  wrt. object origin
+  shape_pose.translation().x() = shape_offset.position.x;
+  shape_pose.translation().y() = shape_offset.position.y;
+  shape_pose.translation().z() = shape_offset.position.z;
 
   // allow all robot links to be in collision for world check
   collision_detection::AllowedCollisionMatrix acm{ collision_detection::AllowedCollisionMatrix(
@@ -506,33 +510,35 @@ bool buildClutteredWorld(const planning_scene::PlanningScenePtr& planning_scene,
     // create random objects until as many added as desired or quit if too many attempts
     while (added_objects < object_count_loop && i < object_count_loop * MAX_SEARCH_FACTOR_CLUTTER)
     {
-      // add with random size and random position
-      pose.translation().x() = num_generator.uniformReal(-1.0, 1.0);
-      pose.translation().y() = num_generator.uniformReal(-1.0, 1.0);
-      pose.translation().z() = num_generator.uniformReal(0.0, 1.0);
+      auto scale_factor = num_generator.uniformReal(scale.first, scale.second);
+      // auto scale_factor = 1.0;
+
+      Eigen::Isometry3d object_pose{ Eigen::Isometry3d::Identity() };  // wrt. planning frame
+      object_pose.translation().x() = num_generator.uniformReal(-1.0, 1.0);
+      object_pose.translation().y() = num_generator.uniformReal(-1.0, 1.0);
+      object_pose.translation().z() = num_generator.uniformReal(0.0, 1.0);
 
       quat.x() = num_generator.uniformReal(-1.0, 1.0);
       quat.y() = num_generator.uniformReal(-1.0, 1.0);
       quat.z() = num_generator.uniformReal(-1.0, 1.0);
       quat.w() = num_generator.uniformReal(-1.0, 1.0);
       quat.normalize();
-      pose.rotate(quat);
+      object_pose.rotate(quat);
 
       switch (type)
       {
         case CollisionObjectType::MESH:
         {
           shapes::Mesh* mesh = shapes::createMeshFromResource(resource);
-          mesh->scale(num_generator.uniformReal(bound[0].first, bound[0].second));
+          mesh->scale(scale_factor);
           shape.reset(mesh);
           name = "mesh";
           break;
         }
         case CollisionObjectType::BOX:
         {
-          shape = std::make_shared<shapes::Box>(num_generator.uniformReal(bound[0].first, bound[0].second),
-                                                num_generator.uniformReal(bound[1].first, bound[1].second),
-                                                num_generator.uniformReal(bound[2].first, bound[2].second));
+          shape = std::make_shared<shapes::Box>(dimensions[0] * scale_factor, dimensions[1] * scale_factor,
+                                                dimensions[2] * scale_factor);
           name = "box";
           break;
         }
@@ -543,7 +549,7 @@ bool buildClutteredWorld(const planning_scene::PlanningScenePtr& planning_scene,
       }
 
       name.append(std::to_string(i));
-      test_scene.getWorldNonConst()->addToObject(name, shape, pose);
+      test_scene.getWorldNonConst()->addToObject(name, object_pose, shape, shape_pose);
 
       collision_detection::CollisionResult res;
       test_scene.checkCollision(req, res, planning_scene->getCurrentState(), acm);
@@ -553,7 +559,7 @@ bool buildClutteredWorld(const planning_scene::PlanningScenePtr& planning_scene,
       if ((helper.in_collision_build && res.contact_count == 1) ||  //
           (!helper.in_collision_build && !res.collision))
       {
-        planning_scene->getWorldNonConst()->addToObject(name, shape, pose);
+        planning_scene->getWorldNonConst()->addToObject(name, object_pose, shape, shape_pose);
         added_objects++;
       }
       // Remove object from test scene
@@ -577,8 +583,8 @@ bool SceneBuilder::buildClutteredSceneFromYAML(ScenePtr& scene,
                                                const std::map<std::string, moveit_msgs::RobotState>& state_map,
                                                const ryml::ConstNodeRef& node) const
 {
-  if (!IO::validateNodeKeys(node, { "object_in_collision", "object_no_collision", "rng_in_collision",
-                                    "rng_no_collision", "bounds", "resource", "robot_state", "object_type" }))
+  if (!IO::validateNodeKeys(node, { "object_in_collision", "object_no_collision", "rng_in_collision", "rng_no_collision",
+                                    "dimensions", "scale", "resource", "robot_state", "object_type", "shape_offset" }))
     return false;
 
   std::size_t in_object_size = 0;
@@ -605,7 +611,10 @@ bool SceneBuilder::buildClutteredSceneFromYAML(ScenePtr& scene,
   std::string resource = "";
   std::string type_str = "";
   std::string robot_state_str = "";
-  std::vector<std::pair<double, double>> bounds;
+  std::vector<double> dimensions;
+  std::pair<double, double> scale = { 1.0, 1.0 };
+  geometry_msgs::Pose shape_offset;
+  shape_offset.orientation.w = 1;
 
   if (node.has_child("in_rng"))
     node["in_rng"] >> in_rng;
@@ -613,8 +622,11 @@ bool SceneBuilder::buildClutteredSceneFromYAML(ScenePtr& scene,
     node["free_rng"] >> free_rng;
   if (node.has_child("resource"))
     node["resource"] >> resource;
+  if (node.has_child("scale"))
+    node["scale"] >> scale;
+  if (node.has_child("shape_offset"))
+    node["shape_offset"] >> shape_offset;
 
-  node["bounds"] >> bounds;
   node["object_type"] >> type_str;
   node["robot_state"] >> robot_state_str;
 
@@ -623,11 +635,6 @@ bool SceneBuilder::buildClutteredSceneFromYAML(ScenePtr& scene,
   if (type_str.compare("MESH") == 0)
   {
     collision_type = CollisionObjectType::MESH;
-    if (bounds.size() != 1)
-    {
-      ROS_WARN("Mesh object type must have a bounds' size of 1, got '%zu'", bounds.size());
-      return false;
-    }
     if (resource.empty())
     {
       ROS_WARN("Mesh object 'resource' parameter must be defined");
@@ -636,10 +643,12 @@ bool SceneBuilder::buildClutteredSceneFromYAML(ScenePtr& scene,
   }
   else if (type_str.compare("BOX") == 0)
   {
+    node["dimensions"] >> dimensions;
+
     collision_type = CollisionObjectType::BOX;
-    if (bounds.size() != 3)
+    if (dimensions.size() != 3)
     {
-      ROS_WARN("Primitive BOX object type must have a 'bounds' size of 3, got '%zu'", bounds.size());
+      ROS_WARN("Primitive BOX object type must have a 'dimensions' size of 3, got '%zu'", dimensions.size());
       return false;
     }
   }
@@ -657,7 +666,7 @@ bool SceneBuilder::buildClutteredSceneFromYAML(ScenePtr& scene,
   }
 
   return buildClutteredWorld(scene->getScene(), it->second, free_object_size, in_object_size, free_rng, in_rng,
-                             collision_type, resource, bounds);
+                             collision_type, resource, dimensions, scale, shape_offset);
 }
 
 std::map<std::string, ScenePtr>

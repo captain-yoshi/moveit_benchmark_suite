@@ -39,10 +39,11 @@ profiler_config:
         robot_state: extended
         object_in_collision: 1
         object_type: BOX
-        bounds:
-        - [0.05, 0.2] # [Lower, Upper]
-        - [0.05, 0.2]
-        - [0.05, 0.2]
+        dimensions: [0.1101, 0.185032, 0.316723]
+        scale: [0.3, 1.0]
+        shape_offset:
+          position: [0, 0.037388, -0.10619]
+          orientation: [0, 0, 0, 1]
         rng_in_collision: 123
   - name: box-1nc
     resource:
@@ -50,10 +51,11 @@ profiler_config:
         robot_state: extended
         object_no_collision: 1
         object_type: BOX
-        bounds:
-        - [0.05, 0.2] # [Lower, Upper]
-        - [0.05, 0.2]
-        - [0.05, 0.2]
+        dimensions: [0.1101, 0.185032, 0.316723]
+        scale: [0.3, 1.0]
+        shape_offset:
+          position: [0, 0.037388, -0.10619]
+          orientation: [0, 0, 0, 1]
         rng_no_collision: 123
   - name: box-100-4c
     resource:
@@ -62,10 +64,11 @@ profiler_config:
         object_in_collision: 4
         object_no_collision: 96
         object_type: BOX
-        bounds:
-        - [0.05, 0.2] # [Lower, Upper]
-        - [0.05, 0.2]
-        - [0.05, 0.2]
+        dimensions: [0.1101, 0.185032, 0.316723]
+        scale: [0.3, 1.0]
+        shape_offset:
+          position: [0, 0.037388, -0.10619]
+          orientation: [0, 0, 0, 1]
         rng_in_collision: 123
         rng_no_collision: 123
   - name: box-100-nc
@@ -74,11 +77,12 @@ profiler_config:
         robot_state: extended
         object_no_collision: 100
         object_type: BOX
-        bounds:
-        - [0.05, 0.2]
-        - [0.05, 0.2]
-        - [0.05, 0.2]
+        dimensions: [0.1101, 0.185032, 0.316723]
+        scale: [0.3, 1.0]
         rng_no_collision: 123
+        shape_offset:
+          position: [0, 0.037388, -0.10619]
+          orientation: [0, 0, 0, 1]
   - name: mesh-100-4c
     resource:
       cluttered_scene:
@@ -87,8 +91,7 @@ profiler_config:
         object_no_collision: 96
         object_type: MESH
         resource: package://moveit_benchmark_suite_resources/robots/panda/meshes/collision/link5.stl
-        bounds:
-        - [0.3, 1.0]
+        scale: [0.3, 1.0]
         rng_in_collision: 123
         rng_no_collision: 123
   - name: mesh-100-nc
@@ -98,13 +101,13 @@ profiler_config:
         object_no_collision: 100
         object_type: MESH
         resource: package://moveit_benchmark_suite_resources/robots/panda/meshes/collision/link5.stl
-        bounds:
-        - [0.3, 1.0]
+        scale: [0.3, 1.0]
         rng_no_collision: 123
-  # collision_detection::CollisionPlugin class name
+
   collision_detectors:
   - FCL
   - Bullet
+
   # collision_detection::CollisionRequest
   collision_requests:
   - name: First (Binary)
