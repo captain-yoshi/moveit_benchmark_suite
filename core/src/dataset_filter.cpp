@@ -183,7 +183,7 @@ DatasetFilter::DatasetMultiMap DatasetFilter::filter(std::size_t id, ryml::Tree&
 
   // clone
   tree.reserve(tree_list_[id].size());
-  tree.merge_with(&tree_list_[id], 0, 0);
+  tree.merge_with(&tree_list_[id]);
 
   for (const auto& ds : dataset_mmap_list_[id])
   {
