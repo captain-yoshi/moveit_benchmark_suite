@@ -120,4 +120,18 @@ void CollisionCheckProfiler::postRunQuery(const CollisionCheckQuery& query, Coll
     data.metrics["contact_count"] = result.collision_result.contact_count;
   if (this->options.metrics & Metrics::DISTANCE && query.request.distance)
     data.metrics["closest_distance"] = result.collision_result.distance;
+
+  // count number of vertices in scene
+  std::size_t scene_vertices = 0;
+  std::vector<moveit_msgs::CollisionObject> collision_objects;
+  query.scene->getScene()->getCollisionObjectMsgs(collision_objects);
+
+  for (const auto& collision_object : collision_objects)
+  {
+    for (const auto& mesh : collision_object.meshes)
+      scene_vertices += mesh.vertices.size();
+  }
+
+  if (this->options.metrics & Metrics::TOTAL_VERTICES)
+    data.metrics["total_vertices"] = scene_vertices;
 }

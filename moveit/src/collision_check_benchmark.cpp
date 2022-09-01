@@ -62,8 +62,8 @@ int main(int argc, char** argv)
 
   profiler.options.metrics = CollisionCheckProfiler::COLLISION |      //
                              CollisionCheckProfiler::CONTACT_COUNT |  //
-                             CollisionCheckProfiler::DISTANCE;        //
-
+                             CollisionCheckProfiler::DISTANCE |       //
+                             CollisionCheckProfiler::TOTAL_VERTICES;
   // Setup benchmark
   Benchmark benchmark;
   benchmark.initializeFromHandle(pnh);

@@ -88,9 +88,10 @@ public:
    */
   enum Metrics
   {
-    COLLISION = 1 << 0,      // True if collision was found
-    CONTACT_COUNT = 1 << 1,  //
-    DISTANCE = 1 << 2,       //
+    COLLISION = 1 << 0,       // True if collision was found
+    CONTACT_COUNT = 1 << 1,   //
+    DISTANCE = 1 << 2,        //
+    TOTAL_VERTICES = 1 << 3,  // Count vertices from all meshes in scene
   };
 
   void buildQueriesFromYAML(const std::string& filename) override;
