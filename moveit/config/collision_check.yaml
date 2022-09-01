@@ -103,6 +103,26 @@ profiler_config:
         resource: package://moveit_benchmark_suite_resources/robots/panda/meshes/collision/link5.stl
         scale: [0.3, 1.0]
         rng_no_collision: 123
+  # - name: mesh-bbox-100-4c
+  #   resource:
+  #     cluttered_scene:
+  #       robot_state: extended
+  #       object_in_collision: 4
+  #       object_no_collision: 96
+  #       object_type: MESH
+  #       resource: package://moveit_benchmark_suite_resources/robots/panda/meshes/collision/link5_bbox.stl
+  #       scale: [0.3, 1.0]
+  #       rng_in_collision: 123
+  #       rng_no_collision: 123
+  # - name: mesh-bbox-100-nc
+  #   resource:
+  #     cluttered_scene:
+  #       robot_state: extended
+  #       object_no_collision: 100
+  #       object_type: MESH
+  #       resource: package://moveit_benchmark_suite_resources/robots/panda/meshes/collision/link5_bbox.stl
+  #       scale: [0.3, 1.0]
+  #       rng_no_collision: 123
 
   collision_detectors:
   - FCL
