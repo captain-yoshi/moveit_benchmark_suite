@@ -1,0 +1,139 @@
+######################################
+# Motion Planning (PlanningPipeline) #
+######################################
+
+# Describes benchmark parameters (independant of profilers)
+benchmark_config:
+  parameters:
+    runs: 50                        # Number of trials for each query
+    name: "MotionPlanning PP"       # Default ""    | Overridden by ROS Param /benchmark/name
+    verbose_status_trial: False     # Print status before each trial of all queries
+    verbose_status_query: True      # Print status before each query
+
+# Describes config for building motion planning pair-wise queries
+profiler_config:
+
+  # Override 'requests' with moveit_msgs/MotionPlanRequest respective field/s
+  requests_override:
+    allowed_planning_time: 10.0
+    num_planning_attempts: 1
+
+  # Resource moveit_msgs/MotionPlanRequest
+  requests:
+    # poc = pose orientation constraint
+    - name: poc-blk01
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk01.yaml
+    - name: poc-blk02
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk02.yaml
+    - name: poc-blk03
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk03.yaml
+    - name: poc-blk04
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk04.yaml
+    - name: poc-blk05
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk05.yaml
+    - name: poc-blk06
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk06.yaml
+    - name: poc-blk07
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk07.yaml
+    - name: poc-blk08
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk08.yaml
+    - name: poc-blk09
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk09.yaml
+    - name: poc-blk10
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk10.yaml
+    - name: poc-blk11
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk11.yaml
+    - name: poc-blk12
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk12.yaml
+    - name: poc-blk13
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk13.yaml
+    - name: poc-blk14
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk14.yaml
+    - name: poc-blk15
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk15.yaml
+    - name: poc-blk16
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk16.yaml
+
+  # Resource moveit_config (robot)
+  robot:
+    name: ur3
+    resources:
+      urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3.xacro
+      srdf: package://moveit_benchmark_suite_resources/robots/ur3/config/ur3.srdf
+      kinematics: package://moveit_benchmark_suite_resources/robots/ur3/config/kinematics.yaml
+      joint_limits: package://moveit_benchmark_suite_resources/robots/ur3/config/joint_limits.yaml
+
+  # Resource moveit_msgs/PlanningScene
+  scenes:
+    - name: empty
+      resource: package://moveit_benchmark_suite_resources/scenes/empty/empty.urdf.xacro
+    - name: primitive
+      resource: package://moveit_benchmark_suite_resources/scenes/bbt/ur3/primitive.urdf.xacro
+    - name: mesh
+      resource: package://moveit_benchmark_suite_resources/scenes/bbt/ur3/mesh_16k.urdf.xacro
+
+  collision_detectors:
+    - FCL
+    - Bullet
+
+  # Resource moveit_config (planning pipeline)
+  # - Override the 'requests' pipeline_id field
+  # - Extends query 'planners' which overrides the 'requests' planner_id field
+  planning_pipelines:
+    - name: ompl
+      resource: package://moveit_benchmark_suite_resources/robots/ur3/config/ompl_planning.yaml
+      parameters:
+        planners:
+          - RRT
+          - RRTConnect
+          - EST
+          - PRM
+          - LBKPIECE
+          - BiEST
+    - name: chomp
+      resource: package://moveit_benchmark_suite_resources/robots/ur3/config/chomp_planning.yaml
+      parameters:
+        planners:
+          - CHOMP
+
+extend_resource_config:
+  robot:
+    extend_resource: ur3
+    resource_names:
+      - ur3_default
+      - ur3_bbox
+      - ur3_vhacd_h01
+      - ur3_vhacd_h02
+      - ur3_vhacd_h03
+      - ur3_vhacd_h04
+      - ur3_vhacd_h05
+      - ur3_vhacd_h06
+      - ur3_vhacd_h07
+      - ur3_vhacd_h08
+      - ur3_vhacd_h09
+      - ur3_vhacd_h10
+      - ur3_vhacd_h11
+      - ur3_vhacd_h12
+      - ur3_vhacd_h13
+      - ur3_vhacd_h14
+      - ur3_vhacd_h15
+      - ur3_vhacd_h16
+    resources:
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_bbox.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h01.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h02.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h03.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h04.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h05.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h06.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h07.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h08.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h09.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h10.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h11.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h12.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h13.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h14.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h15.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h16.xacro

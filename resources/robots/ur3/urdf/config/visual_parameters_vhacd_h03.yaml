@@ -6,7 +6,7 @@ mesh_files:
         name: "LightGrey"
         color: "0.7 0.7 0.7 1.0"
     collision:
-      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h16/base.obj"
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h03/base.obj"
 
   shoulder:
     visual:
@@ -15,7 +15,7 @@ mesh_files:
         name: "LightGrey"
         color: "0.7 0.7 0.7 1.0"
     collision:
-      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h16/shoulder.obj"
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h03/shoulder.obj"
 
   upper_arm:
     visual:
@@ -24,7 +24,7 @@ mesh_files:
         name: "LightGrey"
         color: "0.7 0.7 0.7 1.0"
     collision:
-      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h16/upperarm.obj"
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h03/upperarm.obj"
       mesh_files:
 
   forearm:
@@ -34,7 +34,7 @@ mesh_files:
         name: "LightGrey"
         color: "0.7 0.7 0.7 1.0"
     collision:
-      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h16/forearm.obj"
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h03/forearm.obj"
 
   wrist_1:
     visual:
@@ -43,7 +43,7 @@ mesh_files:
         name: "LightGrey"
         color: "0.7 0.7 0.7 1.0"
     collision:
-      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h16/wrist1.obj"
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h03/wrist1.obj"
     visual_offset: -0.085
 
   wrist_2:
@@ -53,7 +53,7 @@ mesh_files:
         name: "LightGrey"
         color: "0.7 0.7 0.7 1.0"
     collision:
-      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h16/wrist2.obj"
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h03/wrist2.obj"
     visual_offset: -0.085
 
   wrist_3:
@@ -63,5 +63,5 @@ mesh_files:
         name: "LightGrey"
         color: "0.7 0.7 0.7 1.0"
     collision:
-      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h16/wrist3.obj"
+      mesh: "package://moveit_benchmark_suite_resources/robots/ur3/meshes/collision/vhacd_h03/wrist3.obj"
     visual_offset: -0.082
