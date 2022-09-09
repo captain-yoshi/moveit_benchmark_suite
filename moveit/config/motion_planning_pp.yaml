@@ -22,8 +22,38 @@ profiler_config:
   requests:
     - name: jc
       resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/jc.yaml
-    # - name: jc_pcp
-    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/jc_pcp.yaml
+    - name: poc-blk01
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/poc_blk01.yaml
+    - name: poc-blk02
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/poc_blk02.yaml
+    - name: poc-blk03
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/poc_blk03.yaml
+    - name: poc-blk04
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/poc_blk04.yaml
+    - name: poc-blk05
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/poc_blk05.yaml
+    - name: poc-blk06
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/poc_blk06.yaml
+    - name: poc-blk07
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/poc_blk07.yaml
+    - name: poc-blk08
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/poc_blk08.yaml
+    - name: poc-blk09
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/poc_blk09.yaml
+    - name: poc-blk10
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/poc_blk10.yaml
+    - name: poc-blk11
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/poc_blk11.yaml
+    - name: poc-blk12
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/poc_blk12.yaml
+    - name: poc-blk13
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/poc_blk13.yaml
+    - name: poc-blk14
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/poc_blk14.yaml
+    - name: poc-blk15
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/poc_blk15.yaml
+    - name: poc-blk16
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/poc_blk16.yaml
 
   # Resource moveit_config (robot)
   robot:
