@@ -1,0 +1,50 @@
+group_name: panda_arm
+
+start_state:
+  joint_state:
+    header:
+      frame_id: panda_link0
+    name: [panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7, panda_finger_joint1, panda_finger_joint2]
+    position: [0, 0, 0, 0, 0, 1.571, 0.785, 0, 0]
+
+goal_constraints:
+  - position_constraints:
+      - header:
+          frame_id: panda_link0
+        link_name: panda_link8
+        target_point_offset:
+          x: 0
+          y: 0
+          z: 0
+        constraint_region:
+          primitives:
+            - type: 1
+              dimensions:
+                - 0.01
+                - 0.01
+                - 0.01
+          primitive_poses:
+            - position:
+                x: 0.39094200730323792
+                y: -0.12379399687051773
+                z: 0.168     # center of block = 0.02001350000500679
+              orientation:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        weight: 1
+    orientation_constraints:
+      - header:
+          frame_id: panda_link0
+        link_name: panda_link8
+        orientation:
+          x: 0.9238795
+          y: 0.3826834
+          z: 0
+          w: 0
+        absolute_x_axis_tolerance: 1e-3
+        absolute_y_axis_tolerance: 1e-3
+        absolute_z_axis_tolerance: 1e-3
+        weight: 1
+
