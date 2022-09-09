@@ -1,0 +1,6 @@
+unit_box_blender:
+  resource: "package://moveit_benchmark_suite_resources/objects/unit_box_blender.stl"
+  bb:                               # Bounding box wrt. mesh origin
+    - 1
+    - 1
+    - 1

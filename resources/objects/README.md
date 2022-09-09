@@ -12,10 +12,11 @@ Collection of object resources for the Moveit Benchmark Suite. A detailled list 
 | mug_16k.stl            | Google scanner (16k polygons)  | 2021-07-27   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/025_mug_google_16k.tgz                                          |
 | plate_16k.stl          | Google scanner (16k polygons)  | 2021-07-27   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/029_plate_google_16k.tgz                                        |
 | soupcan_16k.stl        | Google scanner (16k polygons)  | 2021-07-27   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/005_tomato_soup_can_google_16k.tgz                              |
+| unit_box_blender.stl   | Blender 3.3.0                  |              | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/029_plate_google_16k.tgz                                        |
 | woodblock_16k.stl      | Google scanner (16k polygons)  | 2021-07-14   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/070-b_colored_wood_blocks_google_16k.tgz                        |
 
 ## Origin
-The convention used for this package is to have the mesh origin at the bottom center of the bounding box. The origin should be placed where it is most natural wrt a person perspective when the object is resting on a flat surafce, or ready to be picked up by hand. Some objects have no natural origin ex. a banana. The `X axis` is positive towards the viewer and the `Z axis` is positive towards the sky.
+The convention used for this package is to have the mesh origin at the bottom center of the bounding box. The origin should be placed where it is most natural wrt a person perspective when the object is resting on a flat surafce, or ready to be picked up by hand. Some objects have no natural origin ex. a banana. The `X axis` is positive towards the viewer and the `Z axis` is positive towards the sky. **EXCEPTION** : primtive shape meshes like the `unit_box` have their origin located in their centroid.
 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/32679594/126876488-1158d015-7624-4c23-8833-762007c8748b.png" width="40%"/>
@@ -67,4 +68,5 @@ Sometimes the bounding box geometry is not enough to caracterize an object. You 
 | mug_16k.stl            | [0.11699, 0.093089, 0.081303]      | 8,185          | 24,564             | 16,375   | 16,375    | 818,8 kB                      |
 | plate_16k.stl          | [0.26015, 0.261102, 0.026723]      | 8,002          | 24,576             | 16,384   | 16,384    | 819,3 kB                      |
 | soupcan_16k.stl        | [0.067911, 0.067743, 0.101855]     | 8,177          | 24,572             | 16,381   | 16,381    | 819,1 kB                      |
+| unit_box_blender.stl   | [1, 1, 1]                          | 8              | 12                 | 6        | 12        | 684 B                         |
 | woodblock_16k.stl      | [0.025942, 0.025808, 0.025847]     | 8,194          | 24,576             | 16,384   | 16,384    | 819,3 kB                      |

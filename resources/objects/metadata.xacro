@@ -4,14 +4,15 @@
   <xacro:property name="pkg_path"   value="$(find moveit_benchmark_suite_resources)/objects/"/>
  
   <!-- Load metadata of all meshes -->
-  <xacro:property name="apcshelf"   value="${xacro.load_yaml(pkg_path + 'apcshelf.yaml')['apcshelf']}"/>
-  <xacro:property name="bowl"       value="${xacro.load_yaml(pkg_path + 'bowl.yaml')['bowl']}"/>
-  <xacro:property name="boxlid"     value="${xacro.load_yaml(pkg_path + 'boxlid.yaml')['boxlid']}"/>
-  <xacro:property name="clearbox"   value="${xacro.load_yaml(pkg_path + 'clearbox.yaml')['clearbox']}"/>
-  <xacro:property name="drill"      value="${xacro.load_yaml(pkg_path + 'drill.yaml')['drill']}"/>
-  <xacro:property name="mug"        value="${xacro.load_yaml(pkg_path + 'mug.yaml')['mug']}"/>
-  <xacro:property name="plate"      value="${xacro.load_yaml(pkg_path + 'plate.yaml')['plate']}"/>
-  <xacro:property name="soupcan"    value="${xacro.load_yaml(pkg_path + 'soupcan.yaml')['soupcan']}"/>
-  <xacro:property name="woodblock"  value="${xacro.load_yaml(pkg_path + 'woodblock.yaml')['woodblock']}"/>
+  <xacro:property name="apcshelf"           value="${xacro.load_yaml(pkg_path + 'apcshelf.yaml')['apcshelf']}"/>
+  <xacro:property name="bowl"               value="${xacro.load_yaml(pkg_path + 'bowl.yaml')['bowl']}"/>
+  <xacro:property name="boxlid"             value="${xacro.load_yaml(pkg_path + 'boxlid.yaml')['boxlid']}"/>
+  <xacro:property name="clearbox"           value="${xacro.load_yaml(pkg_path + 'clearbox.yaml')['clearbox']}"/>
+  <xacro:property name="drill"              value="${xacro.load_yaml(pkg_path + 'drill.yaml')['drill']}"/>
+  <xacro:property name="mug"                value="${xacro.load_yaml(pkg_path + 'mug.yaml')['mug']}"/>
+  <xacro:property name="plate"              value="${xacro.load_yaml(pkg_path + 'plate.yaml')['plate']}"/>
+  <xacro:property name="soupcan"            value="${xacro.load_yaml(pkg_path + 'soupcan.yaml')['soupcan']}"/>
+  <xacro:property name="unit_box_blender"   value="${xacro.load_yaml(pkg_path + 'unit_box_blender.yaml')['unit_box_blender']}"/>
+  <xacro:property name="woodblock"          value="${xacro.load_yaml(pkg_path + 'woodblock.yaml')['woodblock']}"/>
 
 </robot>
