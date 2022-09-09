@@ -2,18 +2,19 @@
 
 Collection of object resources for the Moveit Benchmark Suite. A detailled list is presented below. Object names should always be appended with the number of polygons.
 
-| Resources              | Description                    | Url Date     | Source                                                                                                                                                                                                   |
-|:-----------------------|:-------------------------------|:-------------|:-------------------------------------------------------------------------------------------------------------------------------------|
-| apcshelf_10k.stl       | Low rez shelf from APC 2015    | 2021-07-25   | http://pwurman.org/amazonpickingchallenge/2015/gazebo_pod.shtml                                                                      |
-| bowl_16k.stl           | Google scanner (16k polygons)  | 2021-07-27   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/024_bowl_google_16k.tgz                                         |
-| boxlid_19k.stl         | NA                             | 2021-07-14   | http://www.ycbbenchmarks.com/wp-content/uploads/2020/04/BBT_supplementary.zip                                                        |
-| clearbox_50k.stl       | NA                             | 2021-07-14   | http://www.ycbbenchmarks.com/wp-content/uploads/2020/04/BBT_supplementary.zip                                                        |
-| drill_16k.stl          | Google scanner (16k polygons)  | 2021-07-27   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/035_power_drill_google_16k.tgz                                  |
-| mug_16k.stl            | Google scanner (16k polygons)  | 2021-07-27   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/025_mug_google_16k.tgz                                          |
-| plate_16k.stl          | Google scanner (16k polygons)  | 2021-07-27   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/029_plate_google_16k.tgz                                        |
-| soupcan_16k.stl        | Google scanner (16k polygons)  | 2021-07-27   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/005_tomato_soup_can_google_16k.tgz                              |
-| unit_box_blender.stl   | Blender 3.3.0                  |              | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/029_plate_google_16k.tgz                                        |
-| woodblock_16k.stl      | Google scanner (16k polygons)  | 2021-07-14   | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/070-b_colored_wood_blocks_google_16k.tgz                        |
+| Resources               | Description                   | Url Date   | Source                                                                                                        |
+|:------------------------|:------------------------------|:-----------|:--------------------------------------------------------------------------------------------------------------|
+| apcshelf_10k.stl        | Low rez shelf from APC 2015   | 2021-07-25 | http://pwurman.org/amazonpickingchallenge/2015/gazebo_pod.shtml                                               |
+| bowl_16k.stl            | Google scanner (16k polygons) | 2021-07-27 | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/024_bowl_google_16k.tgz                  |
+| boxlid_19k.stl          | NA                            | 2021-07-14 | http://www.ycbbenchmarks.com/wp-content/uploads/2020/04/BBT_supplementary.zip                                 |
+| clearbox_50k.stl        | NA                            | 2021-07-14 | http://www.ycbbenchmarks.com/wp-content/uploads/2020/04/BBT_supplementary.zip                                 |
+| drill_16k.stl           | Google scanner (16k polygons) | 2021-07-27 | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/035_power_drill_google_16k.tgz           |
+| mug_16k.stl             | Google scanner (16k polygons) | 2021-07-27 | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/025_mug_google_16k.tgz                   |
+| plate_16k.stl           | Google scanner (16k polygons) | 2021-07-27 | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/029_plate_google_16k.tgz                 |
+| soupcan_16k.stl         | Google scanner (16k polygons) | 2021-07-27 | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/005_tomato_soup_can_google_16k.tgz       |
+| unit_box_blender.stl    | Blender 3.3.0                 |            |                                                                                                               |
+| unit_box_solidworks.stl | SolidWorks Premium 2020 SP1.0 |            |                                                                                                               |
+| woodblock_16k.stl       | Google scanner (16k polygons) | 2021-07-14 | http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/070-b_colored_wood_blocks_google_16k.tgz |
 
 ## Origin
 The convention used for this package is to have the mesh origin at the bottom center of the bounding box. The origin should be placed where it is most natural wrt a person perspective when the object is resting on a flat surafce, or ready to be picked up by hand. Some objects have no natural origin ex. a banana. The `X axis` is positive towards the viewer and the `Z axis` is positive towards the sky. **EXCEPTION** : primtive shape meshes like the `unit_box` have their origin located in their centroid.
@@ -69,4 +70,5 @@ Sometimes the bounding box geometry is not enough to caracterize an object. You 
 | plate_16k.stl          | [0.26015, 0.261102, 0.026723]      | 8,002          | 24,576             | 16,384   | 16,384    | 819,3 kB                      |
 | soupcan_16k.stl        | [0.067911, 0.067743, 0.101855]     | 8,177          | 24,572             | 16,381   | 16,381    | 819,1 kB                      |
 | unit_box_blender.stl   | [1, 1, 1]                          | 8              | 12                 | 6        | 12        | 684 B                         |
+| unit_box_blender.stl   | [1, 1, 1]                          | 8              | 18                 | 12       | 12        | 684 B                         |
 | woodblock_16k.stl      | [0.025942, 0.025808, 0.025847]     | 8,194          | 24,576             | 16,384   | 16,384    | 819,3 kB                      |

@@ -1,0 +1,6 @@
+unit_box_solidworks:
+  resource: "package://moveit_benchmark_suite_resources/objects/unit_box_solidworks.stl"
+  bb:                               # Bounding box wrt. mesh origin
+    - 1
+    - 1
+    - 1
