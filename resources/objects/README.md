@@ -59,6 +59,8 @@ Top level example using object metadata:
 Sometimes the bounding box geometry is not enough to caracterize an object. You can add a list of subframes (wrt. the mesh origin) in the [metadata.xacro](objects/metadata.xacro) file.
 
 ## Statistics
+The size for the `stl` format represents the binary output. Some files are outputted in ascii format.
+
 | Resources              | Bounding Box [x, y, z]             | Vertices       | Edges              | Faces    | Triangles | Size                          |
 |:-----------------------|:-----------------------------------|:---------------|:-------------------|:---------|:----------|:------------------------------|
 | apcshelf_10k.stl       | [0.884207, 0.879534, 2.36728]      | 5,147          | 15,154             | 10,147   | 10,147    | 507,6 kB                      |
