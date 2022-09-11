@@ -70,8 +70,10 @@ profiler_config:
       resource: package://moveit_benchmark_suite_resources/scenes/empty/empty.urdf.xacro
     - name: primitive
       resource: package://moveit_benchmark_suite_resources/scenes/bbt/panda/primitive.urdf.xacro
-    - name: mesh_primitive
+    - name: mesh_primitive_blender
       resource: package://moveit_benchmark_suite_resources/scenes/bbt/panda/mesh_box_blender.urdf.xacro
+    - name: mesh_primitive_sw
+      resource: package://moveit_benchmark_suite_resources/scenes/bbt/panda/mesh_box_solidworks.urdf.xacro
     # - name: mesh
     #   resource: package://moveit_benchmark_suite_resources/scenes/bbt/panda/mesh_16k.urdf.xacro
 

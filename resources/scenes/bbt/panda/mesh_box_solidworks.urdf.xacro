@@ -1,0 +1,55 @@
+<?xml version="1.0" ?>
+<robot name="scene" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find urdf_to_scene)/xacro/planning_scene.xacro" />
+  <xacro:include filename="$(find urdf_to_scene)/xacro/collision_objects/opencrate.urdf.xacro" />
+  <xacro:include filename="$(find moveit_benchmark_suite_resources)/objects/metadata.xacro" />
+
+  <!-- Planning frame -->
+  <link name="world"/>
+  <planning_fft name="panda_link0"
+                parent="world"
+                xyz="0.365 0 0"/>
+
+  <!-- World -->
+  <xacro:collision_box name="boxlid"
+                       frame_id="world"
+                       xyz="0 0 ${boxlid['bb'][0]/2}"
+                       dimensions="${boxlid['bb'][1]} ${boxlid['bb'][2]} ${boxlid['bb'][0]}"
+                       mesh_resource="${unit_box_solidworks.resource}"/>
+
+
+  <xacro:opencrate name="clearbox1"
+                   frame_id="boxlid/bottom"
+                   xyz="0 ${-(clearbox['bb'][0]/2 + boxlid['bb'][2]/2)} 0"
+                   dimensions="${clearbox['bb'][1]} ${clearbox['bb'][0]} ${clearbox['bb'][2]}"
+                   thickness="${clearbox['subframes']['stack']['xyz'][2]}"
+                   mesh_resource="${unit_box_solidworks.resource}"/>
+
+  <xacro:opencrate name="clearbox2"
+                   frame_id="clearbox1"
+                   xyz="0 ${clearbox['bb'][0] + boxlid['bb'][2]} 0"
+                   dimensions="${clearbox['bb'][1]} ${clearbox['bb'][0]} ${clearbox['bb'][2]}"
+                   thickness="${clearbox['subframes']['stack']['xyz'][2]}"
+                   mesh_resource="${unit_box_solidworks.resource}"/>
+
+  <xacro:macro name="linearpattern" params="current:=0 frame_id:=^ index:=0 until:=^ xyz:=^ rpy=^|'0 0 0' gap:=^">
+
+    <xacro:if value="${until > current}">
+        <xacro:collision_box name="woodblock${index+current}"
+                             frame_id="${frame_id}"
+                             dimensions="${woodblock['bb'][0]} ${woodblock['bb'][1]} ${woodblock['bb'][2]}"
+                             xyz="${float(xyz.split()[0]) + current*float(gap.split()[0])}
+                                  ${float(xyz.split()[1]) + current*float(gap.split()[1])}
+                                  ${float(xyz.split()[2]) + current*float(gap.split()[2])}"
+                             mesh_resource="${unit_box_solidworks.resource}"/>
+        <xacro:linearpattern current="${current+1}" index="${index}"/>
+    </xacro:if>
+  </xacro:macro>
+
+  <xacro:linearpattern index="1"  until="4"  frame_id="clearbox1_bottom/top" gap="0 ${woodblock['bb'][1]*2} 0" xyz="${3*woodblock['bb'][0]} ${(-3*woodblock['bb'][0])} ${woodblock['bb'][2]/2}" rpy="0 0 0"/>
+  <xacro:linearpattern index="5"  until="4"  frame_id="woodblock1" gap="0 ${woodblock['bb'][1]*2} 0" xyz="${-2*woodblock['bb'][0]} 0 0"/>
+  <xacro:linearpattern index="9"  until="4"  frame_id="woodblock5" gap="0 ${woodblock['bb'][1]*2} 0" xyz="${-2*woodblock['bb'][0]} 0 0"/>
+  <xacro:linearpattern index="13" until="4"  frame_id="woodblock9" gap="0 ${woodblock['bb'][1]*2} 0" xyz="${-2*woodblock['bb'][0]} 0 0"/>
+
+</robot>
