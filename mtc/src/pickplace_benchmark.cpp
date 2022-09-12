@@ -39,6 +39,7 @@
 #include <moveit_benchmark_suite/benchmark.h>
 #include <moveit_benchmark_suite/tools/dataset_log.h>
 #include <moveit_benchmark_suite/tools/rviz_visualization.h>
+#include <moveit_benchmark_suite/utils.h>
 
 #include <moveit_benchmark_suite/mtc/pickplace_profiler.h>
 #include <moveit_benchmark_suite/mtc/pickplace_builder.h>
@@ -94,7 +95,7 @@ int main(int argc, char** argv)
 
     profiler.addPostRunQueryCallback([&](const PickPlaceQuery& query, PickPlaceResult& result, Data& data) {
       ROS_INFO("Press `enter` to view next query");
-      std::cin.ignore();
+      waitForKeyPress();
     });
   }
 
