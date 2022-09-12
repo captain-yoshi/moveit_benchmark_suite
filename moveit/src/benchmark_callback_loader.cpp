@@ -42,7 +42,7 @@ BenchmarkCallbackLoader::BenchmarkCallbackLoader(Benchmark& benchmark) : benchma
 
   // Output dataset to logfile
   benchmark_.addPostBenchmarkCallback([=](DataSetPtr& dataset) {
-    BenchmarkSuiteOutputter logfile;
+    BenchmarkSuiteOutputter logfile(BenchmarkSuiteOutputter::ConversionType::YAML);
     ROS_INFO("Creating dataset...");
     logfile.dump(*dataset, options.output_file);
   });

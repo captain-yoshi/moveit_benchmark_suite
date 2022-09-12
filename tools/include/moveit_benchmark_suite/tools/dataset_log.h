@@ -41,6 +41,7 @@
 #pragma once
 
 #include <moveit_benchmark_suite/dataset.h>
+#include <c4/yml/node.hpp>
 
 namespace moveit_benchmark_suite {
 namespace tools {
@@ -66,11 +67,17 @@ public:
 class BenchmarkSuiteOutputter : public DataSetOutputter
 {
 public:
+  enum ConversionType
+  {
+    YAML,
+    JSON
+  };
+
   /** \brief Constructor.
    *  \param[in] prefix Prefix to place in front of all log files generated.
    *  \param[in] dumpScene If true, will output scene into log file.
    */
-  BenchmarkSuiteOutputter();
+  BenchmarkSuiteOutputter(ConversionType type);
 
   /** \brief Destructor, runs `ompl_benchmark_statistics.py` to generate benchmarking database.
    */
@@ -81,6 +88,18 @@ public:
    *  \param[in] results Results to dump to file.
    */
   void dump(const DataSet& dataset, const std::string& pathname) override;
+  void dump(const c4::yml::ConstNodeRef& node, const std::string& pathname, const std::string& emptypath_prefix = "");
+
+private:
+  std::string getFileExtensionFromConversionType(ConversionType type);
+  ConversionType getConversionTypeFromFileExtension(const std::string& extension);
+
+  void generatePath(const std::string& pathname, const std::string& emptypath_prefix, std::string& computed_path,
+                    ConversionType& type);
+
+  void dumpToStream(const c4::yml::ConstNodeRef& node, const std::string& pathname, const ConversionType type);
+
+  ConversionType type_;
 };
 
 }  // namespace tools

@@ -82,7 +82,7 @@ int main(int argc, char** argv)
   std::string output_file = benchmark.getOptions().output_file;
 
   benchmark.addPostBenchmarkCallback([=](DataSetPtr& dataset) {
-    BenchmarkSuiteOutputter logfile;
+    BenchmarkSuiteOutputter logfile(BenchmarkSuiteOutputter::ConversionType::YAML);
     logfile.dump(*dataset, output_file);
   });
 

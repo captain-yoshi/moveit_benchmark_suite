@@ -76,7 +76,7 @@ int main(int argc, char** argv)
   auto datasets = agg_dataset.aggregate(operations, input_files, filters);
 
   // Save aggregated dataset
-  BenchmarkSuiteOutputter output;
+  BenchmarkSuiteOutputter output(BenchmarkSuiteOutputter::ConversionType::YAML);
 
   for (const auto& dataset : datasets)
     output.dump(*dataset, output_file);
