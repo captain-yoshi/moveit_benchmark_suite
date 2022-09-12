@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<launch>
+
+  <arg name="input_files" default="[]" />
+  <!-- <arg name="output_file" default="" /> -->
+  <arg name="convert_to" doc="Convert dataset to JSON" />
+
+  <!-- By default, we are not in debug mode -->
+  <arg name="debug" default="false" />
+  <arg unless="$(arg debug)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --args" />
+
+  <node name="convert_dataset" pkg="moveit_benchmark_suite_tools" type="convert_dataset" respawn="false" clear_params="true" required="true" output="screen" launch-prefix="$(arg launch_prefix)">
+
+    <!-- <param name="config_file" value="$(arg config)"/> -->
+    <rosparam param="input_files" subst_value="True">$(arg input_files)</rosparam>
+    <param name="convert_to" value="$(arg convert_to)"/>
+    <!-- <param name="output_file" value="$(arg output_file)"/> -->
+  </node>
+</launch>

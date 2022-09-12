@@ -48,6 +48,9 @@ target_link_libraries(ik_generator ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_executable(tf_generator src/tf_generator.cpp)
 target_link_libraries(tf_generator ${PROJECT_NAME} ${catkin_LIBRARIES})
 
+add_executable(convert_dataset src/convert_dataset.cpp)
+target_link_libraries(convert_dataset ${PROJECT_NAME} ${catkin_LIBRARIES})
+
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 
@@ -58,6 +61,7 @@ install(TARGETS
   aggregate
   ik_generator
   tf_generator
+  convert_dataset
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
