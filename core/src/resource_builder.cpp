@@ -616,10 +616,10 @@ bool SceneBuilder::buildClutteredSceneFromYAML(ScenePtr& scene,
   geometry_msgs::Pose shape_offset;
   shape_offset.orientation.w = 1;
 
-  if (node.has_child("in_rng"))
-    node["in_rng"] >> in_rng;
-  if (node.has_child("free_rng"))
-    node["free_rng"] >> free_rng;
+  if (node.has_child("rng_in_collision"))
+    node["rng_in_collision"] >> in_rng;
+  if (node.has_child("rng_no_collision"))
+    node["rng_no_collision"] >> free_rng;
   if (node.has_child("resource"))
     node["resource"] >> resource;
   if (node.has_child("scale"))
