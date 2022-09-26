@@ -47,7 +47,6 @@ using namespace moveit_benchmark_suite::tools;
 
 constexpr char INPUT_PARAMETER[] = "input_files";
 constexpr char CONVERSION_PARAMETER[] = "convert_to";
-constexpr char CONFIG_PARAMETER[] = "config_file";
 
 int main(int argc, char** argv)
 {
@@ -65,7 +64,6 @@ int main(int argc, char** argv)
 
   pnh.getParam(INPUT_PARAMETER, input_files);
   pnh.getParam(CONVERSION_PARAMETER, conversion);
-  pnh.getParam(CONFIG_PARAMETER, config_file);
 
   // validate extension
   if (conversion.compare("json") != 0)
