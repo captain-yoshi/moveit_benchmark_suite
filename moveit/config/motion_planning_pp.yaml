@@ -10,7 +10,7 @@ benchmark_config:
     visualize: false                # Default false | Overridden by ROS Param /benchmark/visualize
     output_file: ""                 # Default ""    | Overridden by ROS Param /benchmark/output_file
 
-# Describes config for building motion planning pair-wise queries
+# Evaluate pose goals on every 16 wood blocks for the bbt scenes using the panda robot in a start state.
 profiler_config:
 
   # Override 'requests' with moveit_msgs/MotionPlanRequest respective field/s

@@ -10,7 +10,12 @@ benchmark_config:
     verbose_status_trial: False     # Print status before each trial of all queries
     verbose_status_query: True      # Print status before each query
 
-# Describes config for building motion planning pair-wise queries
+# Hyperparametization of different robot geometries : approximation using primitive boxes,
+# convex mesh approximation generated from detailed meshes and the default hq mesh supplied
+# from universal_robot ros package.
+#
+# Note: requests `pos_blk05.yaml` to `pos_blk16.yaml` fails to find a solution because of the
+#       supplied scenes, robot and the motion plan request.
 profiler_config:
 
   # Override 'requests' with moveit_msgs/MotionPlanRequest respective field/s
@@ -19,8 +24,10 @@ profiler_config:
     num_planning_attempts: 1
 
   # Resource moveit_msgs/MotionPlanRequest
+  #
+  # Note: jc  = joint constraint goal
+  #       poc = position & orientation constraint goal
   requests:
-    # poc = pose orientation constraint
     - name: poc-blk01
       resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk01.yaml
     - name: poc-blk02

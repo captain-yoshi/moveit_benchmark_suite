@@ -10,7 +10,10 @@ benchmark_config:
     verbose_status_trial: False     # Print status before each trial of all queries
     verbose_status_query: True      # Print status before each query
 
-# Collision check pair-wise queries
+# Evaluate cluttered panda link5 meshes against their respective bounding boxes using primitives
+# and unit box meshes (comment out). Inspiration from :
+#
+# https://github.com/ros-planning/moveit/tree/master/moveit_ros/planning/planning_components_tools#compare-collision-checking-speeds-fcl-vs-bullet
 profiler_config:
   # MSA (urdf, srdf, kinematics, joint limits)
   robots:

@@ -10,7 +10,7 @@ benchmark_config:
     verbose_status_trial: False     # Print status before each trial of all queries
     verbose_status_query: True      # Print status before each query
 
-# Collision check pair-wise queries
+# Evaluate cluttered primitive boxes versus mesh boxes.
 profiler_config:
   # MSA (urdf, srdf, kinematics, joint limits)
   robots:

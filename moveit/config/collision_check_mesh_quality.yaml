@@ -10,7 +10,11 @@ benchmark_config:
     verbose_status_trial: False     # Print status before each trial of all queries
     verbose_status_query: True      # Print status before each query
 
-# Collision check pair-wise queries
+# Hyperparametization of different robot geometries : approximation using primitive boxes,
+# convex mesh approximation generated from detailed meshes and the default hq mesh supplied
+# from universal_robot ros package.
+#
+# Note: Scenes may not be equivalent from one robot representation to another.
 profiler_config:
   # MSA (urdf, srdf, kinematics, joint limits)
   robots:
