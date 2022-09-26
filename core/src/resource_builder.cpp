@@ -433,7 +433,7 @@ std::map<std::string, RobotPtr> RobotBuilder::generateResources() const
 
 namespace {
 /** \brief Factor to compute the maximum number of trials random clutter generation. */
-static const int MAX_SEARCH_FACTOR_CLUTTER = 100;
+static const int MAX_SEARCH_FACTOR_CLUTTER = 200;
 
 enum class CollisionObjectType : int
 {
