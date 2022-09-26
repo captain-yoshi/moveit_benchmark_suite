@@ -5,7 +5,7 @@
 # Describes benchmark parameters (independent of profilers)
 benchmark_config:
   parameters:
-    runs: 5                         # Number of trials for each query
+    runs: 25                         # Number of trials for each query
     name: "PickPlace MTC"           # Default ""    | Overridden by ROS Param /benchmark/name
     visualize: false                # Default false | Overridden by ROS Param /benchmark/visualize
     output_file: ""                 # Default ""    | Overridden by ROS Param /benchmark/output_file
