@@ -28,38 +28,40 @@ profiler_config:
   # Note: jc  = joint constraint goal
   #       poc = position & orientation constraint goal
   requests:
-    - name: poc-blk01
-      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk01.yaml
-    - name: poc-blk02
-      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk02.yaml
-    - name: poc-blk03
-      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk03.yaml
-    - name: poc-blk04
-      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk04.yaml
-    - name: poc-blk05
-      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk05.yaml
-    - name: poc-blk06
-      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk06.yaml
-    - name: poc-blk07
-      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk07.yaml
-    - name: poc-blk08
-      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk08.yaml
-    - name: poc-blk09
-      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk09.yaml
-    - name: poc-blk10
-      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk10.yaml
-    - name: poc-blk11
-      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk11.yaml
-    - name: poc-blk12
-      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk12.yaml
-    - name: poc-blk13
-      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk13.yaml
-    - name: poc-blk14
-      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk14.yaml
-    - name: poc-blk15
-      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk15.yaml
-    - name: poc-blk16
-      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk16.yaml
+    - name: jc-blk02
+      resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/jc_blk02.yaml
+    # - name: poc-blk01
+    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk01.yaml
+    # - name: poc-blk02
+    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk02.yaml
+    # - name: poc-blk03
+    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk03.yaml
+    # - name: poc-blk04
+    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk04.yaml
+    # - name: poc-blk05
+    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk05.yaml
+    # - name: poc-blk06
+    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk06.yaml
+    # - name: poc-blk07
+    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk07.yaml
+    # - name: poc-blk08
+    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk08.yaml
+    # - name: poc-blk09
+    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk09.yaml
+    # - name: poc-blk10
+    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk10.yaml
+    # - name: poc-blk11
+    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk11.yaml
+    # - name: poc-blk12
+    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk12.yaml
+    # - name: poc-blk13
+    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk13.yaml
+    # - name: poc-blk14
+    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk14.yaml
+    # - name: poc-blk15
+    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk15.yaml
+    # - name: poc-blk16
+    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/ur3/poc_blk16.yaml
 
   # Resource moveit_config (robot)
   robot:
@@ -72,12 +74,16 @@ profiler_config:
 
   # Resource moveit_msgs/PlanningScene
   scenes:
-    - name: empty
-      resource: package://moveit_benchmark_suite_resources/scenes/empty/empty.urdf.xacro
+    # - name: empty
+    #   resource: package://moveit_benchmark_suite_resources/scenes/empty/empty.urdf.xacro
     - name: primitive
       resource: package://moveit_benchmark_suite_resources/scenes/bbt/ur3/primitive.urdf.xacro
-    - name: mesh
-      resource: package://moveit_benchmark_suite_resources/scenes/bbt/ur3/mesh_16k.urdf.xacro
+    # - name: mesh_primitive_blender
+    #   resource: package://moveit_benchmark_suite_resources/scenes/bbt/ur3/mesh_box_blender.urdf.xacro
+    # - name: mesh_primitive_sw
+    #   resource: package://moveit_benchmark_suite_resources/scenes/bbt/ur3/mesh_box_solidworks.urdf.xacro
+    # - name: mesh
+    #   resource: package://moveit_benchmark_suite_resources/scenes/bbt/ur3/mesh_16k.urdf.xacro
 
   collision_detectors:
     - FCL
@@ -91,42 +97,42 @@ profiler_config:
       resource: package://moveit_benchmark_suite_resources/robots/ur3/config/ompl_planning.yaml
       parameters:
         planners:
-          - RRT
+          # - RRT
           - RRTConnect
-          - EST
-          - PRM
-          - LBKPIECE
-          - BiEST
-    - name: chomp
-      resource: package://moveit_benchmark_suite_resources/robots/ur3/config/chomp_planning.yaml
-      parameters:
-        planners:
-          - CHOMP
+          # - EST
+          # - PRM
+          # - LBKPIECE
+          # - BiEST
+    # - name: chomp
+    #   resource: package://moveit_benchmark_suite_resources/robots/ur3/config/chomp_planning.yaml
+    #   parameters:
+    #     planners:
+    #       - CHOMP
 
 extend_resource_config:
   robot:
     extend_resource: ur3
     resource_names:
-      - ur3_default
-      - ur3_bbox
-      - ur3_vhacd_h01
-      - ur3_vhacd_h02
-      - ur3_vhacd_h03
-      - ur3_vhacd_h04
-      - ur3_vhacd_h05
-      - ur3_vhacd_h06
-      - ur3_vhacd_h07
-      - ur3_vhacd_h08
-      - ur3_vhacd_h09
-      - ur3_vhacd_h10
-      - ur3_vhacd_h11
-      - ur3_vhacd_h12
-      - ur3_vhacd_h13
-      - ur3_vhacd_h14
-      - ur3_vhacd_h15
-      - ur3_vhacd_h16
+      - primitive_boxes
+      - vhacd_h01
+      - vhacd_h02
+      - vhacd_h03
+      - vhacd_h04
+      - vhacd_h05
+      - vhacd_h06
+      - vhacd_h07
+      - vhacd_h08
+      - vhacd_h09
+      - vhacd_h10
+      - vhacd_h11
+      - vhacd_h12
+      - vhacd_h13
+      - vhacd_h14
+      - vhacd_h15
+      - vhacd_h16
+      - default_mesh
     resources:
-      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3.xacro
+      # lowest to highest quality of robot representation
       - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_bbox.xacro
       - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h01.xacro
       - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h02.xacro
@@ -144,3 +150,4 @@ extend_resource_config:
       - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h14.xacro
       - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h15.xacro
       - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h16.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3.xacro

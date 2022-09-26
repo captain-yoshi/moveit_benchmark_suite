@@ -5,7 +5,7 @@
 # Describes benchmark parameters (independent of profilers)
 benchmark_config:
   parameters:
-    runs: 20                        # Number of trials for each query
+    runs: 25                        # Number of trials for each query
     name: "MotionPlanning PP"       # Default ""    | Overridden by ROS Param /benchmark/name
     visualize: false                # Default false | Overridden by ROS Param /benchmark/visualize
     output_file: ""                 # Default ""    | Overridden by ROS Param /benchmark/output_file
@@ -20,8 +20,8 @@ profiler_config:
 
   # Resource moveit_msgs/MotionPlanRequest
   requests:
-    - name: jc
-      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/jc.yaml
+    # - name: jc
+    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/jc.yaml
     - name: poc-blk01
       resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/poc_blk01.yaml
     - name: poc-blk02
@@ -85,18 +85,18 @@ profiler_config:
   # - Override the 'requests' pipeline_id field
   # - Extends query 'planners' which overrides the 'requests' planner_id field
   planning_pipelines:
-    - name: ompl
-      resource: package://moveit_benchmark_suite_resources/robots/panda/config/ompl_planning.yaml
-      parameters:
-        planners:
-          - RRT
-          - RRTConnect
-          - EST
-          - PRM
-          - LBKPIECE
-          - BiEST
-    # - name: chomp
-    #   resource: package://moveit_benchmark_suite_resources/robots/panda/config/chomp_planning.yaml
+    # - name: ompl
+    #   resource: package://moveit_benchmark_suite_resources/robots/panda/config/ompl_planning.yaml
     #   parameters:
     #     planners:
-    #       - CHOMP
+    #       - RRT
+    #       - RRTConnect
+    #       - EST
+    #       - PRM
+    #       - LBKPIECE
+    #       - BiEST
+    - name: chomp
+      resource: package://moveit_benchmark_suite_resources/robots/panda/config/chomp_planning.yaml
+      parameters:
+        planners:
+          - CHOMP

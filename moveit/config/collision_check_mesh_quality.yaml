@@ -45,22 +45,18 @@ profiler_config:
         robot_state: up
         object_in_collision: 1
         object_type: BOX
-        bounds:
-        - [0.05, 0.2] # [Lower, Upper]
-        - [0.05, 0.2]
-        - [0.05, 0.2]
-        rng_in_collision: 123
+        dimensions: [1, 1, 1]
+        scale: [0.06, 0.2]
+        rng_in_collision: 0
   - name: box-1nc
     resource:
       cluttered_scene:
         robot_state: up
         object_no_collision: 1
         object_type: BOX
-        bounds:
-        - [0.05, 0.2] # [Lower, Upper]
-        - [0.05, 0.2]
-        - [0.05, 0.2]
-        rng_no_collision: 123
+        dimensions: [1, 1, 1]
+        scale: [0.06, 0.2]
+        rng_no_collision: 0
   - name: box-100-4c
     resource:
       cluttered_scene:
@@ -68,49 +64,25 @@ profiler_config:
         object_in_collision: 4
         object_no_collision: 96
         object_type: BOX
-        bounds:
-        - [0.05, 0.2] # [Lower, Upper]
-        - [0.05, 0.2]
-        - [0.05, 0.2]
-        rng_in_collision: 123
-        rng_no_collision: 123
-  - name: box-100-nc
+        dimensions: [1, 1, 1]
+        scale: [0.06, 0.2]
+        rng_in_collision: 0
+        rng_no_collision: 0
+  - name: box-100nc
     resource:
       cluttered_scene:
         robot_state: up
         object_no_collision: 100
         object_type: BOX
-        bounds:
-        - [0.05, 0.2]
-        - [0.05, 0.2]
-        - [0.05, 0.2]
-        rng_no_collision: 123
-  - name: mesh-100-4c
-    resource:
-      cluttered_scene:
-        robot_state: up
-        object_in_collision: 4
-        object_no_collision: 96
-        object_type: MESH
-        resource: package://moveit_benchmark_suite_resources/robots/panda/meshes/collision/link5.stl
-        bounds:
-        - [0.3, 1.0]
-        rng_in_collision: 123
-        rng_no_collision: 123
-  - name: mesh-100-nc
-    resource:
-      cluttered_scene:
-        robot_state: up
-        object_no_collision: 100
-        object_type: MESH
-        resource: package://moveit_benchmark_suite_resources/robots/panda/meshes/collision/link5.stl
-        bounds:
-        - [0.3, 1.0]
-        rng_no_collision: 123
+        dimensions: [1, 1, 1]
+        scale: [0.06, 0.2]
+        rng_no_collision: 0
+
   # collision_detection::CollisionPlugin class name
   collision_detectors:
   - FCL
   - Bullet
+
   # collision_detection::CollisionRequest
   collision_requests:
   - name: First (Binary)
@@ -181,12 +153,41 @@ extend_resource_config:
   robots:
     extend_resource: ur3
     resource_names:
-      - ur3_default
-      - ur3_bbox
-      - ur3_vhacd_h1
-      - ur3_vhacd_h16
+      - primitive_boxes
+      - vhacd_h01
+      - vhacd_h02
+      - vhacd_h03
+      - vhacd_h04
+      - vhacd_h05
+      - vhacd_h06
+      - vhacd_h07
+      - vhacd_h08
+      - vhacd_h09
+      - vhacd_h10
+      - vhacd_h11
+      - vhacd_h12
+      - vhacd_h13
+      - vhacd_h14
+      - vhacd_h15
+      - vhacd_h16
+      - default_mesh
     resources:
-      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3.xacro
-      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_bb.xacro
-      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h1.xacro
+      # lowest to highest quality of robot representation
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_bbox.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h01.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h02.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h03.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h04.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h05.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h06.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h07.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h08.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h09.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h10.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h11.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h12.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h13.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h14.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h15.xacro
       - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3_vhacd_h16.xacro
+      - urdf: package://moveit_benchmark_suite_resources/robots/ur3/urdf/ur3.xacro

@@ -20,8 +20,8 @@ profiler_config:
 
   # Resource moveit_msgs/MotionPlanRequest
   requests:
-    - name: jc
-      resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/jc.yaml
+    # - name: jc
+    #   resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/jc.yaml
     - name: poc-blk01
       resource: package://moveit_benchmark_suite_resources/requests/bbt/panda/poc_blk01.yaml
     - name: poc-blk02
