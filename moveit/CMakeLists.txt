@@ -42,6 +42,9 @@ target_link_libraries(collision_check ${PROJECT_NAME} ${catkin_LIBRARIES})
 install(DIRECTORY include/moveit_benchmark_suite
   DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION})
 
+install(PROGRAMS scripts/run_benchmarks.sh
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
 install(TARGETS
   ${PROJECT_NAME}
   motion_planning_mgi
