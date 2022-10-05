@@ -24,6 +24,15 @@ add_executable(pickplace src/pickplace_benchmark.cpp)
 
 target_link_libraries(pickplace ${PROJECT_NAME} ${catkin_LIBRARIES})
 
+install(DIRECTORY include/moveit_benchmark_suite
+  DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION})
+
+install(DIRECTORY
+  launch
+  benchmarks
+  config
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
 install(TARGETS pickplace
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
