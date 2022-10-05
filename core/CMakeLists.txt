@@ -65,8 +65,8 @@ add_library(${PROJECT_NAME}
   src/serialization/conversions.cpp
 )
 
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+install(DIRECTORY include/moveit_benchmark_suite
+  DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION})
 
 install(TARGETS
   ${PROJECT_NAME}

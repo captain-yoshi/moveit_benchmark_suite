@@ -39,8 +39,8 @@ target_link_libraries(motion_planning_pp ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_executable(collision_check src/collision_check_benchmark.cpp)
 target_link_libraries(collision_check ${PROJECT_NAME} ${catkin_LIBRARIES})
 
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+install(DIRECTORY include/moveit_benchmark_suite
+  DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION})
 
 install(TARGETS
   ${PROJECT_NAME}
