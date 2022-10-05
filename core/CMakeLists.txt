@@ -35,8 +35,6 @@ catkin_package(
     urdf_to_scene
 )
 
-set(CMAKE_CXX_STANDARD 14)
-
 include_directories(include
   ${catkin_INCLUDE_DIRS}
   ${TinyXML2_INCLUDE_DIRS}
