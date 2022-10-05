@@ -49,8 +49,8 @@ target_link_libraries(tf_generator ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_executable(convert_dataset src/convert_dataset.cpp)
 target_link_libraries(convert_dataset ${PROJECT_NAME} ${catkin_LIBRARIES})
 
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+install(DIRECTORY include/moveit_benchmark_suite
+  DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION})
 
 install(TARGETS
   ${PROJECT_NAME}
