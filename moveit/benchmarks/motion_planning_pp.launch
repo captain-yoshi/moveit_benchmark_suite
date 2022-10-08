@@ -1,34 +1,12 @@
-<?xml version="1.0" ?>
+<?xml version="1.0"?>
 <launch>
+  <arg name="output_file" default="" doc="yaml file to store benchmarking data" />
+  <arg name="visualize" default="false" doc="turns on and off visualization with rviz (bool type)" />
+  <arg name="debug" default="false" doc="run in gdb" />
 
-  <arg name="name" default=""/>
-  <arg name="output_file" default=""/>
-  <!-- Overwrite this param as a bool type -->
-  <arg name="visualize" default="" doc="turns on and off visualization with rviz (bool type)"/>
+  <arg name="name" default="Motion Planning PlanningPipeline Default" />
 
-
-  <include file="$(find moveit_benchmark_suite)/launch/moveit_rviz.launch" if="$(eval bool(visualize) == 1)">
-    <!--<arg name="debug" value="$(arg debug)"/>-->
+  <include file="$(dirname)/motion_planning_pp.launch.inc" pass_all_args="true">
+    <arg name="config_file" value="$(dirname)/../config/motion_planning_pp.yaml" />
   </include>
-
-  <!-- By default, we are not in debug mode -->
-  <arg name="debug" default="false" />
-  <arg unless="$(arg debug)" name="launch_prefix" value="" />
-  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --args" />
-
-  <!-- Benchmark configuration file -->
-  <arg name="config_file" default="$(find moveit_benchmark_suite)/config/motion_planning_pp.yaml"/>
-
-  <!-- Launch benchmark node -->
-  <node name="benchmark" pkg="moveit_benchmark_suite" type="motion_planning_pp" output="screen" clear_params="true" required="true" launch-prefix="$(arg launch_prefix)">
-
-    <rosparam command="load" file="$(arg config_file)"/>
-
-    <!-- Override config file if not emprty -->
-    <param name="name" value="$(arg name)"/>
-    <param name="config_file" value="$(arg config_file)"/>
-    <param name="output_file" value="$(arg output_file)"/>
-    <param name="visualize" value="$(arg visualize)"/>
-
-  </node>
 </launch>

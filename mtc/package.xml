@@ -14,6 +14,7 @@
 	<depend>moveit_task_constructor_msgs</depend>
 	<depend>rosparam_shortcuts</depend>
 
+	<depend>moveit_benchmark_suite</depend>
 	<export>
 		<moveit_benchmark_suite benchmarks="${prefix}/benchmarks"/>
 	</export>
