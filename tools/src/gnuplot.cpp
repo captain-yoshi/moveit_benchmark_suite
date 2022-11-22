@@ -940,13 +940,18 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
     }
 
     // Loop through each queries
-    auto queries = dataset["data"];
-    for (std::size_t i = 0; i < queries.num_children(); ++i)
+    if (!dataset.has_child("data"))
+    {
+      ROS_WARN("Malformed dataset, expected node 'data'");
+      continue;
+    }
+
+    const ryml::ConstNodeRef queries = dataset.find_child("data");
+
+    for (ryml::ConstNodeRef const& query : queries.cchildren())
     {
       std::string rel_legend;
       std::string rel_label;
-
-      auto query = queries[i];
 
       // Build legend and label names from queries -> realtive
       for (const auto& token : layout.legends)
@@ -970,7 +975,7 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
       if (!query.has_child("metrics"))
         continue;
 
-      auto metric_node = query["metrics"];
+      const ryml::ConstNodeRef metric_node = query.find_child("metrics");
 
       // Lopp through each plot
       for (std::size_t j = 0; j < layout.plots.size(); ++j)
@@ -1010,8 +1015,13 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
           //   - double
           //   - vector<double>
           //   - vector<vector<double>>
+          if (!metric_node.has_child(ryml::to_csubstr(metric)))
+          {
+            ROS_WARN("Malformed dataset, expected node 'metric'");
+            continue;
+          }
 
-          auto n_metric = metric_node[ryml::to_csubstr(metric)];
+          ryml::ConstNodeRef n_metric = metric_node.find_child(ryml::to_csubstr(metric));
 
           try
           {
