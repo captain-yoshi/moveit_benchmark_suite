@@ -1011,10 +1011,6 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
             for (int k = 0; k < TAG_LABEL_END.size(); ++k)
               label.pop_back();
 
-          // Try decoding metric as
-          //   - double
-          //   - vector<double>
-          //   - vector<vector<double>>
           if (!metric_node.has_child(ryml::to_csubstr(metric)))
           {
             ROS_WARN("Malformed dataset, expected node 'metric'");
@@ -1023,38 +1019,36 @@ void GNUPlotDataset::plot(const MultiPlotLayout& layout, const DatasetFilter::Da
 
           ryml::ConstNodeRef n_metric = metric_node.find_child(ryml::to_csubstr(metric));
 
-          try
+          // metric is either a 1d or 2d vector
+          if (n_metric.is_seq())
+          {
+            // 2d vector
+            if (n_metric.has_children() && n_metric.first_child().has_children())
+            {
+              std::vector<std::vector<double>> values;
+              n_metric >> values;
+
+              for (const auto& value : values)
+                container[j].second.add(value, label, legend);
+              continue;
+            }
+            // 1d vector
+            else
+            {
+              std::vector<double> values;
+              n_metric >> values;
+
+              container[j].second.add(values, label, legend);
+              continue;
+            }
+          }
+          // metric is a value
+          else
           {
             double value;
             n_metric >> value;
             container[j].second.add(value, label, legend);
             continue;
-          }
-          catch (moveit_serialization::yaml_error& e)
-          {
-          }
-          try
-          {
-            std::vector<double> values;
-            n_metric >> values;
-
-            container[j].second.add(values, label, legend);
-            continue;
-          }
-          catch (moveit_serialization::yaml_error& e)
-          {
-          }
-          try
-          {
-            std::vector<std::vector<double>> values;
-            n_metric >> values;
-
-            for (const auto& value : values)
-              container[j].second.add(value, label, legend);
-            continue;
-          }
-          catch (moveit_serialization::yaml_error& e)
-          {
           }
 
           // Should not
