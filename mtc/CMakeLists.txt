@@ -10,7 +10,18 @@ find_package(catkin REQUIRED COMPONENTS
   rosparam_shortcuts
 )
 
-catkin_package()
+catkin_package(
+  LIBRARIES
+    ${PROJECT_NAME}
+  INCLUDE_DIRS
+    include
+  CATKIN_DEPENDS
+    moveit_benchmark_suite_core
+    moveit_benchmark_suite_tools
+    moveit_task_constructor_core
+    moveit_task_constructor_msgs
+    rosparam_shortcuts
+)
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
