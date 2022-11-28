@@ -42,7 +42,7 @@ profiler_config:
     grasp_frame_transform: [0.0441, -0.0441, 0.1, 1.5707, -2.356, 1.5707]
 
     # Place pose [x,y,z,r,p,y]
-    place_pose: [0, 0, 0.01, 0, 0, 0]
+    place_pose: [0, 0, 0.01, 0, 0, 3.1415]
     place_surface_offset: 0.0001 # place offset from table
 
     # Valid distance range when approaching an object for picking
