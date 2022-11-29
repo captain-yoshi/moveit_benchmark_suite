@@ -35,6 +35,8 @@ void PickPlaceTask::loadParameters(const PickPlaceParameters& params, const Task
   object_reference_frame_ = params.object_reference_frame;
   surface_link_ = params.surface_link;
   support_surfaces_ = { surface_link_ };
+  attached_object_names_ = params.attached_object_names;
+  attached_object_names_.push_back(object_name_);
 
   // TODO add to PickPlaceConfig
   hand_open_pose_.is_diff = true;
@@ -205,7 +207,7 @@ void PickPlaceTask::pick()
     {
       auto stage = std::make_unique<stages::ModifyPlanningScene>("allow collision (hand,object)");
       stage->allowCollisions(
-          object_name_,
+          attached_object_names_,
           t.getRobotModel()->getJointModelGroup(hand_group_name_)->getLinkModelNamesWithCollisionGeometry(), true);
       grasp->insert(std::move(stage));
     }
@@ -231,7 +233,7 @@ void PickPlaceTask::pick()
      ***************************************************/
     {
       auto stage = std::make_unique<stages::ModifyPlanningScene>("attach object");
-      stage->attachObject(object_name_, hand_frame_);
+      stage->attachObjects(attached_object_names_, hand_frame_);
       stage_forward_ptr_ = stage.get();
       grasp->insert(std::move(stage));
     }
@@ -399,7 +401,7 @@ void PickPlaceTask::place()
      *****************************************************/
     {
       auto stage = std::make_unique<stages::ModifyPlanningScene>("detach object");
-      stage->detachObject(object_name_, hand_frame_);
+      stage->detachObjects(attached_object_names_, hand_frame_);
       place->insert(std::move(stage));
     }
 

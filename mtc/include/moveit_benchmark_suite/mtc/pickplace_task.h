@@ -118,6 +118,7 @@ struct PickPlaceParameters
   std::string object_name;
   std::string world_frame;
   std::vector<double> object_dimensions;
+  std::vector<std::string> attached_object_names;
 
   // Predefined pose targets
   std::string hand_joint_name;  // Prismatic joint
@@ -177,6 +178,7 @@ private:
   std::string object_name_;
   std::string world_frame_;
   std::vector<double> object_dimensions_;
+  std::vector<std::string> attached_object_names_;
 
   // Predefined pose targets
   std::string hand_joint_name_;

@@ -110,6 +110,8 @@ void PickPlaceConfig::readParameters(ros::NodeHandle& nh)
   errors += !rosparam_shortcuts::get(LOGNAME, pnh, "object_reference_frame", p.object_reference_frame);
   errors += !rosparam_shortcuts::get(LOGNAME, pnh, "surface_link", p.surface_link);
 
+  rosparam_shortcuts::get(LOGNAME, pnh, "attached_object_names", p.attached_object_names);  // optional
+
   // Pick/Place metrics
   errors += !rosparam_shortcuts::get(LOGNAME, pnh, "approach_object_min_dist", p.approach_object_min_dist);
   errors += !rosparam_shortcuts::get(LOGNAME, pnh, "approach_object_max_dist", p.approach_object_max_dist);
