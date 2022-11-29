@@ -668,6 +668,14 @@ bool Scene::fromYAMLFile(const std::string& file)
   if (!IO::YAMLFileToMessage(msg, file))
     return false;
 
+  // Add default /static_tf from 'world' to robot root link
+  geometry_msgs::TransformStamped transform;
+  transform.header.frame_id = "world";
+  transform.child_frame_id = scene_->getRobotModel()->getRootLinkName();
+  transform.transform.rotation.w = 1;
+
+  tf2sbr_.sendTransform(transform);
+
   // Add robot_state if loaded scene does not contain one.
   if (msg.robot_state.joint_state.position.empty())
     moveit::core::robotStateToRobotStateMsg(scene_->getCurrentState(), msg.robot_state);
@@ -686,6 +694,14 @@ bool Scene::fromYAMLNode(const ryml::ConstNodeRef& node)
 {
   moveit_msgs::PlanningScene msg;
   node >> msg;
+
+  // Add default /static_tf from 'world' to robot root link
+  geometry_msgs::TransformStamped transform;
+  transform.header.frame_id = "world";
+  transform.child_frame_id = scene_->getRobotModel()->getRootLinkName();
+  transform.transform.rotation.w = 1;
+
+  tf2sbr_.sendTransform(transform);
 
   // Add robot_state if loaded scene does not contain one.
   if (msg.robot_state.joint_state.position.empty())
