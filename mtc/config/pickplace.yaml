@@ -25,8 +25,8 @@ profiler_config:
 
     # Gripper gap
     hand_joint_name: "panda_finger_joint1"
-    hand_open_gap: 0.08
-    hand_close_gap: 0.067
+    hand_open_joint_pos: 0.04     # gap / 2.0
+    hand_close_joint_pos: 0.0335
 
     # Scene frames
     world_frame: "world"

@@ -121,8 +121,8 @@ struct PickPlaceParameters
 
   // Predefined pose targets
   std::string hand_joint_name;  // Prismatic joint
-  double hand_open_gap;
-  double hand_close_gap;
+  double hand_open_joint_pos;
+  double hand_close_joint_pos;
 
   moveit_msgs::RobotState hand_open_pose;
   moveit_msgs::RobotState hand_close_pose;
@@ -180,8 +180,8 @@ private:
 
   // Predefined pose targets
   std::string hand_joint_name_;
-  double hand_open_gap_;
-  double hand_close_gap_;
+  double hand_open_joint_pos_;
+  double hand_close_joint_pos_;
 
   moveit_msgs::RobotState hand_open_pose_;
   moveit_msgs::RobotState hand_close_pose_;

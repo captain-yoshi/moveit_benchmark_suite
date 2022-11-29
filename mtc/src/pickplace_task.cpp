@@ -25,8 +25,8 @@ void PickPlaceTask::loadParameters(const PickPlaceParameters& params, const Task
   grasp_frame_transform_ = params.grasp_frame_transform;
 
   // Predefined pose targets
-  hand_open_gap_ = params.hand_open_gap;
-  hand_close_gap_ = params.hand_close_gap;
+  hand_open_joint_pos_ = params.hand_open_joint_pos;
+  hand_close_joint_pos_ = params.hand_close_joint_pos;
   hand_joint_name_ = params.hand_joint_name;
 
   // Target object
@@ -41,13 +41,13 @@ void PickPlaceTask::loadParameters(const PickPlaceParameters& params, const Task
   hand_open_pose_.joint_state.name.resize(1);
   hand_open_pose_.joint_state.name[0] = hand_joint_name_;
   hand_open_pose_.joint_state.position.resize(1);
-  hand_open_pose_.joint_state.position[0] = hand_open_gap_ / 2.0;
+  hand_open_pose_.joint_state.position[0] = hand_open_joint_pos_;
 
   hand_close_pose_.is_diff = true;
   hand_close_pose_.joint_state.name.resize(1);
   hand_close_pose_.joint_state.name[0] = hand_joint_name_;
   hand_close_pose_.joint_state.position.resize(1);
-  hand_close_pose_.joint_state.position[0] = hand_close_gap_ / 2.0;
+  hand_close_pose_.joint_state.position[0] = hand_close_joint_pos_;
 
   // Pick/Place metrics
   approach_object_max_dist_ = params.approach_object_max_dist;
