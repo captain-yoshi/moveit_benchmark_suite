@@ -172,8 +172,8 @@ void PickPlaceTask::pick()
 
       // Set hand forward direction
       geometry_msgs::Vector3Stamped vec;
-      vec.header.frame_id = hand_frame_;
-      vec.vector.z = 1.0;
+      vec.header.frame_id = world_frame_;
+      vec.vector.z = -1.0;
       stage->setDirection(vec);
       grasp->insert(std::move(stage));
     }
@@ -421,8 +421,8 @@ void PickPlaceTask::place()
       stage->setIKFrame(hand_frame_);
       stage->properties().set("marker_ns", "retreat");
       geometry_msgs::Vector3Stamped vec;
-      vec.header.frame_id = hand_frame_;
-      vec.vector.z = -1.0;
+      vec.header.frame_id = world_frame_;
+      vec.vector.z = 1.0;
       stage->setDirection(vec);
       place->insert(std::move(stage));
     }
