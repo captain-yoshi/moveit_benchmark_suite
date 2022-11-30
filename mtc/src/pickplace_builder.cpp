@@ -266,13 +266,13 @@ void PickPlaceConfig::buildSolvers(ros::NodeHandle& nh,
 void PickPlaceConfig::readConstraints(ros::NodeHandle& nh)
 {
   std::string file;
-  if (!nh.hasParam("/benchmark/config_file"))
+  if (!nh.hasParam("config_file"))
   {
-    ROS_ERROR("ROSPARAM '/benchmark/config_file' does not exist.");
+    ROS_ERROR("ROSPARAM '%s/config_file' does not exist.", nh.getNamespace().c_str());
     return;
   }
 
-  nh.getParam("/benchmark/config_file", file);
+  nh.getParam("config_file", file);
 
   ryml::Tree tree;
   ryml::NodeRef node = tree.rootref();
