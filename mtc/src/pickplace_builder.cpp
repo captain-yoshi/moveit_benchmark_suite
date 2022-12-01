@@ -300,87 +300,85 @@ void PickPlaceConfig::readConstraints(ros::NodeHandle& nh)
   }
 }
 
-void PickPlaceConfig::fillTaskStages(Task& task, const XmlRpc::XmlRpcValue& node)
-{
-  for (std::map<std::string, XmlRpc::XmlRpcValue>::const_iterator p = node.begin(); p != node.end(); ++p)
-  {
-    Stage stage;
-
-    if (p->second.hasMember("solver"))
-      stage.solver = static_cast<std::string>(p->second["solver"]);
-    else
-      stage.solver = task.global_solver;
-    if (p->second.hasMember("path_constraint"))
-      stage.path_constraints = static_cast<std::string>(p->second["path_constraint"]);
-    else
-      stage.path_constraints = task.global_path_constraints;
-    if (p->second.hasMember("properties"))
-    {
-      const auto& props = p->second["properties"];
-
-      for (int i = 0; i < props.size(); ++i)  // NOLINT(modernize-loop-convert)
-      {
-        const auto& prop = props[i];
-        moveit_task_constructor_msgs::Property property;
-        if (prop.hasMember("name"))
-          property.name = static_cast<std::string>(prop["name"]);
-        if (prop.hasMember("type"))
-          property.type = static_cast<std::string>(prop["type"]);
-        if (prop.hasMember("value"))
-          property.value = static_cast<std::string>(prop["value"]);
-        if (prop.hasMember("description"))
-          property.description = static_cast<std::string>(prop["description"]);
-
-        stage.properties.push_back(property);
-      }
-    }
-    if (p->second.hasMember("timeout"))
-      stage.timeout = static_cast<double>(p->second["timeout"]);
-    else
-      stage.timeout = task.global_timeout;
-
-    task.stage_map.insert({ p->first, stage });
-  }
-}
-
 void PickPlaceConfig::readTasks(ros::NodeHandle& nh)
 {
-  XmlRpc::XmlRpcValue node;
-
-  if (nh.getParam("profiler_config/tasks", node))
+  std::string file;
+  if (!nh.hasParam("config_file"))
   {
-    if (node.getType() != XmlRpc::XmlRpcValue::TypeArray)
+    ROS_ERROR("ROSPARAM '%s/config_file' does not exist.", nh.getNamespace().c_str());
+    return;
+  }
+
+  nh.getParam("config_file", file);
+
+  ryml::Tree tree;
+  ryml::NodeRef node = tree.rootref();
+
+  auto substr = IO::loadFileToYAML(file, node);
+  if (substr.empty())
+    return;
+
+  if (node.has_child("profiler_config") && node["profiler_config"].has_child("tasks"))
+  {
+    ryml::ConstNodeRef const& tasks = node["profiler_config"]["tasks"];
+
+    for (ryml::ConstNodeRef const& task : tasks.children())
     {
-      ROS_ERROR("Expected a list of tasks configuration to benchmark");
-      return;
-    }
+      Task t;
 
-    for (int i = 0; i < node.size(); ++i)  // NOLINT(modernize-loop-convert)
-    {
-      const auto& task_node = node[i];
+      if (task.has_child("name"))
+        task["name"] >> t.name;
+      if (task.has_child("solver"))
+        task["solver"] >> t.global_solver;
+      if (task.has_child("timeout"))
+        task["timeout"] >> t.global_timeout;
+      if (task.has_child("path_constraint"))
+        task["path_constraint"] >> t.global_path_constraints;
 
-      Task task;
-
-      std::string name = static_cast<std::string>(task_node["name"]);
-
-      // get globbal parameters
-      if (task_node.hasMember("solver"))
-        task.global_solver = static_cast<std::string>(task_node["solver"]);
-      if (task_node.hasMember("path_constraint"))
-        task.global_path_constraints = static_cast<std::string>(task_node["path_constraint"]);
-      if (task_node.hasMember("timeout"))
-        task.global_timeout = static_cast<double>(task_node["timeout"]);
-
-      if (task.global_solver.empty() && !task_node.hasMember("stages"))
+      // read stages
+      Stage s;
+      if (task.has_child("stages"))
       {
-        ROS_WARN("Missing global solver for all stages or specific solver for each stages");
-        continue;
+        ryml::ConstNodeRef const& stages = task["stages"];
+        for (ryml::ConstNodeRef const& stage : stages.children())
+        {
+          std::string stage_name;
+          from_chars(stage.key(), &stage_name);
+
+          if (stage.has_child("solver"))
+            stage["solver"] >> s.solver;
+          else
+            s.solver = t.global_solver;
+          if (stage.has_child("timeout"))
+            stage["timeout"] >> s.timeout;
+          else
+            s.timeout = t.global_timeout;
+          if (stage.has_child("path_constraint"))
+            stage["path_constraint"] >> s.path_constraints;
+          else
+            s.path_constraints = t.global_path_constraints;
+          if (stage.has_child("properties"))
+          {
+            ryml::ConstNodeRef const& props = stage["properties"];
+            for (ryml::ConstNodeRef const& prop : stage["properties"].children())
+            {
+              moveit_task_constructor_msgs::Property property;
+              if (prop.has_child("name"))
+                prop["name"] >> property.name;
+              if (prop.has_child("type"))
+                prop["type"] >> property.type;
+              if (prop.has_child("value"))
+                prop["value"] >> property.value;
+              if (prop.has_child("description"))
+                prop["description"] >> property.description;
+              s.properties.push_back(property);
+            }
+          }
+
+          t.stage_map.insert({ stage_name, s });
+        }
       }
-
-      if (task_node.hasMember("stages"))
-        fillTaskStages(task, task_node["stages"]);
-
-      task_map_.insert({ name, task });
+      task_map_.insert({ t.name, t });
     }
   }
 }

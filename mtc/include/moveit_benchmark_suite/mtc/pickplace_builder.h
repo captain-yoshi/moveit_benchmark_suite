@@ -123,8 +123,6 @@ protected:
   void readConstraints(ros::NodeHandle& nh);
   void readTasks(ros::NodeHandle& nh);
 
-  void fillTaskStages(Task& task, const XmlRpc::XmlRpcValue& node);
-
   PickPlaceParameters parameters_;
   std::map<std::string, moveit::task_constructor::solvers::PlannerInterfacePtr> solver_map_;
   std::map<std::string, moveit_msgs::Constraints> constraints_map_;
