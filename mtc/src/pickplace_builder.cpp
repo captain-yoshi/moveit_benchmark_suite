@@ -308,8 +308,12 @@ void PickPlaceConfig::fillTaskStages(Task& task, const XmlRpc::XmlRpcValue& node
 
     if (p->second.hasMember("solver"))
       stage.solver = static_cast<std::string>(p->second["solver"]);
+    else
+      stage.solver = task.global_solver;
     if (p->second.hasMember("path_constraint"))
       stage.path_constraints = static_cast<std::string>(p->second["path_constraint"]);
+    else
+      stage.path_constraints = task.global_path_constraints;
     if (p->second.hasMember("timeout"))
       stage.timeout = static_cast<double>(p->second["timeout"]);
     else
