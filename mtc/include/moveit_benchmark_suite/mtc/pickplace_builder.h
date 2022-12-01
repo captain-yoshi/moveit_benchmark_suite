@@ -83,6 +83,7 @@ struct Stage
 {
   std::string solver;
   std::string path_constraints;
+  std::vector<moveit_task_constructor_msgs::Property> properties;
   double timeout;
 };
 

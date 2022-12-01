@@ -89,6 +89,7 @@ struct StageProperty
 {
   moveit::task_constructor::solvers::PlannerInterfacePtr planner;
   moveit_msgs::Constraints constraint;
+  std::vector<moveit_task_constructor_msgs::Property> properties;
   double timeout;
 };
 

@@ -314,6 +314,26 @@ void PickPlaceConfig::fillTaskStages(Task& task, const XmlRpc::XmlRpcValue& node
       stage.path_constraints = static_cast<std::string>(p->second["path_constraint"]);
     else
       stage.path_constraints = task.global_path_constraints;
+    if (p->second.hasMember("properties"))
+    {
+      const auto& props = p->second["properties"];
+
+      for (int i = 0; i < props.size(); ++i)  // NOLINT(modernize-loop-convert)
+      {
+        const auto& prop = props[i];
+        moveit_task_constructor_msgs::Property property;
+        if (prop.hasMember("name"))
+          property.name = static_cast<std::string>(prop["name"]);
+        if (prop.hasMember("type"))
+          property.type = static_cast<std::string>(prop["type"]);
+        if (prop.hasMember("value"))
+          property.value = static_cast<std::string>(prop["value"]);
+        if (prop.hasMember("description"))
+          property.description = static_cast<std::string>(prop["description"]);
+
+        stage.properties.push_back(property);
+      }
+    }
     if (p->second.hasMember("timeout"))
       stage.timeout = static_cast<double>(p->second["timeout"]);
     else
@@ -534,6 +554,7 @@ void PickPlaceBuilder::buildTasks(ros::NodeHandle& nh,
         planner_name = it->second.solver;
         constraint_name = it->second.path_constraints;
         prop.timeout = it->second.timeout;
+        prop.properties = it->second.properties;
       }
 
       {  // Set solver

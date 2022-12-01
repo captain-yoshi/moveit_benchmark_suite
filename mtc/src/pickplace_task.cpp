@@ -119,6 +119,8 @@ void PickPlaceTask::pick()
       return;
 
     auto stage = std::make_unique<stages::MoveTo>("open hand", it->second.planner);
+    for (const auto& prop : it->second.properties)
+      stage->properties().declare<std::string>(prop.name, prop.value, prop.description);
     stage->setGroup(hand_group_name_);
     stage->setGoal(hand_open_pose_);
     stage->setPathConstraints(it->second.constraint);
@@ -138,6 +140,8 @@ void PickPlaceTask::pick()
 
     auto stage = std::make_unique<stages::Connect>(
         "move to pick", stages::Connect::GroupPlannerVector{ { arm_group_name_, it->second.planner } });
+    for (const auto& prop : it->second.properties)
+      stage->properties().declare<std::string>(prop.name, prop.value, prop.description);
     stage->setTimeout(it->second.timeout);
     stage->setPathConstraints(it->second.constraint);
     stage->properties().configureInitFrom(Stage::PARENT);
@@ -163,6 +167,8 @@ void PickPlaceTask::pick()
         return;
 
       auto stage = std::make_unique<stages::MoveRelative>("approach object", it->second.planner);
+      for (const auto& prop : it->second.properties)
+        stage->properties().declare<std::string>(prop.name, prop.value, prop.description);
       stage->setTimeout(it->second.timeout);
       stage->setPathConstraints(it->second.constraint);
       stage->properties().set("marker_ns", "approach_object");
@@ -221,6 +227,8 @@ void PickPlaceTask::pick()
         return;
 
       auto stage = std::make_unique<stages::MoveTo>("close hand", it->second.planner);
+      for (const auto& prop : it->second.properties)
+        stage->properties().declare<std::string>(prop.name, prop.value, prop.description);
       stage->setGroup(hand_group_name_);
       stage->setGoal(hand_close_pose_);
       stage->setTimeout(it->second.timeout);
@@ -256,6 +264,8 @@ void PickPlaceTask::pick()
         return;
 
       auto stage = std::make_unique<stages::MoveRelative>("lift object", it->second.planner);
+      for (const auto& prop : it->second.properties)
+        stage->properties().declare<std::string>(prop.name, prop.value, prop.description);
       stage->properties().configureInitFrom(Stage::PARENT, { "group" });
       stage->setTimeout(it->second.timeout);
       stage->setPathConstraints(it->second.constraint);
@@ -302,6 +312,8 @@ void PickPlaceTask::place()
 
     auto stage = std::make_unique<stages::Connect>(
         "move to place", stages::Connect::GroupPlannerVector{ { arm_group_name_, it->second.planner } });
+    for (const auto& prop : it->second.properties)
+      stage->properties().declare<std::string>(prop.name, prop.value, prop.description);
     stage->setTimeout(it->second.timeout);
     stage->setPathConstraints(it->second.constraint);
     stage->properties().configureInitFrom(Stage::PARENT);
@@ -327,6 +339,8 @@ void PickPlaceTask::place()
         return;
 
       auto stage = std::make_unique<stages::MoveRelative>("lower object", it->second.planner);
+      for (const auto& prop : it->second.properties)
+        stage->properties().declare<std::string>(prop.name, prop.value, prop.description);
       stage->setTimeout(it->second.timeout);
       stage->setPathConstraints(it->second.constraint);
       stage->properties().set("marker_ns", "lower_object");
@@ -378,6 +392,8 @@ void PickPlaceTask::place()
         return;
 
       auto stage = std::make_unique<stages::MoveTo>("open hand", it->second.planner);
+      for (const auto& prop : it->second.properties)
+        stage->properties().declare<std::string>(prop.name, prop.value, prop.description);
       stage->setTimeout(it->second.timeout);
       stage->setPathConstraints(it->second.constraint);
       stage->setGroup(hand_group_name_);
@@ -414,6 +430,8 @@ void PickPlaceTask::place()
         return;
 
       auto stage = std::make_unique<stages::MoveRelative>("retreat after place", it->second.planner);
+      for (const auto& prop : it->second.properties)
+        stage->properties().declare<std::string>(prop.name, prop.value, prop.description);
       stage->properties().configureInitFrom(Stage::PARENT, { "group" });
       stage->setTimeout(it->second.timeout);
       stage->setPathConstraints(it->second.constraint);
