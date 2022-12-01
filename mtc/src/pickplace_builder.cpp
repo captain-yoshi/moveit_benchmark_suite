@@ -368,7 +368,27 @@ void PickPlaceConfig::readTasks(ros::NodeHandle& nh)
               if (prop.has_child("type"))
                 prop["type"] >> property.type;
               if (prop.has_child("value"))
-                prop["value"] >> property.value;
+              {
+                if (prop["value"].has_val())
+                  prop["value"] >> property.value;
+                else
+                {
+                  // keep as a yaml string
+                  char buf[1024];
+                  ryml::substr sub;
+                  sub = ryml::emit_yaml(prop["value"], buf);
+
+                  std::string yml;
+                  from_chars(sub, &yml);
+
+                  // remove 'value:\n' and last char which is '\n'
+                  yml.erase(0, 7);
+                  yml.pop_back();
+
+                  property.value = yml;
+                }
+              }
+
               if (prop.has_child("description"))
                 prop["description"] >> property.description;
               s.properties.push_back(property);
