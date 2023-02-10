@@ -1,6 +1,13 @@
 # create HTML containing multiple pictures
 # ex. use with the `collision_check_mesh_quality` benchmark
 gnuplot_config:
+  options:
+    terminal: QT
+    n_row: 1
+    n_col: 1
+    size:
+      x: 800
+      y: 480
   plots:
     # individual requests wrt. scenes, FCL and robot with mesh qualities
     - filters:
@@ -58,10 +65,3 @@ gnuplot_config:
         - type: bargraph
           name: avg_correct
           title: '{/:Bold Motion Planning (PlanningPiepeline)}\nCorrectness average (pass/fail) for planner \"CHOMP\" against scenes and collision detector \"FCL\"'
-  options:
-    terminal: QT
-    n_row: 1
-    n_col: 1
-    size:
-      x: 800
-      y: 480
