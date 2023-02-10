@@ -65,6 +65,12 @@ int main(int argc, char** argv)
   pnh.getParam(INPUT_PARAMETER, input_files);
   pnh.getParam(CONVERSION_PARAMETER, conversion);
 
+  if (input_files.empty())
+  {
+    ROS_WARN("No dataset found. The `input_files` parameter MUST be an array :");
+    ROS_WARN("    e.g. input_files:=\"[my/dataset.yaml]\"");
+  }
+
   // validate extension
   if (conversion.compare("json") != 0)
   {

@@ -1,6 +1,13 @@
 # create HTML containing multiple pictures
 # ex. use with the default collision check benchmark
 gnuplot_config:
+  options:
+    terminal: QT
+    n_row: 1
+    n_col: 1
+    size:
+      x: 800
+      y: 480
   plots:
     # individual requests wrt. scenes and collision detectors
     - filters:
@@ -359,10 +366,3 @@ gnuplot_config:
     #     - type: bargraph
     #       name: avg_contact_count
     #       title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for request \"All (Cost)\" against scenes and collision detector \"FCL\"'
-  options:
-    terminal: PNG
-    n_row: 1
-    n_col: 1
-    size:
-      x: 800
-      y: 480

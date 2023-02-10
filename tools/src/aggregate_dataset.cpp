@@ -66,6 +66,12 @@ int main(int argc, char** argv)
   pnh.getParam(OUTPUT_PARAMETER, output_file);
   pnh.getParam(CONFIG_PARAMETER, config_file);
 
+  if (input_files.empty())
+  {
+    ROS_WARN("No dataset found. The `input_files` parameter MUST be an array :");
+    ROS_WARN("    e.g. input_files:=\"[my/dataset.yaml]\"");
+  }
+
   // Aggregate datasets
   std::vector<AggregateDataset::Operation> operations;
   std::vector<Filter> filters;
