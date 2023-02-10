@@ -360,7 +360,7 @@ gnuplot_config:
     #       name: avg_contact_count
     #       title: '{/:Bold Collision (Self + Environment)}\nCountact count (mean) for request \"All (Cost)\" against scenes and collision detector \"FCL\"'
   options:
-    terminal: PNG
+    terminal: QT
     n_row: 1
     n_col: 1
     size:

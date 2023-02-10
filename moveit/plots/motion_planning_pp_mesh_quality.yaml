@@ -59,7 +59,7 @@ gnuplot_config:
           name: avg_correct
           title: '{/:Bold Motion Planning (PlanningPiepeline)}\nCorrectness average (pass/fail) for planner \"CHOMP\" against scenes and collision detector \"FCL\"'
   options:
-    terminal: PNG
+    terminal: QT
     n_row: 1
     n_col: 1
     size:
