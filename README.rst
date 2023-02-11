@@ -20,6 +20,52 @@ Overview:
 
 See the `documentation`_ section for more information.
 
+Tutorial
+--------
+
+Run the benchmark.
+
+.. code-block:: bash
+
+  ~$ roslaunch moveit_benchmark_suite demo.launch
+
+  # 30 seconds later
+  Successfully created dataset: '/home/captain-yoshi/.ros/<timestamp>.json'
+
+The demo benchmark generates motion planning metrics using the *PlanningPipeline* API. It also contains metadata about ROS and Debian packages, including git version control, as well as hardware and os specificities.
+
+Visualize in RViz
+.................
+
+Each benchmarks comes with a set of pre-defined visuals. Simply add the `visualize` parameter to true.
+
+.. code-block:: bash
+
+  ~$ roslaunch moveit_benchmark_suite demo.launch visualize:=true
+
+  Press ENTER to view next query/trial
+
+
+*You may want to lower the number of trials to one if you plan to visualize only one instance of each queries.*
+
+
+Plot with Observable
+....................
+
+`Observable`_, like Jupyter, is a computational notebook that's great for doing data science and visualization, where “notebook” refers to a series of cells containing prose, code, and visualizations.
+
+The MBS Demo notebook will take you through each step :
+
+
+. Here is a glimpse of what plots you can achieve with this framework:
+
+
+Plot with GNUPlot
+....................
+
+
+
+
 Packages description
 --------------------
 
@@ -65,9 +111,9 @@ A lot of concepts and code were taken from the `robowflex_library`_ created by Z
 .. _robowflex_library: https://github.com/KavrakiLab/robowflex
 .. _MoveIt: https://github.com/ros-planning/moveit
 .. _Planner Arena: http://plannerarena.org/
+.. _Observable: https://observablehq.com/plot
 
 .. Declaration of unicode dash
 .. |--| unicode:: U+2013   .. en dash
 .. |---| unicode:: U+2014  .. em dash, trimming surrounding whitespace
    :trim:
-
