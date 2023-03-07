@@ -1,6 +1,6 @@
 <package format="2">
 	<name>moveit_benchmark_suite</name>
-	<version>0.0.0</version>
+	<version>0.1.0</version>
 	<description>Benchmark backend for testing MoveIt</description>
 
 	<license>BSD</license>
