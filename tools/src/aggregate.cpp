@@ -12,21 +12,20 @@ DataSetPtr AggregateDataset::aggregate(const std::vector<Operation>& operations,
 {
   ryml::Tree t;
   auto node = t.rootref();
-  node |= ryml::MAP;
 
-  node.tree()->merge_with(dataset.tree(), dataset.id(), node.append_child().id());
+  node.tree()->merge_with(dataset.tree(), dataset.id(), node.id());
 
-  if (!node.has_child("dataset") || !node["dataset"].has_child("data") || !node["dataset"].has_child("type"))
+  if (!node.has_child("type"))
     return nullptr;
 
   // Add comment that this dataset was aggregated
   std::string type_str;
-  ryml::from_chars(node["dataset"]["type"].val(), &type_str);
+  ryml::from_chars(node["type"].val(), &type_str);
 
-  node["dataset"]["type"] << "[AGGREGATED] " + type_str;
+  node["type"] << "[AGGREGATED] " + type_str;
 
   // Loop through data
-  auto queries = node["dataset"]["data"];
+  auto queries = node["data"];
 
   for (std::size_t i = 0; i < queries.num_children(); ++i)
   {
@@ -110,7 +109,7 @@ DataSetPtr AggregateDataset::aggregate(const std::vector<Operation>& operations,
     }
   }
   DataSet ds;
-  node["dataset"] >> ds;
+  node >> ds;
 
   return std::make_shared<DataSet>(ds);
 }

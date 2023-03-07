@@ -806,23 +806,7 @@ std::string GNUPlotDataset::combineTokenNodeValue(const Token& token, const ryml
   ryml::Tree t;
   ryml::NodeRef scalar = t.rootref();
 
-  // add dataset keymap
-  ryml::Tree t1;
-  ryml::NodeRef token_node = t1.rootref();
-
-  if (token.isAbsolute())
-  {
-    token_node |= ryml::MAP;
-    token_node.append_child() << ryml::key("dataset") |= ryml::KEYMAP;
-    auto lc = token_node.last_child();
-
-    auto token_tree = token.getNode().tree();
-
-    t1.merge_with(token_tree, token_tree->root_id(), lc.id());
-    bool rc = c4::yml::getNodeFromKeyChainVal(token_node.first_child(), node, scalar);
-  }
-  else
-    bool rc = c4::yml::getNodeFromKeyChainVal(token.getNode(), node, scalar);
+  c4::yml::getNodeFromKeyChainVal(token.getNode(), node, scalar);
 
   if (scalar.is_val() || scalar.is_keyval())
   {

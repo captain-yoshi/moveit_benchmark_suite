@@ -26,31 +26,49 @@ Predicate moveit_benchmark_suite::stringToPredicate(const std::string& str)
 namespace {
 ryml::substr loadDataset(const std::string& filename, ryml::NodeRef& root, DatasetFilter::DatasetMultiMap& ds_mmap)
 {
-  // get start index for future children additions
-  std::size_t child_offset = root.num_children();
-
   auto substr = IO::loadFileToYAML(filename, root);
 
-  // loop only through newest childrens
-  std::size_t num_file = 0;
-
-  for (std::size_t i = child_offset; i < root.num_children(); ++i)
+  if (root.is_stream())
   {
-    num_file++;
+    // loop only through newest childrens
+    std::size_t num_file = 0;
 
+    for (std::size_t i = 0; i < root.num_children(); ++i)
+    {
+      num_file++;
+
+      // partial validation of nodes
+      if (not(root[i].has_child("uuid")))
+      {
+        ROS_WARN("Dataset malformed in file '%s' for sequence #%zu", filename.c_str(), num_file);
+        continue;
+      }
+
+      auto dataset = root[i];
+
+      std::string uuid;
+      dataset["uuid"] >> uuid;
+
+      ds_mmap.emplace(uuid, dataset);
+    }
+  }
+  else
+  {
     // partial validation of nodes
-    if (not(root[i].has_child("dataset") && root[i]["dataset"].has_child("uuid")))
+    if (not(root.has_child("uuid")))
     {
       ROS_WARN("Dataset malformed in file '%s' for sequence #%zu", filename.c_str(), num_file);
       continue;
     }
+    else
+    {
+      auto dataset = root;
 
-    auto dataset = root[i]["dataset"];
+      std::string uuid;
+      dataset["uuid"] >> uuid;
 
-    std::string uuid;
-    dataset["uuid"] >> uuid;
-
-    ds_mmap.emplace(uuid, dataset);
+      ds_mmap.emplace(uuid, dataset);
+    }
   }
 
   return substr;
@@ -59,13 +77,10 @@ ryml::substr loadDataset(const std::string& filename, ryml::NodeRef& root, Datas
 void loadDataset(const DataSet& dataset, ryml::NodeRef& root, DatasetFilter::DatasetMultiMap& ds_mmap)
 {
   // serialize the dataset
-  auto child = root.append_child({ ryml::MAP });
-  child["dataset"] << dataset;
-
-  auto n_dataset = child["dataset"];
+  root << dataset;
 
   // partial validation of dataset
-  if (!n_dataset.has_child("uuid"))
+  if (!root.has_child("uuid"))
   {
     ROS_WARN("Dataset malformed with uuid '%s'", dataset.uuid.c_str());
     return;
@@ -73,9 +88,9 @@ void loadDataset(const DataSet& dataset, ryml::NodeRef& root, DatasetFilter::Dat
 
   // add node to map
   std::string uuid;
-  n_dataset["uuid"] >> uuid;
+  root["uuid"] >> uuid;
 
-  ds_mmap.emplace(uuid, n_dataset);
+  ds_mmap.emplace(uuid, root);
 }
 
 }  // namespace
@@ -94,7 +109,7 @@ std::size_t DatasetFilter::loadDataset(const std::string& filename)
 
   ryml::Tree tree;
   auto root = tree.rootref();
-  root |= ryml::SEQ;
+
   DatasetMultiMap ds_mmap;
 
   auto substr = ::loadDataset(filename, root, ds_mmap);
@@ -113,7 +128,7 @@ std::size_t DatasetFilter::loadDatasets(const std::vector<std::string>& filename
 
   ryml::Tree tree;
   auto root = tree.rootref();
-  root |= ryml::SEQ;
+
   DatasetMultiMap ds_mmap;
   std::vector<ryml::substr> substrings;
 
@@ -309,6 +324,10 @@ bool DatasetFilter::filterMetadata(const ryml::ConstNodeRef& node, const Token& 
   ryml::Tree t1;
   ryml::NodeRef token_value = t1.rootref();
   token_value << token.getValue();
+
+  std::cout << "node = \n" << node << std::endl;
+  std::cout << "tnode = \n" << token.getNode() << std::endl;
+  std::cout << "dataset val = \n" << dataset_value << std::endl;
 
   // Compare values between token and dataset
   if (token.hasValue())
