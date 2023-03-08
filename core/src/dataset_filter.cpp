@@ -56,10 +56,7 @@ ryml::substr loadDataset(const std::string& filename, ryml::NodeRef& root, Datas
   {
     // partial validation of nodes
     if (not(root.has_child("uuid")))
-    {
-      ROS_WARN("Dataset malformed in file '%s' for sequence #%zu", filename.c_str(), num_file);
-      continue;
-    }
+      ROS_WARN("Dataset malformed in file '%s'", filename.c_str());
     else
     {
       auto dataset = root;
