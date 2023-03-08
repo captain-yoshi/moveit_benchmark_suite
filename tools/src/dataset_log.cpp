@@ -98,7 +98,7 @@ void BenchmarkSuiteOutputter::dump(const DataSet& dataset, const std::string& pa
   ryml::NodeRef node = tree.rootref();
 
   node |= ryml::MAP;
-  node.append_child() << ryml::key("dataset") << dataset;
+  node.append_child() << dataset;
 
   dumpToStream(node, newpath, type);
 }
@@ -114,17 +114,33 @@ void BenchmarkSuiteOutputter::dumpToStream(const ryml::ConstNodeRef& node, const
 
   ryml::Tree tree;
   ryml::NodeRef root = tree.rootref();
+  root |= ryml::STREAM;
 
-  root |= ryml::SEQ;
-  root.append_child() |= ryml::MAP;
-
-  tree.merge_with(node.tree(), node.id(), root.last_child().id());
+  if (node.is_doc())
+  {
+    tree.merge_with(node.tree(), node.id(), root.append_child().id());
+  }
+  else if (node.is_map())
+  {
+    root.append_child() |= ryml::DOCMAP;
+    tree.merge_with(node.tree(), node.last_child().id(), root.last_child().id());
+  }
+  else if (node.is_seq())
+  {
+    root.append_child() |= ryml::DOCSEQ;
+    tree.merge_with(node.tree(), node.last_child().id(), root.last_child().id());
+  }
+  else
+  {
+    ROS_ERROR("ryml node cannot be of type STREAM | DOCVAL");
+    return;
+  }
 
   // emit to ofstream
   switch (type)
   {
     case JSON:
-      // will emit: `{dataset: {...}}`
+      // will emit: {"name": "my_name", ...}
       out << ryml::as_json(root.last_child());
       break;
     case YAML:
@@ -134,9 +150,13 @@ void BenchmarkSuiteOutputter::dumpToStream(const ryml::ConstNodeRef& node, const
         ROS_WARN("Invalid conversion type. Falling back to yaml.");
 
       // append new line in case file is not empty for a valid indentation
-      out << "\n";
-      // will emit: `- dataset: {...}`
+      // out << "\n";
+      // will emit:
+      // ---
+      // name: my_name
+      // type: collision checks
       out << root;
+      out << "\n";
   }
 
   out.close();

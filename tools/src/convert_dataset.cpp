@@ -92,23 +92,25 @@ int main(int argc, char** argv)
       continue;
     }
 
-    if (node.is_seq())
+    if (node.is_stream())
     {
-      for (ryml::ConstNodeRef const& child : node.children())
+      for (ryml::ConstNodeRef const& doc : node.children())
       {
         std::string prefix;
-        ryml::from_chars(child["dataset"]["name"].val(), &prefix);
+        if (doc.has_child("name"))
+          ryml::from_chars(doc["name"].val(), &prefix);
 
-        // randome filename with benchmark name as prefix
-        outputer.dump(child, "", prefix);
+        // random filename with benchmark name as prefix
+        outputer.dump(doc, "", prefix);
       }
     }
     else
     {
       std::string prefix;
-      ryml::from_chars(node["dataset"]["name"].val(), &prefix);
+      if (node.has_child("name"))
+        ryml::from_chars(node["name"].val(), &prefix);
 
-      // randome filename with benchmark name as prefix
+      // random filename with benchmark name as prefix
       outputer.dump(node, "", prefix);
     }
   }
